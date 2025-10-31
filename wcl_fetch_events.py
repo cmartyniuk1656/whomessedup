@@ -24,14 +24,18 @@ from typing import Iterable, List
 
 import requests
 
+from who_messed_up.env import load_env
 from who_messed_up.api import Fight, events_for_fights, fetch_fights, filter_fights, get_token_from_client
 
 def main():
+    load_env()
+
     ap = argparse.ArgumentParser(description="Fetch Warcraft Logs v2 events to JSONL.")
     ap.add_argument("report_code")
     ap.add_argument("--data-type", default="DamageTaken")
     ap.add_argument("--only-fight", help="Substring match on fight name.")
     ap.add_argument("--fight-id", action="append", type=int, help="Restrict to one or more fight IDs.")
+    ap.add_argument("--ability-id", type=int, help="Only include events matching this ability GUID/ID.")
     ap.add_argument("--out", default="events.jsonl")
     ap.add_argument("--limit", type=int, default=5000)
     ap.add_argument("--token")
@@ -45,7 +49,7 @@ def main():
     s = requests.Session()
 
     try:
-        fights = fetch_fights(s, token, args.report_code)
+        fights, actor_names = fetch_fights(s, token, args.report_code)
     except Exception as exc:
         print(f"ERROR fetching fights: {exc}", file=sys.stderr)
         sys.exit(2)
@@ -68,6 +72,8 @@ def main():
             data_type=args.data_type,
             fights=chosen,
             limit=args.limit,
+            ability_id=args.ability_id,
+            actor_names=actor_names,
         )
         for event in events:
             fh.write(json.dumps(event, ensure_ascii=False) + "\n")

@@ -1,4 +1,4 @@
-# Who Messed Up - Warcraft Logs Analyzer
+﻿# Who Messed Up - Warcraft Logs Analyzer
 
 ### Project Charter
 
@@ -44,7 +44,7 @@ export WCL_CLIENT_ID="YOUR_CLIENT_ID"
 export WCL_CLIENT_SECRET="YOUR_CLIENT_SECRET"
 ```
 
-> ⚠️ **Never commit credentials** to source control.
+> âš ï¸ **Never commit credentials** to source control.
 
 On Windows PowerShell:
 
@@ -77,88 +77,75 @@ uvicorn app:app --reload --port 8080
 
 Then open http://localhost:8080/docs for the automatically generated API docs.
 
-### 4. Sample Request
+> Note: The app and CLI tools auto-load `.env` via `python-dotenv`, so define `WCL_CLIENT_ID` / `WCL_CLIENT_SECRET` there and they will be picked up automatically.
+
+### 4. Run the Frontend (dev)
+
+```bash
+cd frontend
+npm install        # first run only
+npm run dev
+```
+
+Visit the printed Vite URL (default http://localhost:5173). The dev server proxies API requests to `http://localhost:8080` while both services are running.
+
+### 5. Sample API Request
 
 ```http
 GET /api/hits?report=QDbKNwLr3dRXy9TV&ability_id=1227472
 ```
-
-Sample response:
-
-```json
-{
-  "report": "QDbKNwLr3dRXy9TV",
-  "data_type": "DamageTaken",
-  "filters": {
-    "ability": null,
-    "ability_regex": null,
-    "ability_id": "1227472",
-    "source": null,
-    "fight_name": null,
-    "fight_ids": null
-  },
-  "total_hits": {
-    "PlayerOne": 11,
-    "PlayerTwo": 8,
-    "PlayerThree": 23
-  },
-  "per_player": {
-    "PlayerOne": 11,
-    "PlayerTwo": 8,
-    "PlayerThree": 23
-  },
-  "breakdown": [
-    { "player": "PlayerThree", "ability": "Shadowflame", "hits": 23 },
-    { "player": "PlayerOne", "ability": "Shadowflame", "hits": 11 },
-    { "player": "PlayerTwo", "ability": "Shadowflame", "hits": 8 }
-  ],
-  "fights": [
-    { "id": 1, "name": "Prototype Encounter", "start": 123456, "end": 127890, "kill": true }
-  ]
-}
-```
-
 ---
 
 ## CLI Utilities (Existing Workflows)
 
-- `wcl_fetch_events.py` — download raw events to JSONL for offline analysis.
+- `wcl_fetch_events.py` — download raw events to JSONL (pass `--ability-id`/`--only-ability` to filter server-side and embed actor names).
 - `wcl_hit_counter.py` — count hits from JSON/JSONL/CSV exports using the shared analysis engine in `who_messed_up/` (supports `--only-ability`, `--ability-id`, and regex filters).
 
-Example:
+Examples:
 
 ```bash
-python wcl_hit_counter.py events.jsonl --ability-id 1227472
+# Fetch only Besiege hits and keep the JSONL tight
+python wcl_fetch_events.py QDbKNwLr3dRXy9TV --data-type DamageTaken --ability-id 1227472 --out besiege.jsonl
+
+# Summarize the hits with the CLI (names already injected)
+python wcl_hit_counter.py besiege.jsonl --ability-id 1227472
 ```
 
 Both scripts now consume the shared package modules, so new features in the FastAPI layer automatically benefit the CLIs.
-
 ---
 
 ## Production Deployment Notes
 
-1. Point Nginx (or Nginx Proxy Manager) at `http://127.0.0.1:8080` for the `/api/*` path.
-2. Serve the static frontend (planned `static/index.html`) from a web root like `/var/www/who-messed-up`.
-3. Enable HTTPS via Let's Encrypt in the proxy layer.
-4. Use a process manager (systemd, supervisord, or Docker) to keep `uvicorn` running.
+1. Build the frontend before deployment:
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   ```
+   The build output in `frontend/dist/` is served automatically by FastAPI.
+2. Run the API behind a process manager (`uvicorn`, `gunicorn`, or `uvicorn` via systemd/Docker).
+3. Point Nginx (or Nginx Proxy Manager) at `http://127.0.0.1:8080` for the `/api/*` path and the SPA root `/`.
+4. Enable HTTPS via Let's Encrypt in the proxy layer.
 5. Store client credentials in environment variables or a secret manager on the server.
-
 ---
 
 ## Repository Layout
 
 ```text
-who-got-hit/
-├── app.py                # FastAPI application
-├── requirements.txt
-├── wcl_fetch_events.py   # CLI: fetch events to JSONL
-├── wcl_hit_counter.py    # CLI: summarize hits from exports
-├── who_messed_up/
-│   ├── __init__.py
-│   ├── analysis.py       # Normalization and hit counting helpers
-│   ├── api.py            # Warcraft Logs GraphQL client helpers
-│   └── service.py        # Orchestration for the API/CLI layers
-└── README.md
+who-messed-up/
++-- app.py                 # FastAPI backend & SPA static serving
++-- frontend/              # React + Vite + Tailwind frontend
+¦   +-- src/
+¦   +-- dist/              # Production build output (generated)
++-- requirements.txt
++-- wcl_fetch_events.py
++-- wcl_hit_counter.py
++-- who_messed_up/
+¦   +-- __init__.py
+¦   +-- analysis.py
+¦   +-- api.py
+¦   +-- service.py
++-- README.md
 ```
 
 ---
@@ -169,3 +156,5 @@ who-got-hit/
 - Use HTTPS end-to-end.
 - Consider rate limiting, caching, and sanitizing user input.
 - Rotate secrets immediately if they leak or are suspected compromised.
+
+

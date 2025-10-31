@@ -7,6 +7,7 @@ import csv
 import json
 import re
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, Optional, Pattern, Tuple
 
@@ -94,6 +95,7 @@ def normalize_event(row: Dict[str, Any]) -> Dict[str, Any]:
     source_name = first_present(row, SOURCE_KEYS)
     event_type = first_present(row, TYPE_KEYS)
     amount = first_present(row, AMOUNT_KEYS)
+    fight_id = row.get("fight")
 
     normalized_id: Optional[str] = None
     if ability_id is not None and ability_id != "":
@@ -127,6 +129,7 @@ def normalize_event(row: Dict[str, Any]) -> Dict[str, Any]:
         "event_type": event_type,
         "amount": amount,
         "is_miss": is_miss,
+        "fight_id": fight_id,
     }
 
 
@@ -192,6 +195,15 @@ def iter_events_from_path(path: Path) -> Iterator[Dict[str, Any]]:
         yield row
 
 
+@dataclass
+class HitAggregate:
+    hits_by_player: Counter
+    hits_by_player_ability: Dict[Tuple[str, str], int]
+    damage_by_player: Counter
+    fight_total_hits: Dict[int, int]
+    fight_total_damage: Dict[int, float]
+
+
 def count_hits(
     events: Iterable[Dict[str, Any]],
     *,
@@ -199,9 +211,12 @@ def count_hits(
     only_ability: Optional[str] = None,
     only_ability_id: Optional[str] = None,
     only_source: Optional[str] = None,
-) -> Tuple[Counter, Dict[Tuple[str, str], int]]:
-    total_counter: Counter = Counter()
-    by_ability: Dict[Tuple[str, str], int] = defaultdict(int)
+) -> HitAggregate:
+    hits_by_player: Counter = Counter()
+    hits_by_player_ability: Dict[Tuple[str, str], int] = defaultdict(int)
+    damage_by_player: Counter = Counter()
+    fight_total_hits: Dict[int, int] = defaultdict(int)
+    fight_total_damage: Dict[int, float] = defaultdict(float)
 
     for raw in events:
         normalized = normalize_event(raw)
@@ -228,10 +243,36 @@ def count_hits(
         target = normalized["target_name"] or "Unknown Target"
         ability = normalized["ability_name"] or "Unknown Ability"
 
-        total_counter[target] += 1
-        by_ability[(target, ability)] += 1
+        hits_by_player[target] += 1
+        hits_by_player_ability[(target, ability)] += 1
 
-    return total_counter, by_ability
+        damage_value = normalized.get("amount")
+        if isinstance(damage_value, (int, float)):
+            damage_by_player[target] += float(damage_value)
+        fight_id = normalized.get("fight_id")
+        if isinstance(damage_value, (int, float)) and fight_id is not None:
+            try:
+                fight_key = int(fight_id)
+            except (TypeError, ValueError):
+                fight_key = None
+            if fight_key is not None:
+                fight_total_damage[fight_key] += float(damage_value)
+                fight_total_hits[fight_key] += 1
+        elif fight_id is not None:
+            try:
+                fight_key = int(fight_id)
+            except (TypeError, ValueError):
+                fight_key = None
+            if fight_key is not None:
+                fight_total_hits[fight_key] += 1
+
+    return HitAggregate(
+        hits_by_player=hits_by_player,
+        hits_by_player_ability=hits_by_player_ability,
+        damage_by_player=damage_by_player,
+        fight_total_hits=dict(fight_total_hits),
+        fight_total_damage=dict(fight_total_damage),
+    )
 
 
 def build_counter(
@@ -241,7 +282,7 @@ def build_counter(
     only_ability: Optional[str] = None,
     only_ability_id: Optional[int] = None,
     only_source: Optional[str] = None,
-) -> Tuple[Counter, Dict[Tuple[str, str], int]]:
+) -> HitAggregate:
     """
     Backwards-compatible wrapper that reads events from disk before counting.
     """

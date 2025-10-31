@@ -2,4 +2,6 @@
 Core package for interacting with Warcraft Logs data and computing hit summaries.
 """
 
-__all__ = ["api", "analysis", "service"]
+from .env import load_env  # noqa: F401
+
+__all__ = ["api", "analysis", "service", "load_env"]

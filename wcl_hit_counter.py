@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Tuple
 
+from who_messed_up.env import load_env
 from who_messed_up.analysis import build_counter
 
 
@@ -33,6 +34,8 @@ def write_summary_csv(out_path: Path, by_ability: Dict[Tuple[str, str], int]) ->
         w.writerows(rows)
 
 def main():
+    load_env()
+
     ap = argparse.ArgumentParser(description="Count how many times players got hit by abilities from a Warcraft Logs export (JSON/CSV).")
     ap.add_argument("input", type=str, help="Path to JSON/JSONL/CSV exported from Warcraft Logs (Events).")
     ap.add_argument("--only-ability", type=str, help="Exact ability name to include (case sensitive).")
@@ -49,7 +52,7 @@ def main():
 
     ability_re = re.compile(args.ability_regex) if args.ability_regex else None
 
-    total_counter, by_ability = build_counter(
+    aggregate = build_counter(
         path=path,
         ability_regex=ability_re,
         only_ability=args.only_ability,
@@ -57,14 +60,27 @@ def main():
         only_source=args.source,
     )
 
+    total_counter = aggregate.hits_by_player
+
     # Human-readable stdout summary
     print("=== Hits per player (all abilities) ===")
     for player, hits in sorted(total_counter.items(), key=lambda kv: (-kv[1], kv[0].lower())):
         print(f"{player}: {hits}")
 
+    if aggregate.damage_by_player:
+        print("\n=== Damage taken per player ===")
+        for player, dmg in sorted(aggregate.damage_by_player.items(), key=lambda kv: (-kv[1], kv[0].lower())):
+            print(f"{player}: {dmg:,.0f}")
+
+    if aggregate.fight_total_hits:
+        pull_count = len(aggregate.fight_total_hits)
+        total_hits = sum(aggregate.fight_total_hits.values())
+        avg_hits = total_hits / pull_count if pull_count else 0
+        print(f"\nPulls counted: {pull_count}  |  Total hits: {total_hits}  |  Avg hits per pull: {avg_hits:.2f}")
+
     # Detailed CSV (player, ability, hits)
     out_path = Path(args.output)
-    write_summary_csv(out_path, by_ability)
+    write_summary_csv(out_path, aggregate.hits_by_player_ability)
     print(f"\nDetailed breakdown written to: {out_path.resolve()}")
 
 if __name__ == "__main__":

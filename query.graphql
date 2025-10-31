@@ -1,0 +1,10 @@
+﻿query GetEvents($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $abilityID: Float) {
+  reportData {
+    report(code: $code) {
+      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, abilityID: $abilityID) {
+        data
+        nextPageTimestamp
+      }
+    }
+  }
+}

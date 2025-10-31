@@ -4,15 +4,20 @@ FastAPI application entry point exposing Warcraft Logs hit summaries.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from who_messed_up import load_env
 from who_messed_up.api import Fight
 from who_messed_up.service import FightSelectionError, HitSummary, TokenError, fetch_hit_summary
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
+load_env()
 
 
 class FightModel(BaseModel):
@@ -31,6 +36,14 @@ class BreakdownRow(BaseModel):
     player: str
     ability: str
     hits: int
+    damage: float
+
+
+class FightTotalsModel(BaseModel):
+    id: int
+    name: str
+    hits: int
+    damage: float
 
 
 class HitSummaryResponse(BaseModel):
@@ -39,8 +52,15 @@ class HitSummaryResponse(BaseModel):
     filters: Dict[str, Optional[str]]
     total_hits: Dict[str, int]
     per_player: Dict[str, int]
+    per_player_damage: Dict[str, float]
+    per_player_hits_per_pull: Dict[str, float]
+    total_damage: float
+    pull_count: int
+    average_hits_per_pull: float
     breakdown: List[BreakdownRow]
     fights: List[FightModel]
+    fight_totals: List[FightTotalsModel]
+    actors: Dict[int, str]
 
     @classmethod
     def from_summary(cls, summary: HitSummary) -> "HitSummaryResponse":
@@ -58,14 +78,37 @@ class HitSummaryResponse(BaseModel):
         if summary.fight_ids:
             filters["fight_ids"] = ",".join(str(fid) for fid in summary.fight_ids)
 
+        per_player_damage = {player: float(amount) for player, amount in summary.damage_per_player.items()}
+        per_player_hits_per_pull = {
+            player: float(value) for player, value in summary.per_player_hits_per_pull().items()
+        }
+
+        fight_totals = []
+        for fight in summary.fights_considered:
+            fight_totals.append(
+                FightTotalsModel(
+                    id=fight.id,
+                    name=fight.name,
+                    hits=summary.fight_total_hits.get(fight.id, 0),
+                    damage=float(summary.fight_total_damage.get(fight.id, 0.0)),
+                )
+            )
+
         return cls(
             report=summary.report_code,
             data_type=summary.data_type,
             filters=filters,
             total_hits=dict(summary.total_hits),
             per_player=per_player,
+            per_player_damage=per_player_damage,
+            per_player_hits_per_pull=per_player_hits_per_pull,
+            total_damage=summary.total_damage,
+            pull_count=summary.pull_count,
+            average_hits_per_pull=summary.average_hits_per_pull,
             breakdown=[BreakdownRow(**row) for row in breakdown_rows],
             fights=fights,
+            fight_totals=fight_totals,
+            actors=summary.actor_names,
         )
 
 
@@ -119,3 +162,29 @@ def get_hits(
         raise HTTPException(status_code=500, detail=f"Failed to fetch hits: {exc}") from exc
 
     return HitSummaryResponse.from_summary(summary)
+
+
+FRONTEND_DIST = Path(__file__).resolve().parent / "frontend" / "dist"
+
+if FRONTEND_DIST.exists():
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    async def serve_frontend() -> FileResponse:
+        return FileResponse(FRONTEND_DIST / "index.html")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    async def serve_spa(path: str):
+        index_file = FRONTEND_DIST / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        raise HTTPException(status_code=404, detail="Frontend build not found.")
+else:
+
+    @app.get("/", include_in_schema=False)
+    async def frontend_placeholder() -> Dict[str, str]:
+        return {
+            "detail": "Frontend build not found. Run `npm install` and `npm run build` inside the frontend/ directory."
+        }

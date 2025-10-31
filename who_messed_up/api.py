@@ -1,4 +1,4 @@
-"""
+﻿"""
 Utilities for querying the Warcraft Logs GraphQL API.
 """
 from __future__ import annotations
@@ -12,7 +12,7 @@ import requests
 API_URL = "https://www.warcraftlogs.com/api/v2/client"
 OAUTH_URL = "https://www.warcraftlogs.com/oauth/token"
 
-FIGHTS_QUERY = """
+REPORT_OVERVIEW_QUERY = """
 query($code: String!) {
   reportData {
     report(code: $code) {
@@ -26,19 +26,26 @@ query($code: String!) {
         endTime
         kill
       }
+      masterData {
+        actors {
+          id
+          name
+          type
+          subType
+        }
+      }
     }
   }
 }
 """
 
 EVENTS_QUERY = """
-query($code: String!, $dataType: ReportDataType!, $start: Float!, $end: Float!, $limit: Int!, $after: Float) {
+query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String) {
   reportData {
     report(code: $code) {
-      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, after: $after) {
+      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, filterExpression: $filter) {
         data
         nextPageTimestamp
-        pageInfo { hasMorePages endTime }
       }
     }
   }
@@ -53,6 +60,13 @@ class Fight:
     start: float
     end: float
     kill: bool
+
+
+@dataclass
+class ReportMetadata:
+    fights: List[Fight]
+    actors: Dict[int, str]
+    abilities: Dict[int, str]
 
 
 def get_token_from_client(
@@ -85,7 +99,15 @@ def gql(session: requests.Session, token: str, query: str, variables: Dict[str, 
     """
     headers = {"Authorization": f"Bearer {token}"}
     resp = session.post(API_URL, json={"query": query, "variables": variables}, headers=headers, timeout=60)
-    resp.raise_for_status()
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as exc:
+        detail = ""
+        try:
+            detail = resp.json()
+        except Exception:
+            detail = resp.text
+        raise requests.HTTPError(f"{exc} | Response: {detail}") from exc
     data = resp.json()
     errors = data.get("errors")
     if errors:
@@ -93,12 +115,26 @@ def gql(session: requests.Session, token: str, query: str, variables: Dict[str, 
     return data["data"]
 
 
-def fetch_fights(session: requests.Session, token: str, code: str) -> List[Fight]:
+def _build_actor_map(report: Dict[str, Any]) -> Dict[int, str]:
+    actors = (((report.get("masterData") or {})).get("actors") or [])
+    mapping: Dict[int, str] = {}
+    for actor in actors:
+        try:
+            actor_id = int(actor.get("id"))
+        except (TypeError, ValueError):
+            continue
+        name = actor.get("name")
+        if name:
+            mapping[actor_id] = name
+    return mapping
+
+
+def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List[Fight], Dict[int, str]]:
     """
-    Retrieve all fights for a report.
+    Retrieve all fights for a report along with the actor id -> name map.
     """
-    fights_data = gql(session, token, FIGHTS_QUERY, {"code": code})
-    report = fights_data["reportData"]["report"]
+    overview = gql(session, token, REPORT_OVERVIEW_QUERY, {"code": code})
+    report = overview["reportData"]["report"]
     fights: List[Fight] = []
     for raw in report.get("fights") or []:
         if raw.get("startTime") is None or raw.get("endTime") is None:
@@ -112,7 +148,64 @@ def fetch_fights(session: requests.Session, token: str, code: str) -> List[Fight
                 kill=bool(raw.get("kill")),
             )
         )
-    return fights
+    actors = _build_actor_map(report)
+    return fights, actors
+
+
+def _apply_actor_names(event: Dict[str, Any], actor_names: Dict[int, str]) -> None:
+    """
+    Mutate an event dict in-place to inject target/source names from actor metadata.
+    """
+    target_id = event.get("targetID")
+    if target_id is None and isinstance(event.get("target"), dict):
+        target_id = event["target"].get("id")
+    if target_id is not None:
+        try:
+            target_id_int = int(target_id)
+        except (TypeError, ValueError):
+            target_id_int = None
+        if target_id_int is not None:
+            name = actor_names.get(target_id_int)
+            if name:
+                if not isinstance(event.get("target"), dict):
+                    event["target"] = {}
+                event["target"]["name"] = event["target"].get("name") or name
+                event.setdefault("targetName", name)
+
+    source_id = event.get("sourceID")
+    if source_id is None and isinstance(event.get("source"), dict):
+        source_id = event["source"].get("id")
+    if source_id is not None:
+        try:
+            source_id_int = int(source_id)
+        except (TypeError, ValueError):
+            source_id_int = None
+        if source_id_int is not None:
+            name = actor_names.get(source_id_int)
+            if name:
+                if not isinstance(event.get("source"), dict):
+                    event["source"] = {}
+                event["source"]["name"] = event["source"].get("name") or name
+                event.setdefault("sourceName", name)
+
+
+def _compose_filter_expression(
+    *,
+    ability_id: Optional[int],
+    ability_name: Optional[str],
+    extra_filter: Optional[str],
+) -> Optional[str]:
+    parts: List[str] = []
+    if extra_filter:
+        parts.append(f"({extra_filter})")
+    if ability_id is not None:
+        parts.append(f"ability.id = {int(ability_id)}")
+    if ability_name:
+        safe_name = ability_name.replace('"', '\\"')
+        parts.append(f'ability.name = "{safe_name}"')
+    if not parts:
+        return None
+    return " and ".join(parts)
 
 
 def filter_fights(fights: List[Fight], name_filter: Optional[str]) -> List[Fight]:
@@ -134,45 +227,40 @@ def fetch_events(
     start: float,
     end: float,
     limit: int = 5000,
+    ability_id: Optional[int] = None,
+    ability_name: Optional[str] = None,
+    extra_filter: Optional[str] = None,
+    actor_names: Optional[Dict[int, str]] = None,
     sleep_seconds: float = 0.1,
 ) -> Iterator[Dict[str, Any]]:
     """
     Stream paginated events for a single fight window.
     """
-    after: Optional[float] = None
-    safety = 0
+    cursor: float = float(start)
 
     while True:
         variables = {
             "code": code,
             "dataType": data_type,
-            "start": float(start),
+            "start": float(cursor),
             "end": float(end),
             "limit": int(limit),
-            "after": float(after) if after is not None else None,
+            "filter": _compose_filter_expression(ability_id=ability_id, ability_name=ability_name, extra_filter=extra_filter),
         }
         payload = gql(session, token, EVENTS_QUERY, variables)
         events_data = payload["reportData"]["report"]["events"]
         rows = events_data.get("data") or []
         for row in rows:
+            if actor_names:
+                _apply_actor_names(row, actor_names)
             yield row
 
         next_ts = events_data.get("nextPageTimestamp")
-        has_more = bool((events_data.get("pageInfo") or {}).get("hasMorePages"))
 
         if next_ts is not None:
             if next_ts >= end:
                 break
-            after = float(next_ts + 1)
-        elif has_more:
-            if rows:
-                last_ts = rows[-1].get("timestamp")
-                after = float(last_ts + 1) if last_ts is not None else (after or start) + 1.0
-            else:
-                safety += 1
-                if safety > 5:
-                    break
-                after = (after or start) + 1000.0
+            cursor = float(next_ts + 1)
         else:
             break
 
@@ -187,6 +275,10 @@ def events_for_fights(
     data_type: str,
     fights: Iterable[Fight],
     limit: int = 5000,
+    ability_id: Optional[int] = None,
+    ability_name: Optional[str] = None,
+    extra_filter: Optional[str] = None,
+    actor_names: Optional[Dict[int, str]] = None,
     sleep_seconds: float = 0.1,
 ) -> Iterator[Dict[str, Any]]:
     """
@@ -201,6 +293,11 @@ def events_for_fights(
             start=fight.start,
             end=fight.end,
             limit=limit,
+            ability_id=ability_id,
+            ability_name=ability_name,
+            extra_filter=extra_filter,
+            actor_names=actor_names,
             sleep_seconds=sleep_seconds,
         ):
             yield event
+
