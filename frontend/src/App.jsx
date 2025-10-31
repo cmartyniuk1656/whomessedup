@@ -1,5 +1,23 @@
 import { useMemo, useState } from "react";
 
+const CLASS_COLORS = {
+  "Death Knight": "#C41E3A",
+  "Demon Hunter": "#A330C9",
+  Druid: "#FF7C0A",
+  Evoker: "#33937F",
+  Hunter: "#AAD372",
+  Mage: "#3FC7EB",
+  Monk: "#00FF98",
+  Paladin: "#F48CBA",
+  Priest: "#FFFFFF",
+  Rogue: "#FFF468",
+  Shaman: "#0070DD",
+  Warlock: "#8788EE",
+  Warrior: "#C69B6D",
+};
+
+const DEFAULT_PLAYER_COLOR = "#e2e8f0";
+
 const TILES = [
   {
     id: "besiege-hits",
@@ -44,11 +62,15 @@ function App() {
       .map(([player, hits]) => {
         const damage = result.per_player_damage?.[player] ?? 0;
         const hitsPerPull = result.per_player_hits_per_pull?.[player] ?? 0;
+        const playerClass = result.player_classes?.[player] ?? null;
+        const color = playerClass ? CLASS_COLORS[playerClass] ?? DEFAULT_PLAYER_COLOR : DEFAULT_PLAYER_COLOR;
         return {
           player,
           hits,
           damage,
           hitsPerPull,
+          className: playerClass,
+          color,
         };
       })
       .sort((a, b) => b.hits - a.hits);
@@ -236,7 +258,14 @@ function App() {
                   <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
                     {rows.map((row) => (
                       <tr key={row.player}>
-                        <td className="px-4 py-3 font-medium">{row.player}</td>
+                        <td className="px-4 py-3 font-medium">
+                          <span style={{ color: row.color }}>
+                            {row.player}
+                            {row.className ? (
+                              <span className="ml-2 text-xs text-slate-400">({row.className})</span>
+                            ) : null}
+                          </span>
+                        </td>
                         <td className="px-4 py-3 text-right font-semibold text-emerald-300">{formatInt(row.hits)}</td>
                         <td className="px-4 py-3 text-right text-slate-200">{formatDamage(row.damage)}</td>
                         <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.hitsPerPull, 2)}</td>
@@ -252,6 +281,25 @@ function App() {
                   </tbody>
                 </table>
               </div>
+
+              {result.fight_totals?.length ? (
+                <div className="mt-6 overflow-hidden rounded-xl border border-slate-800">
+                  <div className="bg-slate-900/80 px-4 py-3 text-xs uppercase tracking-widest text-slate-400">
+                    Per-pull totals
+                  </div>
+                  <ul className="divide-y divide-slate-800 bg-slate-900/40 text-sm text-slate-200">
+                    {result.fight_totals.map((fight) => (
+                      <li key={fight.id} className="flex items-center justify-between px-4 py-3">
+                        <span className="font-medium">{fight.name} #{formatInt(fight.id)}</span>
+                        <span className="space-x-4 text-xs text-slate-400">
+                          <span>Hits: {formatInt(fight.hits)}</span>
+                          <span>Damage: {formatDamage(fight.damage)}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           )}
         </section>

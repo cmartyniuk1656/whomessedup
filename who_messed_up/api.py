@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Dict, Iterable, Iterator, List, Optional, Any
+from typing import Dict, Iterable, Iterator, List, Optional, Any, Tuple
 
 import requests
 
@@ -32,6 +32,10 @@ query($code: String!) {
           name
           type
           subType
+        }
+        abilities {
+          gameID
+          name
         }
       }
     }
@@ -115,9 +119,11 @@ def gql(session: requests.Session, token: str, query: str, variables: Dict[str, 
     return data["data"]
 
 
-def _build_actor_map(report: Dict[str, Any]) -> Dict[int, str]:
-    actors = (((report.get("masterData") or {})).get("actors") or [])
-    mapping: Dict[int, str] = {}
+def _build_actor_maps(report: Dict[str, Any]) -> Tuple[Dict[int, str], Dict[int, Optional[str]]]:
+    master = report.get("masterData") or {}
+    actors = master.get("actors") or []
+    names: Dict[int, str] = {}
+    classes: Dict[int, Optional[str]] = {}
     for actor in actors:
         try:
             actor_id = int(actor.get("id"))
@@ -125,11 +131,15 @@ def _build_actor_map(report: Dict[str, Any]) -> Dict[int, str]:
             continue
         name = actor.get("name")
         if name:
-            mapping[actor_id] = name
-    return mapping
+            names[actor_id] = name
+        if (actor.get("type") or "").lower() == "player":
+            subtype = actor.get("subType") or actor.get("subtype")
+            if subtype:
+                classes[actor_id] = subtype
+    return names, classes
 
 
-def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List[Fight], Dict[int, str]]:
+def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List[Fight], Dict[int, str], Dict[int, Optional[str]]]:
     """
     Retrieve all fights for a report along with the actor id -> name map.
     """
@@ -148,8 +158,8 @@ def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List
                 kill=bool(raw.get("kill")),
             )
         )
-    actors = _build_actor_map(report)
-    return fights, actors
+    actor_names, actor_classes = _build_actor_maps(report)
+    return fights, actor_names, actor_classes
 
 
 def _apply_actor_names(event: Dict[str, Any], actor_names: Dict[int, str]) -> None:

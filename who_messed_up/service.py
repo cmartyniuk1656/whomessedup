@@ -31,6 +31,8 @@ class HitSummary:
     fight_total_damage: Dict[int, float]
     fights_considered: List[Fight]
     actor_names: Dict[int, str]
+    actor_classes: Dict[int, Optional[str]]
+    player_classes: Dict[str, Optional[str]]
 
     def per_player(self) -> Dict[str, int]:
         return dict(self.total_hits)
@@ -120,7 +122,7 @@ def fetch_hit_summary(
 
     session = requests.Session()
     bearer = _resolve_token(token, client_id, client_secret)
-    fights, actor_names = fetch_fights(session, bearer, report_code)
+    fights, actor_names, actor_classes = fetch_fights(session, bearer, report_code)
     chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
 
     ability_re = re.compile(ability_regex) if ability_regex else None
@@ -145,6 +147,16 @@ def fetch_hit_summary(
         only_source=source,
     )
 
+    name_to_class: Dict[str, Optional[str]] = {}
+    for actor_id, name in actor_names.items():
+        if name:
+            name_to_class[name] = actor_classes.get(actor_id)
+
+    player_classes = {
+        player: name_to_class.get(player)
+        for player in agg.hits_by_player.keys()
+    }
+
     return HitSummary(
         report_code=report_code,
         data_type=data_type,
@@ -161,4 +173,6 @@ def fetch_hit_summary(
         fight_total_damage=agg.fight_total_damage,
         fights_considered=chosen,
         actor_names=actor_names,
+        actor_classes=actor_classes,
+        player_classes=player_classes,
     )
