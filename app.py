@@ -63,6 +63,8 @@ class HitSummaryResponse(BaseModel):
     actors: Dict[int, str]
     actor_classes: Dict[int, Optional[str]]
     player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
 
     @classmethod
     def from_summary(cls, summary: HitSummary) -> "HitSummaryResponse":
@@ -113,6 +115,8 @@ class HitSummaryResponse(BaseModel):
             actors=summary.actor_names,
             actor_classes=summary.actor_classes,
             player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
         )
 
 

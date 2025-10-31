@@ -1,22 +1,46 @@
 import { useMemo, useState } from "react";
 
 const CLASS_COLORS = {
-  "Death Knight": "#C41E3A",
-  "Demon Hunter": "#A330C9",
-  Druid: "#FF7C0A",
-  Evoker: "#33937F",
-  Hunter: "#AAD372",
-  Mage: "#3FC7EB",
-  Monk: "#00FF98",
-  Paladin: "#F48CBA",
-  Priest: "#FFFFFF",
-  Rogue: "#FFF468",
-  Shaman: "#0070DD",
-  Warlock: "#8788EE",
-  Warrior: "#C69B6D",
+  deathknight: "#C41E3A",
+  demonhunter: "#A330C9",
+  druid: "#FF7C0A",
+  evoker: "#33937F",
+  hunter: "#AAD372",
+  mage: "#3FC7EB",
+  monk: "#00FF98",
+  paladin: "#F48CBA",
+  priest: "#FFFFFF",
+  rogue: "#FFF468",
+  shaman: "#0070DD",
+  warlock: "#8788EE",
+  warrior: "#C69B6D",
 };
 
 const DEFAULT_PLAYER_COLOR = "#e2e8f0";
+
+const ROLE_PRIORITY = {
+  Tank: 0,
+  Healer: 1,
+  Melee: 2,
+  Ranged: 3,
+  Unknown: 4,
+};
+
+const DEFAULT_SORT_DIRECTIONS = {
+  role: "asc",
+  player: "asc",
+  hits: "desc",
+  damage: "desc",
+  hitsPerPull: "desc",
+};
+
+const ROLE_BADGE_STYLES = {
+  Tank: "border border-amber-500/40 bg-amber-500/10 text-amber-200",
+  Healer: "border border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+  Melee: "border border-rose-500/40 bg-rose-500/10 text-rose-200",
+  Ranged: "border border-sky-500/40 bg-sky-500/10 text-sky-200",
+  Unknown: "border border-slate-600/40 bg-slate-700/30 text-slate-200",
+};
 
 const TILES = [
   {
@@ -55,6 +79,7 @@ function App() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [activeTile, setActiveTile] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: "role", direction: "asc" });
 
   const rows = useMemo(() => {
     if (!result?.per_player) return [];
@@ -63,7 +88,9 @@ function App() {
         const damage = result.per_player_damage?.[player] ?? 0;
         const hitsPerPull = result.per_player_hits_per_pull?.[player] ?? 0;
         const playerClass = result.player_classes?.[player] ?? null;
-        const color = playerClass ? CLASS_COLORS[playerClass] ?? DEFAULT_PLAYER_COLOR : DEFAULT_PLAYER_COLOR;
+        const normalizedClass = playerClass ? playerClass.replace(/\s+/g, "").toLowerCase() : null;
+        const color = normalizedClass ? CLASS_COLORS[normalizedClass] ?? DEFAULT_PLAYER_COLOR : DEFAULT_PLAYER_COLOR;
+        const role = result.player_roles?.[player] ?? "Unknown";
         return {
           player,
           hits,
@@ -71,10 +98,52 @@ function App() {
           hitsPerPull,
           className: playerClass,
           color,
+          role,
         };
-      })
-      .sort((a, b) => b.hits - a.hits);
+      });
   }, [result]);
+
+  const sortedRows = useMemo(() => {
+    const arr = [...rows];
+    const { key, direction } = sortConfig;
+    const dir = direction === "asc" ? 1 : -1;
+    arr.sort((a, b) => {
+      if (key === "role") {
+        const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+        const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+        if (aPriority !== bPriority) {
+          return (aPriority - bPriority) * dir;
+        }
+        if (b.hits !== a.hits) {
+          return (b.hits - a.hits) * dir;
+        }
+        return a.player.localeCompare(b.player) * dir;
+      }
+      if (key === "player") {
+        return a.player.localeCompare(b.player) * dir;
+      }
+      if (key === "hits") {
+        if (a.hits !== b.hits) {
+          return (a.hits - b.hits) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "damage") {
+        if (a.damage !== b.damage) {
+          return (a.damage - b.damage) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "hitsPerPull") {
+        if (a.hitsPerPull !== b.hitsPerPull) {
+          return (a.hitsPerPull - b.hitsPerPull) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      return 0;
+    });
+    return arr;
+  }, [rows, sortConfig]);
 
   const totalHits = useMemo(() => {
     if (!result?.total_hits) return 0;
@@ -95,6 +164,26 @@ function App() {
     typeof value === "number"
       ? value.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
       : value;
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      return { key, direction: DEFAULT_SORT_DIRECTIONS[key] || "asc" };
+    });
+  };
+
+  const renderSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return <span className="ml-2 text-slate-500">↕</span>;
+    }
+    return (
+      <span className="ml-2 text-emerald-300">
+        {sortConfig.direction === "asc" ? "▲" : "▼"}
+      </span>
+    );
+  };
 
   const handleTileClick = async (tile) => {
     setError("");
@@ -249,21 +338,71 @@ function App() {
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
                   <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
                     <tr>
-                      <th className="px-4 py-3 text-left">Player</th>
-                      <th className="px-4 py-3 text-right">Hits</th>
-                      <th className="px-4 py-3 text-right">Damage</th>
-                      <th className="px-4 py-3 text-right">Hits / Pull</th>
+                      <th className="px-4 py-3 text-left">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                          onClick={() => handleSort("player")}
+                        >
+                          Player
+                          {renderSortIcon("player")}
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-left">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                          onClick={() => handleSort("role")}
+                        >
+                          Role
+                          {renderSortIcon("role")}
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                          onClick={() => handleSort("hits")}
+                        >
+                          Hits
+                          {renderSortIcon("hits")}
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                          onClick={() => handleSort("damage")}
+                        >
+                          Damage
+                          {renderSortIcon("damage")}
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                          onClick={() => handleSort("hitsPerPull")}
+                        >
+                          Hits / Pull
+                          {renderSortIcon("hitsPerPull")}
+                        </button>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
-                    {rows.map((row) => (
+                    {sortedRows.map((row) => (
                       <tr key={row.player}>
                         <td className="px-4 py-3 font-medium">
-                          <span style={{ color: row.color }}>
-                            {row.player}
-                            {row.className ? (
-                              <span className="ml-2 text-xs text-slate-400">({row.className})</span>
-                            ) : null}
+                          <span style={{ color: row.color }}>{row.player}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                              ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                            }`}
+                          >
+                            {row.role}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-emerald-300">{formatInt(row.hits)}</td>
@@ -273,7 +412,7 @@ function App() {
                     ))}
                     {rows.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
+                        <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
                           No events matched the filters.
                         </td>
                       </tr>

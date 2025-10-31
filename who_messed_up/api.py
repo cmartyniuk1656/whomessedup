@@ -43,6 +43,16 @@ query($code: String!) {
 }
 """
 
+PLAYER_DETAILS_QUERY = """
+query($code: String!, $fightIDs: [Int!]) {
+  reportData {
+    report(code: $code) {
+      playerDetails(fightIDs: $fightIDs)
+    }
+  }
+}
+"""
+
 EVENTS_QUERY = """
 query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String) {
   reportData {
@@ -310,4 +320,16 @@ def events_for_fights(
             sleep_seconds=sleep_seconds,
         ):
             yield event
+
+
+def fetch_player_details(session: requests.Session, token: str, *, code: str, fight_ids: List[int]) -> Dict[str, Any]:
+    """
+    Retrieve the playerDetails JSON block for the given fights.
+    """
+    if not fight_ids:
+        return {}
+    variables = {"code": code, "fightIDs": [int(fid) for fid in fight_ids]}
+    payload = gql(session, token, PLAYER_DETAILS_QUERY, variables)
+    player_details = (((payload["reportData"]["report"].get("playerDetails") or {}).get("data") or {}).get("playerDetails") or {})
+    return player_details
 
