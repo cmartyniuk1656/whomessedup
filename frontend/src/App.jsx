@@ -34,6 +34,17 @@ const ROLE_BADGE_STYLES = {
   Unknown: "border border-slate-600/40 bg-slate-700/30 text-slate-200",
 };
 
+const BOSS_OPTIONS = [
+  "Plexus Sentinel",
+  "Loom'ithar",
+  "Soulbinder Naazindhri",
+  "Forgeweaver Araz",
+  "The Soul Hunters",
+  "Fractillus",
+  "Nexus-King Salhadaar",
+  "Dimensius, the All-Devouring",
+];
+
 const DEFAULT_SORT_DIRECTIONS = {
   role: "asc",
   player: "asc",
@@ -399,12 +410,19 @@ function App() {
             </label>
             <label className="flex w-full flex-col text-sm font-medium text-slate-300 sm:max-w-xs">
               Fight filter (optional)
-              <input
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-base text-white placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                placeholder="Defaults per tile"
+              <select
+                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-base text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                 value={fightOverride}
                 onChange={(event) => setFightOverride(event.target.value)}
-              />
+              >
+                <option value="">All fights</option>
+                {BOSS_OPTIONS.map((boss) => (
+                  <option key={boss} value={boss}>
+                    {boss}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 text-xs text-slate-400">Use this to restrict the report to a specific boss.</span>
             </label>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
