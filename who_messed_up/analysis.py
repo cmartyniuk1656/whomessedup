@@ -133,6 +133,21 @@ def normalize_event(row: Dict[str, Any]) -> Dict[str, Any]:
         except Exception:
             timestamp = None
 
+    source_id = row.get("sourceID")
+    if source_id is None and isinstance(row.get("source"), dict):
+        source_id = row["source"].get("id")
+    target_id = row.get("targetID")
+    if target_id is None and isinstance(row.get("target"), dict):
+        target_id = row["target"].get("id")
+
+    def _normalize_int(value: Any) -> Optional[int]:
+        if value is None or value == "":
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
     return {
         "ability_name": ability_name,
         "ability_id": normalized_id,
@@ -143,6 +158,8 @@ def normalize_event(row: Dict[str, Any]) -> Dict[str, Any]:
         "is_miss": is_miss,
         "fight_id": fight_id,
         "timestamp": timestamp,
+        "source_id": _normalize_int(source_id),
+        "target_id": _normalize_int(target_id),
     }
 
 
@@ -220,8 +237,8 @@ class HitAggregate:
 
 @dataclass
 class AmountAggregate:
-    amount_by_player: Dict[str, float]
-    amount_by_player_fight: Dict[Tuple[str, int], float]
+    amount_by_actor: Dict[Any, float]
+    amount_by_actor_fight: Dict[Tuple[Any, int], float]
 
 
 def count_hits(
@@ -348,18 +365,21 @@ def aggregate_amounts(
     events: Iterable[Dict[str, Any]],
     *,
     actor_field: str = "source_name",
+    actor_id_field: str = "source_id",
 ) -> AmountAggregate:
     """
-    Sum event ``amount`` values grouped by actor and fight.
+    Sum event ``amount`` values grouped by actor (preferring IDs) and fight.
     """
-    amount_by_player: Dict[str, float] = defaultdict(float)
-    amount_by_player_fight: Dict[Tuple[str, int], float] = defaultdict(float)
+    amount_by_actor: Dict[Any, float] = defaultdict(float)
+    amount_by_actor_fight: Dict[Tuple[Any, int], float] = defaultdict(float)
 
     for raw in events:
         normalized = normalize_event(raw)
 
-        actor = normalized.get(actor_field)
-        if not actor:
+        actor_key: Any = normalized.get(actor_id_field)
+        if actor_key is None:
+            actor_key = normalized.get(actor_field)
+        if actor_key in (None, ""):
             continue
 
         amount = normalized.get("amount")
@@ -367,7 +387,7 @@ def aggregate_amounts(
             continue
         amount_value = float(amount)
 
-        amount_by_player[actor] += amount_value
+        amount_by_actor[actor_key] += amount_value
 
         fight_id = normalized.get("fight_id")
         if fight_id is not None:
@@ -376,9 +396,9 @@ def aggregate_amounts(
             except (TypeError, ValueError):
                 fight_key = None
             if fight_key is not None:
-                amount_by_player_fight[(actor, fight_key)] += amount_value
+                amount_by_actor_fight[(actor_key, fight_key)] += amount_value
 
     return AmountAggregate(
-        amount_by_player=dict(amount_by_player),
-        amount_by_player_fight=dict(amount_by_player_fight),
+        amount_by_actor=dict(amount_by_actor),
+        amount_by_actor_fight=dict(amount_by_actor_fight),
     )

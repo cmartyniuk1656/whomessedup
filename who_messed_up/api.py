@@ -1,4 +1,4 @@
-﻿"""
+"""
 Utilities for querying the Warcraft Logs GraphQL API.
 """
 from __future__ import annotations
@@ -32,6 +32,7 @@ query($code: String!) {
           name
           type
           subType
+          petOwner
         }
         abilities {
           gameID
@@ -65,6 +66,7 @@ query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $
   }
 }
 """
+
 
 
 @dataclass
@@ -129,11 +131,12 @@ def gql(session: requests.Session, token: str, query: str, variables: Dict[str, 
     return data["data"]
 
 
-def _build_actor_maps(report: Dict[str, Any]) -> Tuple[Dict[int, str], Dict[int, Optional[str]]]:
+def _build_actor_maps(report: Dict[str, Any]) -> Tuple[Dict[int, str], Dict[int, Optional[str]], Dict[int, Optional[int]]]:
     master = report.get("masterData") or {}
     actors = master.get("actors") or []
     names: Dict[int, str] = {}
     classes: Dict[int, Optional[str]] = {}
+    owners: Dict[int, Optional[int]] = {}
     for actor in actors:
         try:
             actor_id = int(actor.get("id"))
@@ -146,13 +149,16 @@ def _build_actor_maps(report: Dict[str, Any]) -> Tuple[Dict[int, str], Dict[int,
             subtype = actor.get("subType") or actor.get("subtype")
             if subtype:
                 classes[actor_id] = subtype
-    return names, classes
+        owner_id = actor.get("petOwner")
+        if owner_id not in (None, ""):
+            try:
+                owners[actor_id] = int(owner_id)
+            except (TypeError, ValueError):
+                continue
+    return names, classes, owners
 
 
-def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List[Fight], Dict[int, str], Dict[int, Optional[str]]]:
-    """
-    Retrieve all fights for a report along with the actor id -> name map.
-    """
+def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List[Fight], Dict[int, str], Dict[int, Optional[str]], Dict[int, Optional[int]]]:
     overview = gql(session, token, REPORT_OVERVIEW_QUERY, {"code": code})
     report = overview["reportData"]["report"]
     fights: List[Fight] = []
@@ -168,8 +174,8 @@ def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List
                 kill=bool(raw.get("kill")),
             )
         )
-    actor_names, actor_classes = _build_actor_maps(report)
-    return fights, actor_names, actor_classes
+    actor_names, actor_classes, actor_owners = _build_actor_maps(report)
+    return fights, actor_names, actor_classes, actor_owners
 
 
 def _apply_actor_names(event: Dict[str, Any], actor_names: Dict[int, str]) -> None:

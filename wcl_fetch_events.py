@@ -49,7 +49,7 @@ def main():
     s = requests.Session()
 
     try:
-        fights, actor_names = fetch_fights(s, token, args.report_code)
+        fights, actor_names, actor_classes, actor_owners = fetch_fights(s, token, args.report_code)
     except Exception as exc:
         print(f"ERROR fetching fights: {exc}", file=sys.stderr)
         sys.exit(2)

@@ -62,7 +62,7 @@ const TILES = [
     title: "Nexus-King Phase 1 - Fuck Ups",
     description:
       "Combine Besiege hits and Oathbound ghost misses into a single per-player dashboard for Nexus-King Salhadaar pulls.",
-    defaultFight: "Nexus-King",
+    defaultFight: "Nexus-King Salhadaar",
     endpoint: "/api/nexus-phase1",
     params: {
       hit_ability_id: 1227472,
@@ -90,7 +90,7 @@ const TILES = [
     title: "Nexus-King Phase Damage Report",
     description:
       "Summarize total damage or healing per phase across all Nexus-King Salhadaar pulls, with per-pull averages.",
-    defaultFight: "Nexus-King",
+    defaultFight: "Nexus-King Salhadaar",
     endpoint: "/api/nexus-phase-damage",
     mode: "phase-damage",
     defaultSort: { key: "role", direction: "asc" },
@@ -161,7 +161,7 @@ function extractReportCode(input) {
 
 function App() {
   const [reportInput, setReportInput] = useState("");
-  const [fightOverride, setFightOverride] = useState("");
+  const [fightOverride, setFightOverride] = useState(TILES[0]?.defaultFight ?? "");
   const [ignoreAfterDeaths, setIgnoreAfterDeaths] = useState("");
   const [ignoreFinalSeconds, setIgnoreFinalSeconds] = useState("");
   const [activeTile, setActiveTile] = useState(TILES[0]?.id ?? null);
@@ -173,6 +173,7 @@ function App() {
   const [showConfig, setShowConfig] = useState(false);
   const [configValues, setConfigValues] = useState({});
   const [savedConfigs, setSavedConfigs] = useState({});
+  const isBusy = loadingId !== null;
 
   const currentTile = useMemo(
     () => TILES.find((tile) => tile.id === activeTile) ?? TILES[0] ?? null,
@@ -417,6 +418,14 @@ function App() {
       return;
     }
 
+    let effectiveFight = fightOverride;
+    if (tile.defaultFight) {
+      effectiveFight = tile.defaultFight;
+      if (fightOverride !== tile.defaultFight) {
+        setFightOverride(tile.defaultFight);
+      }
+    }
+
     const resolvedConfig = {};
     if (tile.configOptions?.length) {
       tile.configOptions.forEach((opt) => {
@@ -436,7 +445,7 @@ function App() {
     setLoadingId(tile.id);
     try {
       const params = new URLSearchParams({ report: code });
-      const fightName = (fightOverride || tile.defaultFight || "").trim();
+      const fightName = (effectiveFight || "").trim();
       if (fightName) {
         params.set("fight", fightName);
       }
@@ -490,6 +499,9 @@ function App() {
   };
 
   const handleTileClick = (tile) => {
+    if (isBusy) {
+      return;
+    }
     if (tile.configOptions?.length) {
       const saved = savedConfigs[tile.id] ?? {};
       const initial = {};
@@ -550,6 +562,7 @@ function App() {
                 placeholder="https://www.warcraftlogs.com/reports/..."
                 value={reportInput}
                 onChange={(event) => setReportInput(event.target.value)}
+                disabled={isBusy}
               />
             </label>
             <label className="flex w-full flex-col text-sm font-medium text-slate-300 sm:max-w-xs">
@@ -558,6 +571,7 @@ function App() {
                 className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-base text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                 value={fightOverride}
                 onChange={(event) => setFightOverride(event.target.value)}
+                disabled={isBusy}
               >
                 <option value="">All fights</option>
                 {BOSS_OPTIONS.map((boss) => (
@@ -577,6 +591,7 @@ function App() {
                 placeholder="e.g. 3"
                 value={ignoreAfterDeaths}
                 onChange={(event) => setIgnoreAfterDeaths(event.target.value)}
+                disabled={isBusy}
               />
             </label>
             <label className="flex w-full flex-col text-sm font-medium text-slate-300">
@@ -586,6 +601,7 @@ function App() {
                 placeholder="e.g. 10"
                 value={ignoreFinalSeconds}
                 onChange={(event) => setIgnoreFinalSeconds(event.target.value)}
+                disabled={isBusy}
               />
             </label>
           </div>
@@ -609,7 +625,7 @@ function App() {
                   type="button"
                   onClick={() => handleTileClick(tile)}
                   className="group flex h-full flex-col rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-left shadow-lg shadow-emerald-500/5 transition hover:border-emerald-400 hover:shadow-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-950"
-                  disabled={isLoading}
+                  disabled={isBusy}
                 >
                   <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-emerald-400">
                     Raid Tool
@@ -918,6 +934,7 @@ function App() {
                     className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-400"
                     checked={!!configValues[option.id]}
                     onChange={(event) => handleConfigOptionChange(option.id, event.target.checked)}
+                    disabled={isBusy}
                   />
                   <span>{option.label}</span>
                 </label>
@@ -928,6 +945,7 @@ function App() {
                 type="button"
                 onClick={handleConfigCancel}
                 className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+                disabled={isBusy}
               >
                 Cancel
               </button>
@@ -935,6 +953,7 @@ function App() {
                 type="button"
                 onClick={handleConfigConfirm}
                 className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+                disabled={isBusy}
               >
                 Run Report
               </button>

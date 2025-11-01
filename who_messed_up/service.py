@@ -90,6 +90,15 @@ ROLE_PRIORITY: Dict[str, int] = {
     ROLE_UNKNOWN: 4,
 }
 
+NEXUS_PHASE_LABELS: Dict[str, str] = {
+    "full": "Full Fight",
+    "1": "Stage One: Oath Breakers",
+    "2": "Stage Two: Rider's of the Dark",
+    "3": "Intermission One: Nexus Descent",
+    "4": "Intermission Two: King's Hunger",
+    "5": "Stage Three: World in Twilight",
+}
+
 
 def _extract_spec(entry: Dict[str, Any]) -> Optional[str]:
     specs = entry.get("specs") or []
@@ -169,7 +178,7 @@ class HitSummary:
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
     hits_by_player_fight: Dict[Tuple[str, int], int]
-    player_roles_by_fight: Dict[int, Dict[str, str]]
+    roles_by_fight: Dict[int, Dict[str, str]]
 
     def per_player(self) -> Dict[str, int]:
         return dict(self.total_hits)
@@ -228,7 +237,7 @@ class GhostSummary:
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
     ghost_counts_by_player_fight: Dict[Tuple[int, str], int]
-    player_roles_by_fight: Dict[int, Dict[str, str]]
+    roles_by_fight: Dict[int, Dict[str, str]]
     @property
     def pull_count(self) -> int:
         return len(self.fights_considered)
@@ -367,7 +376,7 @@ def fetch_hit_summary(
 
     session = requests.Session()
     bearer = _resolve_token(token, client_id, client_secret)
-    fights, actor_names, actor_classes = fetch_fights(session, bearer, report_code)
+    fights, actor_names, actor_classes, actor_owners = fetch_fights(session, bearer, report_code)
     chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
 
     ability_re = re.compile(ability_regex) if ability_regex else None
@@ -375,12 +384,12 @@ def fetch_hit_summary(
     fight_id_list = [fight.id for fight in chosen]
     player_details = fetch_player_details(session, bearer, code=report_code, fight_ids=fight_id_list)
     player_roles, player_specs = _infer_player_roles(player_details)
-    player_roles_by_fight: Dict[int, Dict[str, str]] = {}
+    roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
         fight_details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
         fight_roles, _ = _infer_player_roles(fight_details)
         if fight_roles:
-            player_roles_by_fight[fight.id] = fight_roles
+            roles_by_fight[fight.id] = fight_roles
     death_cutoffs_by_fight: Dict[int, float] = {}
     if ignore_after_deaths and ignore_after_deaths > 0:
         for fight in chosen:
@@ -502,7 +511,7 @@ def fetch_hit_summary(
         player_roles=player_roles_full,
         player_specs=player_specs_full,
         hits_by_player_fight=dict(agg.hits_by_player_fight),
-        player_roles_by_fight=player_roles_by_fight,
+        roles_by_fight=roles_by_fight,
     )
 
 
@@ -521,7 +530,7 @@ def fetch_ghost_summary(
 
     session = requests.Session()
     bearer = _resolve_token(token, client_id, client_secret)
-    fights, actor_names, actor_classes = fetch_fights(session, bearer, report_code)
+    fights, actor_names, actor_classes, actor_owners = fetch_fights(session, bearer, report_code)
     chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
     fight_id_list = [fight.id for fight in chosen]
 
@@ -529,12 +538,12 @@ def fetch_ghost_summary(
     player_roles, player_specs = _infer_player_roles(aggregated_details)
 
     pulls_per_player: Dict[str, int] = defaultdict(int)
-    player_roles_by_fight: Dict[int, Dict[str, str]] = {}
+    roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
         details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
         fight_roles, _ = _infer_player_roles(details)
         if fight_roles:
-            player_roles_by_fight[fight.id] = fight_roles
+            roles_by_fight[fight.id] = fight_roles
         for name in set(_players_from_details(details)):
             pulls_per_player[name] += 1
 
@@ -635,8 +644,38 @@ def fetch_ghost_summary(
         player_roles=player_roles_full,
         player_specs=player_specs_full,
         ghost_counts_by_player_fight=dict(ghost_counts_by_fight),
-        player_roles_by_fight=player_roles_by_fight,
+        roles_by_fight=roles_by_fight,
     )
+
+
+def _normalize_phase_ids(phases: Optional[Iterable[str]]) -> List[str]:
+    normalized: List[str] = []
+    seen: Set[str] = set()
+    if phases:
+        for raw in phases:
+            if raw is None:
+                continue
+            text_value = str(raw).strip()
+            if not text_value:
+                continue
+            lowered = text_value.lower()
+            if lowered in {"full", "all"}:
+                key = "full"
+            else:
+                try:
+                    phase_int = int(lowered)
+                except ValueError:
+                    continue
+                if phase_int < 1 or phase_int > 5:
+                    continue
+                key = str(phase_int)
+            if key not in NEXUS_PHASE_LABELS or key in seen:
+                continue
+            normalized.append(key)
+            seen.add(key)
+    if not normalized:
+        normalized.append("full")
+    return normalized
 
 
 def fetch_phase_summary(
@@ -656,15 +695,14 @@ def fetch_phase_summary(
     first_hit_only_hits: bool = True,
     first_hit_only_ghosts: bool = True,
 ) -> PhaseSummary:
-    """
-    Aggregate Besiege hits and Oathbound ghost misses into a combined per-player report.
-    """
+    fight_id_filter = [int(fid) for fid in fight_ids] if fight_ids else None
+
     hit_summary = fetch_hit_summary(
         report_code=report_code,
         data_type=hit_data_type,
         ability_id=besiege_ability_id,
         fight_name=fight_name,
-        fight_ids=fight_ids,
+        fight_ids=fight_id_filter,
         token=token,
         client_id=client_id,
         client_secret=client_secret,
@@ -677,117 +715,136 @@ def fetch_phase_summary(
         report_code=report_code,
         ability_id=ghost_ability_id,
         fight_name=fight_name,
-        fight_ids=fight_ids,
+        fight_ids=fight_id_filter,
         token=token,
         client_id=client_id,
         client_secret=client_secret,
         first_miss_only=first_hit_only_ghosts,
     )
 
-    pull_count = ghost_summary.pull_count or hit_summary.pull_count
+    fights = list(hit_summary.fights_considered)
+    if not fights:
+        fights = list(ghost_summary.fights_considered)
+    pull_count = len(fights)
 
     roles_by_fight: Dict[int, Dict[str, str]] = {}
-    roles_by_fight.update(hit_summary.player_roles_by_fight)
-    for fight_id, mapping in ghost_summary.player_roles_by_fight.items():
+    roles_by_fight.update(hit_summary.roles_by_fight or {})
+    for fight_id, mapping in ghost_summary.roles_by_fight.items():
         roles_by_fight.setdefault(fight_id, {}).update(mapping)
 
-    fight_ids_by_player_role: Dict[Tuple[str, str], Set[int]] = defaultdict(set)
-    besiege_by_player_role: Dict[Tuple[str, str], int] = defaultdict(int)
-    ghost_by_player_role: Dict[Tuple[str, str], int] = defaultdict(int)
+    hits_by_player_fight = dict(hit_summary.hits_by_player_fight)
+    hits_by_fight: Dict[int, Dict[str, int]] = defaultdict(dict)
+    for (player, fight_id), count in hits_by_player_fight.items():
+        hits_by_fight[int(fight_id)][player] = count
 
-    for (player, fight_id), hits in hit_summary.hits_by_player_fight.items():
-        role = roles_by_fight.get(fight_id, {}).get(player)
-        if not role:
-            role = hit_summary.player_roles_by_fight.get(fight_id, {}).get(player) if hit_summary.player_roles_by_fight else None
-        if not role:
-            role = hit_summary.player_roles.get(player) or ghost_summary.player_roles.get(player) or ROLE_UNKNOWN
-        key = (player, role)
-        besiege_by_player_role[key] += hits
-        fight_ids_by_player_role[key].add(fight_id)
+    ghost_counts_by_player_fight: Dict[Tuple[str, int], int] = {}
+    for (fight_id, player), count in ghost_summary.ghost_counts_by_player_fight.items():
+        ghost_counts_by_player_fight[(player, int(fight_id))] = count
+    ghosts_by_fight: Dict[int, Dict[str, int]] = defaultdict(dict)
+    for (player, fight_id), count in ghost_counts_by_player_fight.items():
+        ghosts_by_fight[fight_id][player] = count
 
-    for (fight_id, player), misses in ghost_summary.ghost_counts_by_player_fight.items():
-        role = roles_by_fight.get(fight_id, {}).get(player)
-        if not role:
-            role = ghost_summary.player_roles_by_fight.get(fight_id, {}).get(player) if ghost_summary.player_roles_by_fight else None
-        if not role:
-            role = ghost_summary.player_roles.get(player) or hit_summary.player_roles.get(player) or ROLE_UNKNOWN
-        key = (player, role)
-        ghost_by_player_role[key] += misses
-        fight_ids_by_player_role[key].add(fight_id)
+    players: Set[str] = set(hit_summary.total_hits.keys())
+    players.update(ghost_summary.per_player_misses().keys())
+    for mapping in roles_by_fight.values():
+        players.update(mapping.keys())
 
-    for fight_id, role_map in roles_by_fight.items():
-        for player, role in role_map.items():
-            key = (player, role or ROLE_UNKNOWN)
-            fight_ids_by_player_role[key].add(fight_id)
+    player_classes = dict(hit_summary.player_classes)
+    for player, class_name in ghost_summary.player_classes.items():
+        if player not in player_classes or player_classes[player] is None:
+            player_classes[player] = class_name
 
-    player_classes: Dict[str, Optional[str]] = {}
-    player_classes.update(hit_summary.player_classes)
-    player_classes.update(ghost_summary.player_classes)
-    player_roles: Dict[str, str] = {}
-    player_roles.update(hit_summary.player_roles)
-    player_roles.update(ghost_summary.player_roles)
-    player_specs: Dict[str, Optional[str]] = {}
-    player_specs.update(hit_summary.player_specs)
-    player_specs.update(ghost_summary.player_specs)
+    player_roles = dict(hit_summary.player_roles)
+    for player, role in ghost_summary.player_roles.items():
+        player_roles.setdefault(player, role)
 
-    all_player_roles = set(besiege_by_player_role.keys()) | set(ghost_by_player_role.keys()) | set(fight_ids_by_player_role.keys())
+    player_specs = dict(hit_summary.player_specs)
+    for player, spec in ghost_summary.player_specs.items():
+        if player not in player_specs or player_specs[player] is None:
+            player_specs[player] = spec
+
+    pulls_by_key: Dict[Tuple[str, str], int] = defaultdict(int)
+    besieges_by_key: Dict[Tuple[str, str], int] = defaultdict(int)
+    ghosts_by_key: Dict[Tuple[str, str], int] = defaultdict(int)
+
+    for fight in fights:
+        fight_roles = roles_by_fight.get(fight.id, {})
+        hits_map = hits_by_fight.get(fight.id, {})
+        ghosts_map = ghosts_by_fight.get(fight.id, {})
+        participants = set(fight_roles.keys()) | set(hits_map.keys()) | set(ghosts_map.keys())
+        if not participants:
+            continue
+        for player in participants:
+            role = fight_roles.get(player) or player_roles.get(player) or ROLE_UNKNOWN
+            key = (player, role)
+            pulls_by_key[key] += 1
+            besieges_by_key[key] += hits_map.get(player, 0)
+            ghosts_by_key[key] += ghosts_map.get(player, 0)
+            players.add(player)
+            if player not in player_roles:
+                player_roles[player] = role
+
+    for player in players:
+        player_classes.setdefault(player, None)
+        player_roles.setdefault(player, ROLE_UNKNOWN)
+        player_specs.setdefault(player, None)
 
     entries: List[PhasePlayerEntry] = []
-    for player, role in sorted(
-        all_player_roles,
-        key=lambda item: (
-            ROLE_PRIORITY.get(item[1] or ROLE_UNKNOWN, ROLE_PRIORITY["Unknown"]),
-            item[0].lower(),
-        ),
-    ):
-        key = (player, role or ROLE_UNKNOWN)
-        pulls = len(fight_ids_by_player_role.get(key, set()))
-        besiege_hits = besiege_by_player_role.get(key, 0)
-        ghost_misses = ghost_by_player_role.get(key, 0)
-        ghost_per_pull = ghost_misses / pulls if pulls else 0.0
-        besiege_per_pull = besiege_hits / pulls if pulls else 0.0
-        fuckup_rate = besiege_per_pull + ghost_per_pull
+    total_besieges = 0
+    total_ghosts = 0
 
-        if pulls == 0 and besiege_hits == 0 and ghost_misses == 0:
+    for (player, role), pulls in pulls_by_key.items():
+        if pulls <= 0:
             continue
+        bes_hits = besieges_by_key.get((player, role), 0)
+        ghost_misses = ghosts_by_key.get((player, role), 0)
+        bes_per_pull = bes_hits / pulls if pulls else 0.0
+        ghost_per_pull = ghost_misses / pulls if pulls else 0.0
+        fuckup_rate = bes_per_pull + ghost_per_pull
 
-        if player not in player_classes:
-            player_classes[player] = hit_summary.player_classes.get(player) or ghost_summary.player_classes.get(player)
-        if player not in player_roles:
-            player_roles[player] = role or ROLE_UNKNOWN
+        total_besieges += bes_hits
+        total_ghosts += ghost_misses
 
         entries.append(
             PhasePlayerEntry(
                 player=player,
-                role=role or ROLE_UNKNOWN,
+                role=role,
                 class_name=player_classes.get(player),
                 pulls=pulls,
-                besiege_hits=besiege_hits,
-                besiege_per_pull=besiege_per_pull,
+                besiege_hits=bes_hits,
+                besiege_per_pull=bes_per_pull,
                 ghost_misses=ghost_misses,
                 ghost_per_pull=ghost_per_pull,
                 fuckup_rate=fuckup_rate,
             )
         )
 
-    total_besieges = sum(hit_summary.total_hits.values())
-    total_ghosts = sum(ghost_by_player_role.values())
-    avg_besieges = total_besieges / pull_count if pull_count else 0.0
-    avg_ghosts = total_ghosts / pull_count if pull_count else 0.0
+    entries.sort(
+        key=lambda entry: (
+            ROLE_PRIORITY.get(entry.role or ROLE_UNKNOWN, ROLE_PRIORITY[ROLE_UNKNOWN]),
+            -entry.fuckup_rate,
+            -entry.pulls,
+            entry.player.lower(),
+        )
+    )
+
+    avg_besieges_per_pull = total_besieges / pull_count if pull_count else 0.0
+    avg_ghosts_per_pull = total_ghosts / pull_count if pull_count else 0.0
+    combined_per_pull = (total_besieges + total_ghosts) / pull_count if pull_count else 0.0
 
     return PhaseSummary(
         report_code=report_code,
         fight_filter=fight_name,
-        fight_ids=list(int(fid) for fid in fight_ids) if fight_ids else None,
+        fight_ids=fight_id_filter,
         pull_count=pull_count,
         besiege_ability_id=besiege_ability_id,
         ghost_ability_id=ghost_ability_id,
         entries=entries,
         total_besieges=total_besieges,
         total_ghosts=total_ghosts,
-        avg_besieges_per_pull=avg_besieges,
-        avg_ghosts_per_pull=avg_ghosts,
-        combined_per_pull=avg_besieges + avg_ghosts,
+        avg_besieges_per_pull=avg_besieges_per_pull,
+        avg_ghosts_per_pull=avg_ghosts_per_pull,
+        combined_per_pull=combined_per_pull,
         player_classes=player_classes,
         player_roles=player_roles,
         player_specs=player_specs,
@@ -798,20 +855,10 @@ def fetch_phase_summary(
     )
 
 
-NEXUS_PHASE_LABELS: Dict[str, str] = {
-    "1": "Stage One: Oath Breakers",
-    "2": "Stage Two: Rider's of the Dark",
-    "3": "Intermission One: Nexus Descent",
-    "4": "Intermission Two: King's Hunger",
-    "5": "Stage Three: World in Twilight",
-    "full": "Full Fight",
-}
-
-
 def fetch_phase_damage_summary(
     *,
     report_code: str,
-    phases: Iterable[str],
+    phases: Optional[Iterable[str]] = None,
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
     token: Optional[str] = None,
@@ -820,45 +867,62 @@ def fetch_phase_damage_summary(
 ) -> PhaseDamageSummary:
     load_env()
 
-    seen_phases: Set[str] = set()
-    selected_phases: List[str] = []
-    for phase in phases:
-        if phase in NEXUS_PHASE_LABELS and phase not in seen_phases:
-            seen_phases.add(phase)
-            selected_phases.append(phase)
-    if not selected_phases:
-        selected_phases = ["full"]
+    fight_id_filter = [int(fid) for fid in fight_ids] if fight_ids else None
 
     session = requests.Session()
     bearer = _resolve_token(token, client_id, client_secret)
-    fights, actor_names, actor_classes = fetch_fights(session, bearer, report_code)
-    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
+    fights, actor_names, actor_classes, actor_owners = fetch_fights(session, bearer, report_code)
+    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_id_filter)
+
+    selected_phases = _normalize_phase_ids(phases)
 
     fight_id_list = [fight.id for fight in chosen]
     aggregated_details = fetch_player_details(session, bearer, code=report_code, fight_ids=fight_id_list)
     player_roles_global, player_specs_global = _infer_player_roles(aggregated_details)
 
-    player_roles_by_fight: Dict[int, Dict[str, str]] = {}
+    roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
         details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
         fight_roles, _ = _infer_player_roles(details)
         if fight_roles:
-            player_roles_by_fight[fight.id] = fight_roles
+            roles_by_fight[fight.id] = fight_roles
+
+    valid_players: Set[str] = set(player_roles_global.keys())
+    for fight_roles in roles_by_fight.values():
+        valid_players.update(name for name in fight_roles if name)
+
+    player_classes: Dict[str, Optional[str]] = {
+        name: actor_classes.get(actor_id)
+        for actor_id, name in actor_names.items()
+        if name
+    }
+    player_roles: Dict[str, str] = dict(player_roles_global)
+    player_specs: Dict[str, Optional[str]] = dict(player_specs_global)
+
+    fight_ids_by_player_role: Dict[Tuple[str, str], Set[int]] = defaultdict(set)
 
     damage_aggregates: Dict[str, AmountAggregate] = {}
     healing_aggregates: Dict[str, AmountAggregate] = {}
 
-    for phase in selected_phases:
-        extra_filter = None if phase == "full" else f"phase = {int(phase)}"
+    for phase_id in selected_phases:
+        filter_expr = None
+        if phase_id != "full":
+            try:
+                numeric_phase = int(phase_id)
+                filter_expr = f"encounterPhase = {numeric_phase}"
+            except ValueError:
+                filter_expr = None
+
         damage_events = events_for_fights(
             session,
             bearer,
             code=report_code,
             data_type="DamageDone",
             fights=chosen,
+            limit=5000,
             ability_id=None,
             ability_name=None,
-            extra_filter=extra_filter,
+            extra_filter=filter_expr,
             actor_names=actor_names,
         )
         healing_events = events_for_fights(
@@ -867,65 +931,128 @@ def fetch_phase_damage_summary(
             code=report_code,
             data_type="Healing",
             fights=chosen,
+            limit=5000,
             ability_id=None,
             ability_name=None,
-            extra_filter=extra_filter,
+            extra_filter=filter_expr,
             actor_names=actor_names,
         )
-        damage_aggregates[phase] = aggregate_amounts(damage_events, actor_field="source_name")
-        healing_aggregates[phase] = aggregate_amounts(healing_events, actor_field="source_name")
 
-    fight_ids_by_player_role: Dict[Tuple[str, str], Set[int]] = defaultdict(set)
-    for fight in chosen:
-        role_map = player_roles_by_fight.get(fight.id, {})
-        for player, role in role_map.items():
-            key = (player, role or ROLE_UNKNOWN)
-            fight_ids_by_player_role[key].add(fight.id)
+        damage_aggregates[phase_id] = aggregate_amounts(damage_events)
+        healing_aggregates[phase_id] = aggregate_amounts(healing_events)
 
-    player_classes: Dict[str, Optional[str]] = {}
-    for actor_id, name in actor_names.items():
-        if name:
-            player_classes[name] = actor_classes.get(actor_id)
+    damage_roles = {"Tank", "Melee", "Ranged", ROLE_UNKNOWN}
+    healing_roles = {"Healer"}
 
-    all_player_roles: Set[Tuple[str, str]] = set(fight_ids_by_player_role.keys())
+    def resolve_actor(actor_key: Any) -> Tuple[Optional[int], Optional[str]]:
+        if isinstance(actor_key, int):
+            current = actor_key
+            seen: Set[int] = set()
+            while True:
+                owner = actor_owners.get(current)
+                if owner in (None, 0) or owner in seen:
+                    break
+                seen.add(current)
+                current = owner
+            name = actor_names.get(current) or actor_names.get(actor_key)
+            return current, name
+        if isinstance(actor_key, str):
+            return None, actor_key
+        return None, None
+
+    phase_totals: Dict[Tuple[str, str], Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+
+    for phase_id in selected_phases:
+        damage_agg = damage_aggregates[phase_id]
+        for (actor_key, fight_id), amount in damage_agg.amount_by_actor_fight.items():
+            owner_id, owner_name = resolve_actor(actor_key)
+            if not owner_name:
+                continue
+            fight_id_int = int(fight_id)
+            role = roles_by_fight.get(fight_id_int, {}).get(owner_name) or player_roles_global.get(owner_name) or ROLE_UNKNOWN
+            if role not in damage_roles:
+                continue
+            if owner_name not in valid_players:
+                if owner_id is not None and actor_classes.get(owner_id):
+                    valid_players.add(owner_name)
+                elif owner_name in player_roles_global:
+                    valid_players.add(owner_name)
+                else:
+                    continue
+            key = (owner_name, role)
+            phase_totals[key][phase_id] += float(amount)
+            fight_tags = fight_ids_by_player_role.setdefault(key, set())
+            fight_tags.add(fight_id_int)
+            if owner_name not in player_classes and owner_id is not None:
+                player_classes[owner_name] = actor_classes.get(owner_id)
+            player_roles.setdefault(owner_name, role)
+
+        healing_agg = healing_aggregates[phase_id]
+        for (actor_key, fight_id), amount in healing_agg.amount_by_actor_fight.items():
+            owner_id, owner_name = resolve_actor(actor_key)
+            if not owner_name:
+                continue
+            fight_id_int = int(fight_id)
+            role = roles_by_fight.get(fight_id_int, {}).get(owner_name) or player_roles_global.get(owner_name) or ROLE_UNKNOWN
+            if role not in healing_roles:
+                continue
+            if owner_name not in valid_players:
+                if owner_id is not None and actor_classes.get(owner_id):
+                    valid_players.add(owner_name)
+                elif owner_name in player_roles_global:
+                    valid_players.add(owner_name)
+                else:
+                    continue
+            key = (owner_name, role)
+            phase_totals[key][phase_id] += float(amount)
+            fight_tags = fight_ids_by_player_role.setdefault(key, set())
+            fight_tags.add(fight_id_int)
+            if owner_name not in player_classes and owner_id is not None:
+                player_classes[owner_name] = actor_classes.get(owner_id)
+            player_roles.setdefault(owner_name, role)
+
+    for player, role in list(fight_ids_by_player_role.keys()):
+        if player not in valid_players:
+            continue
+        key = (player, role)
+        phase_totals.setdefault(key, defaultdict(float))
+        player_classes.setdefault(player, None)
+        player_roles.setdefault(player, role)
+        player_specs.setdefault(player, None)
 
     entries: List[PhaseDamageEntry] = []
-
     for player, role in sorted(
-        all_player_roles,
+        phase_totals.keys(),
         key=lambda item: (
-            ROLE_PRIORITY.get(item[1] or ROLE_UNKNOWN, ROLE_PRIORITY["Unknown"]),
+            ROLE_PRIORITY.get(item[1] or ROLE_UNKNOWN, ROLE_PRIORITY[ROLE_UNKNOWN]),
             item[0].lower(),
         ),
     ):
+        if player not in valid_players:
+            continue
         pulls = len(fight_ids_by_player_role.get((player, role), set()))
         if pulls <= 0:
             continue
-
-        role_label = role or ROLE_UNKNOWN
-        is_healer = role_label == "Healer"
+        totals_for_player = phase_totals[(player, role)]
         metrics: List[PhaseMetric] = []
-
-        for phase in selected_phases:
-            phase_label = NEXUS_PHASE_LABELS[phase]
-            aggregate = healing_aggregates[phase] if is_healer else damage_aggregates[phase]
-            total_amount = 0.0
-            for fight_id in fight_ids_by_player_role.get((player, role), set()):
-                total_amount += aggregate.amount_by_player_fight.get((player, fight_id), 0.0)
-            average = total_amount / pulls if pulls else 0.0
+        for phase_id in selected_phases:
+            total_amount = totals_for_player.get(phase_id, 0.0)
+            average_per_pull = total_amount / pulls if pulls else 0.0
             metrics.append(
                 PhaseMetric(
-                    phase_id=phase,
-                    phase_label=phase_label,
+                    phase_id=phase_id,
+                    phase_label=NEXUS_PHASE_LABELS[phase_id],
                     total_amount=total_amount,
-                    average_per_pull=average,
+                    average_per_pull=average_per_pull,
                 )
             )
-
+        player_classes.setdefault(player, None)
+        player_roles.setdefault(player, role)
+        player_specs.setdefault(player, None)
         entries.append(
             PhaseDamageEntry(
                 player=player,
-                role=role_label,
+                role=role,
                 class_name=player_classes.get(player),
                 pulls=pulls,
                 metrics=metrics,
@@ -935,11 +1062,13 @@ def fetch_phase_damage_summary(
     return PhaseDamageSummary(
         report_code=report_code,
         fight_filter=fight_name,
-        fight_ids=list(int(fid) for fid in fight_ids) if fight_ids else None,
+        fight_ids=fight_id_filter,
         phases=selected_phases,
         phase_labels={phase: NEXUS_PHASE_LABELS[phase] for phase in selected_phases},
         entries=entries,
         player_classes=player_classes,
-        player_roles=player_roles_global,
-        player_specs=player_specs_global,
+        player_roles=player_roles,
+        player_specs=player_specs,
     )
+
+
