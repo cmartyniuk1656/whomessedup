@@ -91,6 +91,9 @@ const TILES = [
         param: "fresh",
       },
     ],
+    footnotes: [
+      "Filters out duplicate besiege ticks that happen when a single besiege hits a player multiple times.",
+    ],
   },
   {
     id: "nexus-phase1-damage",
@@ -150,6 +153,10 @@ const TILES = [
         default: false,
         param: "fresh",
       },
+    ],
+    footnotes: [
+      "Tanks and DPS will show Damage done and Healers will show healing done.",
+      "Single phase or full fight reports are recommended. Multi-phase reports will aggregate data and compute averages off the total pull count even if the player was dead during a phase, impacting their overall average.",
     ],
   },
 ];
@@ -760,7 +767,7 @@ function App() {
       <header className="border-b border-slate-800 bg-slate-950/40">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <p className="text-sm uppercase tracking-widest text-slate-400">Who Messed Up</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Raid Failure Dashboard</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Raid Analysis Dashboard</h1>
           <p className="mt-4 max-w-3xl text-base text-slate-300">
             Pick a tool, paste a Warcraft Logs report URL or code, and review the culprits in seconds. Tiles run a
             curated query against the report and return a player-by-player summary.
@@ -1449,6 +1456,16 @@ function App() {
                 </label>
               ))}
             </div>
+            {pendingTile.footnotes?.length ? (
+              <div className="mt-4 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Notes</p>
+                <ul className="mt-2 space-y-1 text-xs text-slate-400">
+                  {pendingTile.footnotes.map((note) => (
+                    <li key={note}>* {note}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"

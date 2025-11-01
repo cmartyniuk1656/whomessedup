@@ -67,6 +67,16 @@ query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $
 }
 """
 
+TABLE_QUERY = """
+query($code: String!, $dataType: TableDataType!, $fightIDs: [Int!], $startTime: Float!, $endTime: Float!, $filter: String) {
+  reportData {
+    report(code: $code) {
+      table(dataType: $dataType, fightIDs: $fightIDs, startTime: $startTime, endTime: $endTime, filterExpression: $filter)
+    }
+  }
+}
+"""
+
 
 
 @dataclass
@@ -339,4 +349,31 @@ def fetch_player_details(session: requests.Session, token: str, *, code: str, fi
     payload = gql(session, token, PLAYER_DETAILS_QUERY, variables)
     player_details = (((payload["reportData"]["report"].get("playerDetails") or {}).get("data") or {}).get("playerDetails") or {})
     return player_details
+
+
+def fetch_table(
+    session: requests.Session,
+    token: str,
+    *,
+    code: str,
+    data_type: str,
+    fight_id: int,
+    start: float,
+    end: float,
+    filter_expr: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Fetch aggregated table data (Damage, Healing, etc.) for a specific fight.
+    """
+    variables = {
+        "code": code,
+        "dataType": data_type,
+        "fightIDs": [int(fight_id)],
+        "startTime": float(start),
+        "endTime": float(end),
+        "filter": filter_expr,
+    }
+    payload = gql(session, token, TABLE_QUERY, variables)
+    table = ((payload["reportData"]["report"].get("table") or {}).get("data") or {})
+    return table
 

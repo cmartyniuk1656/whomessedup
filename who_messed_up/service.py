@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Set
 
 import requests
 
-from .analysis import AmountAggregate, HitAggregate, aggregate_amounts, count_hits
+from .analysis import HitAggregate, count_hits
 from .env import load_env
 from .api import (
     Fight,
@@ -18,6 +18,7 @@ from .api import (
     fetch_events,
     fetch_fights,
     fetch_player_details,
+    fetch_table,
     filter_fights,
     get_token_from_client,
 )
@@ -900,46 +901,10 @@ def fetch_phase_damage_summary(
     player_specs: Dict[str, Optional[str]] = dict(player_specs_global)
 
     fight_ids_by_player_role: Dict[Tuple[str, str], Set[int]] = defaultdict(set)
-
-    damage_aggregates: Dict[str, AmountAggregate] = {}
-    healing_aggregates: Dict[str, AmountAggregate] = {}
-
-    for phase_id in selected_phases:
-        filter_expr = None
-        if phase_id != "full":
-            try:
-                numeric_phase = int(phase_id)
-                filter_expr = f"encounterPhase = {numeric_phase}"
-            except ValueError:
-                filter_expr = None
-
-        damage_events = events_for_fights(
-            session,
-            bearer,
-            code=report_code,
-            data_type="DamageDone",
-            fights=chosen,
-            limit=5000,
-            ability_id=None,
-            ability_name=None,
-            extra_filter=filter_expr,
-            actor_names=actor_names,
-        )
-        healing_events = events_for_fights(
-            session,
-            bearer,
-            code=report_code,
-            data_type="Healing",
-            fights=chosen,
-            limit=5000,
-            ability_id=None,
-            ability_name=None,
-            extra_filter=filter_expr,
-            actor_names=actor_names,
-        )
-
-        damage_aggregates[phase_id] = aggregate_amounts(damage_events)
-        healing_aggregates[phase_id] = aggregate_amounts(healing_events)
+    for fight in chosen:
+        fight_roles = roles_by_fight.get(fight.id, {})
+        for player, role in fight_roles.items():
+            fight_ids_by_player_role[(player, role)].add(fight.id)
 
     damage_roles = {"Tank", "Melee", "Ranged", ROLE_UNKNOWN}
     healing_roles = {"Healer"}
@@ -960,56 +925,77 @@ def fetch_phase_damage_summary(
             return None, actor_key
         return None, None
 
+    def sum_entry_total(entry: Dict[str, Any]) -> float:
+        value = entry.get("total")
+        if value is None:
+            value = entry.get("totalReduced")
+        try:
+            return float(value or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
     phase_totals: Dict[Tuple[str, str], Dict[str, float]] = defaultdict(lambda: defaultdict(float))
 
     for phase_id in selected_phases:
-        damage_agg = damage_aggregates[phase_id]
-        for (actor_key, fight_id), amount in damage_agg.amount_by_actor_fight.items():
-            owner_id, owner_name = resolve_actor(actor_key)
-            if not owner_name:
-                continue
-            fight_id_int = int(fight_id)
-            role = roles_by_fight.get(fight_id_int, {}).get(owner_name) or player_roles_global.get(owner_name) or ROLE_UNKNOWN
-            if role not in damage_roles:
-                continue
-            if owner_name not in valid_players:
-                if owner_id is not None and actor_classes.get(owner_id):
-                    valid_players.add(owner_name)
-                elif owner_name in player_roles_global:
-                    valid_players.add(owner_name)
-                else:
-                    continue
-            key = (owner_name, role)
-            phase_totals[key][phase_id] += float(amount)
-            fight_tags = fight_ids_by_player_role.setdefault(key, set())
-            fight_tags.add(fight_id_int)
-            if owner_name not in player_classes and owner_id is not None:
-                player_classes[owner_name] = actor_classes.get(owner_id)
-            player_roles.setdefault(owner_name, role)
+        filter_expr = None
+        if phase_id != "full":
+            try:
+                numeric_phase = int(phase_id)
+                filter_expr = f"encounterPhase = {numeric_phase}"
+            except ValueError:
+                filter_expr = None
 
-        healing_agg = healing_aggregates[phase_id]
-        for (actor_key, fight_id), amount in healing_agg.amount_by_actor_fight.items():
-            owner_id, owner_name = resolve_actor(actor_key)
-            if not owner_name:
-                continue
-            fight_id_int = int(fight_id)
-            role = roles_by_fight.get(fight_id_int, {}).get(owner_name) or player_roles_global.get(owner_name) or ROLE_UNKNOWN
-            if role not in healing_roles:
-                continue
-            if owner_name not in valid_players:
-                if owner_id is not None and actor_classes.get(owner_id):
+        for fight in chosen:
+            def consume_entries(entries: Iterable[Dict[str, Any]], *, allowed_roles: Set[str]) -> None:
+                for entry in entries:
+                    actor_key = entry.get("id")
+                    if actor_key is None:
+                        continue
+                    total_amount = sum_entry_total(entry)
+                    if total_amount <= 0:
+                        continue
+                    owner_id, owner_name = resolve_actor(actor_key)
+                    if not owner_name:
+                        owner_name = entry.get("name")
+                    if not owner_name:
+                        continue
+                    role = (
+                        roles_by_fight.get(fight.id, {}).get(owner_name)
+                        or player_roles_global.get(owner_name)
+                        or ROLE_UNKNOWN
+                    )
+                    if role not in allowed_roles:
+                        continue
+                    key = (owner_name, role)
+                    phase_totals[key][phase_id] += float(total_amount)
+                    if owner_name not in player_classes and owner_id is not None:
+                        player_classes[owner_name] = actor_classes.get(owner_id)
+                    player_roles.setdefault(owner_name, role)
                     valid_players.add(owner_name)
-                elif owner_name in player_roles_global:
-                    valid_players.add(owner_name)
-                else:
-                    continue
-            key = (owner_name, role)
-            phase_totals[key][phase_id] += float(amount)
-            fight_tags = fight_ids_by_player_role.setdefault(key, set())
-            fight_tags.add(fight_id_int)
-            if owner_name not in player_classes and owner_id is not None:
-                player_classes[owner_name] = actor_classes.get(owner_id)
-            player_roles.setdefault(owner_name, role)
+
+            damage_table = fetch_table(
+                session,
+                bearer,
+                code=report_code,
+                data_type="DamageDone",
+                fight_id=fight.id,
+                start=fight.start,
+                end=fight.end,
+                filter_expr=filter_expr,
+            )
+            consume_entries(damage_table.get("entries") or [], allowed_roles=damage_roles)
+
+            healing_table = fetch_table(
+                session,
+                bearer,
+                code=report_code,
+                data_type="Healing",
+                fight_id=fight.id,
+                start=fight.start,
+                end=fight.end,
+                filter_expr=filter_expr,
+            )
+            consume_entries(healing_table.get("entries") or [], allowed_roles=healing_roles)
 
     for player, role in list(fight_ids_by_player_role.keys()):
         if player not in valid_players:
