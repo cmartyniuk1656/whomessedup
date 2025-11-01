@@ -5,15 +5,16 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from who_messed_up import load_env
 from who_messed_up.api import Fight
+from who_messed_up.jobs import job_manager
 from who_messed_up.service import (
     FightSelectionError,
     GhostSummary,
@@ -326,6 +327,18 @@ class PhaseDamageSummaryResponse(BaseModel):
         )
 
 
+class JobStatusModel(BaseModel):
+    id: str
+    type: str
+    status: str
+    position: Optional[int]
+    created_at: Optional[str]
+    started_at: Optional[str]
+    finished_at: Optional[str]
+    error: Optional[str] = None
+    result: Optional[Dict[str, Any]] = None
+
+
 def _client_credentials() -> Dict[str, Optional[str]]:
     return {
         "client_id": os.getenv("WCL_CLIENT_ID"),
@@ -333,9 +346,62 @@ def _client_credentials() -> Dict[str, Optional[str]]:
     }
 
 
+JOB_NEXUS_PHASE1 = "nexus_phase1"
+JOB_PHASE_DAMAGE = "nexus_phase_damage"
+
+
+def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    summary = fetch_phase_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+        besiege_ability_id=payload["hit_ability_id"],
+        ghost_ability_id=payload["ghost_ability_id"],
+        hit_data_type=payload["data_type"],
+        hit_dedupe_ms=payload.get("hit_dedupe_ms"),
+        hit_exclude_final_ms=payload.get("ignore_final_ms"),
+        hit_ignore_after_deaths=payload.get("ignore_after_deaths"),
+        first_hit_only_hits=payload.get("first_hit_only", True),
+        first_hit_only_ghosts=payload.get("first_ghost_only", True),
+    )
+    return PhaseSummaryResponse.from_summary(summary).dict()
+
+
+def _execute_phase_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    summary = fetch_phase_damage_summary(
+        report_code=payload["report"],
+        phases=payload.get("phases"),
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+    return PhaseDamageSummaryResponse.from_summary(summary).dict()
+
+
+job_manager.register_handler(JOB_NEXUS_PHASE1, _execute_nexus_phase1_job)
+job_manager.register_handler(JOB_PHASE_DAMAGE, _execute_phase_damage_job)
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/jobs/{job_id}", response_model=JobStatusModel)
+def get_job_status(job_id: str) -> JobStatusModel:
+    snapshot = job_manager.snapshot(job_id, include_result=True)
+    if snapshot is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    return JobStatusModel.parse_obj(snapshot)
 
 
 @app.get("/api/hits", response_model=HitSummaryResponse)
@@ -423,36 +489,40 @@ def get_nexus_phase1(
     ),
     first_hit_only: bool = Query(True, description="Count only the first Besiege hit per pull."),
     first_ghost_only: bool = Query(True, description="Count only the first Ghost miss per pull."),
+    fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> PhaseSummaryResponse:
-    credentials = _client_credentials()
     final_ms = float(ignore_final_seconds) * 1000.0 if ignore_final_seconds and ignore_final_seconds > 0 else None
     death_threshold = ignore_after_deaths if ignore_after_deaths and ignore_after_deaths > 0 else None
-    try:
-        summary = fetch_phase_summary(
-            report_code=report,
-            fight_name=fight,
-            fight_ids=fight_id,
-            token=token,
-            client_id=credentials["client_id"],
-            client_secret=credentials["client_secret"],
-            besiege_ability_id=hit_ability_id,
-            ghost_ability_id=ghost_ability_id,
-            hit_data_type=data_type,
-            hit_dedupe_ms=1500.0,
-            hit_exclude_final_ms=final_ms,
-            hit_ignore_after_deaths=death_threshold,
-            first_hit_only_hits=first_hit_only,
-            first_hit_only_ghosts=first_ghost_only,
-        )
-    except TokenError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
-    except FightSelectionError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except Exception as exc:  # pragma: no cover - defensive
-        raise HTTPException(status_code=500, detail=f"Failed to fetch combined phase summary: {exc}") from exc
+    fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    payload = {
+        "report": report,
+        "fight": fight,
+        "fight_ids": fight_ids_payload,
+        "hit_ability_id": hit_ability_id,
+        "ghost_ability_id": ghost_ability_id,
+        "data_type": data_type,
+        "ignore_after_deaths": death_threshold,
+        "ignore_final_ms": final_ms,
+        "hit_dedupe_ms": 1500.0,
+        "first_hit_only": first_hit_only,
+        "first_ghost_only": first_ghost_only,
+    }
+    if token:
+        payload["token"] = token
 
-    return PhaseSummaryResponse.from_summary(summary)
+    try:
+        job, immediate = job_manager.enqueue(JOB_NEXUS_PHASE1, payload, bust_cache=fresh)
+    except KeyError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if job.status == "completed":
+        return PhaseSummaryResponse.parse_obj(job.result)
+
+    snapshot = job_manager.snapshot(job.id)
+    if snapshot is None:
+        raise HTTPException(status_code=500, detail="Job tracking failed.")
+    return JSONResponse(status_code=202, content={"job": snapshot})
 
 
 @app.get("/api/nexus-phase-damage", response_model=PhaseDamageSummaryResponse)
@@ -461,28 +531,32 @@ def get_nexus_phase_damage(
     fight: Optional[str] = Query(None, description="Substring match on fight name."),
     fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
     phase: Optional[List[str]] = Query(None, description="Phases to include (full, 1-5)."),
+    fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> PhaseDamageSummaryResponse:
-    credentials = _client_credentials()
     phases = phase or ["full"]
-    try:
-        summary = fetch_phase_damage_summary(
-            report_code=report,
-            phases=phases,
-            fight_name=fight,
-            fight_ids=fight_id,
-            token=token,
-            client_id=credentials["client_id"],
-            client_secret=credentials["client_secret"],
-        )
-    except TokenError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
-    except FightSelectionError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except Exception as exc:  # pragma: no cover - defensive
-        raise HTTPException(status_code=500, detail=f"Failed to fetch phase damage summary: {exc}") from exc
+    fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    payload: Dict[str, Any] = {
+        "report": report,
+        "fight": fight,
+        "fight_ids": fight_ids_payload,
+        "phases": list(phases),
+    }
+    if token:
+        payload["token"] = token
 
-    return PhaseDamageSummaryResponse.from_summary(summary)
+    try:
+        job, immediate = job_manager.enqueue(JOB_PHASE_DAMAGE, payload, bust_cache=fresh)
+    except KeyError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if job.status == "completed":
+        return PhaseDamageSummaryResponse.parse_obj(job.result)
+
+    snapshot = job_manager.snapshot(job.id)
+    if snapshot is None:
+        raise HTTPException(status_code=500, detail="Job tracking failed.")
+    return JSONResponse(status_code=202, content={"job": snapshot})
 
 
 FRONTEND_DIST = Path(__file__).resolve().parent / "frontend" / "dist"
