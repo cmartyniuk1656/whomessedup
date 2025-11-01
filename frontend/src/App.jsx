@@ -32,6 +32,9 @@ const DEFAULT_SORT_DIRECTIONS = {
   hits: "desc",
   damage: "desc",
   hitsPerPull: "desc",
+  pulls: "desc",
+  ghostMisses: "desc",
+  ghostPerPull: "desc",
 };
 
 const ROLE_BADGE_STYLES = {
@@ -51,6 +54,20 @@ const TILES = [
     dataType: "DamageTaken",
     abilityId: 1227472,
     defaultFight: "Nexus-King",
+    endpoint: "/api/hits",
+    mode: "hits",
+    defaultSort: { key: "role", direction: "asc" },
+  },
+  {
+    id: "ghost-misses",
+    title: "Ghost Misses – Nexus-King Salhadaar",
+    description:
+      "Track applications of Oathbound (1224737) after the first 15 seconds of each pull to identify missed Ghost triggers.",
+    abilityId: 1224737,
+    defaultFight: "Nexus-King",
+    endpoint: "/api/ghosts",
+    mode: "ghost",
+    defaultSort: { key: "role", direction: "asc" },
   },
 ];
 
@@ -81,27 +98,53 @@ function App() {
   const [activeTile, setActiveTile] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: "role", direction: "asc" });
 
+  const currentTile = useMemo(
+    () => TILES.find((tile) => tile.id === activeTile) ?? null,
+    [activeTile]
+  );
+  const isGhostMode = currentTile?.mode === "ghost";
+
   const rows = useMemo(() => {
-    if (!result?.per_player) return [];
-    return Object.entries(result.per_player)
-      .map(([player, hits]) => {
-        const damage = result.per_player_damage?.[player] ?? 0;
-        const hitsPerPull = result.per_player_hits_per_pull?.[player] ?? 0;
-        const playerClass = result.player_classes?.[player] ?? null;
+    if (!result || !currentTile) return [];
+
+    if (currentTile.mode === "ghost") {
+      const playerClasses = result.player_classes ?? {};
+      const playerRoles = result.player_roles ?? {};
+      return (result.entries ?? []).map((entry) => {
+        const playerClass = playerClasses[entry.player] ?? null;
         const normalizedClass = playerClass ? playerClass.replace(/\s+/g, "").toLowerCase() : null;
         const color = normalizedClass ? CLASS_COLORS[normalizedClass] ?? DEFAULT_PLAYER_COLOR : DEFAULT_PLAYER_COLOR;
-        const role = result.player_roles?.[player] ?? "Unknown";
+        const role = playerRoles[entry.player] ?? entry.role ?? "Unknown";
         return {
-          player,
-          hits,
-          damage,
-          hitsPerPull,
-          className: playerClass,
+          player: entry.player,
+          pulls: entry.pulls,
+          ghostMisses: entry.ghost_misses ?? entry.misses ?? 0,
+          ghostPerPull: entry.ghost_per_pull ?? entry.misses_per_pull ?? 0,
           color,
           role,
         };
       });
-  }, [result]);
+    }
+
+    const playerClasses = result.player_classes ?? {};
+    const playerRoles = result.player_roles ?? {};
+    return Object.entries(result.per_player ?? {}).map(([player, hits]) => {
+      const damage = result.per_player_damage?.[player] ?? 0;
+      const hitsPerPull = result.per_player_hits_per_pull?.[player] ?? 0;
+      const playerClass = playerClasses[player] ?? null;
+      const normalizedClass = playerClass ? playerClass.replace(/\s+/g, "").toLowerCase() : null;
+      const color = normalizedClass ? CLASS_COLORS[normalizedClass] ?? DEFAULT_PLAYER_COLOR : DEFAULT_PLAYER_COLOR;
+      const role = playerRoles[player] ?? "Unknown";
+      return {
+        player,
+        hits,
+        damage,
+        hitsPerPull,
+        color,
+        role,
+      };
+    });
+  }, [result, currentTile]);
 
   const sortedRows = useMemo(() => {
     const arr = [...rows];
@@ -114,8 +157,15 @@ function App() {
         if (aPriority !== bPriority) {
           return (aPriority - bPriority) * dir;
         }
-        if (b.hits !== a.hits) {
-          return (b.hits - a.hits) * dir;
+        if (isGhostMode) {
+          if ((b.ghostMisses ?? 0) !== (a.ghostMisses ?? 0)) {
+            return ((a.ghostMisses ?? 0) - (b.ghostMisses ?? 0)) * dir;
+          }
+          if ((b.pulls ?? 0) !== (a.pulls ?? 0)) {
+            return ((a.pulls ?? 0) - (b.pulls ?? 0)) * dir;
+          }
+        } else if ((b.hits ?? 0) !== (a.hits ?? 0)) {
+          return ((a.hits ?? 0) - (b.hits ?? 0)) * dir;
         }
         return a.player.localeCompare(b.player) * dir;
       }
@@ -123,36 +173,72 @@ function App() {
         return a.player.localeCompare(b.player) * dir;
       }
       if (key === "hits") {
-        if (a.hits !== b.hits) {
-          return (a.hits - b.hits) * dir;
+        if ((a.hits ?? 0) !== (b.hits ?? 0)) {
+          return ((a.hits ?? 0) - (b.hits ?? 0)) * dir;
         }
         return a.player.localeCompare(b.player);
       }
       if (key === "damage") {
-        if (a.damage !== b.damage) {
-          return (a.damage - b.damage) * dir;
+        if ((a.damage ?? 0) !== (b.damage ?? 0)) {
+          return ((a.damage ?? 0) - (b.damage ?? 0)) * dir;
         }
         return a.player.localeCompare(b.player);
       }
       if (key === "hitsPerPull") {
-        if (a.hitsPerPull !== b.hitsPerPull) {
-          return (a.hitsPerPull - b.hitsPerPull) * dir;
+        if ((a.hitsPerPull ?? 0) !== (b.hitsPerPull ?? 0)) {
+          return ((a.hitsPerPull ?? 0) - (b.hitsPerPull ?? 0)) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "pulls") {
+        if ((a.pulls ?? 0) !== (b.pulls ?? 0)) {
+          return ((a.pulls ?? 0) - (b.pulls ?? 0)) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "ghostMisses") {
+        if ((a.ghostMisses ?? 0) !== (b.ghostMisses ?? 0)) {
+          return ((a.ghostMisses ?? 0) - (b.ghostMisses ?? 0)) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "ghostPerPull") {
+        if ((a.ghostPerPull ?? 0) !== (b.ghostPerPull ?? 0)) {
+          return ((a.ghostPerPull ?? 0) - (b.ghostPerPull ?? 0)) * dir;
         }
         return a.player.localeCompare(b.player);
       }
       return 0;
     });
     return arr;
-  }, [rows, sortConfig]);
+  }, [rows, sortConfig, isGhostMode]);
+
+  const pullCount = useMemo(() => {
+    if (!result) return 0;
+    if (isGhostMode) {
+      return result.pull_count ?? (result.fights ? result.fights.length : 0);
+    }
+    return result.fights ? result.fights.length : 0;
+  }, [result, isGhostMode]);
 
   const totalHits = useMemo(() => {
-    if (!result?.total_hits) return 0;
+    if (isGhostMode || !result?.total_hits) return 0;
     return Object.values(result.total_hits).reduce((acc, value) => acc + value, 0);
-  }, [result]);
+  }, [result, isGhostMode]);
 
-  const pullCount = result?.pull_count ?? 0;
-  const averageHitsPerPull = result?.average_hits_per_pull ?? 0;
-  const totalDamage = result?.total_damage ?? 0;
+  const averageHitsPerPull = useMemo(() => {
+    if (isGhostMode) return 0;
+    return result?.average_hits_per_pull ?? 0;
+  }, [result, isGhostMode]);
+
+  const totalDamage = isGhostMode ? 0 : result?.total_damage ?? 0;
+
+  const totalGhostMisses = useMemo(() => {
+    if (!isGhostMode) return 0;
+    return rows.reduce((sum, row) => sum + (row.ghostMisses ?? 0), 0);
+  }, [rows, isGhostMode]);
+
+  const averageGhostPerPull = pullCount ? totalGhostMisses / pullCount : 0;
 
   const formatInt = (value) =>
     typeof value === "number" ? value.toLocaleString(undefined, { maximumFractionDigits: 0 }) : value;
@@ -164,6 +250,19 @@ function App() {
     typeof value === "number"
       ? value.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
       : value;
+
+  const summaryMetrics = isGhostMode
+    ? [
+        { label: "Pulls counted", value: formatInt(pullCount) },
+        { label: "Total ghost misses", value: formatInt(totalGhostMisses) },
+        { label: "Avg ghost per pull", value: formatFloat(averageGhostPerPull, 3) },
+      ]
+    : [
+        { label: "Pulls counted", value: formatInt(pullCount) },
+        { label: "Total hits", value: formatInt(totalHits) },
+        { label: "Total damage", value: formatDamage(totalDamage) },
+        { label: "Avg hits per pull", value: formatFloat(averageHitsPerPull, 2) },
+      ];
 
   const handleSort = (key) => {
     setSortConfig((prev) => {
@@ -188,6 +287,7 @@ function App() {
   const handleTileClick = async (tile) => {
     setError("");
     setResult(null);
+    setSortConfig(tile.defaultSort ?? { key: "role", direction: "asc" });
 
     const code = extractReportCode(reportInput);
     if (!code) {
@@ -198,17 +298,23 @@ function App() {
     setLoadingId(tile.id);
     setActiveTile(tile.id);
     try {
-      const params = new URLSearchParams({
-        report: code,
-        data_type: tile.dataType,
-        ability_id: String(tile.abilityId),
-      });
+      const endpoint = tile.endpoint ?? "/api/hits";
+      const params = new URLSearchParams();
+      params.set("report", code);
+
       const fightName = (fightOverride || tile.defaultFight || "").trim();
       if (fightName) {
         params.set("fight", fightName);
       }
 
-      const response = await fetch(`/api/hits?${params.toString()}`);
+      if (tile.dataType && endpoint === "/api/hits") {
+        params.set("data_type", tile.dataType);
+      }
+      if (tile.abilityId) {
+        params.set("ability_id", String(tile.abilityId));
+      }
+
+      const response = await fetch(`${endpoint}?${params.toString()}`);
       if (!response.ok) {
         const detail = await response.json().catch(() => ({}));
         throw new Error(detail?.detail || "Request failed");
@@ -327,90 +433,170 @@ function App() {
                   </p>
                 </div>
                 <div className="grid gap-1 text-right text-sm text-slate-300">
-                  <p>Pulls counted: {formatInt(pullCount)}</p>
-                  <p>Total hits: {formatInt(totalHits)}</p>
-                  <p>Total damage: {formatDamage(totalDamage)}</p>
-                  <p>Avg hits per pull: {formatFloat(averageHitsPerPull, 2)}</p>
+                  {summaryMetrics.map(({ label, value }) => (
+                    <p key={label}>
+                      {label}: {value}
+                    </p>
+                  ))}
                 </div>
               </div>
 
               <div className="mt-6 overflow-hidden rounded-xl border border-slate-800">
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
                   <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
-                    <tr>
-                      <th className="px-4 py-3 text-left">
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
-                          onClick={() => handleSort("player")}
-                        >
-                          Player
-                          {renderSortIcon("player")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-left">
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
-                          onClick={() => handleSort("role")}
-                        >
-                          Role
-                          {renderSortIcon("role")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("hits")}
-                        >
-                          Hits
-                          {renderSortIcon("hits")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("damage")}
-                        >
-                          Damage
-                          {renderSortIcon("damage")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("hitsPerPull")}
-                        >
-                          Hits / Pull
-                          {renderSortIcon("hitsPerPull")}
-                        </button>
-                      </th>
-                    </tr>
+                    {isGhostMode ? (
+                      <tr>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("player")}
+                          >
+                            Player
+                            {renderSortIcon("player")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("role")}
+                          >
+                            Role
+                            {renderSortIcon("role")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("pulls")}
+                          >
+                            Pulls In
+                            {renderSortIcon("pulls")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("ghostMisses")}
+                          >
+                            Ghost Misses
+                            {renderSortIcon("ghostMisses")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("ghostPerPull")}
+                          >
+                            Ghost / Pull
+                            {renderSortIcon("ghostPerPull")}
+                          </button>
+                        </th>
+                      </tr>
+                    ) : (
+                      <tr>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("player")}
+                          >
+                            Player
+                            {renderSortIcon("player")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("role")}
+                          >
+                            Role
+                            {renderSortIcon("role")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("hits")}
+                          >
+                            Hits
+                            {renderSortIcon("hits")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("damage")}
+                          >
+                            Damage
+                            {renderSortIcon("damage")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("hitsPerPull")}
+                          >
+                            Hits / Pull
+                            {renderSortIcon("hitsPerPull")}
+                          </button>
+                        </th>
+                      </tr>
+                    )}
                   </thead>
                   <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
-                    {sortedRows.map((row) => (
-                      <tr key={row.player}>
-                        <td className="px-4 py-3 font-medium">
-                          <span style={{ color: row.color }}>{row.player}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                              ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
-                            }`}
-                          >
-                            {row.role}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold text-emerald-300">{formatInt(row.hits)}</td>
-                        <td className="px-4 py-3 text-right text-slate-200">{formatDamage(row.damage)}</td>
-                        <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.hitsPerPull, 2)}</td>
-                      </tr>
-                    ))}
-                    {rows.length === 0 && (
+                    {sortedRows.map((row) =>
+                      isGhostMode ? (
+                        <tr key={row.player}>
+                          <td className="px-4 py-3 font-medium">
+                            <span style={{ color: row.color }}>{row.player}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                              }`}
+                            >
+                              {row.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls ?? 0)}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-emerald-300">
+                            {formatInt(row.ghostMisses ?? 0)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-200">
+                            {formatFloat(row.ghostPerPull ?? 0, 3)}
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr key={row.player}>
+                          <td className="px-4 py-3 font-medium">
+                            <span style={{ color: row.color }}>{row.player}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                              }`}
+                            >
+                              {row.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-semibold text-emerald-300">{formatInt(row.hits ?? 0)}</td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatDamage(row.damage ?? 0)}</td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.hitsPerPull ?? 0, 2)}</td>
+                        </tr>
+                      )
+                    )}
+                    {sortedRows.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
                           No events matched the filters.
@@ -421,7 +607,7 @@ function App() {
                 </table>
               </div>
 
-              {result.fight_totals?.length ? (
+              {!isGhostMode && result.fight_totals?.length ? (
                 <div className="mt-6 overflow-hidden rounded-xl border border-slate-800">
                   <div className="bg-slate-900/80 px-4 py-3 text-xs uppercase tracking-widest text-slate-400">
                     Per-pull totals
@@ -448,3 +634,4 @@ function App() {
 }
 
 export default App;
+

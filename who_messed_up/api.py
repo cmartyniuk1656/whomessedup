@@ -219,7 +219,8 @@ def _compose_filter_expression(
     if extra_filter:
         parts.append(f"({extra_filter})")
     if ability_id is not None:
-        parts.append(f"ability.id = {int(ability_id)}")
+        ability_int = int(ability_id)
+        parts.append(f"(ability.id = {ability_int} or abilityGameID = {ability_int})")
     if ability_name:
         safe_name = ability_name.replace('"', '\\"')
         parts.append(f'ability.name = "{safe_name}"')

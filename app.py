@@ -14,7 +14,14 @@ from pydantic import BaseModel
 
 from who_messed_up import load_env
 from who_messed_up.api import Fight
-from who_messed_up.service import FightSelectionError, HitSummary, TokenError, fetch_hit_summary
+from who_messed_up.service import (
+    FightSelectionError,
+    GhostSummary,
+    HitSummary,
+    TokenError,
+    fetch_ghost_summary,
+    fetch_hit_summary,
+)
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
 load_env()
@@ -120,6 +127,57 @@ class HitSummaryResponse(BaseModel):
         )
 
 
+class GhostEntryModel(BaseModel):
+    player: str
+    role: str
+    pulls: int
+    ghost_misses: int
+    ghost_per_pull: float
+
+
+class GhostSummaryResponse(BaseModel):
+    report: str
+    ability_id: int
+    filters: Dict[str, Optional[str]]
+    pull_count: int
+    entries: List[GhostEntryModel]
+    actors: Dict[int, str]
+    actor_classes: Dict[int, Optional[str]]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+
+    @classmethod
+    def from_summary(cls, summary: GhostSummary) -> "GhostSummaryResponse":
+        filters: Dict[str, Optional[str]] = {
+            "fight_name": summary.fight_filter,
+            "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+        }
+        entries = [
+            GhostEntryModel(
+                player=entry.player,
+                role=summary.player_roles.get(entry.player, "Unknown"),
+                pulls=entry.pulls,
+                ghost_misses=entry.misses,
+                ghost_per_pull=entry.misses_per_pull,
+            )
+            for entry in summary.entries
+        ]
+
+        return cls(
+            report=summary.report_code,
+            ability_id=summary.ability_id,
+            filters=filters,
+            pull_count=summary.pull_count,
+            entries=entries,
+            actors=summary.actor_names,
+            actor_classes=summary.actor_classes,
+            player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
+        )
+
+
 def _client_credentials() -> Dict[str, Optional[str]]:
     return {
         "client_id": os.getenv("WCL_CLIENT_ID"),
@@ -170,6 +228,35 @@ def get_hits(
         raise HTTPException(status_code=500, detail=f"Failed to fetch hits: {exc}") from exc
 
     return HitSummaryResponse.from_summary(summary)
+
+
+@app.get("/api/ghosts", response_model=GhostSummaryResponse)
+def get_ghosts(
+    report: str = Query(..., description="Warcraft Logs report code."),
+    ability_id: int = Query(1224737, description="Ability GUID/ID to track as a ghost miss."),
+    fight: Optional[str] = Query(None, description="Substring match on fight name."),
+    fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+) -> GhostSummaryResponse:
+    credentials = _client_credentials()
+    try:
+        summary = fetch_ghost_summary(
+            report_code=report,
+            ability_id=ability_id,
+            fight_name=fight,
+            fight_ids=fight_id,
+            token=token,
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+        )
+    except TokenError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except FightSelectionError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:  # pragma: no cover - defensive
+        raise HTTPException(status_code=500, detail=f"Failed to fetch ghost misses: {exc}") from exc
+
+    return GhostSummaryResponse.from_summary(summary)
 
 
 FRONTEND_DIST = Path(__file__).resolve().parent / "frontend" / "dist"

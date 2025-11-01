@@ -4,6 +4,7 @@ High-level orchestration for fetching Warcraft Logs events and summarizing hits.
 from __future__ import annotations
 
 import re
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -11,7 +12,15 @@ import requests
 
 from .analysis import HitAggregate, count_hits
 from .env import load_env
-from .api import Fight, events_for_fights, fetch_fights, fetch_player_details, filter_fights, get_token_from_client
+from .api import (
+    Fight,
+    events_for_fights,
+    fetch_events,
+    fetch_fights,
+    fetch_player_details,
+    filter_fights,
+    get_token_from_client,
+)
 
 SPEC_ROLE_BY_CLASS: Dict[Tuple[str, str], str] = {
     ("DeathKnight", "Blood"): "Tank",
@@ -73,6 +82,14 @@ CLASS_DEFAULT_ROLE: Dict[str, str] = {
 
 ROLE_UNKNOWN = "Unknown"
 
+ROLE_PRIORITY: Dict[str, int] = {
+    "Tank": 0,
+    "Healer": 1,
+    "Melee": 2,
+    "Ranged": 3,
+    ROLE_UNKNOWN: 4,
+}
+
 
 def _extract_spec(entry: Dict[str, Any]) -> Optional[str]:
     specs = entry.get("specs") or []
@@ -118,6 +135,16 @@ def _infer_player_roles(details: Dict[str, Any]) -> Tuple[Dict[str, str], Dict[s
         register(entry, inferred_role)
 
     return roles, specs
+
+
+def _players_from_details(details: Dict[str, Any]) -> List[str]:
+    players: List[str] = []
+    for category in ("tanks", "healers", "dps"):
+        for entry in details.get(category, []):
+            name = entry.get("name")
+            if name:
+                players.append(name)
+    return players
 
 
 @dataclass
@@ -176,6 +203,42 @@ class HitSummary:
     def per_player_hits_per_pull(self) -> Dict[str, float]:
         pulls = self.pull_count or 1
         return {player: hits / pulls for player, hits in self.total_hits.items()}
+
+@dataclass
+class GhostEntry:
+    player: str
+    pulls: int
+    misses: int
+    misses_per_pull: float
+
+
+@dataclass
+class GhostSummary:
+    report_code: str
+    ability_id: int
+    fight_filter: Optional[str]
+    fight_ids: Optional[List[int]]
+    fights_considered: List[Fight]
+    entries: List[GhostEntry]
+    actor_names: Dict[int, str]
+    actor_classes: Dict[int, Optional[str]]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+
+    @property
+    def pull_count(self) -> int:
+        return len(self.fights_considered)
+
+    @property
+    def total_ghosts(self) -> int:
+        return sum(entry.misses for entry in self.entries)
+
+    def per_player_misses(self) -> Dict[str, int]:
+        return {entry.player: entry.misses for entry in self.entries}
+
+    def misses_per_pull_by_player(self) -> Dict[str, float]:
+        return {entry.player: entry.misses_per_pull for entry in self.entries}
 
 
 class TokenError(RuntimeError):
@@ -283,6 +346,125 @@ def fetch_hit_summary(
         fight_total_hits=agg.fight_total_hits,
         fight_total_damage=agg.fight_total_damage,
         fights_considered=chosen,
+        actor_names=actor_names,
+        actor_classes=actor_classes,
+        player_classes=player_classes,
+        player_roles=player_roles_full,
+        player_specs=player_specs_full,
+    )
+
+
+def fetch_ghost_summary(
+    *,
+    report_code: str,
+    ability_id: int = 1224737,
+    fight_name: Optional[str] = None,
+    fight_ids: Optional[Iterable[int]] = None,
+    token: Optional[str] = None,
+    client_id: Optional[str] = None,
+    client_secret: Optional[str] = None,
+) -> GhostSummary:
+    load_env()
+
+    session = requests.Session()
+    bearer = _resolve_token(token, client_id, client_secret)
+    fights, actor_names, actor_classes = fetch_fights(session, bearer, report_code)
+    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
+    fight_id_list = [fight.id for fight in chosen]
+
+    aggregated_details = fetch_player_details(session, bearer, code=report_code, fight_ids=fight_id_list)
+    player_roles, player_specs = _infer_player_roles(aggregated_details)
+
+    pulls_per_player: Dict[str, int] = defaultdict(int)
+    for fight in chosen:
+        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+        for name in set(_players_from_details(details)):
+            pulls_per_player[name] += 1
+
+    name_to_class: Dict[str, Optional[str]] = {}
+    for actor_id, name in actor_names.items():
+        if name:
+            name_to_class[name] = actor_classes.get(actor_id)
+
+    ghost_counts: Dict[str, int] = defaultdict(int)
+
+    for fight in chosen:
+        for event in fetch_events(
+            session,
+            bearer,
+            code=report_code,
+            data_type="Debuffs",
+            start=fight.start,
+            end=fight.end,
+            limit=2000,
+            ability_id=None,
+            actor_names=actor_names,
+        ):
+            event_type = (event.get("type") or "").lower()
+            if event_type not in {"applydebuff", "applydebuffstack"}:
+                continue
+            timestamp = event.get("timestamp")
+            if timestamp is None:
+                continue
+            if timestamp < fight.start + 15000:
+                continue
+            ability_game_id = event.get("abilityGameID")
+            ability_id_match = False
+            if ability_game_id is not None:
+                try:
+                    ability_id_match = int(ability_game_id) == int(ability_id)
+                except (TypeError, ValueError):
+                    ability_id_match = False
+            ability_obj = event.get("ability") or {}
+            if not ability_id_match and isinstance(ability_obj, dict):
+                try:
+                    ability_id_match = int(ability_obj.get("id")) == int(ability_id)
+                except (TypeError, ValueError):
+                    ability_id_match = False
+            if ability_id is not None and not ability_id_match:
+                continue
+            target_name = event.get("targetName")
+            if not target_name and isinstance(event.get("target"), dict):
+                target_name = event["target"].get("name")
+            if not target_name:
+                continue
+            ghost_counts[target_name] += 1
+
+    all_players = set(pulls_per_player.keys()) | set(ghost_counts.keys())
+    if not all_players:
+        all_players = set(player_roles.keys())
+
+    entries: List[GhostEntry] = []
+    total_pulls = len(chosen) or 1
+
+    for player in sorted(all_players):
+        pulls = pulls_per_player.get(player, total_pulls)
+        if pulls <= 0:
+            pulls = total_pulls
+        misses = ghost_counts.get(player, 0)
+        misses_per_pull = misses / pulls if pulls else 0.0
+        entries.append(
+            GhostEntry(
+                player=player,
+                pulls=pulls,
+                misses=misses,
+                misses_per_pull=misses_per_pull,
+            )
+        )
+
+    player_classes = {player: name_to_class.get(player) for player in all_players}
+    player_roles_full = {player: player_roles.get(player, ROLE_UNKNOWN) for player in all_players}
+    player_specs_full = {player: player_specs.get(player) for player in all_players}
+
+    entries.sort(key=lambda e: (ROLE_PRIORITY.get(player_roles_full.get(e.player, ROLE_UNKNOWN), ROLE_PRIORITY["Unknown"]), -e.misses, e.player.lower()))
+
+    return GhostSummary(
+        report_code=report_code,
+        ability_id=ability_id,
+        fight_filter=fight_name,
+        fight_ids=list(int(fid) for fid in fight_ids) if fight_ids else None,
+        fights_considered=chosen,
+        entries=entries,
         actor_names=actor_names,
         actor_classes=actor_classes,
         player_classes=player_classes,
