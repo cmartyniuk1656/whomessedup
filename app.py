@@ -18,10 +18,12 @@ from who_messed_up.service import (
     FightSelectionError,
     GhostSummary,
     HitSummary,
+    PhaseDamageSummary,
     PhaseSummary,
     TokenError,
     fetch_ghost_summary,
     fetch_hit_summary,
+    fetch_phase_damage_summary,
     fetch_phase_summary,
 )
 
@@ -263,6 +265,67 @@ class PhaseSummaryResponse(BaseModel):
         )
 
 
+class PhaseMetricModel(BaseModel):
+    phase_id: str
+    phase_label: str
+    total_amount: float
+    average_per_pull: float
+
+
+class PhaseDamageEntryModel(BaseModel):
+    player: str
+    role: str
+    class_name: Optional[str]
+    pulls: int
+    metrics: List[PhaseMetricModel]
+
+
+class PhaseDamageSummaryResponse(BaseModel):
+    report: str
+    filters: Dict[str, Optional[str]]
+    phases: List[str]
+    phase_labels: Dict[str, str]
+    entries: List[PhaseDamageEntryModel]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+
+    @classmethod
+    def from_summary(cls, summary: PhaseDamageSummary) -> "PhaseDamageSummaryResponse":
+        filters: Dict[str, Optional[str]] = {
+            "fight_name": summary.fight_filter,
+            "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+        }
+        entries = [
+            PhaseDamageEntryModel(
+                player=row.player,
+                role=row.role,
+                class_name=row.class_name,
+                pulls=row.pulls,
+                metrics=[
+                    PhaseMetricModel(
+                        phase_id=metric.phase_id,
+                        phase_label=metric.phase_label,
+                        total_amount=metric.total_amount,
+                        average_per_pull=metric.average_per_pull,
+                    )
+                    for metric in row.metrics
+                ],
+            )
+            for row in summary.entries
+        ]
+        return cls(
+            report=summary.report_code,
+            filters=filters,
+            phases=list(summary.phases),
+            phase_labels=dict(summary.phase_labels),
+            entries=entries,
+            player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
+        )
+
+
 def _client_credentials() -> Dict[str, Optional[str]]:
     return {
         "client_id": os.getenv("WCL_CLIENT_ID"),
@@ -390,6 +453,36 @@ def get_nexus_phase1(
         raise HTTPException(status_code=500, detail=f"Failed to fetch combined phase summary: {exc}") from exc
 
     return PhaseSummaryResponse.from_summary(summary)
+
+
+@app.get("/api/nexus-phase-damage", response_model=PhaseDamageSummaryResponse)
+def get_nexus_phase_damage(
+    report: str = Query(..., description="Warcraft Logs report code."),
+    fight: Optional[str] = Query(None, description="Substring match on fight name."),
+    fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    phase: Optional[List[str]] = Query(None, description="Phases to include (full, 1-5)."),
+    token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+) -> PhaseDamageSummaryResponse:
+    credentials = _client_credentials()
+    phases = phase or ["full"]
+    try:
+        summary = fetch_phase_damage_summary(
+            report_code=report,
+            phases=phases,
+            fight_name=fight,
+            fight_ids=fight_id,
+            token=token,
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+        )
+    except TokenError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except FightSelectionError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:  # pragma: no cover - defensive
+        raise HTTPException(status_code=500, detail=f"Failed to fetch phase damage summary: {exc}") from exc
+
+    return PhaseDamageSummaryResponse.from_summary(summary)
 
 
 FRONTEND_DIST = Path(__file__).resolve().parent / "frontend" / "dist"

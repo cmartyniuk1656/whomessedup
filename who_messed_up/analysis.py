@@ -218,6 +218,12 @@ class HitAggregate:
     fight_total_damage: Dict[int, float]
 
 
+@dataclass
+class AmountAggregate:
+    amount_by_player: Dict[str, float]
+    amount_by_player_fight: Dict[Tuple[str, int], float]
+
+
 def count_hits(
     events: Iterable[Dict[str, Any]],
     *,
@@ -335,4 +341,44 @@ def build_counter(
         only_ability_id=ability_id_str,
         only_source=only_source,
         dedupe_ms=dedupe_ms,
+    )
+
+
+def aggregate_amounts(
+    events: Iterable[Dict[str, Any]],
+    *,
+    actor_field: str = "source_name",
+) -> AmountAggregate:
+    """
+    Sum event ``amount`` values grouped by actor and fight.
+    """
+    amount_by_player: Dict[str, float] = defaultdict(float)
+    amount_by_player_fight: Dict[Tuple[str, int], float] = defaultdict(float)
+
+    for raw in events:
+        normalized = normalize_event(raw)
+
+        actor = normalized.get(actor_field)
+        if not actor:
+            continue
+
+        amount = normalized.get("amount")
+        if not isinstance(amount, (int, float)):
+            continue
+        amount_value = float(amount)
+
+        amount_by_player[actor] += amount_value
+
+        fight_id = normalized.get("fight_id")
+        if fight_id is not None:
+            try:
+                fight_key = int(fight_id)
+            except (TypeError, ValueError):
+                fight_key = None
+            if fight_key is not None:
+                amount_by_player_fight[(actor, fight_key)] += amount_value
+
+    return AmountAggregate(
+        amount_by_player=dict(amount_by_player),
+        amount_by_player_fight=dict(amount_by_player_fight),
     )

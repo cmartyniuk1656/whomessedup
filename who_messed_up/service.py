@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Set
 
 import requests
 
-from .analysis import HitAggregate, count_hits
+from .analysis import AmountAggregate, HitAggregate, aggregate_amounts, count_hits
 from .env import load_env
 from .api import (
     Fight,
@@ -278,6 +278,36 @@ class PhaseSummary:
     hit_exclude_final_ms: Optional[float]
     first_hit_only_hits: bool
     first_hit_only_ghosts: bool
+
+
+@dataclass
+class PhaseMetric:
+    phase_id: str
+    phase_label: str
+    total_amount: float
+    average_per_pull: float
+
+
+@dataclass
+class PhaseDamageEntry:
+    player: str
+    role: str
+    class_name: Optional[str]
+    pulls: int
+    metrics: List[PhaseMetric]
+
+
+@dataclass
+class PhaseDamageSummary:
+    report_code: str
+    fight_filter: Optional[str]
+    fight_ids: Optional[List[int]]
+    phases: List[str]
+    phase_labels: Dict[str, str]
+    entries: List[PhaseDamageEntry]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
 
 
 class TokenError(RuntimeError):
@@ -765,4 +795,151 @@ def fetch_phase_summary(
         hit_exclude_final_ms=hit_exclude_final_ms,
         first_hit_only_hits=first_hit_only_hits,
         first_hit_only_ghosts=first_hit_only_ghosts,
+    )
+
+
+NEXUS_PHASE_LABELS: Dict[str, str] = {
+    "1": "Stage One: Oath Breakers",
+    "2": "Stage Two: Rider's of the Dark",
+    "3": "Intermission One: Nexus Descent",
+    "4": "Intermission Two: King's Hunger",
+    "5": "Stage Three: World in Twilight",
+    "full": "Full Fight",
+}
+
+
+def fetch_phase_damage_summary(
+    *,
+    report_code: str,
+    phases: Iterable[str],
+    fight_name: Optional[str] = None,
+    fight_ids: Optional[Iterable[int]] = None,
+    token: Optional[str] = None,
+    client_id: Optional[str] = None,
+    client_secret: Optional[str] = None,
+) -> PhaseDamageSummary:
+    load_env()
+
+    seen_phases: Set[str] = set()
+    selected_phases: List[str] = []
+    for phase in phases:
+        if phase in NEXUS_PHASE_LABELS and phase not in seen_phases:
+            seen_phases.add(phase)
+            selected_phases.append(phase)
+    if not selected_phases:
+        selected_phases = ["full"]
+
+    session = requests.Session()
+    bearer = _resolve_token(token, client_id, client_secret)
+    fights, actor_names, actor_classes = fetch_fights(session, bearer, report_code)
+    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
+
+    fight_id_list = [fight.id for fight in chosen]
+    aggregated_details = fetch_player_details(session, bearer, code=report_code, fight_ids=fight_id_list)
+    player_roles_global, player_specs_global = _infer_player_roles(aggregated_details)
+
+    player_roles_by_fight: Dict[int, Dict[str, str]] = {}
+    for fight in chosen:
+        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+        fight_roles, _ = _infer_player_roles(details)
+        if fight_roles:
+            player_roles_by_fight[fight.id] = fight_roles
+
+    damage_aggregates: Dict[str, AmountAggregate] = {}
+    healing_aggregates: Dict[str, AmountAggregate] = {}
+
+    for phase in selected_phases:
+        extra_filter = None if phase == "full" else f"phase = {int(phase)}"
+        damage_events = events_for_fights(
+            session,
+            bearer,
+            code=report_code,
+            data_type="DamageDone",
+            fights=chosen,
+            ability_id=None,
+            ability_name=None,
+            extra_filter=extra_filter,
+            actor_names=actor_names,
+        )
+        healing_events = events_for_fights(
+            session,
+            bearer,
+            code=report_code,
+            data_type="Healing",
+            fights=chosen,
+            ability_id=None,
+            ability_name=None,
+            extra_filter=extra_filter,
+            actor_names=actor_names,
+        )
+        damage_aggregates[phase] = aggregate_amounts(damage_events, actor_field="source_name")
+        healing_aggregates[phase] = aggregate_amounts(healing_events, actor_field="source_name")
+
+    fight_ids_by_player_role: Dict[Tuple[str, str], Set[int]] = defaultdict(set)
+    for fight in chosen:
+        role_map = player_roles_by_fight.get(fight.id, {})
+        for player, role in role_map.items():
+            key = (player, role or ROLE_UNKNOWN)
+            fight_ids_by_player_role[key].add(fight.id)
+
+    player_classes: Dict[str, Optional[str]] = {}
+    for actor_id, name in actor_names.items():
+        if name:
+            player_classes[name] = actor_classes.get(actor_id)
+
+    all_player_roles: Set[Tuple[str, str]] = set(fight_ids_by_player_role.keys())
+
+    entries: List[PhaseDamageEntry] = []
+
+    for player, role in sorted(
+        all_player_roles,
+        key=lambda item: (
+            ROLE_PRIORITY.get(item[1] or ROLE_UNKNOWN, ROLE_PRIORITY["Unknown"]),
+            item[0].lower(),
+        ),
+    ):
+        pulls = len(fight_ids_by_player_role.get((player, role), set()))
+        if pulls <= 0:
+            continue
+
+        role_label = role or ROLE_UNKNOWN
+        is_healer = role_label == "Healer"
+        metrics: List[PhaseMetric] = []
+
+        for phase in selected_phases:
+            phase_label = NEXUS_PHASE_LABELS[phase]
+            aggregate = healing_aggregates[phase] if is_healer else damage_aggregates[phase]
+            total_amount = 0.0
+            for fight_id in fight_ids_by_player_role.get((player, role), set()):
+                total_amount += aggregate.amount_by_player_fight.get((player, fight_id), 0.0)
+            average = total_amount / pulls if pulls else 0.0
+            metrics.append(
+                PhaseMetric(
+                    phase_id=phase,
+                    phase_label=phase_label,
+                    total_amount=total_amount,
+                    average_per_pull=average,
+                )
+            )
+
+        entries.append(
+            PhaseDamageEntry(
+                player=player,
+                role=role_label,
+                class_name=player_classes.get(player),
+                pulls=pulls,
+                metrics=metrics,
+            )
+        )
+
+    return PhaseDamageSummary(
+        report_code=report_code,
+        fight_filter=fight_name,
+        fight_ids=list(int(fid) for fid in fight_ids) if fight_ids else None,
+        phases=selected_phases,
+        phase_labels={phase: NEXUS_PHASE_LABELS[phase] for phase in selected_phases},
+        entries=entries,
+        player_classes=player_classes,
+        player_roles=player_roles_global,
+        player_specs=player_specs_global,
     )

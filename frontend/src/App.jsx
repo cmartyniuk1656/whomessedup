@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 const CLASS_COLORS = {
   deathknight: "#C41E3A",
@@ -85,6 +85,60 @@ const TILES = [
       },
     ],
   },
+  {
+    id: "nexus-phase1-damage",
+    title: "Nexus-King Phase Damage Report",
+    description:
+      "Summarize total damage or healing per phase across all Nexus-King Salhadaar pulls, with per-pull averages.",
+    defaultFight: "Nexus-King",
+    endpoint: "/api/nexus-phase-damage",
+    mode: "phase-damage",
+    defaultSort: { key: "role", direction: "asc" },
+    configOptions: [
+      {
+        id: "phase_full",
+        label: "Full Fight",
+        default: true,
+        param: "phase",
+        value: "full",
+      },
+      {
+        id: "phase_1",
+        label: "Stage One: Oath Breakers",
+        default: false,
+        param: "phase",
+        value: "1",
+      },
+      {
+        id: "phase_2",
+        label: "Stage Two: Rider's of the Dark",
+        default: false,
+        param: "phase",
+        value: "2",
+      },
+      {
+        id: "phase_3",
+        label: "Intermission One: Nexus Descent",
+        default: false,
+        param: "phase",
+        value: "3",
+      },
+      {
+        id: "phase_4",
+        label: "Intermission Two: King's Hunger",
+        default: false,
+        param: "phase",
+        value: "4",
+      },
+      {
+        id: "phase_5",
+        label: "Stage Three: World in Twilight",
+        default: false,
+        param: "phase",
+        value: "5",
+      },
+    ],
+  },
 ];
 
 function extractReportCode(input) {
@@ -125,10 +179,38 @@ function App() {
     [activeTile]
   );
 
+  const phaseOrder = result?.phases ?? [];
+  const phaseLabels = result?.phase_labels ?? {};
+
   const rows = useMemo(() => {
-    if (!result?.entries) return [];
+    if (!result?.entries || !currentTile) return [];
     const playerClasses = result.player_classes ?? {};
     const playerRoles = result.player_roles ?? {};
+
+    if (currentTile.mode === "phase-damage") {
+      return result.entries.map((entry) => {
+        const playerClass = playerClasses[entry.player] ?? null;
+        const normalizedClass = playerClass ? playerClass.replace(/\s+/g, "").toLowerCase() : null;
+        const color = normalizedClass ? CLASS_COLORS[normalizedClass] ?? DEFAULT_PLAYER_COLOR : DEFAULT_PLAYER_COLOR;
+        const role = entry.role ?? playerRoles[entry.player] ?? "Unknown";
+        const phaseTotals = {};
+        const phaseAverages = {};
+        (entry.metrics ?? []).forEach((metric) => {
+          phaseTotals[metric.phase_id] = metric.total_amount ?? 0;
+          phaseAverages[metric.phase_id] = metric.average_per_pull ?? 0;
+        });
+        return {
+          player: entry.player,
+          role,
+          className: playerClass,
+          color,
+          pulls: entry.pulls ?? 0,
+          phaseTotals,
+          phaseAverages,
+        };
+      });
+    }
+
     return result.entries.map((entry) => {
       const playerClass = playerClasses[entry.player] ?? null;
       const normalizedClass = playerClass ? playerClass.replace(/\s+/g, "").toLowerCase() : null;
@@ -147,12 +229,58 @@ function App() {
         fuckupRate: entry.fuckup_rate ?? 0,
       };
     });
-  }, [result]);
+  }, [result, currentTile]);
 
   const sortedRows = useMemo(() => {
     const arr = [...rows];
     const { key, direction } = sortConfig;
     const dir = direction === "asc" ? 1 : -1;
+
+    if (currentTile?.mode === "phase-damage") {
+      arr.sort((a, b) => {
+        if (key === "role") {
+          const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+          const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+          if (aPriority !== bPriority) {
+            return (aPriority - bPriority) * dir;
+          }
+          const pullDiff = (b.pulls ?? 0) - (a.pulls ?? 0);
+          if (pullDiff !== 0) {
+            return dir === 1 ? pullDiff : -pullDiff;
+          }
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "player") {
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "pulls") {
+          if (a.pulls !== b.pulls) {
+            return (a.pulls - b.pulls) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key.startsWith("total_phase_")) {
+          const phaseId = key.replace("total_phase_", "");
+          const aVal = a.phaseTotals?.[phaseId] ?? 0;
+          const bVal = b.phaseTotals?.[phaseId] ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key.startsWith("avg_phase_")) {
+          const phaseId = key.replace("avg_phase_", "");
+          const aVal = a.phaseAverages?.[phaseId] ?? 0;
+          const bVal = b.phaseAverages?.[phaseId] ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        return 0;
+      });
+      return arr;
+    }
 
     arr.sort((a, b) => {
       if (key === "role") {
@@ -214,7 +342,7 @@ function App() {
     });
 
     return arr;
-  }, [rows, sortConfig]);
+  }, [rows, sortConfig, currentTile]);
 
   const pullCount = result?.pull_count ?? 0;
   const totals = result?.totals ?? {};
@@ -246,22 +374,32 @@ function App() {
   if (typeof hitFilters.first_ghost_only === "boolean") {
     filterTags.push(hitFilters.first_ghost_only ? "First Ghost per pull" : "All Ghost misses");
   }
+  if (currentTile?.mode === "phase-damage" && phaseOrder.length) {
+    const phaseLabelString = phaseOrder.map((id) => phaseLabels[id] ?? id).join(", ");
+    filterTags.unshift(`Phases: ${phaseLabelString}`);
+  }
 
-  const summaryMetrics = [
-    { label: "Pulls counted", value: formatInt(pullCount) },
-    { label: "Total Besieges", value: formatInt(totalBesieges) },
-    { label: "Total Ghost Misses", value: formatInt(totalGhosts) },
-    { label: "Avg Besieges / Pull", value: formatFloat(avgBesiegePerPull, 3) },
-    { label: "Avg Ghosts / Pull", value: formatFloat(avgGhostPerPull, 3) },
-    { label: "Fuck-up rate / Pull", value: formatFloat(combinedPerPull, 3) },
-  ];
+  const summaryMetrics =
+    currentTile?.mode === "phase-damage"
+      ? []
+      : [
+          { label: "Pulls counted", value: formatInt(pullCount) },
+          { label: "Total Besieges", value: formatInt(totalBesieges) },
+          { label: "Total Ghost Misses", value: formatInt(totalGhosts) },
+          { label: "Avg Besieges / Pull", value: formatFloat(avgBesiegePerPull, 3) },
+          { label: "Avg Ghosts / Pull", value: formatFloat(avgGhostPerPull, 3) },
+          { label: "Fuck-up rate / Pull", value: formatFloat(combinedPerPull, 3) },
+        ];
 
   const handleSort = (key) => {
     setSortConfig((prev) => {
       if (prev.key === key) {
         return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
-      return { key, direction: DEFAULT_SORT_DIRECTIONS[key] || "asc" };
+      const defaultDirection =
+        DEFAULT_SORT_DIRECTIONS[key] ||
+        (key.startsWith("total_phase_") || key.startsWith("avg_phase_") ? "desc" : "asc");
+      return { key, direction: defaultDirection };
     });
   };
 
@@ -322,7 +460,13 @@ function App() {
       if (tile.configOptions?.length) {
         tile.configOptions.forEach((opt) => {
           if (typeof resolvedConfig[opt.id] === "boolean") {
-            params.set(opt.param, resolvedConfig[opt.id] ? "true" : "false");
+            if (opt.value !== undefined) {
+              if (resolvedConfig[opt.id]) {
+                params.append(opt.param, String(opt.value));
+              }
+            } else {
+              params.set(opt.param, resolvedConfig[opt.id] ? "true" : "false");
+            }
           }
         });
       }
@@ -449,10 +593,16 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 pb-16">
-        <section aria-label="Tool tiles">
+        <section aria-label="Tool tiles" className="mt-[30px]">
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {TILES.map((tile) => {
               const isLoading = loadingId === tile.id;
+              const tileBadge =
+                tile.mode === "phase-damage"
+                  ? "Damage Report"
+                  : tile.mode === "ghost"
+                  ? "Ghost Analysis"
+                  : "Combined Failures";
               return (
                 <button
                   key={tile.id}
@@ -464,7 +614,7 @@ function App() {
                   <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-emerald-400">
                     Raid Tool
                     <span className="h-1 w-1 rounded-full bg-emerald-400" />
-                    Combined Failures
+                    {tileBadge}
                   </div>
                   <h2 className="mt-3 text-xl font-semibold text-white">{tile.title}</h2>
                   <p className="mt-3 text-sm text-slate-300">{tile.description}</p>
@@ -528,127 +678,226 @@ function App() {
               </div>
 
               <div className="mt-6 overflow-hidden rounded-xl border border-slate-800">
-                <table className="min-w-full divide-y divide-slate-800 text-sm">
-                  <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
-                    <tr>
-                      <th className="px-4 py-3 text-left">
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
-                          onClick={() => handleSort("player")}
-                        >
-                          Player
-                          {renderSortIcon("player")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-left">
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
-                          onClick={() => handleSort("role")}
-                        >
-                          Role
-                          {renderSortIcon("role")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("pulls")}
-                        >
-                          Pulls
-                          {renderSortIcon("pulls")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("ghostMisses")}
-                        >
-                          Ghost Misses
-                          {renderSortIcon("ghostMisses")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("ghostPerPull")}
-                        >
-                          Ghost / Pull
-                          {renderSortIcon("ghostPerPull")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("besiegeHits")}
-                        >
-                          Besiege Hits
-                          {renderSortIcon("besiegeHits")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("besiegePerPull")}
-                        >
-                          Besiege / Pull
-                          {renderSortIcon("besiegePerPull")}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
-                          onClick={() => handleSort("fuckupRate")}
-                        >
-                          Fuck-up Rate
-                          {renderSortIcon("fuckupRate")}
-                        </button>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
-                    {sortedRows.map((row) => (
-                      <tr key={`${row.player}-${row.role}`}> 
-                        <td className="px-4 py-3 font-medium">
-                          <span style={{ color: row.color }}>{row.player}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                              ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
-                            }`}
-                          >
-                            {row.role}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-emerald-300">
-                          {formatInt(row.ghostMisses)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.ghostPerPull)}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-emerald-300">
-                          {formatInt(row.besiegeHits)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.besiegePerPull, 3)}</td>
-                        <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate, 3)}</td>
-                      </tr>
-                    ))}
-                    {sortedRows.length === 0 && (
+                {currentTile?.mode === "phase-damage" ? (
+                  <table className="min-w-full divide-y divide-slate-800 text-sm">
+                    <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
                       <tr>
-                        <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
-                          No events matched the filters.
-                        </td>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("player")}
+                          >
+                            Player
+                            {renderSortIcon("player")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("role")}
+                          >
+                            Role
+                            {renderSortIcon("role")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("pulls")}
+                          >
+                            Pulls
+                            {renderSortIcon("pulls")}
+                          </button>
+                        </th>
+                        {phaseOrder.map((phaseId) => (
+                          <Fragment key={`phase-header-${phaseId}`}>
+                            <th className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                                onClick={() => handleSort(`total_phase_${phaseId}`)}
+                              >
+                                Total · {phaseLabels[phaseId] || phaseId}
+                                {renderSortIcon(`total_phase_${phaseId}`)}
+                              </button>
+                            </th>
+                            <th className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                                onClick={() => handleSort(`avg_phase_${phaseId}`)}
+                              >
+                                Avg / Pull · {phaseLabels[phaseId] || phaseId}
+                                {renderSortIcon(`avg_phase_${phaseId}`)}
+                              </button>
+                            </th>
+                          </Fragment>
+                        ))}
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
+                      {sortedRows.map((row) => (
+                        <tr key={`${row.player}-${row.role}`}>
+                          <td className="px-4 py-3 font-medium">
+                            <span style={{ color: row.color }}>{row.player}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                              }`}
+                            >
+                              {row.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                          {phaseOrder.map((phaseId) => (
+                            <Fragment key={`metric-${row.player}-${row.role}-${phaseId}`}>
+                              <td className="px-4 py-3 text-right text-slate-200">
+                                {formatInt(row.phaseTotals?.[phaseId] ?? 0)}
+                              </td>
+                              <td className="px-4 py-3 text-right text-slate-200">
+                                {formatFloat(row.phaseAverages?.[phaseId] ?? 0, 2)}
+                              </td>
+                            </Fragment>
+                          ))}
+                        </tr>
+                      ))}
+                      {sortedRows.length === 0 && (
+                        <tr>
+                          <td colSpan={3 + phaseOrder.length * 2} className="px-4 py-6 text-center text-slate-400">
+                            No events matched the filters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                ) : (
+                  <table className="min-w-full divide-y divide-slate-800 text-sm">
+                    <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
+                      <tr>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("player")}
+                          >
+                            Player
+                            {renderSortIcon("player")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-left">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                            onClick={() => handleSort("role")}
+                          >
+                            Role
+                            {renderSortIcon("role")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("pulls")}
+                          >
+                            Pulls
+                            {renderSortIcon("pulls")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("ghostMisses")}
+                          >
+                            Ghost Misses
+                            {renderSortIcon("ghostMisses")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("ghostPerPull")}
+                          >
+                            Ghost / Pull
+                            {renderSortIcon("ghostPerPull")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("besiegeHits")}
+                          >
+                            Besiege Hits
+                            {renderSortIcon("besiegeHits")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("besiegePerPull")}
+                          >
+                            Besiege / Pull
+                            {renderSortIcon("besiegePerPull")}
+                          </button>
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex w-full items-center justify-end gap-1 text-right text-slate-300 hover:text-white"
+                            onClick={() => handleSort("fuckupRate")}
+                          >
+                            Fuck-up Rate
+                            {renderSortIcon("fuckupRate")}
+                          </button>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
+                      {sortedRows.map((row) => (
+                        <tr key={`${row.player}-${row.role}`}>
+                          <td className="px-4 py-3 font-medium">
+                            <span style={{ color: row.color }}>{row.player}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                              }`}
+                            >
+                              {row.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-emerald-300">
+                            {formatInt(row.ghostMisses)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.ghostPerPull)}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-emerald-300">
+                            {formatInt(row.besiegeHits)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.besiegePerPull, 3)}</td>
+                          <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate, 3)}</td>
+                        </tr>
+                      ))}
+                      {sortedRows.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
+                            No events matched the filters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           )}
