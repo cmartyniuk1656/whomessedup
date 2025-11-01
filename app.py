@@ -18,9 +18,11 @@ from who_messed_up.service import (
     FightSelectionError,
     GhostSummary,
     HitSummary,
+    PhaseSummary,
     TokenError,
     fetch_ghost_summary,
     fetch_hit_summary,
+    fetch_phase_summary,
 )
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
@@ -178,6 +180,87 @@ class GhostSummaryResponse(BaseModel):
         )
 
 
+class PhasePlayerModel(BaseModel):
+    player: str
+    role: str
+    class_name: Optional[str]
+    pulls: int
+    besiege_hits: int
+    besiege_per_pull: float
+    ghost_misses: int
+    ghost_per_pull: float
+    fuckup_rate: float
+
+
+class PhaseSummaryResponse(BaseModel):
+    report: str
+    filters: Dict[str, Optional[str]]
+    pull_count: int
+    totals: Dict[str, float]
+    entries: List[PhasePlayerModel]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+    ability_ids: Dict[str, int]
+    hit_filters: Dict[str, Optional[float]]
+
+    @classmethod
+    def from_summary(cls, summary: PhaseSummary) -> "PhaseSummaryResponse":
+        filters: Dict[str, Optional[str]] = {
+            "fight_name": summary.fight_filter,
+            "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+            "ignore_after_deaths": str(summary.hit_ignore_after_deaths)
+            if summary.hit_ignore_after_deaths
+            else None,
+            "ignore_final_seconds": str(summary.hit_exclude_final_ms / 1000.0)
+            if summary.hit_exclude_final_ms
+            else None,
+        }
+        entries = [
+            PhasePlayerModel(
+                player=row.player,
+                role=row.role,
+                class_name=row.class_name,
+                pulls=row.pulls,
+                besiege_hits=row.besiege_hits,
+                besiege_per_pull=row.besiege_per_pull,
+                ghost_misses=row.ghost_misses,
+                ghost_per_pull=row.ghost_per_pull,
+                fuckup_rate=row.fuckup_rate,
+            )
+            for row in summary.entries
+        ]
+        totals = {
+            "total_besieges": float(summary.total_besieges),
+            "total_ghosts": float(summary.total_ghosts),
+            "avg_besieges_per_pull": summary.avg_besieges_per_pull,
+            "avg_ghosts_per_pull": summary.avg_ghosts_per_pull,
+            "combined_per_pull": summary.combined_per_pull,
+        }
+        ability_ids = {
+            "besiege": summary.besiege_ability_id,
+            "ghost": summary.ghost_ability_id,
+        }
+        hit_filters = {
+            "ignore_after_deaths": float(summary.hit_ignore_after_deaths)
+            if summary.hit_ignore_after_deaths
+            else None,
+            "ignore_final_seconds": summary.hit_exclude_final_ms / 1000.0 if summary.hit_exclude_final_ms else None,
+        }
+        return cls(
+            report=summary.report_code,
+            filters=filters,
+            pull_count=summary.pull_count,
+            totals=totals,
+            entries=entries,
+            player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
+            ability_ids=ability_ids,
+            hit_filters=hit_filters,
+        )
+
+
 def _client_credentials() -> Dict[str, Optional[str]]:
     return {
         "client_id": os.getenv("WCL_CLIENT_ID"),
@@ -257,6 +340,50 @@ def get_ghosts(
         raise HTTPException(status_code=500, detail=f"Failed to fetch ghost misses: {exc}") from exc
 
     return GhostSummaryResponse.from_summary(summary)
+
+
+@app.get("/api/nexus-phase1", response_model=PhaseSummaryResponse)
+def get_nexus_phase1(
+    report: str = Query(..., description="Warcraft Logs report code."),
+    fight: Optional[str] = Query(None, description="Substring match on fight name."),
+    fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    hit_ability_id: int = Query(1227472, description="Ability ID for Besiege hits."),
+    ghost_ability_id: int = Query(1224737, description="Ability ID for Oathbound ghost misses."),
+    data_type: str = Query("DamageTaken", description="ReportDataType used to fetch hit events."),
+    ignore_after_deaths: Optional[int] = Query(
+        None, description="Stop counting hits after this many total player deaths in a pull."
+    ),
+    ignore_final_seconds: Optional[float] = Query(
+        None, description="Ignore hits that occur within the final N seconds of each pull."
+    ),
+    token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+) -> PhaseSummaryResponse:
+    credentials = _client_credentials()
+    final_ms = float(ignore_final_seconds) * 1000.0 if ignore_final_seconds and ignore_final_seconds > 0 else None
+    death_threshold = ignore_after_deaths if ignore_after_deaths and ignore_after_deaths > 0 else None
+    try:
+        summary = fetch_phase_summary(
+            report_code=report,
+            fight_name=fight,
+            fight_ids=fight_id,
+            token=token,
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+            besiege_ability_id=hit_ability_id,
+            ghost_ability_id=ghost_ability_id,
+            hit_data_type=data_type,
+            hit_dedupe_ms=1500.0,
+            hit_exclude_final_ms=final_ms,
+            hit_ignore_after_deaths=death_threshold,
+        )
+    except TokenError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except FightSelectionError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:  # pragma: no cover - defensive
+        raise HTTPException(status_code=500, detail=f"Failed to fetch combined phase summary: {exc}") from exc
+
+    return PhaseSummaryResponse.from_summary(summary)
 
 
 FRONTEND_DIST = Path(__file__).resolve().parent / "frontend" / "dist"

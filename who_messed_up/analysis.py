@@ -32,6 +32,11 @@ ABILITY_ID_KEYS = [
     "spellID",
 ]
 
+TIMESTAMP_KEYS = [
+    "timestamp",
+    "time",
+]
+
 TARGET_KEYS = [
     "target.name",
     "targetName",
@@ -96,6 +101,7 @@ def normalize_event(row: Dict[str, Any]) -> Dict[str, Any]:
     event_type = first_present(row, TYPE_KEYS)
     amount = first_present(row, AMOUNT_KEYS)
     fight_id = row.get("fight")
+    timestamp = first_present(row, TIMESTAMP_KEYS)
 
     normalized_id: Optional[str] = None
     if ability_id is not None and ability_id != "":
@@ -121,6 +127,12 @@ def normalize_event(row: Dict[str, Any]) -> Dict[str, Any]:
             is_miss = True
             break
 
+    if isinstance(timestamp, str):
+        try:
+            timestamp = float(timestamp)
+        except Exception:
+            timestamp = None
+
     return {
         "ability_name": ability_name,
         "ability_id": normalized_id,
@@ -130,6 +142,7 @@ def normalize_event(row: Dict[str, Any]) -> Dict[str, Any]:
         "amount": amount,
         "is_miss": is_miss,
         "fight_id": fight_id,
+        "timestamp": timestamp,
     }
 
 
@@ -199,6 +212,7 @@ def iter_events_from_path(path: Path) -> Iterator[Dict[str, Any]]:
 class HitAggregate:
     hits_by_player: Counter
     hits_by_player_ability: Dict[Tuple[str, str], int]
+    hits_by_player_fight: Dict[Tuple[str, int], int]
     damage_by_player: Counter
     fight_total_hits: Dict[int, int]
     fight_total_damage: Dict[int, float]
@@ -211,12 +225,15 @@ def count_hits(
     only_ability: Optional[str] = None,
     only_ability_id: Optional[str] = None,
     only_source: Optional[str] = None,
+    dedupe_ms: Optional[float] = None,
 ) -> HitAggregate:
     hits_by_player: Counter = Counter()
     hits_by_player_ability: Dict[Tuple[str, str], int] = defaultdict(int)
+    hits_by_player_fight: Dict[Tuple[str, int], int] = defaultdict(int)
     damage_by_player: Counter = Counter()
     fight_total_hits: Dict[int, int] = defaultdict(int)
     fight_total_damage: Dict[int, float] = defaultdict(float)
+    last_hit_timestamp: Dict[Tuple[str, str], float] = {}
 
     for raw in events:
         normalized = normalize_event(raw)
@@ -243,8 +260,27 @@ def count_hits(
         target = normalized["target_name"] or "Unknown Target"
         ability = normalized["ability_name"] or "Unknown Ability"
 
+        timestamp = normalized.get("timestamp")
+        ability_key = (target, ability)
+        if (
+            dedupe_ms is not None
+            and isinstance(timestamp, (int, float))
+            and ability_key in last_hit_timestamp
+            and (timestamp - last_hit_timestamp[ability_key]) < dedupe_ms
+        ):
+            continue
+
         hits_by_player[target] += 1
         hits_by_player_ability[(target, ability)] += 1
+
+        fight_raw = normalized.get("fight_id")
+        if fight_raw is not None:
+            try:
+                fight_key = int(fight_raw)
+            except (TypeError, ValueError):
+                fight_key = None
+            if fight_key is not None:
+                hits_by_player_fight[(target, fight_key)] += 1
 
         damage_value = normalized.get("amount")
         if isinstance(damage_value, (int, float)):
@@ -265,10 +301,13 @@ def count_hits(
                 fight_key = None
             if fight_key is not None:
                 fight_total_hits[fight_key] += 1
+        if isinstance(timestamp, (int, float)):
+            last_hit_timestamp[ability_key] = float(timestamp)
 
     return HitAggregate(
         hits_by_player=hits_by_player,
         hits_by_player_ability=hits_by_player_ability,
+        hits_by_player_fight=dict(hits_by_player_fight),
         damage_by_player=damage_by_player,
         fight_total_hits=dict(fight_total_hits),
         fight_total_damage=dict(fight_total_damage),
@@ -282,6 +321,7 @@ def build_counter(
     only_ability: Optional[str] = None,
     only_ability_id: Optional[int] = None,
     only_source: Optional[str] = None,
+    dedupe_ms: Optional[float] = None,
 ) -> HitAggregate:
     """
     Backwards-compatible wrapper that reads events from disk before counting.
@@ -294,4 +334,5 @@ def build_counter(
         only_ability=only_ability,
         only_ability_id=ability_id_str,
         only_source=only_source,
+        dedupe_ms=dedupe_ms,
     )
