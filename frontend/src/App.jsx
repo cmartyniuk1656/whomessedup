@@ -48,7 +48,7 @@ const DEFAULT_SORT_DIRECTIONS = {
 const TILES = [
   {
     id: "nexus-phase1",
-    title: "Nexus-King Phase 1 – Fuck Ups",
+    title: "Nexus-King Phase 1 - Fuck Ups",
     description:
       "Combine Besiege hits and Oathbound ghost misses into a single per-player dashboard for Nexus-King Salhadaar pulls.",
     defaultFight: "Nexus-King",
@@ -59,6 +59,20 @@ const TILES = [
       data_type: "DamageTaken",
     },
     defaultSort: { key: "role", direction: "asc" },
+    configOptions: [
+      {
+        id: "first_hit_only",
+        label: "Only report the first Besiege hit per pull",
+        default: true,
+        param: "first_hit_only",
+      },
+      {
+        id: "first_ghost_only",
+        label: "Only report the first Ghost miss per pull",
+        default: true,
+        param: "first_ghost_only",
+      },
+    ],
   },
 ];
 
@@ -90,6 +104,10 @@ function App() {
   const [loadingId, setLoadingId] = useState(null);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [pendingTile, setPendingTile] = useState(null);
+  const [showConfig, setShowConfig] = useState(false);
+  const [configValues, setConfigValues] = useState({});
+  const [savedConfigs, setSavedConfigs] = useState({});
 
   const currentTile = useMemo(
     () => TILES.find((tile) => tile.id === activeTile) ?? TILES[0] ?? null,
@@ -204,6 +222,20 @@ function App() {
       ? value.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
       : value;
 
+  const filterTags = [];
+  if (hitFilters.ignore_after_deaths) {
+    filterTags.push(`Stop after ${formatInt(hitFilters.ignore_after_deaths)} deaths`);
+  }
+  if (hitFilters.ignore_final_seconds) {
+    filterTags.push(`Ignore final ${formatFloat(hitFilters.ignore_final_seconds, 1)}s`);
+  }
+  if (typeof hitFilters.first_hit_only === "boolean") {
+    filterTags.push(hitFilters.first_hit_only ? "First Besiege per pull" : "All Besiege hits");
+  }
+  if (typeof hitFilters.first_ghost_only === "boolean") {
+    filterTags.push(hitFilters.first_ghost_only ? "First Ghost per pull" : "All Ghost misses");
+  }
+
   const summaryMetrics = [
     { label: "Pulls counted", value: formatInt(pullCount) },
     { label: "Total Besieges", value: formatInt(totalBesieges) },
@@ -229,17 +261,28 @@ function App() {
     return <span className="ml-2 text-emerald-300">{sortConfig.direction === "asc" ? "▲" : "▼"}</span>;
   };
 
-  const handleTileClick = async (tile) => {
-    setError("");
-    setResult(null);
-    setActiveTile(tile.id);
-    setSortConfig(tile.defaultSort ?? { key: "role", direction: "asc" });
-
+  const runTile = async (tile, overrides = {}) => {
     const code = extractReportCode(reportInput);
     if (!code) {
       setError("Enter a Warcraft Logs report URL or code first.");
       return;
     }
+
+    const resolvedConfig = {};
+    if (tile.configOptions?.length) {
+      tile.configOptions.forEach((opt) => {
+        if (typeof overrides[opt.id] === "boolean") {
+          resolvedConfig[opt.id] = overrides[opt.id];
+        } else if (typeof opt.default === "boolean") {
+          resolvedConfig[opt.id] = opt.default;
+        }
+      });
+    }
+
+    setError("");
+    setResult(null);
+    setActiveTile(tile.id);
+    setSortConfig(tile.defaultSort ?? { key: "role", direction: "asc" });
 
     setLoadingId(tile.id);
     try {
@@ -265,6 +308,13 @@ function App() {
       if (!Number.isNaN(finalNum) && finalNum > 0) {
         params.set("ignore_final_seconds", String(finalNum));
       }
+      if (tile.configOptions?.length) {
+        tile.configOptions.forEach((opt) => {
+          if (typeof resolvedConfig[opt.id] === "boolean") {
+            params.set(opt.param, resolvedConfig[opt.id] ? "true" : "false");
+          }
+        });
+      }
 
       const response = await fetch(`${tile.endpoint}?${params.toString()}`);
       if (!response.ok) {
@@ -282,6 +332,49 @@ function App() {
     } finally {
       setLoadingId(null);
     }
+  };
+
+  const handleTileClick = (tile) => {
+    if (tile.configOptions?.length) {
+      const saved = savedConfigs[tile.id] ?? {};
+      const initial = {};
+      tile.configOptions.forEach((opt) => {
+        const savedValue = saved[opt.id];
+        initial[opt.id] = typeof savedValue === "boolean" ? savedValue : !!opt.default;
+      });
+      setConfigValues(initial);
+      setPendingTile(tile);
+      setShowConfig(true);
+    } else {
+      runTile(tile);
+    }
+  };
+
+  const handleConfigOptionChange = (id, value) => {
+    setConfigValues((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleConfigCancel = () => {
+    setShowConfig(false);
+    setPendingTile(null);
+  };
+
+  const handleConfigConfirm = () => {
+    if (!pendingTile) {
+      return;
+    }
+    const overrides = { ...configValues };
+    setSavedConfigs((prev) => ({
+      ...prev,
+      [pendingTile.id]: overrides,
+    }));
+    setShowConfig(false);
+    const tileToRun = pendingTile;
+    setPendingTile(null);
+    runTile(tileToRun, overrides);
   };
 
   return (
@@ -404,8 +497,7 @@ function App() {
                     {result.filters?.fight_name ? ` · Fight filter: ${result.filters.fight_name}` : ""}
                     {abilityIds.besiege ? ` · Besiege ${abilityIds.besiege}` : ""}
                     {abilityIds.ghost ? ` · Ghost ${abilityIds.ghost}` : ""}
-                    {hitFilters.ignore_after_deaths ? ` · Stop after deaths: ${hitFilters.ignore_after_deaths}` : ""}
-                    {hitFilters.ignore_final_seconds ? ` · Ignore final ${formatFloat(hitFilters.ignore_final_seconds, 1)}s` : ""}
+                    {filterTags.length ? ` · ${filterTags.join(" · ")}` : ""}
                   </p>
                 </div>
                 <div className="grid gap-1 text-right text-sm text-slate-300">
@@ -505,7 +597,7 @@ function App() {
                   </thead>
                   <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
                     {sortedRows.map((row) => (
-                      <tr key={row.player}>
+                      <tr key={`${row.player}-${row.role}`}> 
                         <td className="px-4 py-3 font-medium">
                           <span style={{ color: row.color }}>{row.player}</span>
                         </td>
@@ -544,6 +636,45 @@ function App() {
           )}
         </section>
       </main>
+      {showConfig && pendingTile ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl shadow-emerald-500/10">
+            <h2 className="text-lg font-semibold text-white">Report Configuration</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Adjust settings before running <span className="font-medium text-slate-200">{pendingTile.title}</span>.
+            </p>
+            <div className="mt-4 space-y-3">
+              {pendingTile.configOptions?.map((option) => (
+                <label key={option.id} className="flex items-start gap-3 text-sm text-slate-200">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-400"
+                    checked={!!configValues[option.id]}
+                    onChange={(event) => handleConfigOptionChange(option.id, event.target.checked)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleConfigCancel}
+                className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfigConfirm}
+                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+              >
+                Run Report
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

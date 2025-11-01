@@ -246,6 +246,8 @@ class PhaseSummaryResponse(BaseModel):
             if summary.hit_ignore_after_deaths
             else None,
             "ignore_final_seconds": summary.hit_exclude_final_ms / 1000.0 if summary.hit_exclude_final_ms else None,
+            "first_hit_only": summary.first_hit_only_hits,
+            "first_ghost_only": summary.first_hit_only_ghosts,
         }
         return cls(
             report=summary.report_code,
@@ -356,6 +358,8 @@ def get_nexus_phase1(
     ignore_final_seconds: Optional[float] = Query(
         None, description="Ignore hits that occur within the final N seconds of each pull."
     ),
+    first_hit_only: bool = Query(True, description="Count only the first Besiege hit per pull."),
+    first_ghost_only: bool = Query(True, description="Count only the first Ghost miss per pull."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> PhaseSummaryResponse:
     credentials = _client_credentials()
@@ -375,6 +379,8 @@ def get_nexus_phase1(
             hit_dedupe_ms=1500.0,
             hit_exclude_final_ms=final_ms,
             hit_ignore_after_deaths=death_threshold,
+            first_hit_only_hits=first_hit_only,
+            first_hit_only_ghosts=first_ghost_only,
         )
     except TokenError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc

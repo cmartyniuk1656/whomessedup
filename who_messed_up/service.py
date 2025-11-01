@@ -229,7 +229,6 @@ class GhostSummary:
     player_specs: Dict[str, Optional[str]]
     ghost_counts_by_player_fight: Dict[Tuple[int, str], int]
     player_roles_by_fight: Dict[int, Dict[str, str]]
-
     @property
     def pull_count(self) -> int:
         return len(self.fights_considered)
@@ -277,6 +276,8 @@ class PhaseSummary:
     player_specs: Dict[str, Optional[str]]
     hit_ignore_after_deaths: Optional[int]
     hit_exclude_final_ms: Optional[float]
+    first_hit_only_hits: bool
+    first_hit_only_ghosts: bool
 
 
 class TokenError(RuntimeError):
@@ -330,6 +331,7 @@ def fetch_hit_summary(
     dedupe_ms: Optional[float] = None,
     exclude_final_ms: Optional[float] = None,
     ignore_after_deaths: Optional[int] = None,
+    first_hit_only: bool = True,
 ) -> HitSummary:
     load_env()
 
@@ -387,7 +389,7 @@ def fetch_hit_summary(
             if exclude_final_ms is not None:
                 cutoff = float(fight.end) - float(exclude_final_ms)
             fight_death_cutoff = death_cutoffs_by_fight.get(fight.id)
-            seen_targets: Set[str] = set()
+            seen_targets: Set[str] = set() if first_hit_only else set()
             for event in fetch_events(
                 session,
                 bearer,
@@ -423,7 +425,7 @@ def fetch_hit_summary(
                 target_name = event.get("targetName")
                 if not target_name and isinstance(event.get("target"), dict):
                     target_name = event["target"].get("name")
-                if target_name:
+                if target_name and first_hit_only:
                     if target_name in seen_targets:
                         continue
                     seen_targets.add(target_name)
@@ -483,6 +485,7 @@ def fetch_ghost_summary(
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
+    first_miss_only: bool = True,
 ) -> GhostSummary:
     load_env()
 
@@ -514,7 +517,7 @@ def fetch_ghost_summary(
     ghost_counts_by_fight: Dict[Tuple[int, str], int] = defaultdict(int)
 
     for fight in chosen:
-        seen_targets: Set[str] = set()
+        seen_targets: Set[str] = set() if first_miss_only else set()
         for event in fetch_events(
             session,
             bearer,
@@ -554,9 +557,10 @@ def fetch_ghost_summary(
                 target_name = event["target"].get("name")
             if not target_name:
                 continue
-            if target_name in seen_targets:
-                continue
-            seen_targets.add(target_name)
+            if first_miss_only:
+                if target_name in seen_targets:
+                    continue
+                seen_targets.add(target_name)
             ghost_counts[target_name] += 1
             ghost_counts_by_fight[(fight.id, target_name)] += 1
 
@@ -619,6 +623,8 @@ def fetch_phase_summary(
     hit_dedupe_ms: Optional[float] = 1500.0,
     hit_exclude_final_ms: Optional[float] = None,
     hit_ignore_after_deaths: Optional[int] = None,
+    first_hit_only_hits: bool = True,
+    first_hit_only_ghosts: bool = True,
 ) -> PhaseSummary:
     """
     Aggregate Besiege hits and Oathbound ghost misses into a combined per-player report.
@@ -635,6 +641,7 @@ def fetch_phase_summary(
         dedupe_ms=hit_dedupe_ms,
         exclude_final_ms=hit_exclude_final_ms,
         ignore_after_deaths=hit_ignore_after_deaths,
+        first_hit_only=first_hit_only_hits,
     )
     ghost_summary = fetch_ghost_summary(
         report_code=report_code,
@@ -644,6 +651,7 @@ def fetch_phase_summary(
         token=token,
         client_id=client_id,
         client_secret=client_secret,
+        first_miss_only=first_hit_only_ghosts,
     )
 
     pull_count = ghost_summary.pull_count or hit_summary.pull_count
@@ -755,4 +763,6 @@ def fetch_phase_summary(
         player_specs=player_specs,
         hit_ignore_after_deaths=hit_ignore_after_deaths,
         hit_exclude_final_ms=hit_exclude_final_ms,
+        first_hit_only_hits=first_hit_only_hits,
+        first_hit_only_ghosts=first_hit_only_ghosts,
     )
