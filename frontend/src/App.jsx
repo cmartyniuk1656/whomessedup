@@ -74,18 +74,26 @@ const TILES = [
     configOptions: [
       {
         id: "first_hit_only",
+        type: "checkbox",
         label: "Only report the first Besiege hit per pull",
         default: true,
         param: "first_hit_only",
       },
       {
-        id: "first_ghost_only",
-        label: "Only report the first Ghost miss per pull",
-        default: true,
-        param: "first_ghost_only",
+        id: "ghost_miss_mode",
+        type: "select",
+        label: "How should ghost misses be counted?",
+        default: "first_per_set",
+        param: "ghost_miss_mode",
+        options: [
+          { value: "first_per_set", label: "Count the first ghost miss of each set" },
+          { value: "first_per_pull", label: "Count the first ghost miss of each pull" },
+          { value: "all", label: "Count every ghost miss" },
+        ],
       },
       {
         id: "fresh_run",
+        type: "checkbox",
         label: "Force fresh run (skip cache)",
         default: false,
         param: "fresh",
@@ -571,7 +579,14 @@ function App() {
   if (typeof hitFilters.first_hit_only === "boolean") {
     filterTags.push(hitFilters.first_hit_only ? "First Besiege per pull" : "All Besiege hits");
   }
-  if (typeof hitFilters.first_ghost_only === "boolean") {
+  const ghostMode = hitFilters.ghost_miss_mode;
+  if (ghostMode === "first_per_set") {
+    filterTags.push("First Ghost per set");
+  } else if (ghostMode === "first_per_pull") {
+    filterTags.push("First Ghost per pull");
+  } else if (ghostMode === "all") {
+    filterTags.push("All Ghost misses");
+  } else if (typeof hitFilters.first_ghost_only === "boolean") {
     filterTags.push(hitFilters.first_ghost_only ? "First Ghost per pull" : "All Ghost misses");
   }
   if (currentTile?.mode === "phase-damage" && phaseOrder.length) {
@@ -631,10 +646,34 @@ function App() {
     const resolvedConfig = {};
     if (tile.configOptions?.length) {
       tile.configOptions.forEach((opt) => {
-        if (typeof overrides[opt.id] === "boolean") {
-          resolvedConfig[opt.id] = overrides[opt.id];
-        } else if (typeof opt.default === "boolean") {
-          resolvedConfig[opt.id] = opt.default;
+        const optionType = opt.type ?? "checkbox";
+        let rawValue;
+        if (Object.prototype.hasOwnProperty.call(overrides, opt.id)) {
+          rawValue = overrides[opt.id];
+        } else if (opt.default !== undefined) {
+          rawValue = opt.default;
+        } else if (optionType === "select" && Array.isArray(opt.options) && opt.options.length > 0) {
+          rawValue = opt.options[0].value;
+        } else if (optionType === "checkbox") {
+          rawValue = false;
+        }
+        if (rawValue === undefined) {
+          return;
+        }
+        if (optionType === "select") {
+          resolvedConfig[opt.id] = String(rawValue);
+        } else if (optionType === "checkbox") {
+          if (typeof rawValue === "boolean") {
+            resolvedConfig[opt.id] = rawValue;
+          } else if (typeof rawValue === "string") {
+            resolvedConfig[opt.id] = rawValue === "true" || rawValue === "1";
+          } else if (typeof rawValue === "number") {
+            resolvedConfig[opt.id] = rawValue === 1;
+          } else {
+            resolvedConfig[opt.id] = Boolean(rawValue);
+          }
+        } else {
+          resolvedConfig[opt.id] = rawValue;
         }
       });
     }
@@ -671,14 +710,27 @@ function App() {
       }
       if (tile.configOptions?.length) {
         tile.configOptions.forEach((opt) => {
-          if (typeof resolvedConfig[opt.id] === "boolean") {
-            if (opt.value !== undefined) {
-              if (resolvedConfig[opt.id]) {
-                params.append(opt.param, String(opt.value));
-              }
-            } else {
-              params.set(opt.param, resolvedConfig[opt.id] ? "true" : "false");
+          const optionType = opt.type ?? "checkbox";
+          const value = resolvedConfig[opt.id];
+          if (value === undefined || value === null) {
+            return;
+          }
+          if (optionType === "select") {
+            params.set(opt.param, String(value));
+            return;
+          }
+          const boolValue =
+            typeof value === "boolean"
+              ? value
+              : typeof value === "string"
+              ? value === "true" || value === "1"
+              : Boolean(value);
+          if (opt.value !== undefined) {
+            if (boolValue) {
+              params.append(opt.param, String(opt.value));
             }
+          } else {
+            params.set(opt.param, boolValue ? "true" : "false");
           }
         });
       }
@@ -725,7 +777,28 @@ function App() {
       const initial = {};
       tile.configOptions.forEach((opt) => {
         const savedValue = saved[opt.id];
-        initial[opt.id] = typeof savedValue === "boolean" ? savedValue : !!opt.default;
+        const optionType = opt.type ?? "checkbox";
+        if (optionType === "select") {
+          if (typeof savedValue === "string") {
+            initial[opt.id] = savedValue;
+          } else if (typeof opt.default === "string") {
+            initial[opt.id] = opt.default;
+          } else if (Array.isArray(opt.options) && opt.options.length > 0) {
+            initial[opt.id] = String(opt.options[0].value);
+          } else {
+            initial[opt.id] = "";
+          }
+        } else {
+          if (typeof savedValue === "boolean") {
+            initial[opt.id] = savedValue;
+          } else if (typeof opt.default === "boolean") {
+            initial[opt.id] = opt.default;
+          } else if (typeof savedValue === "string") {
+            initial[opt.id] = savedValue === "true" || savedValue === "1";
+          } else {
+            initial[opt.id] = false;
+          }
+        }
       });
       setConfigValues(initial);
       setPendingTile(tile);
@@ -1443,18 +1516,52 @@ function App() {
               Adjust settings before running <span className="font-medium text-slate-200">{pendingTile.title}</span>.
             </p>
             <div className="mt-4 space-y-3">
-              {pendingTile.configOptions?.map((option) => (
-                <label key={option.id} className="flex items-start gap-3 text-sm text-slate-200">
-                  <input
-                    type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-400"
-                    checked={!!configValues[option.id]}
-                    onChange={(event) => handleConfigOptionChange(option.id, event.target.checked)}
-                    disabled={isBusy}
-                  />
-                  <span>{option.label}</span>
-                </label>
-              ))}
+              {pendingTile.configOptions?.map((option) => {
+                const optionType = option.type ?? "checkbox";
+                if (optionType === "select") {
+                  const selectValue =
+                    typeof configValues[option.id] === "string"
+                      ? configValues[option.id]
+                      : typeof option.default === "string"
+                      ? option.default
+                      : "";
+                  return (
+                    <label key={option.id} className="flex flex-col gap-2 text-sm text-slate-200">
+                      <span>{option.label}</span>
+                      <select
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                        value={selectValue}
+                        onChange={(event) => handleConfigOptionChange(option.id, event.target.value)}
+                        disabled={isBusy}
+                      >
+                        {(option.options ?? []).map((optChoice) => (
+                          <option key={optChoice.value} value={optChoice.value}>
+                            {optChoice.label ?? optChoice.value}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                }
+                return (
+                  <label key={option.id} className="flex items-start gap-3 text-sm text-slate-200">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-400"
+                      checked={
+                        typeof configValues[option.id] === "boolean"
+                          ? configValues[option.id]
+                          : typeof option.default === "boolean"
+                          ? option.default
+                          : false
+                      }
+                      onChange={(event) => handleConfigOptionChange(option.id, event.target.checked)}
+                      disabled={isBusy}
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                );
+              })}
             </div>
             {pendingTile.footnotes?.length ? (
               <div className="mt-4 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2">

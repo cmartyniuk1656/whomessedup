@@ -22,6 +22,9 @@ from who_messed_up.service import (
     PhaseDamageSummary,
     PhaseSummary,
     TokenError,
+    DEFAULT_GHOST_MISS_MODE,
+    GhostMissMode,
+    normalize_ghost_miss_mode,
     fetch_ghost_summary,
     fetch_hit_summary,
     fetch_phase_damage_summary,
@@ -157,6 +160,7 @@ class GhostSummaryResponse(BaseModel):
         filters: Dict[str, Optional[str]] = {
             "fight_name": summary.fight_filter,
             "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+            "ghost_miss_mode": summary.ghost_miss_mode,
         }
         entries = [
             GhostEntryModel(
@@ -205,7 +209,7 @@ class PhaseSummaryResponse(BaseModel):
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
     ability_ids: Dict[str, int]
-    hit_filters: Dict[str, Optional[float]]
+    hit_filters: Dict[str, Optional[Any]]
 
     @classmethod
     def from_summary(cls, summary: PhaseSummary) -> "PhaseSummaryResponse":
@@ -218,6 +222,7 @@ class PhaseSummaryResponse(BaseModel):
             "ignore_final_seconds": str(summary.hit_exclude_final_ms / 1000.0)
             if summary.hit_exclude_final_ms
             else None,
+            "ghost_miss_mode": summary.ghost_miss_mode,
         }
         entries = [
             PhasePlayerModel(
@@ -250,8 +255,14 @@ class PhaseSummaryResponse(BaseModel):
             else None,
             "ignore_final_seconds": summary.hit_exclude_final_ms / 1000.0 if summary.hit_exclude_final_ms else None,
             "first_hit_only": summary.first_hit_only_hits,
-            "first_ghost_only": summary.first_hit_only_ghosts,
+            "ghost_miss_mode": summary.ghost_miss_mode,
         }
+        if summary.ghost_miss_mode == "first_per_pull":
+            hit_filters["first_ghost_only"] = True
+        elif summary.ghost_miss_mode == "all":
+            hit_filters["first_ghost_only"] = False
+        else:
+            hit_filters["first_ghost_only"] = None
         return cls(
             report=summary.report_code,
             filters=filters,
@@ -353,6 +364,9 @@ JOB_PHASE_DAMAGE = "nexus_phase_damage"
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
+    ghost_mode_value = payload.get("ghost_miss_mode")
+    if ghost_mode_value is None and "first_ghost_only" in payload:
+        ghost_mode_value = payload.get("first_ghost_only")
     summary = fetch_phase_summary(
         report_code=payload["report"],
         fight_name=payload.get("fight"),
@@ -367,7 +381,7 @@ def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         hit_exclude_final_ms=payload.get("ignore_final_ms"),
         hit_ignore_after_deaths=payload.get("ignore_after_deaths"),
         first_hit_only_hits=payload.get("first_hit_only", True),
-        first_hit_only_ghosts=payload.get("first_ghost_only", True),
+        ghost_miss_mode=ghost_mode_value,
     )
     return PhaseSummaryResponse.from_summary(summary).dict()
 
@@ -451,8 +465,20 @@ def get_ghosts(
     fight: Optional[str] = Query(None, description="Substring match on fight name."),
     fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+    ghost_miss_mode: GhostMissMode = Query(
+        DEFAULT_GHOST_MISS_MODE, description="Ghost miss counting strategy (per set, per pull, or all)."
+    ),
+    legacy_first_ghost_only: Optional[bool] = Query(
+        None,
+        alias="first_ghost_only",
+        include_in_schema=False,
+        description="Deprecated: set true to count first per pull or false to count all ghost misses.",
+    ),
 ) -> GhostSummaryResponse:
     credentials = _client_credentials()
+    ghost_mode_value: Any = ghost_miss_mode
+    if legacy_first_ghost_only is not None:
+        ghost_mode_value = legacy_first_ghost_only
     try:
         summary = fetch_ghost_summary(
             report_code=report,
@@ -462,6 +488,7 @@ def get_ghosts(
             token=token,
             client_id=credentials["client_id"],
             client_secret=credentials["client_secret"],
+            ghost_miss_mode=ghost_mode_value,
         )
     except TokenError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
@@ -488,13 +515,26 @@ def get_nexus_phase1(
         None, description="Ignore hits that occur within the final N seconds of each pull."
     ),
     first_hit_only: bool = Query(True, description="Count only the first Besiege hit per pull."),
-    first_ghost_only: bool = Query(True, description="Count only the first Ghost miss per pull."),
+    ghost_miss_mode: GhostMissMode = Query(
+        DEFAULT_GHOST_MISS_MODE,
+        description="How to count ghost misses: per set (default), per pull, or all misses.",
+    ),
+    legacy_first_ghost_only: Optional[bool] = Query(
+        None,
+        alias="first_ghost_only",
+        include_in_schema=False,
+        description="Deprecated: set true to count first ghost per pull, false to count all ghost misses.",
+    ),
     fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> PhaseSummaryResponse:
     final_ms = float(ignore_final_seconds) * 1000.0 if ignore_final_seconds and ignore_final_seconds > 0 else None
     death_threshold = ignore_after_deaths if ignore_after_deaths and ignore_after_deaths > 0 else None
     fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    ghost_mode_input: Any = ghost_miss_mode
+    if legacy_first_ghost_only is not None:
+        ghost_mode_input = legacy_first_ghost_only
+    normalized_ghost_mode = normalize_ghost_miss_mode(ghost_mode_input)
     payload = {
         "report": report,
         "fight": fight,
@@ -506,7 +546,7 @@ def get_nexus_phase1(
         "ignore_final_ms": final_ms,
         "hit_dedupe_ms": 1500.0,
         "first_hit_only": first_hit_only,
-        "first_ghost_only": first_ghost_only,
+        "ghost_miss_mode": normalized_ghost_mode,
     }
     if token:
         payload["token"] = token

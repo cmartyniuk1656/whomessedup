@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Set
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Set, Literal
 
 import requests
 
@@ -99,6 +99,55 @@ NEXUS_PHASE_LABELS: Dict[str, str] = {
     "4": "Intermission Two: King's Hunger",
     "5": "Stage Three: World in Twilight",
 }
+
+GhostMissMode = Literal["first_per_set", "first_per_pull", "all"]
+DEFAULT_GHOST_MISS_MODE: GhostMissMode = "first_per_set"
+_GHOST_MODE_ALIASES: Dict[str, GhostMissMode] = {
+    "first_per_set": "first_per_set",
+    "firstperset": "first_per_set",
+    "per_set": "first_per_set",
+    "perset": "first_per_set",
+    "set_first": "first_per_set",
+    "setfirst": "first_per_set",
+    "first_set": "first_per_set",
+    "firstset": "first_per_set",
+    "first_per_pull": "first_per_pull",
+    "firstperpull": "first_per_pull",
+    "per_pull": "first_per_pull",
+    "perpull": "first_per_pull",
+    "pull_first": "first_per_pull",
+    "pullfirst": "first_per_pull",
+    "first_pull": "first_per_pull",
+    "firstpull": "first_per_pull",
+    "all": "all",
+    "all_hits": "all",
+    "allhits": "all",
+    "all_misses": "all",
+    "allmisses": "all",
+    "every": "all",
+}
+GHOST_SET_WINDOW_MS = 6000
+
+
+def normalize_ghost_miss_mode(value: Any) -> GhostMissMode:
+    """
+    Normalize user-provided ghost miss mode values into the canonical set.
+    """
+    if isinstance(value, bool):
+        return "first_per_pull" if value else "all"
+    if isinstance(value, (int, float)) and value in (0, 1):
+        return "first_per_pull" if int(value) == 1 else "all"
+    if value is None:
+        return DEFAULT_GHOST_MISS_MODE
+    if isinstance(value, str):
+        cleaned = value.strip().lower()
+        cleaned = cleaned.replace("-", "_").replace(" ", "_")
+        while "__" in cleaned:
+            cleaned = cleaned.replace("__", "_")
+        normalized = _GHOST_MODE_ALIASES.get(cleaned)
+        if normalized:
+            return normalized
+    raise ValueError(f"Invalid ghost miss mode: {value}")
 
 
 def _extract_spec(entry: Dict[str, Any]) -> Optional[str]:
@@ -237,6 +286,7 @@ class GhostSummary:
     player_classes: Dict[str, Optional[str]]
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
+    ghost_miss_mode: GhostMissMode
     ghost_counts_by_player_fight: Dict[Tuple[int, str], int]
     roles_by_fight: Dict[int, Dict[str, str]]
     @property
@@ -287,7 +337,7 @@ class PhaseSummary:
     hit_ignore_after_deaths: Optional[int]
     hit_exclude_final_ms: Optional[float]
     first_hit_only_hits: bool
-    first_hit_only_ghosts: bool
+    ghost_miss_mode: GhostMissMode
 
 
 @dataclass
@@ -525,7 +575,8 @@ def fetch_ghost_summary(
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
-    first_miss_only: bool = True,
+    ghost_miss_mode: Any = DEFAULT_GHOST_MISS_MODE,
+    first_miss_only: Optional[bool] = None,
 ) -> GhostSummary:
     load_env()
 
@@ -534,6 +585,11 @@ def fetch_ghost_summary(
     fights, actor_names, actor_classes, actor_owners = fetch_fights(session, bearer, report_code)
     chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
     fight_id_list = [fight.id for fight in chosen]
+
+    mode_input = ghost_miss_mode
+    if first_miss_only is not None and ghost_miss_mode == DEFAULT_GHOST_MISS_MODE:
+        mode_input = first_miss_only
+    mode = normalize_ghost_miss_mode(mode_input)
 
     aggregated_details = fetch_player_details(session, bearer, code=report_code, fight_ids=fight_id_list)
     player_roles, player_specs = _infer_player_roles(aggregated_details)
@@ -557,7 +613,8 @@ def fetch_ghost_summary(
     ghost_counts_by_fight: Dict[Tuple[int, str], int] = defaultdict(int)
 
     for fight in chosen:
-        seen_targets: Set[str] = set() if first_miss_only else set()
+        seen_targets: Set[str] = set()
+        last_counted_ts: Dict[str, int] = {}
         for event in fetch_events(
             session,
             bearer,
@@ -597,10 +654,23 @@ def fetch_ghost_summary(
                 target_name = event["target"].get("name")
             if not target_name:
                 continue
-            if first_miss_only:
+
+            should_count = True
+            if mode == "first_per_pull":
                 if target_name in seen_targets:
-                    continue
-                seen_targets.add(target_name)
+                    should_count = False
+                else:
+                    seen_targets.add(target_name)
+            elif mode == "first_per_set":
+                last_timestamp = last_counted_ts.get(target_name)
+                if last_timestamp is not None and timestamp - last_timestamp < GHOST_SET_WINDOW_MS:
+                    should_count = False
+                else:
+                    last_counted_ts[target_name] = timestamp
+
+            if not should_count:
+                continue
+
             ghost_counts[target_name] += 1
             ghost_counts_by_fight[(fight.id, target_name)] += 1
 
@@ -644,6 +714,7 @@ def fetch_ghost_summary(
         player_classes=player_classes,
         player_roles=player_roles_full,
         player_specs=player_specs_full,
+        ghost_miss_mode=mode,
         ghost_counts_by_player_fight=dict(ghost_counts_by_fight),
         roles_by_fight=roles_by_fight,
     )
@@ -694,7 +765,7 @@ def fetch_phase_summary(
     hit_exclude_final_ms: Optional[float] = None,
     hit_ignore_after_deaths: Optional[int] = None,
     first_hit_only_hits: bool = True,
-    first_hit_only_ghosts: bool = True,
+    ghost_miss_mode: Any = DEFAULT_GHOST_MISS_MODE,
 ) -> PhaseSummary:
     fight_id_filter = [int(fid) for fid in fight_ids] if fight_ids else None
 
@@ -712,6 +783,8 @@ def fetch_phase_summary(
         ignore_after_deaths=hit_ignore_after_deaths,
         first_hit_only=first_hit_only_hits,
     )
+    normalized_ghost_mode = normalize_ghost_miss_mode(ghost_miss_mode)
+
     ghost_summary = fetch_ghost_summary(
         report_code=report_code,
         ability_id=ghost_ability_id,
@@ -720,7 +793,7 @@ def fetch_phase_summary(
         token=token,
         client_id=client_id,
         client_secret=client_secret,
-        first_miss_only=first_hit_only_ghosts,
+        ghost_miss_mode=normalized_ghost_mode,
     )
 
     fights = list(hit_summary.fights_considered)
@@ -852,7 +925,7 @@ def fetch_phase_summary(
         hit_ignore_after_deaths=hit_ignore_after_deaths,
         hit_exclude_final_ms=hit_exclude_final_ms,
         first_hit_only_hits=first_hit_only_hits,
-        first_hit_only_ghosts=first_hit_only_ghosts,
+        ghost_miss_mode=normalized_ghost_mode,
     )
 
 
