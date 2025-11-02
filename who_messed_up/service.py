@@ -150,6 +150,23 @@ def normalize_ghost_miss_mode(value: Any) -> GhostMissMode:
     raise ValueError(f"Invalid ghost miss mode: {value}")
 
 
+def _sanitize_report_code(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        raise ValueError("Report code cannot be empty.")
+    lowered = text.lower()
+    if "/reports/" in lowered:
+        parts = text.split("/reports/", 1)
+        if len(parts) == 2:
+            remainder = parts[1]
+            remainder = remainder.split("/", 1)[0]
+            remainder = remainder.split("?", 1)[0]
+            cleaned = remainder.strip()
+            if cleaned:
+                return cleaned
+    return text
+
+
 def _extract_spec(entry: Dict[str, Any]) -> Optional[str]:
     specs = entry.get("specs") or []
     for spec_obj in specs:
@@ -368,6 +385,9 @@ class PhaseDamageSummary:
     player_classes: Dict[str, Optional[str]]
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
+    pull_count: int
+    source_reports: List[str]
+    fight_signature: List[Tuple[str, bool, int]]
 
 
 class TokenError(RuntimeError):
@@ -929,7 +949,7 @@ def fetch_phase_summary(
     )
 
 
-def fetch_phase_damage_summary(
+def _fetch_phase_damage_summary_single(
     *,
     report_code: str,
     phases: Optional[Iterable[str]] = None,
@@ -1128,6 +1148,171 @@ def fetch_phase_damage_summary(
         player_classes=player_classes,
         player_roles=player_roles,
         player_specs=player_specs,
+        pull_count=len(chosen),
+        source_reports=[report_code],
+        fight_signature=[
+            (fight.name, bool(fight.kill), int(fight.end - fight.start)) for fight in chosen
+        ],
+    )
+
+
+def fetch_phase_damage_summary(
+    *,
+    report_code: str,
+    phases: Optional[Iterable[str]] = None,
+    fight_name: Optional[str] = None,
+    fight_ids: Optional[Iterable[int]] = None,
+    token: Optional[str] = None,
+    client_id: Optional[str] = None,
+    client_secret: Optional[str] = None,
+    extra_report_codes: Optional[Iterable[str]] = None,
+) -> PhaseDamageSummary:
+    primary_code = _sanitize_report_code(report_code)
+    primary_summary = _fetch_phase_damage_summary_single(
+        report_code=primary_code,
+        phases=phases,
+        fight_name=fight_name,
+        fight_ids=fight_ids,
+        token=token,
+        client_id=client_id,
+        client_secret=client_secret,
+    )
+
+    extra_codes: List[str] = []
+    if extra_report_codes:
+        for code in extra_report_codes:
+            if not code:
+                continue
+            try:
+                code_str = _sanitize_report_code(code)
+            except ValueError:
+                continue
+            if code_str == primary_code or code_str in extra_codes:
+                continue
+            extra_codes.append(code_str)
+
+    if not extra_codes:
+        return primary_summary
+
+    summaries: List[PhaseDamageSummary] = [primary_summary]
+    for extra_code in extra_codes:
+        extra_summary = _fetch_phase_damage_summary_single(
+            report_code=extra_code,
+            phases=phases,
+            fight_name=fight_name,
+            fight_ids=fight_ids,
+            token=token,
+            client_id=client_id,
+            client_secret=client_secret,
+        )
+        summaries.append(extra_summary)
+
+    base_signature = primary_summary.fight_signature
+    base_phases = list(primary_summary.phases)
+    for other in summaries[1:]:
+        if base_phases != list(other.phases):
+            raise FightSelectionError(
+                "Additional report uses a different phase configuration than the primary report."
+            )
+        if len(base_signature) != len(other.fight_signature):
+            raise FightSelectionError(
+                "Additional report does not contain the same number of pulls as the primary report."
+            )
+        for idx, (base_fight, other_fight) in enumerate(zip(base_signature, other.fight_signature), start=1):
+            base_name, base_kill, base_duration = base_fight
+            other_name, other_kill, other_duration = other_fight
+            if base_name != other_name or base_kill != other_kill:
+                raise FightSelectionError(
+                    f"Additional report pull #{idx} does not match the primary report (encounter mismatch)."
+                )
+            duration_delta = abs(base_duration - other_duration)
+            if duration_delta > 15000:
+                raise FightSelectionError(
+                    f"Additional report pull #{idx} duration differs significantly from the primary report."
+                )
+
+    phase_ids = list(primary_summary.phases)
+    phase_labels = dict(primary_summary.phase_labels)
+    combined_totals: Dict[Tuple[str, str], Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    combined_pulls: Dict[Tuple[str, str], int] = {}
+    combined_classes: Dict[str, Optional[str]] = dict(primary_summary.player_classes)
+    combined_roles: Dict[str, str] = dict(primary_summary.player_roles)
+    combined_specs: Dict[str, Optional[str]] = dict(primary_summary.player_specs)
+
+    def merge_entry(summary: PhaseDamageSummary, entry: PhaseDamageEntry) -> None:
+        key = (entry.player, entry.role)
+        combined_pulls[key] = max(combined_pulls.get(key, 0), entry.pulls)
+        if entry.player not in combined_classes or combined_classes[entry.player] is None:
+            combined_classes[entry.player] = summary.player_classes.get(entry.player)
+        if entry.player not in combined_roles or combined_roles.get(entry.player) in (None, ROLE_UNKNOWN):
+            combined_roles[entry.player] = entry.role
+        combined_specs.setdefault(entry.player, summary.player_specs.get(entry.player))
+        totals = combined_totals[key]
+        for metric in entry.metrics:
+            if metric.phase_id not in phase_ids:
+                continue
+            totals[metric.phase_id] = max(totals.get(metric.phase_id, 0.0), metric.total_amount)
+
+    for summary in summaries:
+        for player, class_name in summary.player_classes.items():
+            if player not in combined_classes or combined_classes[player] is None:
+                combined_classes[player] = class_name
+        for player, role in summary.player_roles.items():
+            if player not in combined_roles or combined_roles[player] in (None, ROLE_UNKNOWN):
+                combined_roles[player] = role
+        for player, spec in summary.player_specs.items():
+            if player not in combined_specs or combined_specs[player] is None:
+                combined_specs[player] = spec
+        for entry in summary.entries:
+            merge_entry(summary, entry)
+
+    merged_entries: List[PhaseDamageEntry] = []
+    for (player, role), totals in combined_totals.items():
+        pulls = combined_pulls.get((player, role), primary_summary.pull_count)
+        metrics: List[PhaseMetric] = []
+        for phase_id in phase_ids:
+            total_amount = totals.get(phase_id, 0.0)
+            average = total_amount / pulls if pulls else 0.0
+            metrics.append(
+                PhaseMetric(
+                    phase_id=phase_id,
+                    phase_label=phase_labels.get(phase_id, NEXUS_PHASE_LABELS.get(phase_id, phase_id)),
+                    total_amount=total_amount,
+                    average_per_pull=average,
+                )
+            )
+        merged_entries.append(
+            PhaseDamageEntry(
+                player=player,
+                role=role,
+                class_name=combined_classes.get(player),
+                pulls=pulls,
+                metrics=metrics,
+            )
+        )
+
+    merged_entries.sort(
+        key=lambda entry: (
+            ROLE_PRIORITY.get(entry.role or ROLE_UNKNOWN, ROLE_PRIORITY[ROLE_UNKNOWN]),
+            entry.player.lower(),
+        )
+    )
+
+    all_reports = [primary_code] + extra_codes
+
+    return PhaseDamageSummary(
+        report_code=primary_code,
+        fight_filter=primary_summary.fight_filter,
+        fight_ids=primary_summary.fight_ids,
+        phases=phase_ids,
+        phase_labels=phase_labels,
+        entries=merged_entries,
+        player_classes=combined_classes,
+        player_roles=combined_roles,
+        player_specs=combined_specs,
+        pull_count=primary_summary.pull_count,
+        source_reports=all_reports,
+        fight_signature=base_signature,
     )
 
 

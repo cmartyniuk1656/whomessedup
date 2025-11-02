@@ -307,6 +307,7 @@ class PhaseDamageSummaryResponse(BaseModel):
         filters: Dict[str, Optional[str]] = {
             "fight_name": summary.fight_filter,
             "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+            "additional_reports": ",".join(summary.source_reports[1:]) if len(summary.source_reports) > 1 else None,
         }
         entries = [
             PhaseDamageEntryModel(
@@ -357,6 +358,23 @@ def _client_credentials() -> Dict[str, Optional[str]]:
     }
 
 
+def _normalize_report_code(value: str) -> str:
+    text = (value or "").strip()
+    if not text:
+        raise HTTPException(status_code=422, detail="Report code cannot be empty.")
+    lowered = text.lower()
+    if "warcraftlogs.com" in lowered:
+        parts = text.split("/reports/", 1)
+        if len(parts) == 2:
+            remainder = parts[1]
+            remainder = remainder.split("/", 1)[0]
+            remainder = remainder.split("?", 1)[0]
+            code = remainder.strip()
+            if code:
+                return code
+    return text
+
+
 JOB_NEXUS_PHASE1 = "nexus_phase1"
 JOB_PHASE_DAMAGE = "nexus_phase_damage"
 
@@ -397,6 +415,7 @@ def _execute_phase_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         token=payload.get("token"),
         client_id=credentials["client_id"],
         client_secret=credentials["client_secret"],
+        extra_report_codes=payload.get("extra_reports"),
     )
     return PhaseDamageSummaryResponse.from_summary(summary).dict()
 
@@ -571,16 +590,30 @@ def get_nexus_phase_damage(
     fight: Optional[str] = Query(None, description="Substring match on fight name."),
     fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
     phase: Optional[List[str]] = Query(None, description="Phases to include (full, 1-5)."),
+    additional_report: Optional[List[str]] = Query(
+        None, description="Optional additional report codes to merge for damage/healing totals."
+    ),
     fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> PhaseDamageSummaryResponse:
     phases = phase or ["full"]
     fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    primary_report = _normalize_report_code(report)
+    extra_reports: List[str] = []
+    if additional_report:
+        for candidate in additional_report:
+            try:
+                normalized = _normalize_report_code(candidate)
+            except HTTPException:
+                continue
+            if normalized and normalized != primary_report and normalized not in extra_reports:
+                extra_reports.append(normalized)
     payload: Dict[str, Any] = {
-        "report": report,
+        "report": primary_report,
         "fight": fight,
         "fight_ids": fight_ids_payload,
         "phases": list(phases),
+        "extra_reports": extra_reports,
     }
     if token:
         payload["token"] = token

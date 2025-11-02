@@ -114,6 +114,14 @@ const TILES = [
     defaultSort: { key: "role", direction: "asc" },
     configOptions: [
       {
+        id: "additional_reports",
+        type: "multi-text",
+        label: "Additional report codes or URLs (optional)",
+        default: [""],
+        param: "additional_report",
+        placeholder: "https://www.warcraftlogs.com/reports/...",
+      },
+      {
         id: "phase_full",
         label: "Full Fight",
         default: true,
@@ -589,6 +597,18 @@ function App() {
   } else if (typeof hitFilters.first_ghost_only === "boolean") {
     filterTags.push(hitFilters.first_ghost_only ? "First Ghost per pull" : "All Ghost misses");
   }
+  const additionalReportsFilter = result?.filters?.additional_reports;
+  if (typeof additionalReportsFilter === "string" && additionalReportsFilter.trim()) {
+    const reportList = additionalReportsFilter
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+    if (reportList.length === 1) {
+      filterTags.push("Merged 1 additional report");
+    } else if (reportList.length > 1) {
+      filterTags.push(`Merged ${reportList.length} additional reports`);
+    }
+  }
   if (currentTile?.mode === "phase-damage" && phaseOrder.length) {
     const phaseLabelString = phaseOrder.map((id) => phaseLabels[id] ?? id).join(", ");
     filterTags.unshift(`Phases: ${phaseLabelString}`);
@@ -662,6 +682,14 @@ function App() {
         }
         if (optionType === "select") {
           resolvedConfig[opt.id] = String(rawValue);
+        } else if (optionType === "multi-text") {
+          if (Array.isArray(rawValue)) {
+            resolvedConfig[opt.id] = rawValue.map((entry) => (entry == null ? "" : String(entry)));
+          } else if (typeof rawValue === "string") {
+            resolvedConfig[opt.id] = [rawValue];
+          } else {
+            resolvedConfig[opt.id] = [];
+          }
         } else if (optionType === "checkbox") {
           if (typeof rawValue === "boolean") {
             resolvedConfig[opt.id] = rawValue;
@@ -717,6 +745,16 @@ function App() {
           }
           if (optionType === "select") {
             params.set(opt.param, String(value));
+            return;
+          }
+          if (optionType === "multi-text") {
+            const list = Array.isArray(value) ? value : [value];
+            list
+              .map((entry) => (entry == null ? "" : String(entry).trim()))
+              .filter((entry) => entry.length > 0)
+              .forEach((entry) => {
+                params.append(opt.param, entry);
+              });
             return;
           }
           const boolValue =
@@ -788,6 +826,21 @@ function App() {
           } else {
             initial[opt.id] = "";
           }
+        } else if (optionType === "multi-text") {
+          let values;
+          if (Array.isArray(savedValue)) {
+            values = savedValue.map((entry) => (entry == null ? "" : String(entry)));
+          } else if (Array.isArray(opt.default)) {
+            values = opt.default.map((entry) => (entry == null ? "" : String(entry)));
+          } else if (typeof savedValue === "string" && savedValue.trim()) {
+            values = [savedValue];
+          } else {
+            values = [""];
+          }
+          if (!values.length) {
+            values = [""];
+          }
+          initial[opt.id] = values;
         } else {
           if (typeof savedValue === "boolean") {
             initial[opt.id] = savedValue;
@@ -815,6 +868,49 @@ function App() {
     }));
   };
 
+  const handleMultiTextChange = (id, index, value) => {
+    setConfigValues((prev) => {
+      const current = Array.isArray(prev[id]) ? [...prev[id]] : [];
+      while (current.length <= index) {
+        current.push("");
+      }
+      current[index] = value;
+      return {
+        ...prev,
+        [id]: current,
+      };
+    });
+  };
+
+  const handleMultiTextAdd = (id) => {
+    setConfigValues((prev) => {
+      const current = Array.isArray(prev[id]) ? [...prev[id]] : [];
+      current.push("");
+      return {
+        ...prev,
+        [id]: current,
+      };
+    });
+  };
+
+  const handleMultiTextRemove = (id, index) => {
+    setConfigValues((prev) => {
+      let current = Array.isArray(prev[id]) ? [...prev[id]] : [];
+      if (current.length <= 1) {
+        current = [""];
+      } else {
+        current.splice(index, 1);
+        if (!current.length) {
+          current = [""];
+        }
+      }
+      return {
+        ...prev,
+        [id]: current,
+      };
+    });
+  };
+
   const handleConfigCancel = () => {
     setShowConfig(false);
     setPendingTile(null);
@@ -824,7 +920,14 @@ function App() {
     if (!pendingTile) {
       return;
     }
-    const overrides = { ...configValues };
+    const overrides = Object.entries(configValues).reduce((acc, [key, value]) => {
+      if (Array.isArray(value)) {
+        acc[key] = value.map((entry) => (entry == null ? "" : String(entry)));
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
     setSavedConfigs((prev) => ({
       ...prev,
       [pendingTile.id]: overrides,
@@ -1518,6 +1621,51 @@ function App() {
             <div className="mt-4 space-y-3">
               {pendingTile.configOptions?.map((option) => {
                 const optionType = option.type ?? "checkbox";
+                if (optionType === "multi-text") {
+                  const rawValues = Array.isArray(configValues[option.id])
+                    ? configValues[option.id]
+                    : Array.isArray(option.default)
+                    ? option.default
+                    : [""];
+                  const values = rawValues.length ? rawValues : [""];
+                  return (
+                    <div key={option.id} className="flex flex-col gap-2 text-sm text-slate-200">
+                      <span>{option.label}</span>
+                      <div className="space-y-2">
+                        {values.map((entryValue, index) => (
+                          <div key={`${option.id}-${index}`} className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                              value={entryValue ?? ""}
+                              placeholder={option.placeholder ?? "Report code or URL"}
+                              onChange={(event) =>
+                                handleMultiTextChange(option.id, index, event.target.value)
+                              }
+                              disabled={isBusy}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleMultiTextRemove(option.id, index)}
+                              className="rounded-lg border border-slate-600 px-2 py-1 text-xs font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 disabled:opacity-40"
+                              disabled={isBusy || values.length <= 1}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleMultiTextAdd(option.id)}
+                        className="self-start rounded-lg border border-dashed border-slate-600 px-3 py-1 text-xs font-medium text-slate-200 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+                        disabled={isBusy}
+                      >
+                        + Add another
+                      </button>
+                    </div>
+                  );
+                }
                 if (optionType === "select") {
                   const selectValue =
                     typeof configValues[option.id] === "string"

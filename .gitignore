@@ -19,6 +19,9 @@ venv/
 .idea/
 .vscode/
 
+# Deployment scripts
+deploy.sh
+
 # Frontend
 frontend/node_modules/
 frontend/dist/
