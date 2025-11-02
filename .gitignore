@@ -21,6 +21,7 @@ venv/
 
 # Deployment scripts
 deploy.sh
+whomessedup_start.sh
 
 # Frontend
 frontend/node_modules/
