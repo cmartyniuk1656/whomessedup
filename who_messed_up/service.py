@@ -126,7 +126,7 @@ _GHOST_MODE_ALIASES: Dict[str, GhostMissMode] = {
     "allmisses": "all",
     "every": "all",
 }
-GHOST_SET_WINDOW_MS = 6000
+GHOST_SET_WINDOW_MS = 5000
 
 
 def normalize_ghost_miss_mode(value: Any) -> GhostMissMode:
