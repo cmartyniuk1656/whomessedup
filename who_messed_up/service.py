@@ -291,6 +291,16 @@ class GhostEntry:
 
 
 @dataclass
+class GhostEvent:
+    player: str
+    fight_id: int
+    fight_name: str
+    pull_index: int
+    timestamp: float
+    offset_ms: float
+
+
+@dataclass
 class GhostSummary:
     report_code: str
     ability_id: int
@@ -306,6 +316,8 @@ class GhostSummary:
     ghost_miss_mode: GhostMissMode
     ghost_counts_by_player_fight: Dict[Tuple[int, str], int]
     roles_by_fight: Dict[int, Dict[str, str]]
+    ghost_events: List[GhostEvent]
+    ignore_after_deaths: Optional[int]
     @property
     def pull_count(self) -> int:
         return len(self.fights_considered)
@@ -348,6 +360,7 @@ class PhaseSummary:
     avg_besieges_per_pull: float
     avg_ghosts_per_pull: float
     combined_per_pull: float
+    ghost_events: List[GhostEvent]
     player_classes: Dict[str, Optional[str]]
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
@@ -597,6 +610,7 @@ def fetch_ghost_summary(
     client_secret: Optional[str] = None,
     ghost_miss_mode: Any = DEFAULT_GHOST_MISS_MODE,
     first_miss_only: Optional[bool] = None,
+    ignore_after_deaths: Optional[int] = None,
 ) -> GhostSummary:
     load_env()
 
@@ -624,6 +638,38 @@ def fetch_ghost_summary(
         for name in set(_players_from_details(details)):
             pulls_per_player[name] += 1
 
+    death_cutoffs_by_fight: Dict[int, float] = {}
+    if ignore_after_deaths and ignore_after_deaths > 0:
+        for fight in chosen:
+            total_deaths = 0
+            cutoff_ts: Optional[float] = None
+            for death_event in fetch_events(
+                session,
+                bearer,
+                code=report_code,
+                data_type="Deaths",
+                start=fight.start,
+                end=fight.end,
+                limit=1000,
+                actor_names=actor_names,
+            ):
+                event_type = (death_event.get("type") or "").lower()
+                if event_type not in {"death", "instakill"}:
+                    continue
+                ts_raw = death_event.get("timestamp")
+                try:
+                    ts_val = float(ts_raw)
+                except (TypeError, ValueError):
+                    ts_val = None
+                if ts_val is None:
+                    continue
+                total_deaths += 1
+                if total_deaths >= ignore_after_deaths:
+                    if cutoff_ts is None or ts_val < cutoff_ts:
+                        cutoff_ts = ts_val
+            if cutoff_ts is not None:
+                death_cutoffs_by_fight[fight.id] = cutoff_ts
+
     name_to_class: Dict[str, Optional[str]] = {}
     for actor_id, name in actor_names.items():
         if name:
@@ -631,10 +677,12 @@ def fetch_ghost_summary(
 
     ghost_counts: Dict[str, int] = defaultdict(int)
     ghost_counts_by_fight: Dict[Tuple[int, str], int] = defaultdict(int)
+    ghost_events: List[GhostEvent] = []
 
-    for fight in chosen:
+    for pull_index, fight in enumerate(chosen, start=1):
         seen_targets: Set[str] = set()
         last_counted_ts: Dict[str, int] = {}
+        fight_death_cutoff = death_cutoffs_by_fight.get(fight.id)
         for event in fetch_events(
             session,
             bearer,
@@ -654,6 +702,13 @@ def fetch_ghost_summary(
                 continue
             if timestamp < fight.start + 15000:
                 continue
+            if fight_death_cutoff is not None:
+                try:
+                    ts_val = float(timestamp)
+                except (TypeError, ValueError):
+                    ts_val = None
+                if ts_val is not None and ts_val >= fight_death_cutoff:
+                    continue
             ability_game_id = event.get("abilityGameID")
             ability_id_match = False
             if ability_game_id is not None:
@@ -693,6 +748,17 @@ def fetch_ghost_summary(
 
             ghost_counts[target_name] += 1
             ghost_counts_by_fight[(fight.id, target_name)] += 1
+            offset_ms = float(timestamp) - float(fight.start)
+            ghost_events.append(
+                GhostEvent(
+                    player=target_name,
+                    fight_id=fight.id,
+                    fight_name=fight.name or "",
+                    pull_index=pull_index,
+                    timestamp=float(timestamp),
+                    offset_ms=offset_ms,
+                )
+            )
 
     all_players = set(pulls_per_player.keys()) | set(ghost_counts.keys())
     if not all_players:
@@ -737,6 +803,8 @@ def fetch_ghost_summary(
         ghost_miss_mode=mode,
         ghost_counts_by_player_fight=dict(ghost_counts_by_fight),
         roles_by_fight=roles_by_fight,
+        ghost_events=ghost_events,
+        ignore_after_deaths=ignore_after_deaths if ignore_after_deaths and ignore_after_deaths > 0 else None,
     )
 
 
@@ -814,6 +882,7 @@ def fetch_phase_summary(
         client_id=client_id,
         client_secret=client_secret,
         ghost_miss_mode=normalized_ghost_mode,
+        ignore_after_deaths=hit_ignore_after_deaths,
     )
 
     fights = list(hit_summary.fights_considered)
@@ -939,6 +1008,7 @@ def fetch_phase_summary(
         avg_besieges_per_pull=avg_besieges_per_pull,
         avg_ghosts_per_pull=avg_ghosts_per_pull,
         combined_per_pull=combined_per_pull,
+        ghost_events=ghost_summary.ghost_events,
         player_classes=player_classes,
         player_roles=player_roles,
         player_specs=player_specs,

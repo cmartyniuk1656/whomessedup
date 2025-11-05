@@ -441,6 +441,29 @@ function App() {
     });
   }, [result, currentTile]);
 
+  useEffect(() => {
+    if (!result?.ghost_events || !result.ghost_events.length) {
+      return;
+    }
+    const groupLabel = `[Ghost Miss Debug] ${result.report || "Report"} - ${result.ghost_events.length} events`;
+    console.groupCollapsed(groupLabel);
+    const tableData = result.ghost_events.map((event) => {
+      const offsetSeconds = Number.isFinite(event.offset_ms) ? event.offset_ms / 1000 : null;
+      console.log(
+        `Pull ${event.pull}: ${event.player} at ${offsetSeconds !== null ? offsetSeconds.toFixed(2) : "?"}s (ts ${event.timestamp})`
+      );
+      return {
+        pull: event.pull,
+        player: event.player,
+        fight: event.fight_name ?? "",
+        timestamp: event.timestamp,
+        offset_seconds: offsetSeconds,
+      };
+    });
+    console.table(tableData);
+    console.groupEnd();
+  }, [result]);
+
   const sortedRows = useMemo(() => {
     const arr = [...rows];
     const { key, direction } = sortConfig;

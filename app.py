@@ -61,6 +61,15 @@ class FightTotalsModel(BaseModel):
     damage: float
 
 
+class GhostEventModel(BaseModel):
+    player: str
+    fight_id: int
+    fight_name: Optional[str]
+    pull: int
+    timestamp: float
+    offset_ms: float
+
+
 class HitSummaryResponse(BaseModel):
     report: str
     data_type: str
@@ -154,6 +163,7 @@ class GhostSummaryResponse(BaseModel):
     player_classes: Dict[str, Optional[str]]
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
+    ghost_events: List[GhostEventModel]
 
     @classmethod
     def from_summary(cls, summary: GhostSummary) -> "GhostSummaryResponse":
@@ -161,6 +171,9 @@ class GhostSummaryResponse(BaseModel):
             "fight_name": summary.fight_filter,
             "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
             "ghost_miss_mode": summary.ghost_miss_mode,
+            "ignore_after_deaths": (
+                str(summary.ignore_after_deaths) if summary.ignore_after_deaths is not None else None
+            ),
         }
         entries = [
             GhostEntryModel(
@@ -184,6 +197,17 @@ class GhostSummaryResponse(BaseModel):
             player_classes=summary.player_classes,
             player_roles=summary.player_roles,
             player_specs=summary.player_specs,
+            ghost_events=[
+                GhostEventModel(
+                    player=event.player,
+                    fight_id=event.fight_id,
+                    fight_name=event.fight_name or None,
+                    pull=event.pull_index,
+                    timestamp=event.timestamp,
+                    offset_ms=event.offset_ms,
+                )
+                for event in summary.ghost_events
+            ],
         )
 
 
@@ -208,6 +232,7 @@ class PhaseSummaryResponse(BaseModel):
     player_classes: Dict[str, Optional[str]]
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
+    ghost_events: List[GhostEventModel]
     ability_ids: Dict[str, int]
     hit_filters: Dict[str, Optional[Any]]
 
@@ -245,6 +270,17 @@ class PhaseSummaryResponse(BaseModel):
             "avg_ghosts_per_pull": summary.avg_ghosts_per_pull,
             "combined_per_pull": summary.combined_per_pull,
         }
+        ghost_events = [
+            GhostEventModel(
+                player=event.player,
+                fight_id=event.fight_id,
+                fight_name=event.fight_name or None,
+                pull=event.pull_index,
+                timestamp=event.timestamp,
+                offset_ms=event.offset_ms,
+            )
+            for event in summary.ghost_events
+        ]
         ability_ids = {
             "besiege": summary.besiege_ability_id,
             "ghost": summary.ghost_ability_id,
@@ -272,6 +308,7 @@ class PhaseSummaryResponse(BaseModel):
             player_classes=summary.player_classes,
             player_roles=summary.player_roles,
             player_specs=summary.player_specs,
+            ghost_events=ghost_events,
             ability_ids=ability_ids,
             hit_filters=hit_filters,
         )
@@ -484,6 +521,9 @@ def get_ghosts(
     fight: Optional[str] = Query(None, description="Substring match on fight name."),
     fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+    ignore_after_deaths: Optional[int] = Query(
+        None, description="Stop counting ghost misses after this many player deaths in a fight."
+    ),
     ghost_miss_mode: GhostMissMode = Query(
         DEFAULT_GHOST_MISS_MODE, description="Ghost miss counting strategy (per set, per pull, or all)."
     ),
@@ -508,6 +548,7 @@ def get_ghosts(
             client_id=credentials["client_id"],
             client_secret=credentials["client_secret"],
             ghost_miss_mode=ghost_mode_value,
+            ignore_after_deaths=ignore_after_deaths,
         )
     except TokenError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
