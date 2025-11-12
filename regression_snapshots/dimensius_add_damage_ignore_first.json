@@ -1,0 +1,12 @@
+{
+  "job": {
+    "created_at": "2025-11-12T15:32:01.957037Z",
+    "error": null,
+    "finished_at": null,
+    "id": "8104969e-2f8b-41ad-923a-75431bb2723a",
+    "position": 4,
+    "started_at": null,
+    "status": "pending",
+    "type": "dimensius_add_damage"
+  }
+}

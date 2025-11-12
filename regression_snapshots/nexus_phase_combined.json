@@ -1,0 +1,12 @@
+{
+  "job": {
+    "created_at": "2025-11-12T15:32:01.948761Z",
+    "error": null,
+    "finished_at": null,
+    "id": "ad30c840-1d2f-4a7f-ad69-df008976493b",
+    "position": 1,
+    "started_at": null,
+    "status": "pending",
+    "type": "nexus_phase1"
+  }
+}

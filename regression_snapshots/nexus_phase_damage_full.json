@@ -1,0 +1,12 @@
+{
+  "job": {
+    "created_at": "2025-11-12T15:32:01.951692Z",
+    "error": null,
+    "finished_at": null,
+    "id": "d93ddc75-38ac-4d62-9add-6199b4b9a709",
+    "position": 1,
+    "started_at": null,
+    "status": "pending",
+    "type": "nexus_phase_damage"
+  }
+}
