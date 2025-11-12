@@ -104,7 +104,12 @@ Run the helper script (ensure the backend is running locally) to refresh the sto
 .\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:8088 --out-dir regression_snapshots
 ```
 
-The generated JSON lives in `regression_snapshots/` and acts as the “golden” expectations for future diffs.
+The generated JSON lives in `regression_snapshots/` and acts as the “golden” expectations for future diffs. To run a single case without re-running the entire suite, pass one or more `--case` flags (each matching the case name from `scripts/capture_regressions.py`). Example:
+
+```bash
+.\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:8088 --out-dir regression_snapshots_current --case ghosts_all
+git diff --no-index regression_snapshots/ghosts_all.json regression_snapshots_current/ghosts_all.json
+```
 
 ## Feedback & Contributions
 
