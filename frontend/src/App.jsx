@@ -50,6 +50,8 @@ const DEFAULT_SORT_DIRECTIONS = {
   player: "asc",
   pulls: "desc",
   combinedAverage: "desc",
+  addTotalDamage: "desc",
+  addAverageDamage: "desc",
   ghostMisses: "desc",
   ghostPerPull: "desc",
   besiegeHits: "desc",
@@ -110,6 +112,9 @@ const TILES = [
       "Summarize total damage or healing per phase across all Nexus-King Salhadaar pulls, with per-pull averages.",
     defaultFight: "Nexus-King Salhadaar",
     endpoint: "/api/nexus-phase-damage",
+    params: {
+      phase_profile: "nexus",
+    },
     mode: "phase-damage",
     defaultSort: { key: "role", direction: "asc" },
     configOptions: [
@@ -174,6 +179,108 @@ const TILES = [
       "Tanks and DPS will show Damage done and Healers will show healing done.",
       "Single phase or full fight reports are recommended. Multi-phase reports will aggregate data and compute averages off the total pull count even if the player was dead during a phase, impacting their overall average.",
     ],
+  },
+  {
+    id: "dimensius-phase-damage",
+    title: "Dimensius Phase Damage/Healing Report",
+    description:
+      "Summarize total damage or healing per phase across all Dimensius, the All-Devouring pulls, with per-pull averages.",
+    defaultFight: "Dimensius, the All-Devouring",
+    endpoint: "/api/nexus-phase-damage",
+    params: {
+      phase_profile: "dimensius",
+    },
+    mode: "phase-damage",
+    defaultSort: { key: "role", direction: "asc" },
+    configOptions: [
+      {
+        id: "additional_reports_dimensius",
+        type: "multi-text",
+        label: "Additional report codes or URLs (optional)",
+        default: [""],
+        param: "additional_report",
+        placeholder: "https://www.warcraftlogs.com/reports/...",
+      },
+      {
+        id: "dim_phase_full",
+        label: "Full Fight",
+        default: true,
+        param: "phase",
+        value: "full",
+      },
+      {
+        id: "dim_phase_1",
+        label: "Stage One: Critical Mass",
+        default: false,
+        param: "phase",
+        value: "1",
+      },
+      {
+        id: "dim_phase_2",
+        label: "Intermission: Event Horizon",
+        default: false,
+        param: "phase",
+        value: "2",
+      },
+      {
+        id: "dim_phase_3",
+        label: "Stage Two: The Dark Heart",
+        default: false,
+        param: "phase",
+        value: "3",
+      },
+      {
+        id: "dim_phase_4",
+        label: "Stage Three: Singularity",
+        default: false,
+        param: "phase",
+        value: "4",
+      },
+      {
+        id: "dim_fresh_run",
+        label: "Force fresh run (skip cache)",
+        default: false,
+        param: "fresh",
+      },
+    ],
+    footnotes: [
+      "Tanks and DPS will show Damage done and Healers will show healing done.",
+      "Single phase or full fight reports are recommended. Multi-phase reports will aggregate data and compute averages off the total pull count even if the player was dead during a phase, impacting their overall average.",
+    ],
+  },
+  {
+    id: "dimensius-add-damage",
+    title: "Dimensius - Phase 1 Add Damage",
+    description:
+      "Average player damage into Living Mass adds during Stage One: Critical Mass for Dimensius, the All-Devouring.",
+    defaultFight: "Dimensius, the All-Devouring",
+    endpoint: "/api/dimensius-add-damage",
+    mode: "add-damage",
+    defaultSort: { key: "role", direction: "asc" },
+    configOptions: [
+      {
+        id: "dim_additional_reports",
+        type: "multi-text",
+        label: "Additional report codes or URLs (optional)",
+        default: [""],
+        param: "additional_report",
+        placeholder: "https://www.warcraftlogs.com/reports/...",
+      },
+      {
+        id: "dim_ignore_first_add_set",
+        type: "checkbox",
+        label: "Ignore first add set",
+        default: false,
+        param: "ignore_first_add_set",
+      },
+      {
+        id: "dim_add_fresh_run",
+        label: "Force fresh run (skip cache)",
+        default: false,
+        param: "fresh",
+      },
+    ],
+    footnotes: ["*Optional ignore first 6 adds that spawn instantly on pull"],
   },
 ];
 
@@ -323,6 +430,24 @@ function App() {
       return `\ufeff${lines.join("\n")}`;
     }
 
+    if (tile.mode === "add-damage") {
+      const headers = ["Player", "Role", "Class", "Pulls", "Total Add Damage", "Avg Add Damage / Pull"];
+      const lines = [headers.map(escapeCsv).join(",")];
+      tableRows.forEach((row) => {
+        const className = row.className ?? data.player_classes?.[row.player] ?? "";
+        const values = [
+          row.player,
+          row.role,
+          className,
+          row.pulls ?? 0,
+          row.addTotalDamage ?? 0,
+          row.addAverageDamage ?? 0,
+        ];
+        lines.push(values.map(escapeCsv).join(","));
+      });
+      return `\ufeff${lines.join("\n")}`;
+    }
+
     const headers = [
       "Player",
       "Role",
@@ -417,6 +542,24 @@ function App() {
           phaseTotals,
           phaseAverages,
           combinedAverage,
+        };
+      });
+    }
+
+    if (currentTile.mode === "add-damage") {
+      return result.entries.map((entry) => {
+        const playerClass = entry.class_name ?? playerClasses[entry.player] ?? null;
+        const normalizedClass = playerClass ? playerClass.replace(/\s+/g, "").toLowerCase() : null;
+        const color = normalizedClass ? CLASS_COLORS[normalizedClass] ?? DEFAULT_PLAYER_COLOR : DEFAULT_PLAYER_COLOR;
+        const role = entry.role ?? playerRoles[entry.player] ?? "Unknown";
+        return {
+          player: entry.player,
+          role,
+          className: playerClass,
+          color,
+          pulls: entry.pulls ?? 0,
+          addTotalDamage: entry.total_damage ?? 0,
+          addAverageDamage: entry.average_damage ?? 0,
         };
       });
     }
@@ -521,6 +664,46 @@ function App() {
       return arr;
     }
 
+    if (currentTile?.mode === "add-damage") {
+      arr.sort((a, b) => {
+        if (key === "role") {
+          const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+          const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+          if (aPriority !== bPriority) {
+            return (aPriority - bPriority) * dir;
+          }
+          const totalDiff = (b.addTotalDamage ?? 0) - (a.addTotalDamage ?? 0);
+          if (totalDiff !== 0) {
+            return dir === 1 ? totalDiff : -totalDiff;
+          }
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "player") {
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "pulls") {
+          if (a.pulls !== b.pulls) {
+            return (a.pulls - b.pulls) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "addTotalDamage") {
+          if (a.addTotalDamage !== b.addTotalDamage) {
+            return (a.addTotalDamage - b.addTotalDamage) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "addAverageDamage") {
+          if (a.addAverageDamage !== b.addAverageDamage) {
+            return (a.addAverageDamage - b.addAverageDamage) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        return 0;
+      });
+      return arr;
+    }
+
     arr.sort((a, b) => {
       if (key === "role") {
         const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
@@ -600,54 +783,114 @@ function App() {
       ? value.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
       : value;
 
+  const filters = result?.filters ?? {};
   const filterTags = [];
-  if (hitFilters.ignore_after_deaths) {
-    filterTags.push(`Stop after ${formatInt(hitFilters.ignore_after_deaths)} deaths`);
-  }
-  if (hitFilters.ignore_final_seconds) {
-    filterTags.push(`Ignore final ${formatFloat(hitFilters.ignore_final_seconds, 1)}s`);
-  }
-  if (typeof hitFilters.first_hit_only === "boolean") {
-    filterTags.push(hitFilters.first_hit_only ? "First Besiege per pull" : "All Besiege hits");
-  }
-  const ghostMode = hitFilters.ghost_miss_mode;
-  if (ghostMode === "first_per_set") {
-    filterTags.push("First Ghost per set");
-  } else if (ghostMode === "first_per_pull") {
-    filterTags.push("First Ghost per pull");
-  } else if (ghostMode === "all") {
-    filterTags.push("All Ghost misses");
-  } else if (typeof hitFilters.first_ghost_only === "boolean") {
-    filterTags.push(hitFilters.first_ghost_only ? "First Ghost per pull" : "All Ghost misses");
-  }
-  const additionalReportsFilter = result?.filters?.additional_reports;
-  if (typeof additionalReportsFilter === "string" && additionalReportsFilter.trim()) {
-    const reportList = additionalReportsFilter
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-    if (reportList.length === 1) {
-      filterTags.push("Merged 1 additional report");
-    } else if (reportList.length > 1) {
-      filterTags.push(`Merged ${reportList.length} additional reports`);
+  if (currentTile?.mode === "phase-damage") {
+    if (hitFilters.ignore_after_deaths) {
+      filterTags.push(`Stop after ${formatInt(hitFilters.ignore_after_deaths)} deaths`);
+    }
+    if (hitFilters.ignore_final_seconds) {
+      filterTags.push(`Ignore final ${formatFloat(hitFilters.ignore_final_seconds, 1)}s`);
+    }
+    if (typeof hitFilters.first_hit_only === "boolean") {
+      filterTags.push(hitFilters.first_hit_only ? "First Besiege per pull" : "All Besiege hits");
+    }
+    const ghostMode = hitFilters.ghost_miss_mode;
+    if (ghostMode === "first_per_set") {
+      filterTags.push("First Ghost per set");
+    } else if (ghostMode === "first_per_pull") {
+      filterTags.push("First Ghost per pull");
+    } else if (ghostMode === "all") {
+      filterTags.push("All Ghost misses");
+    } else if (typeof hitFilters.first_ghost_only === "boolean") {
+      filterTags.push(hitFilters.first_ghost_only ? "First Ghost per pull" : "All Ghost misses");
+    }
+    const additionalReportsFilter = filters.additional_reports;
+    if (typeof additionalReportsFilter === "string" && additionalReportsFilter.trim()) {
+      const reportList = additionalReportsFilter
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+      if (reportList.length === 1) {
+        filterTags.push("Merged 1 additional report");
+      } else if (reportList.length > 1) {
+        filterTags.push(`Merged ${reportList.length} additional reports`);
+      }
+    }
+    if (phaseOrder.length) {
+      const phaseLabelString = phaseOrder.map((id) => phaseLabels[id] ?? id).join(", ");
+      filterTags.unshift(`Phases: ${phaseLabelString}`);
+    }
+  } else if (currentTile?.mode === "add-damage") {
+    if (filters.ignore_first_add_set === "true") {
+      filterTags.push("Ignoring first Living Mass set");
+    }
+    const additionalReportsFilter = filters.additional_reports;
+    if (typeof additionalReportsFilter === "string" && additionalReportsFilter.trim()) {
+      const reportList = additionalReportsFilter
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+      if (reportList.length === 1) {
+        filterTags.push("Merged 1 additional report");
+      } else if (reportList.length > 1) {
+        filterTags.push(`Merged ${reportList.length} additional reports`);
+      }
+    }
+  } else {
+    if (hitFilters.ignore_after_deaths) {
+      filterTags.push(`Stop after ${formatInt(hitFilters.ignore_after_deaths)} deaths`);
+    }
+    if (hitFilters.ignore_final_seconds) {
+      filterTags.push(`Ignore final ${formatFloat(hitFilters.ignore_final_seconds, 1)}s`);
+    }
+    if (typeof hitFilters.first_hit_only === "boolean") {
+      filterTags.push(hitFilters.first_hit_only ? "First Besiege per pull" : "All Besiege hits");
+    }
+    const ghostMode = hitFilters.ghost_miss_mode;
+    if (ghostMode === "first_per_set") {
+      filterTags.push("First Ghost per set");
+    } else if (ghostMode === "first_per_pull") {
+      filterTags.push("First Ghost per pull");
+    } else if (ghostMode === "all") {
+      filterTags.push("All Ghost misses");
+    } else if (typeof hitFilters.first_ghost_only === "boolean") {
+      filterTags.push(hitFilters.first_ghost_only ? "First Ghost per pull" : "All Ghost misses");
+    }
+    const additionalReportsFilter = filters.additional_reports;
+    if (typeof additionalReportsFilter === "string" && additionalReportsFilter.trim()) {
+      const reportList = additionalReportsFilter
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+      if (reportList.length === 1) {
+        filterTags.push("Merged 1 additional report");
+      } else if (reportList.length > 1) {
+        filterTags.push(`Merged ${reportList.length} additional reports`);
+      }
     }
   }
-  if (currentTile?.mode === "phase-damage" && phaseOrder.length) {
-    const phaseLabelString = phaseOrder.map((id) => phaseLabels[id] ?? id).join(", ");
-    filterTags.unshift(`Phases: ${phaseLabelString}`);
-  }
 
-  const summaryMetrics =
-    currentTile?.mode === "phase-damage"
-      ? []
-      : [
-          { label: "Pulls counted", value: formatInt(pullCount) },
-          { label: "Total Besieges", value: formatInt(totalBesieges) },
-          { label: "Total Ghost Misses", value: formatInt(totalGhosts) },
-          { label: "Avg Besieges / Pull", value: formatFloat(avgBesiegePerPull, 3) },
-          { label: "Avg Ghosts / Pull", value: formatFloat(avgGhostPerPull, 3) },
-          { label: "Fuck-up rate / Pull", value: formatFloat(combinedPerPull, 3) },
-        ];
+  let summaryMetrics = [];
+  if (currentTile?.mode === "phase-damage") {
+    summaryMetrics = [];
+  } else if (currentTile?.mode === "add-damage") {
+    const addTotals = result?.totals ?? {};
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Combined add damage", value: formatInt(addTotals.total_damage ?? 0) },
+      { label: "Avg add damage / Pull", value: formatFloat(addTotals.avg_damage_per_pull ?? 0, 3) },
+    ];
+  } else {
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Total Besieges", value: formatInt(totalBesieges) },
+      { label: "Total Ghost Misses", value: formatInt(totalGhosts) },
+      { label: "Avg Besieges / Pull", value: formatFloat(avgBesiegePerPull, 3) },
+      { label: "Avg Ghosts / Pull", value: formatFloat(avgGhostPerPull, 3) },
+      { label: "Fuck-up rate / Pull", value: formatFloat(combinedPerPull, 3) },
+    ];
+  }
 
   const handleSort = (key) => {
     setSortConfig((prev) => {
@@ -1034,6 +1277,8 @@ function App() {
               const tileBadge =
                 tile.mode === "phase-damage"
                   ? "Damage/Healing Report"
+                  : tile.mode === "add-damage"
+                  ? "Add Damage Report"
                   : tile.mode === "ghost"
                   ? "Ghost Analysis"
                   : "Combined Failures";
@@ -1392,6 +1637,182 @@ function App() {
                                     </td>
                                   </Fragment>
                                 ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  </>
+                ) : currentTile?.mode === "add-damage" ? (
+                  <>
+                    <div className="hidden sm:block overflow-x-auto">
+                      <table className="min-w-full divide-y divide-slate-800 text-sm">
+                        <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
+                          <tr>
+                            <th className="px-4 py-3 text-left">
+                              <button
+                                type="button"
+                                className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                                onClick={() => handleSort("player")}
+                              >
+                                Player
+                                {renderSortIcon("player")}
+                              </button>
+                            </th>
+                            <th className="px-4 py-3 text-left">
+                              <button
+                                type="button"
+                                className="flex items-center gap-1 text-left text-slate-300 hover:text-white"
+                                onClick={() => handleSort("role")}
+                              >
+                                Role
+                                {renderSortIcon("role")}
+                              </button>
+                            </th>
+                            <th className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                className="flex items-center gap-1 text-right text-slate-300 hover:text-white"
+                                onClick={() => handleSort("pulls")}
+                              >
+                                Pulls
+                                {renderSortIcon("pulls")}
+                              </button>
+                            </th>
+                            <th className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                className="flex items-center gap-1 text-right text-slate-300 hover:text-white"
+                                onClick={() => handleSort("addTotalDamage")}
+                              >
+                                Total Add Damage
+                                {renderSortIcon("addTotalDamage")}
+                              </button>
+                            </th>
+                            <th className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                className="flex items-center gap-1 text-right text-slate-300 hover:text-white"
+                                onClick={() => handleSort("addAverageDamage")}
+                              >
+                                Avg Add Damage / Pull
+                                {renderSortIcon("addAverageDamage")}
+                              </button>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
+                          {sortedRows.map((row) => (
+                            <tr key={`${row.player}-${row.role}-add`}>
+                              <td className="px-4 py-3 font-medium">
+                                <span style={{ color: row.color }}>{row.player}</span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                    ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                                  }`}
+                                >
+                                  {row.role}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                              <td className="px-4 py-3 text-right text-slate-200">
+                                {formatInt(row.addTotalDamage)}
+                              </td>
+                              <td className="px-4 py-3 text-right text-slate-200">
+                                {formatFloat(row.addAverageDamage, 3)}
+                              </td>
+                            </tr>
+                          ))}
+                          {sortedRows.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                                No events matched the filters.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div
+                      className={`sm:hidden p-4 ${mobileViewMode === "cards" ? "space-y-4" : "overflow-x-auto"}`}
+                    >
+                      {sortedRows.length === 0 ? (
+                        <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+                          No events matched the filters.
+                        </div>
+                      ) : mobileViewMode === "cards" ? (
+                        sortedRows.map((row) => (
+                          <div
+                            key={`${row.player}-${row.role}-add-card`}
+                            className="rounded-lg border border-slate-800 bg-slate-900/70 p-4 shadow-sm shadow-emerald-500/5"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-base font-semibold" style={{ color: row.color }}>
+                                {row.player}
+                              </span>
+                              <span
+                                className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                  ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                                }`}
+                              >
+                                {row.role}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-400">Pulls: {formatInt(row.pulls)}</p>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-200">
+                              <div className="rounded-md border border-slate-800/70 bg-slate-900/60 px-3 py-2">
+                                <p className="text-[11px] uppercase tracking-widest text-slate-400">Total Damage</p>
+                                <p className="mt-1 text-sm font-semibold text-emerald-300">
+                                  {formatInt(row.addTotalDamage)}
+                                </p>
+                              </div>
+                              <div className="rounded-md border border-slate-800/70 bg-slate-900/60 px-3 py-2">
+                                <p className="text-[11px] uppercase tracking-widest text-slate-400">
+                                  Avg / Pull
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-emerald-300">
+                                  {formatFloat(row.addAverageDamage, 3)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <table className="min-w-full divide-y divide-slate-800 text-xs">
+                          <thead className="bg-slate-900/80 text-[11px] uppercase tracking-widest text-slate-400">
+                            <tr>
+                              <th className="px-3 py-2 text-left">Player</th>
+                              <th className="px-3 py-2 text-left">Role</th>
+                              <th className="px-3 py-2 text-right">Pulls</th>
+                              <th className="px-3 py-2 text-right">Add Damage</th>
+                              <th className="px-3 py-2 text-right">Avg / Pull</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
+                            {sortedRows.map((row) => (
+                              <tr key={`${row.player}-${row.role}-add-mobile`}>
+                                <td className="px-3 py-2 font-medium" style={{ color: row.color }}>
+                                  {row.player}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <span
+                                    className={`inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${
+                                      ROLE_BADGE_STYLES[row.role] || ROLE_BADGE_STYLES.Unknown
+                                    }`}
+                                  >
+                                    {row.role}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                                <td className="px-3 py-2 text-right text-slate-200">
+                                  {formatInt(row.addTotalDamage)}
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-200">
+                                  {formatFloat(row.addAverageDamage, 3)}
+                                </td>
                               </tr>
                             ))}
                           </tbody>

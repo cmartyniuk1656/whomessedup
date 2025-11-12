@@ -16,6 +16,7 @@ from who_messed_up import load_env
 from who_messed_up.api import Fight
 from who_messed_up.jobs import job_manager
 from who_messed_up.service import (
+    AddDamageSummary,
     FightSelectionError,
     GhostSummary,
     HitSummary,
@@ -27,6 +28,7 @@ from who_messed_up.service import (
     normalize_ghost_miss_mode,
     fetch_ghost_summary,
     fetch_hit_summary,
+    fetch_dimensius_add_damage_summary,
     fetch_phase_damage_summary,
     fetch_phase_summary,
 )
@@ -376,6 +378,62 @@ class PhaseDamageSummaryResponse(BaseModel):
         )
 
 
+class AddDamageEntryModel(BaseModel):
+    player: str
+    role: str
+    class_name: Optional[str]
+    pulls: int
+    total_damage: float
+    average_damage: float
+
+
+class DimensiusAddDamageResponse(BaseModel):
+    report: str
+    filters: Dict[str, Optional[str]]
+    pull_count: int
+    totals: Dict[str, float]
+    entries: List[AddDamageEntryModel]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+    source_reports: List[str]
+
+    @classmethod
+    def from_summary(cls, summary: AddDamageSummary) -> "DimensiusAddDamageResponse":
+        filters: Dict[str, Optional[str]] = {
+            "fight_name": summary.fight_filter,
+            "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+            "ignore_first_add_set": "true" if summary.ignore_first_add_set else None,
+            "additional_reports": ",".join(summary.source_reports[1:]) if len(summary.source_reports) > 1 else None,
+        }
+        entries = [
+            AddDamageEntryModel(
+                player=row.player,
+                role=row.role,
+                class_name=row.class_name,
+                pulls=row.pulls,
+                total_damage=row.total_damage,
+                average_damage=row.average_damage,
+            )
+            for row in summary.entries
+        ]
+        totals = {
+            "total_damage": summary.total_damage,
+            "avg_damage_per_pull": summary.avg_damage_per_pull,
+        }
+        return cls(
+            report=summary.report_code,
+            filters=filters,
+            pull_count=summary.pull_count,
+            totals=totals,
+            entries=entries,
+            player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
+            source_reports=summary.source_reports,
+        )
+
+
 class JobStatusModel(BaseModel):
     id: str
     type: str
@@ -414,6 +472,7 @@ def _normalize_report_code(value: str) -> str:
 
 JOB_NEXUS_PHASE1 = "nexus_phase1"
 JOB_PHASE_DAMAGE = "nexus_phase_damage"
+JOB_DIMENSIUS_ADD_DAMAGE = "dimensius_add_damage"
 
 
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -453,12 +512,30 @@ def _execute_phase_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         client_id=credentials["client_id"],
         client_secret=credentials["client_secret"],
         extra_report_codes=payload.get("extra_reports"),
+        phase_profile=payload.get("phase_profile"),
     )
     return PhaseDamageSummaryResponse.from_summary(summary).dict()
 
 
+def _execute_dimensius_add_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    summary = fetch_dimensius_add_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+        extra_report_codes=payload.get("extra_reports"),
+        ignore_first_add_set=payload.get("ignore_first_add_set"),
+    )
+    return DimensiusAddDamageResponse.from_summary(summary).dict()
+
+
 job_manager.register_handler(JOB_NEXUS_PHASE1, _execute_nexus_phase1_job)
 job_manager.register_handler(JOB_PHASE_DAMAGE, _execute_phase_damage_job)
+job_manager.register_handler(JOB_DIMENSIUS_ADD_DAMAGE, _execute_dimensius_add_damage_job)
 
 
 @app.get("/health")
@@ -631,6 +708,10 @@ def get_nexus_phase_damage(
     fight: Optional[str] = Query(None, description="Substring match on fight name."),
     fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
     phase: Optional[List[str]] = Query(None, description="Phases to include (full, 1-5)."),
+    phase_profile: str = Query(
+        "nexus",
+        description="Phase preset to use (e.g., 'nexus' or 'dimensius').",
+    ),
     additional_report: Optional[List[str]] = Query(
         None, description="Optional additional report codes to merge for damage/healing totals."
     ),
@@ -655,6 +736,7 @@ def get_nexus_phase_damage(
         "fight_ids": fight_ids_payload,
         "phases": list(phases),
         "extra_reports": extra_reports,
+        "phase_profile": phase_profile,
     }
     if token:
         payload["token"] = token
@@ -666,6 +748,55 @@ def get_nexus_phase_damage(
 
     if job.status == "completed":
         return PhaseDamageSummaryResponse.parse_obj(job.result)
+
+    snapshot = job_manager.snapshot(job.id)
+    if snapshot is None:
+        raise HTTPException(status_code=500, detail="Job tracking failed.")
+    return JSONResponse(status_code=202, content={"job": snapshot})
+
+
+@app.get("/api/dimensius-add-damage", response_model=DimensiusAddDamageResponse)
+def get_dimensius_add_damage(
+    report: str = Query(..., description="Warcraft Logs report code."),
+    fight: Optional[str] = Query(None, description="Substring match on fight name."),
+    fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    additional_report: Optional[List[str]] = Query(
+        None, description="Optional additional report codes to merge for Living Mass damage totals."
+    ),
+    ignore_first_add_set: bool = Query(
+        False, description="Ignore the first Living Mass set that spawns immediately on pull."
+    ),
+    fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
+    token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+) -> DimensiusAddDamageResponse:
+    fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    primary_report = _normalize_report_code(report)
+    extra_reports: List[str] = []
+    if additional_report:
+        for candidate in additional_report:
+            try:
+                normalized = _normalize_report_code(candidate)
+            except HTTPException:
+                continue
+            if normalized and normalized != primary_report and normalized not in extra_reports:
+                extra_reports.append(normalized)
+    payload: Dict[str, Any] = {
+        "report": primary_report,
+        "fight": fight,
+        "fight_ids": fight_ids_payload,
+        "extra_reports": extra_reports,
+        "ignore_first_add_set": bool(ignore_first_add_set),
+    }
+    if token:
+        payload["token"] = token
+
+    try:
+        job, immediate = job_manager.enqueue(JOB_DIMENSIUS_ADD_DAMAGE, payload, bust_cache=fresh)
+    except KeyError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if job.status == "completed":
+        return DimensiusAddDamageResponse.parse_obj(job.result)
 
     snapshot = job_manager.snapshot(job.id)
     if snapshot is None:
