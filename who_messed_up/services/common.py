@@ -119,6 +119,7 @@ class FightSelectionError(RuntimeError):
 
 GhostMissMode = Literal["first_per_set", "first_per_pull", "all"]
 DEFAULT_GHOST_MISS_MODE: GhostMissMode = "first_per_set"
+GHOST_SET_WINDOW_MS = 5000
 _GHOST_MODE_ALIASES: Dict[str, GhostMissMode] = {
     "first_per_set": "first_per_set",
     "firstperset": "first_per_set",
