@@ -1,0 +1,478 @@
+{
+  "entries": [
+    {
+      "class_name": "Paladin",
+      "metrics": [
+        {
+          "average_per_pull": 521969839.48,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 13049245987.0
+        }
+      ],
+      "player": "Athen\u00e4",
+      "pulls": 25,
+      "role": "Tank"
+    },
+    {
+      "class_name": "DeathKnight",
+      "metrics": [
+        {
+          "average_per_pull": 715880852.88,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 17897021322.0
+        }
+      ],
+      "player": "Monor\u00ecth",
+      "pulls": 25,
+      "role": "Tank"
+    },
+    {
+      "class_name": "Shaman",
+      "metrics": [
+        {
+          "average_per_pull": 904671855.28,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 22616796382.0
+        }
+      ],
+      "player": "Ellimist",
+      "pulls": 25,
+      "role": "Healer"
+    },
+    {
+      "class_name": "Paladin",
+      "metrics": [
+        {
+          "average_per_pull": 769875708.6,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 19246892715.0
+        }
+      ],
+      "player": "Malandru",
+      "pulls": 25,
+      "role": "Healer"
+    },
+    {
+      "class_name": "Evoker",
+      "metrics": [
+        {
+          "average_per_pull": 1204633540.6,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 30115838515.0
+        }
+      ],
+      "player": "Taisuwu",
+      "pulls": 25,
+      "role": "Healer"
+    },
+    {
+      "class_name": "Priest",
+      "metrics": [
+        {
+          "average_per_pull": 1394968942.08,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 34874223552.0
+        }
+      ],
+      "player": "Zakma",
+      "pulls": 25,
+      "role": "Healer"
+    },
+    {
+      "class_name": "Druid",
+      "metrics": [
+        {
+          "average_per_pull": 1023885474.96,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 25597136874.0
+        }
+      ],
+      "player": "B\u00ebar",
+      "pulls": 25,
+      "role": "Melee"
+    },
+    {
+      "class_name": "DeathKnight",
+      "metrics": [
+        {
+          "average_per_pull": 1438323010.08,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 35958075252.0
+        }
+      ],
+      "player": "Crassberry",
+      "pulls": 25,
+      "role": "Melee"
+    },
+    {
+      "class_name": "DemonHunter",
+      "metrics": [
+        {
+          "average_per_pull": 1402955094.52,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 35073877363.0
+        }
+      ],
+      "player": "Deimortus",
+      "pulls": 25,
+      "role": "Melee"
+    },
+    {
+      "class_name": "DemonHunter",
+      "metrics": [
+        {
+          "average_per_pull": 1303687167.76,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 32592179194.0
+        }
+      ],
+      "player": "Felseki",
+      "pulls": 25,
+      "role": "Melee"
+    },
+    {
+      "class_name": "Monk",
+      "metrics": [
+        {
+          "average_per_pull": 1357612704.8,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 33940317620.0
+        }
+      ],
+      "player": "Hellenkeller",
+      "pulls": 25,
+      "role": "Melee"
+    },
+    {
+      "class_name": "DeathKnight",
+      "metrics": [
+        {
+          "average_per_pull": 1593303169.6,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 39832579240.0
+        }
+      ],
+      "player": "Hipdk",
+      "pulls": 25,
+      "role": "Melee"
+    },
+    {
+      "class_name": "Warrior",
+      "metrics": [
+        {
+          "average_per_pull": 1365330549.6,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 34133263740.0
+        }
+      ],
+      "player": "Owneege",
+      "pulls": 25,
+      "role": "Melee"
+    },
+    {
+      "class_name": "Mage",
+      "metrics": [
+        {
+          "average_per_pull": 1215922768.44,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 30398069211.0
+        }
+      ],
+      "player": "Chocolate",
+      "pulls": 25,
+      "role": "Ranged"
+    },
+    {
+      "class_name": "Priest",
+      "metrics": [
+        {
+          "average_per_pull": 962696931.75,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 7701575454.0
+        }
+      ],
+      "player": "Fyxxie",
+      "pulls": 8,
+      "role": "Ranged"
+    },
+    {
+      "class_name": "Hunter",
+      "metrics": [
+        {
+          "average_per_pull": 1016888352.4705882,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 17287101992.0
+        }
+      ],
+      "player": "Gialiana",
+      "pulls": 17,
+      "role": "Ranged"
+    },
+    {
+      "class_name": "Mage",
+      "metrics": [
+        {
+          "average_per_pull": 1394142735.96,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 34853568399.0
+        }
+      ],
+      "player": "Inferni\u00f6",
+      "pulls": 25,
+      "role": "Ranged"
+    },
+    {
+      "class_name": "Evoker",
+      "metrics": [
+        {
+          "average_per_pull": 938205199.28,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 23455129982.0
+        }
+      ],
+      "player": "Pikagosa",
+      "pulls": 25,
+      "role": "Ranged"
+    },
+    {
+      "class_name": "Shaman",
+      "metrics": [
+        {
+          "average_per_pull": 1298218607.88,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 32455465197.0
+        }
+      ],
+      "player": "Pumpy",
+      "pulls": 25,
+      "role": "Ranged"
+    },
+    {
+      "class_name": "Warlock",
+      "metrics": [
+        {
+          "average_per_pull": 1190146013.88,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 29753650347.0
+        }
+      ],
+      "player": "Teacupps",
+      "pulls": 25,
+      "role": "Ranged"
+    },
+    {
+      "class_name": "Hunter",
+      "metrics": [
+        {
+          "average_per_pull": 1189133650.48,
+          "phase_id": "full",
+          "phase_label": "Full Fight",
+          "total_amount": 29728341262.0
+        }
+      ],
+      "player": "Vodnar",
+      "pulls": 25,
+      "role": "Ranged"
+    }
+  ],
+  "filters": {
+    "additional_reports": null,
+    "fight_ids": null,
+    "fight_name": "Nexus-King Salhadaar"
+  },
+  "phase_labels": {
+    "full": "Full Fight"
+  },
+  "phases": [
+    "full"
+  ],
+  "player_classes": {
+    "Ancestor": null,
+    "Ancestral Protection Totem": null,
+    "Arcane Phoenix": null,
+    "Athen\u00e4": "Paladin",
+    "Auto-Hammer": null,
+    "Beam": null,
+    "Beast": null,
+    "Besiege": null,
+    "Blood Beast": null,
+    "Bruunum": null,
+    "B\u00ebar": "Druid",
+    "Chocolate": "Mage",
+    "Cloudburst Totem": null,
+    "Crashin' Thrashin' Shredder": null,
+    "Crassberry": "DeathKnight",
+    "Deimortus": "DemonHunter",
+    "Diabolic Imp": null,
+    "Dimension Portal": null,
+    "Dimensius": null,
+    "Divine Image": null,
+    "Dracthyr Commando": null,
+    "Earth Spirit": null,
+    "Ellimist": "Shaman",
+    "Environment": null,
+    "Felseki": "DemonHunter",
+    "Fenryr": null,
+    "Fire Spirit": null,
+    "Flamesworn Boulderfist": null,
+    "Fractal Image": null,
+    "Fyxxie": "Priest",
+    "Gialiana": "Hunter",
+    "Gravekeeper": null,
+    "Greater Earth Elemental": null,
+    "Greater Lightning Elemental": null,
+    "Greater Storm Elemental": null,
+    "Grimewick": null,
+    "Hati": null,
+    "Healing Tide Totem": null,
+    "Hearty Feast of the Midnight Masquerade": null,
+    "Hellenkeller": "Monk",
+    "High Inquisitor Whitemane": null,
+    "Highlord Darion Mograine": null,
+    "Hipdk": "DeathKnight",
+    "Infernal": null,
+    "Infernal Fragment": null,
+    "Inferni\u00f6": "Mage",
+    "King Thoras Trollbane": null,
+    "Kip": null,
+    "Leap Target": null,
+    "Lesser Ghoul": null,
+    "Lesser Storm Elemental": null,
+    "Liquid Magma Totem": null,
+    "Magus of the Dead": null,
+    "Malandru": "Paladin",
+    "Manaforged Titan": null,
+    "Mindbender": null,
+    "Mirror Image": null,
+    "Monor\u00ecth": "DeathKnight",
+    "Mother of Chaos": null,
+    "Nazgrim": null,
+    "Netherbreaker": null,
+    "Nexus-King Salhadaar": null,
+    "Nexus-Prince Ky'vor": null,
+    "Nexus-Prince Xevvos": null,
+    "Overfiend": null,
+    "Overlord": null,
+    "Owneege": "Warrior",
+    "Past Self": null,
+    "Pikagosa": "Evoker",
+    "Pit Lord": null,
+    "Portal to Dornogal": null,
+    "Pumpy": "Shaman",
+    "Risen Ghoul": null,
+    "Rune Weapon": null,
+    "Sacred Weapon": null,
+    "Shadowfiend": null,
+    "Shadowguard Reaper": null,
+    "Soulwell": null,
+    "Sovereign Image": null,
+    "Spider Eggs": null,
+    "Spirit Link Totem": null,
+    "Stone Bulwark Totem": null,
+    "Sul'raka": null,
+    "Summoning Portal": null,
+    "Taisuwu": "Evoker",
+    "Teacupps": "Warlock",
+    "The Royal Voidwing": null,
+    "Thing From Beyond": null,
+    "Transcendence Spirit": null,
+    "Vengeful Oath": null,
+    "Vodnar": "Hunter",
+    "Void Lasher": null,
+    "Void Tendril": null,
+    "Water Elemental": null,
+    "White Tiger Statue": null,
+    "Wind Rush Totem": null,
+    "Xuen": null,
+    "Zakma": "Priest"
+  },
+  "player_roles": {
+    "Ancestor": "Unknown",
+    "Athen\u00e4": "Tank",
+    "B\u00ebar": "Melee",
+    "Chocolate": "Ranged",
+    "Crassberry": "Melee",
+    "Deimortus": "Melee",
+    "Diabolic Imp": "Unknown",
+    "Dracthyr Commando": "Unknown",
+    "Ellimist": "Healer",
+    "Felseki": "Melee",
+    "Fyxxie": "Ranged",
+    "Gialiana": "Ranged",
+    "Greater Earth Elemental": "Unknown",
+    "Greater Lightning Elemental": "Unknown",
+    "Hellenkeller": "Melee",
+    "High Inquisitor Whitemane": "Unknown",
+    "Highlord Darion Mograine": "Unknown",
+    "Hipdk": "Melee",
+    "Infernal": "Unknown",
+    "Inferni\u00f6": "Ranged",
+    "King Thoras Trollbane": "Unknown",
+    "Lesser Ghoul": "Unknown",
+    "Lesser Storm Elemental": "Unknown",
+    "Liquid Magma Totem": "Unknown",
+    "Magus of the Dead": "Unknown",
+    "Malandru": "Healer",
+    "Monor\u00ecth": "Tank",
+    "Mother of Chaos": "Unknown",
+    "Nazgrim": "Unknown",
+    "Overfiend": "Unknown",
+    "Overlord": "Unknown",
+    "Owneege": "Melee",
+    "Pikagosa": "Ranged",
+    "Pit Lord": "Unknown",
+    "Pumpy": "Ranged",
+    "Sacred Weapon": "Unknown",
+    "Taisuwu": "Healer",
+    "Teacupps": "Ranged",
+    "Thing From Beyond": "Unknown",
+    "Vodnar": "Ranged",
+    "Void Lasher": "Unknown",
+    "Void Tendril": "Unknown",
+    "Zakma": "Healer"
+  },
+  "player_specs": {
+    "Athen\u00e4": "Protection",
+    "B\u00ebar": "Feral",
+    "Chocolate": "Arcane",
+    "Crassberry": "Unholy",
+    "Deimortus": "Havoc",
+    "Ellimist": "Restoration",
+    "Felseki": "Havoc",
+    "Fyxxie": "Shadow",
+    "Gialiana": "Marksmanship",
+    "Hellenkeller": "Windwalker",
+    "Hipdk": "Frost",
+    "Inferni\u00f6": "Frost",
+    "Malandru": "Holy",
+    "Monor\u00ecth": "Blood",
+    "Owneege": "Fury",
+    "Pikagosa": "Devastation",
+    "Pumpy": "Elemental",
+    "Taisuwu": "Preservation",
+    "Teacupps": "Destruction",
+    "Vodnar": "BeastMastery",
+    "Zakma": "Holy"
+  },
+  "report": "WczAN4bDfXxPhV93"
+}

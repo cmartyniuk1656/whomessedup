@@ -80,7 +80,37 @@ who-messed-up/
 - The queue is in-memory; restart clears jobs. Persist results externally if you need long-term history.
 - Use HTTPS in front of the app and lock management endpoints (e.g., /docs) if you expose it publicly.
 
+## Regression Test References
+
+When refactoring or adding features, sanity-check the existing reports against these known Warcraft Logs reports:
+
+- **Nexus-King Regression**: `WczAN4bDfXxPhV93` (use the Nexus-King tiles, including phase damage and combined fuck-up dashboards).
+- **Dimensius Regression**: `W4cZgnxQfR2AH1dT` (covers Dimensius phase damage plus the “Phase 1 Add Damage” report with and without “Ignore first add set”).
+
+Recommended workflow:
+
+1. Run the backend (`uvicorn app:app --reload --port 8088`) and the frontend dev server.
+2. Load each tile using the report codes above, once with cached results and once using the “Force fresh run” option.
+3. Export CSVs before/after your changes; diff them (ignoring timestamp/order shifts) to confirm metrics remain identical unless intentionally changed.
+4. When backend-only refactors are done, hit the REST endpoints directly (`/api/nexus-phase1`, `/api/nexus-phase-damage`, `/api/dimensius-add-damage`) with the codes above and compare JSON responses.
+
+Automating these checks (e.g., via a pytest script that fetches the endpoints and compares snapshots) is encouraged as we continue to split the codebase into reusable modules.
+
+### Capturing New Baselines
+
+Run the helper script (ensure the backend is running locally) to refresh the stored snapshots:
+
+```bash
+.\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:8088 --out-dir regression_snapshots
+```
+
+The generated JSON lives in `regression_snapshots/` and acts as the “golden” expectations for future diffs. To run a single case without re-running the entire suite, pass one or more `--case` flags (each matching the case name from `scripts/capture_regressions.py`). Example:
+
+```bash
+.\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:8088 --out-dir regression_snapshots_current --case ghosts_all
+git diff --no-index regression_snapshots/ghosts_all.json regression_snapshots_current/ghosts_all.json
+```
+
 ## Feedback & Contributions
 
 Open PRs/issues, or fork and customize your own tiles. The architecture keeps tiles modular, so adding new analyses is just a matter of wiring a service function + frontend card.
-
