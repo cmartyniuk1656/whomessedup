@@ -1,8 +1,17 @@
 import { PropsWithChildren } from "react";
 
-export function GlassCard({ title, children }: PropsWithChildren<{ title?: string }>) {
+type GlassCardProps = PropsWithChildren<{ title?: string; className?: string }>;
+
+export function GlassCard({ title, children, className }: GlassCardProps) {
+  const cardClasses = [
+    "rounded-xl2 border border-border/60 bg-glass-gradient backdrop-blur-md shadow-glass",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className="rounded-xl2 border border-border/60 bg-glass-gradient backdrop-blur-md shadow-glass">
+    <div className={cardClasses}>
       {title ? (
         <div className="flex items-center justify-between border-b border-white/5 p-5">
           <h3 className="font-medium tracking-tight">{title}</h3>
