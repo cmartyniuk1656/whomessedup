@@ -647,7 +647,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-dvh bg-bg text-content relative overflow-hidden">
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-radial-pool" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 mix-blend-overlay opacity-20 [background-image:var(--noise)]" />
       <ReportControls
         reportInput={reportInput}
         onReportInputChange={setReportInput}
