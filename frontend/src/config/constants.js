@@ -55,6 +55,8 @@ export const DEFAULT_SORT_DIRECTIONS = {
   besiegeHits: "desc",
   besiegePerPull: "desc",
   fuckupRate: "desc",
+  deaths: "desc",
+  deathRate: "desc",
 };
 
 export const TILES = [
@@ -259,9 +261,23 @@ export const TILES = [
       {
         id: "dim_rg_em_overlap",
         type: "checkbox",
-        label: "Players who got Reverse Gravity and Excess Mass at the same time",
+        label: "Mass Gravity Overlap (Players who got both at the same time)",
         default: true,
         param: "reverse_gravity_excess_mass",
+      },
+      {
+        id: "dim_early_mass",
+        type: "checkbox",
+        label: "Early Mass (Players who grabbed Excess Mass < 1 second before Reverse Gravities)",
+        default: false,
+        param: "early_mass_before_rg",
+      },
+      {
+        id: "dim_dark_energy",
+        type: "checkbox",
+        label: "Dark Energy hits",
+        default: false,
+        param: "dark_energy_hits",
       },
       {
         id: "dim_phase1_fresh_run",
@@ -272,7 +288,30 @@ export const TILES = [
       },
     ],
     footnotes: [
-      "Counts a fuck-up each time Reverse Gravity and Excess Mass overlap on the same player during Stage One pulls.",
+      "A single event can be counted for both Mass Gravity Overlap and Early Mass if the Mass was collected < 1 second before Reverse Gravity was applied to them.",
+      "Dark Energy circle damage appears to be entirely avoidable as long as you move right as it drops. Shadowstepping on top of one still counts :(",
+    ],
+  },
+  {
+    id: "dimensius-deaths",
+    title: "Dimensius Death Counter",
+    description:
+      "Count player deaths during Dimensius pulls, excluding Oblivion deaths without a recent Airborne, Fists of the Voidlord, or Devour event.",
+    defaultFight: "Dimensius, the All-Devouring",
+    endpoint: "/api/dimensius-deaths",
+    mode: "dimensius-deaths",
+    defaultSort: { key: "deathRate", direction: "desc" },
+    configOptions: [
+      {
+        id: "dim_deaths_fresh_run",
+        type: "checkbox",
+        label: "Force fresh run (skip cache)",
+        default: false,
+        param: "fresh",
+      },
+    ],
+    footnotes: [
+      "Oblivion deaths are excluded unless Airborne, Fists of the Voidlord, or Devour affected the player within the previous 8 seconds.",
     ],
   },
   {

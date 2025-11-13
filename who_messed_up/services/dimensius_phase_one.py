@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple
+from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple, Set
 
 import requests
 
@@ -18,13 +18,17 @@ from .common import (
     _players_from_details,
     _resolve_token,
     _select_fights,
+    compute_death_cutoffs,
 )
 
 REVERSE_GRAVITY_ID = 1243577
 EXCESS_MASS_ID = 1228206
+DARK_ENERGY_ID = 1231002
 
 APPLY_EVENTS = {"applydebuff", "applydebuffstack", "refreshdebuff"}
 REMOVE_EVENTS = {"removedebuff", "removedebuffstack"}
+EARLY_MASS_WINDOW_MS = 1000.0
+REVERSE_GRAVITY_SET_GAP_MS = 1500.0
 
 
 @dataclass
@@ -68,6 +72,7 @@ class DimensiusPhaseOneSummary:
     fight_filter: Optional[str]
     fight_ids: Optional[List[int]]
     pull_count: int
+    ignore_after_deaths: Optional[int]
     metrics: List[MetricDefinition]
     entries: List[DimensiusPhaseOneEntry]
     player_classes: Dict[str, Optional[str]]
@@ -85,6 +90,9 @@ def fetch_dimensius_phase_one_summary(
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
     include_rg_em_overlap: bool = True,
+    include_early_mass: bool = False,
+    include_dark_energy_hits: bool = False,
+    ignore_after_deaths: Optional[int] = None,
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
@@ -123,27 +131,58 @@ def fetch_dimensius_phase_one_summary(
                 per_pull_label="Overlap / Pull",
             )
         )
+    if include_early_mass:
+        metrics.append(
+            MetricDefinition(
+                id="early_mass",
+                label="Excess Mass before Reverse Gravity",
+                per_pull_label="Early Mass / Pull",
+            )
+        )
+    if include_dark_energy_hits:
+        metrics.append(
+            MetricDefinition(
+                id="dark_energy",
+                label="Dark Energy hits",
+                per_pull_label="Dark Energy hits / Pull",
+            )
+        )
+
+    death_limit = ignore_after_deaths if ignore_after_deaths and ignore_after_deaths > 0 else None
+    death_cutoffs = compute_death_cutoffs(
+        session,
+        bearer,
+        fights=chosen,
+        report_code=report_code,
+        actor_names=actor_names,
+        max_deaths=death_limit,
+    )
 
     overlap_counts_by_player: DefaultDict[str, int] = defaultdict(int)
     player_events: DefaultDict[str, List[TrackedEvent]] = defaultdict(list)
     pull_index_by_fight: Dict[int, int] = {fight.id: idx + 1 for idx, fight in enumerate(chosen)}
+    early_mass_counts_by_player: DefaultDict[str, int] = defaultdict(int)
+    dark_energy_counts_by_player: DefaultDict[str, int] = defaultdict(int)
 
     if include_rg_em_overlap:
-        rg_intervals = _collect_debuff_intervals(
+        rg_intervals, rg_apply_events = _collect_debuff_intervals(
             session,
             bearer,
             fights=chosen,
             report_code=report_code,
             ability_id=REVERSE_GRAVITY_ID,
             actor_names=actor_names,
+            capture_applies=True,
+            death_cutoffs=death_cutoffs,
         )
-        em_intervals = _collect_debuff_intervals(
+        em_intervals, _ = _collect_debuff_intervals(
             session,
             bearer,
             fights=chosen,
             report_code=report_code,
             ability_id=EXCESS_MASS_ID,
             actor_names=actor_names,
+            death_cutoffs=death_cutoffs,
         )
         for fight in chosen:
             fight_rg = rg_intervals.get(fight.id, {})
@@ -166,6 +205,107 @@ def fetch_dimensius_phase_one_summary(
                                 metric_id="rg_em_overlap",
                             )
                         )
+    else:
+        rg_intervals, rg_apply_events = _collect_debuff_intervals(
+            session,
+            bearer,
+            fights=chosen,
+            report_code=report_code,
+            ability_id=REVERSE_GRAVITY_ID,
+            actor_names=actor_names,
+            capture_applies=True,
+            death_cutoffs=death_cutoffs,
+        )
+        em_intervals, _ = _collect_debuff_intervals(
+            session,
+            bearer,
+            fights=chosen,
+            report_code=report_code,
+            ability_id=EXCESS_MASS_ID,
+            actor_names=actor_names,
+            death_cutoffs=death_cutoffs,
+        )
+
+    if include_early_mass:
+        set_starts_by_fight = _identify_reverse_gravity_sets(rg_apply_events or {})
+        for fight in chosen:
+            set_starts = set_starts_by_fight.get(fight.id, [])
+            if not set_starts:
+                continue
+            em_map = em_intervals.get(fight.id, {})
+            seen_pairs: Set[Tuple[str, float]] = set()
+            for player, intervals in em_map.items():
+                for start_ts, _ in intervals:
+                    for set_start in set_starts:
+                        if set_start - EARLY_MASS_WINDOW_MS <= start_ts < set_start:
+                            key = (player, set_start)
+                            if key in seen_pairs:
+                                continue
+                            seen_pairs.add(key)
+                            early_mass_counts_by_player[player] += 1
+                            offset = start_ts - float(fight.start)
+                            player_events[player].append(
+                                TrackedEvent(
+                                    player=player,
+                                    fight_id=fight.id,
+                                    fight_name=fight.name or "",
+                                    pull_index=pull_index_by_fight.get(fight.id, 0),
+                                    timestamp=start_ts,
+                                    offset_ms=offset,
+                                    metric_id="early_mass",
+                                )
+                            )
+                            break
+
+    if include_dark_energy_hits:
+        for fight in chosen:
+            for event in fetch_events(
+                session,
+                bearer,
+                code=report_code,
+                data_type="DamageTaken",
+                start=fight.start,
+                end=fight.end,
+                ability_id=DARK_ENERGY_ID,
+                actor_names=actor_names,
+            ):
+                timestamp = event.get("timestamp")
+                if timestamp is None:
+                    continue
+                try:
+                    ts_val = float(timestamp)
+                except (TypeError, ValueError):
+                    continue
+                cutoff = death_cutoffs.get(fight.id) if death_cutoffs else None
+                if cutoff is not None and ts_val >= cutoff:
+                    continue
+                target_name = event.get("targetName")
+                if not target_name and isinstance(event.get("target"), dict):
+                    target_name = event["target"].get("name")
+                if not target_name:
+                    continue
+                amount = event.get("amount")
+                absorbed = event.get("absorbed")
+                mitigated = event.get("mitigated")
+                total_amount = 0.0
+                for value in (amount, absorbed, mitigated):
+                    if isinstance(value, (int, float)):
+                        total_amount += float(value)
+                if total_amount <= 0:
+                    continue
+                dark_energy_counts_by_player[target_name] += 1
+                offset = ts_val - float(fight.start)
+                player_events[target_name].append(
+                    TrackedEvent(
+                        player=target_name,
+                        fight_id=fight.id,
+                        fight_name=fight.name or "",
+                        pull_index=pull_index_by_fight.get(fight.id, 0),
+                        timestamp=ts_val,
+                        offset_ms=offset,
+                        metric_id="dark_energy",
+                    )
+                )
 
     pull_count = len(chosen)
     name_to_class: Dict[str, Optional[str]] = {}
@@ -177,6 +317,8 @@ def fetch_dimensius_phase_one_summary(
         set(player_roles.keys())
         | set(pulls_by_player.keys())
         | set(overlap_counts_by_player.keys())
+        | set(early_mass_counts_by_player.keys())
+        | set(dark_energy_counts_by_player.keys())
         | set(player_events.keys())
     )
     if not all_players and participants_by_fight:
@@ -190,14 +332,32 @@ def fetch_dimensius_phase_one_summary(
         total_overlaps = float(sum(overlap_counts_by_player.values()))
         avg_per_pull = total_overlaps / pull_count if pull_count else 0.0
         metric_totals["rg_em_overlap"] = MetricValue(total=total_overlaps, per_pull=avg_per_pull)
+    if include_early_mass:
+        total_early = float(sum(early_mass_counts_by_player.values()))
+        avg_early = total_early / pull_count if pull_count else 0.0
+        metric_totals["early_mass"] = MetricValue(total=total_early, per_pull=avg_early)
+    if include_dark_energy_hits:
+        total_dark = float(sum(dark_energy_counts_by_player.values()))
+        avg_dark = total_dark / pull_count if pull_count else 0.0
+        metric_totals["dark_energy"] = MetricValue(total=total_dark, per_pull=avg_dark)
 
     combined_per_pull = sum(value.per_pull for value in metric_totals.values())
+
+    def _player_metric_total(name: str) -> int:
+        total = 0
+        if include_rg_em_overlap:
+            total += overlap_counts_by_player.get(name, 0)
+        if include_early_mass:
+            total += early_mass_counts_by_player.get(name, 0)
+        if include_dark_energy_hits:
+            total += dark_energy_counts_by_player.get(name, 0)
+        return total
 
     for player in sorted(
         all_players,
         key=lambda name: (
             ROLE_PRIORITY.get(player_roles.get(name, ROLE_UNKNOWN), ROLE_PRIORITY[ROLE_UNKNOWN]),
-            -((overlap_counts_by_player.get(name, 0)) if include_rg_em_overlap else 0),
+            -_player_metric_total(name),
             name.lower(),
         ),
     ):
@@ -209,6 +369,14 @@ def fetch_dimensius_phase_one_summary(
             total = float(overlap_counts_by_player.get(player, 0))
             per_pull = total / pulls if pulls else 0.0
             metrics_map["rg_em_overlap"] = MetricValue(total=total, per_pull=per_pull)
+        if include_early_mass:
+            total = float(early_mass_counts_by_player.get(player, 0))
+            per_pull = total / pulls if pulls else 0.0
+            metrics_map["early_mass"] = MetricValue(total=total, per_pull=per_pull)
+        if include_dark_energy_hits:
+            total = float(dark_energy_counts_by_player.get(player, 0))
+            per_pull = total / pulls if pulls else 0.0
+            metrics_map["dark_energy"] = MetricValue(total=total, per_pull=per_pull)
 
         fuckup_rate = sum(value.per_pull for value in metrics_map.values())
 
@@ -236,6 +404,7 @@ def fetch_dimensius_phase_one_summary(
     ability_ids = {
         "reverse_gravity": REVERSE_GRAVITY_ID,
         "excess_mass": EXCESS_MASS_ID,
+        "dark_energy": DARK_ENERGY_ID,
     }
 
     return DimensiusPhaseOneSummary(
@@ -251,6 +420,7 @@ def fetch_dimensius_phase_one_summary(
         metric_totals=metric_totals,
         combined_per_pull=combined_per_pull,
         ability_ids=ability_ids,
+        ignore_after_deaths=death_limit,
         player_events={player: list(events) for player, events in player_events.items()},
     )
 
@@ -263,12 +433,16 @@ def _collect_debuff_intervals(
     report_code: str,
     ability_id: int,
     actor_names: Dict[int, str],
-) -> Dict[int, Dict[str, List[Tuple[float, float]]]]:
+    capture_applies: bool = False,
+    death_cutoffs: Optional[Dict[int, float]] = None,
+) -> Tuple[Dict[int, Dict[str, List[Tuple[float, float]]]], Optional[Dict[int, List[Tuple[float, str]]]]]:
     intervals_by_fight: Dict[int, Dict[str, List[Tuple[float, float]]]] = {}
+    apply_events_by_fight: Dict[int, List[Tuple[float, str]]] = defaultdict(list)
     for fight in fights:
         intervals: Dict[str, List[Tuple[float, float]]] = defaultdict(list)
         active_start: Dict[str, float] = {}
         stack_counts: Dict[str, int] = {}
+        cutoff = death_cutoffs.get(fight.id) if death_cutoffs else None
         for event in fetch_events(
             session,
             bearer,
@@ -289,6 +463,8 @@ def _collect_debuff_intervals(
                 ts_val = float(timestamp)
             except (TypeError, ValueError):
                 continue
+            if cutoff is not None and ts_val >= cutoff:
+                continue
             target_name = event.get("targetName")
             if not target_name and isinstance(event.get("target"), dict):
                 target_name = event["target"].get("name")
@@ -296,6 +472,8 @@ def _collect_debuff_intervals(
                 continue
 
             if event_type in APPLY_EVENTS:
+                if capture_applies:
+                    apply_events_by_fight[fight.id].append((ts_val, target_name))
                 current = stack_counts.get(target_name, 0)
                 stack_counts[target_name] = current + 1
                 if current == 0:
@@ -306,16 +484,30 @@ def _collect_debuff_intervals(
                     start_ts = active_start.pop(target_name, None)
                     stack_counts.pop(target_name, None)
                     if start_ts is not None and ts_val >= start_ts:
-                        intervals[target_name].append((start_ts, ts_val))
+                        end_ts = ts_val
+                        if cutoff is not None and end_ts > cutoff:
+                            end_ts = cutoff
+                        if cutoff is not None and start_ts >= cutoff:
+                            continue
+                        intervals[target_name].append((start_ts, end_ts))
                 else:
                     stack_counts[target_name] = current - 1
 
         for player, start_ts in active_start.items():
-            intervals[player].append((start_ts, float(fight.end)))
+            if cutoff is not None and start_ts >= cutoff:
+                continue
+            end_ts = float(fight.end)
+            if cutoff is not None and cutoff < end_ts:
+                end_ts = cutoff
+            intervals[player].append((start_ts, end_ts))
         for player in intervals:
             intervals[player].sort(key=lambda pair: pair[0])
         intervals_by_fight[fight.id] = intervals
-    return intervals_by_fight
+    if capture_applies:
+        for events in apply_events_by_fight.values():
+            events.sort(key=lambda item: item[0])
+        return intervals_by_fight, dict(apply_events_by_fight)
+    return intervals_by_fight, None
 
 
 def _detect_interval_overlaps(
@@ -339,6 +531,23 @@ def _detect_interval_overlaps(
     return overlaps
 
 
+def _identify_reverse_gravity_sets(
+    apply_events_by_fight: Dict[int, List[Tuple[float, str]]],
+) -> Dict[int, List[float]]:
+    set_starts: Dict[int, List[float]] = {}
+    for fight_id, events in apply_events_by_fight.items():
+        if not events:
+            continue
+        starts: List[float] = []
+        prev_ts: Optional[float] = None
+        for ts, _ in events:
+            if prev_ts is None or ts - prev_ts > REVERSE_GRAVITY_SET_GAP_MS:
+                starts.append(ts)
+            prev_ts = ts
+        set_starts[fight_id] = starts
+    return set_starts
+
+
 __all__ = [
     "DimensiusPhaseOneEntry",
     "DimensiusPhaseOneSummary",
@@ -348,4 +557,5 @@ __all__ = [
     "fetch_dimensius_phase_one_summary",
     "REVERSE_GRAVITY_ID",
     "EXCESS_MASS_ID",
+    "DARK_ENERGY_ID",
 ]

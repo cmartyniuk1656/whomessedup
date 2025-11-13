@@ -73,6 +73,34 @@ export function ResultsTable({
             renderSortIcon={renderSortIcon}
           />
         </>
+      ) : mode === "dimensius-deaths" ? (
+        <>
+          {showMobileToggle ? (
+            <div className="sm:hidden mt-4 px-4">
+              <label className="flex w-full flex-col text-sm font-medium text-slate-300">
+                Mobile layout
+                <select
+                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-base text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  value={mobileViewMode}
+                  onChange={(event) => onMobileViewModeChange(event.target.value)}
+                >
+                  <option value="table">Table</option>
+                  <option value="cards">Cards</option>
+                </select>
+                <span className="mt-1 text-xs text-slate-400">Choose how results display on smaller screens.</span>
+              </label>
+            </div>
+          ) : null}
+          <DeathsTable
+            rows={rows}
+            playerEvents={playerEvents}
+            expandedPlayers={expandedPlayers}
+            onTogglePlayer={togglePlayerRow}
+            mobileViewMode={mobileViewMode}
+            handleSort={handleSort}
+            renderSortIcon={renderSortIcon}
+          />
+        </>
       ) : (
         <>
           {showMobileToggle ? (
@@ -315,7 +343,7 @@ function MetricTable({
   handleSort,
   renderSortIcon,
 }) {
-  const totalColumns = 4 + Math.max(metricColumns.length, 0) * 2;
+  const totalColumns = 4 + Math.max(metricColumns.length, 0);
   return (
     <>
       <div className="hidden sm:block overflow-x-auto">
@@ -326,22 +354,14 @@ function MetricTable({
               <SortableHeader label="Role" column="role" handleSort={handleSort} renderSortIcon={renderSortIcon} align="left" />
               <SortableHeader label="Pulls" column="pulls" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" />
               {metricColumns.map((metric) => (
-                <Fragment key={`metric-header-${metric.id}`}>
-                  <SortableHeader
-                    label={metric.label || metric.id}
-                    column={`metric_total_${metric.id}`}
-                    handleSort={handleSort}
-                    renderSortIcon={renderSortIcon}
-                    align="right"
-                  />
-                  <SortableHeader
-                    label={metric.per_pull_label || `${metric.label || metric.id} / Pull`}
-                    column={`metric_per_pull_${metric.id}`}
-                    handleSort={handleSort}
-                    renderSortIcon={renderSortIcon}
-                    align="right"
-                  />
-                </Fragment>
+                <SortableHeader
+                  key={`metric-header-${metric.id}`}
+                  label={metric.label || metric.id}
+                  column={`metric_total_${metric.id}`}
+                  handleSort={handleSort}
+                  renderSortIcon={renderSortIcon}
+                  align="right"
+                />
               ))}
               <SortableHeader label="Fuck-up Rate" column="fuckupRate" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" />
             </tr>
@@ -365,12 +385,9 @@ function MetricTable({
                     </td>
                     <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
                     {metricColumns.map((metric) => (
-                      <Fragment key={`metric-row-${row.player}-${metric.id}`}>
-                        <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.metricTotals?.[metric.id] ?? 0)}</td>
-                        <td className="px-4 py-3 text-right text-slate-200">
-                          {formatFloat(row.metricPerPull?.[metric.id] ?? 0, 3)}
-                        </td>
-                      </Fragment>
+                      <td key={`metric-row-${row.player}-${metric.id}`} className="px-4 py-3 text-right text-slate-200">
+                        {formatInt(row.metricTotals?.[metric.id] ?? 0)}
+                      </td>
                     ))}
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
                   </tr>
@@ -418,16 +435,10 @@ function MetricTable({
                   <p className="text-xs text-slate-400">Enable at least one option to see detailed metrics.</p>
                 ) : (
                   metricColumns.map((metric) => (
-                    <Fragment key={`metric-card-${row.player}-${metric.id}`}>
-                      <div className="flex justify-between">
-                        <span>{metric.label || metric.id}</span>
-                        <span>{formatInt(row.metricTotals?.[metric.id] ?? 0)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>{metric.per_pull_label || `${metric.label || metric.id} / Pull`}</span>
-                        <span>{formatFloat(row.metricPerPull?.[metric.id] ?? 0, 3)}</span>
-                      </div>
-                    </Fragment>
+                    <div key={`metric-card-${row.player}-${metric.id}`} className="flex justify-between">
+                      <span>{metric.label || metric.id}</span>
+                      <span>{formatInt(row.metricTotals?.[metric.id] ?? 0)}</span>
+                    </div>
                   ))
                 )}
                 <div className="flex justify-between">
@@ -483,6 +494,135 @@ function MetricTable({
                     </td>
                   ))}
                   <td className="px-4 py-2 text-right">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  );
+}
+
+function DeathsTable({ rows, playerEvents = {}, expandedPlayers = {}, onTogglePlayer, mobileViewMode, handleSort, renderSortIcon }) {
+  return (
+    <>
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-800 text-sm">
+          <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
+            <tr>
+              <SortableHeader label="Player" column="player" handleSort={handleSort} renderSortIcon={renderSortIcon} align="left" />
+              <SortableHeader label="Role" column="role" handleSort={handleSort} renderSortIcon={renderSortIcon} align="left" />
+              <SortableHeader label="Pulls" column="pulls" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" />
+              <SortableHeader label="Deaths" column="deaths" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" />
+              <SortableHeader label="Death Rate" column="deathRate" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
+            {rows.map((row) => {
+              const events = playerEvents?.[row.player] ?? [];
+              const hasEvents = events.length > 0;
+              const isExpanded = !!expandedPlayers[row.player];
+              return (
+                <Fragment key={`${row.player}-${row.role}-death`}>
+                  <tr
+                    className={hasEvents ? "cursor-pointer hover:bg-slate-900/80" : ""}
+                    onClick={() => hasEvents && onTogglePlayer?.(row.player)}
+                  >
+                    <td className="px-4 py-3 font-medium">
+                      <span style={{ color: row.color }}>{row.player}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <RoleBadge role={row.role} />
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.deaths ?? 0)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.deathRate ?? 0, 3)}</td>
+                  </tr>
+                  {hasEvents && isExpanded ? <EventDetailsRow colSpan={5} events={events} /> : null}
+                </Fragment>
+              );
+            })}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                  No events matched the filters.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+      <div className={`sm:hidden p-4 ${mobileViewMode === "cards" ? "space-y-4" : "overflow-x-auto"}`}>
+        {rows.length === 0 ? (
+          <EmptyMessage />
+        ) : mobileViewMode === "cards" ? (
+          rows.map((row) => (
+            <div
+              key={`${row.player}-${row.role}-death-card`}
+              className="rounded-lg border border-slate-800 bg-slate-900/70 p-4 shadow-sm shadow-emerald-500/5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-base font-semibold" style={{ color: row.color }}>
+                  {row.player}
+                </span>
+                <RoleBadge role={row.role} />
+              </div>
+              <dl className="mt-3 space-y-1 text-sm text-slate-200">
+                <div className="flex justify-between">
+                  <span>Pulls</span>
+                  <span>{formatInt(row.pulls)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Deaths</span>
+                  <span>{formatInt(row.deaths ?? 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Death Rate</span>
+                  <span>{formatFloat(row.deathRate ?? 0, 3)}</span>
+                </div>
+                {playerEvents?.[row.player]?.length ? (
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      className="text-xs text-emerald-300 underline"
+                      onClick={() => onTogglePlayer?.(row.player)}
+                    >
+                      {expandedPlayers[row.player] ? "Hide events" : "Show events"}
+                    </button>
+                    {expandedPlayers[row.player] ? (
+                      <div className="mt-2 rounded-lg border border-slate-800/60 bg-slate-900/50 p-2">
+                        <EventList events={playerEvents[row.player]} />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          ))
+        ) : (
+          <table className="min-w-full divide-y divide-slate-800 text-xs">
+            <thead className="bg-slate-900/80 text-[11px] uppercase tracking-widest text-slate-400">
+              <tr>
+                <SortableHeader label="Player" column="player" handleSort={handleSort} renderSortIcon={renderSortIcon} align="left" small />
+                <SortableHeader label="Role" column="role" handleSort={handleSort} renderSortIcon={renderSortIcon} align="left" small />
+                <SortableHeader label="Pulls" column="pulls" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" small />
+                <SortableHeader label="Deaths" column="deaths" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" small />
+                <SortableHeader label="Death Rate" column="deathRate" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" small />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
+              {rows.map((row) => (
+                <tr key={`${row.player}-${row.role}-death-table`}>
+                  <td className="px-3 py-2 font-medium" style={{ color: row.color }}>
+                    {row.player}
+                  </td>
+                  <td className="px-3 py-2">
+                    <RoleBadge role={row.role} small />
+                  </td>
+                  <td className="px-3 py-2 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                  <td className="px-3 py-2 text-right text-slate-200">{formatInt(row.deaths ?? 0)}</td>
+                  <td className="px-3 py-2 text-right text-slate-200">{formatFloat(row.deathRate ?? 0, 3)}</td>
                 </tr>
               ))}
             </tbody>
@@ -739,7 +879,12 @@ function EventList({ events }) {
           <span className="text-slate-300">
             Pull {event.pull ?? "?"} – {formatSeconds(event.offset_ms)} ({formatInt(Math.round(event.timestamp ?? 0))})
           </span>
-          {event.fight_name ? <span className="text-slate-400">[{event.fight_name}]</span> : null}
+          {event.ability_label ? <span className="text-slate-200">via {event.ability_label}</span> : null}
+          {event.fight_name ? (
+            <span className="text-slate-400">[{event.fight_name}{event.fight_id ? ` • Fight ${event.fight_id}` : ""}]</span>
+          ) : event.fight_id ? (
+            <span className="text-slate-400">[Fight {event.fight_id}]</span>
+          ) : null}
         </li>
       ))}
     </ul>

@@ -136,13 +136,11 @@ function App() {
         const className = result.player_classes?.[entry.player] ?? null;
         const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
         const metricTotalsMap = {};
-        const metricPerPullMap = {};
         Object.entries(entry.metrics ?? {}).forEach(([metricId, values]) => {
           if (!values) {
             return;
           }
           metricTotalsMap[metricId] = values.total ?? 0;
-          metricPerPullMap[metricId] = values.per_pull ?? 0;
         });
         return {
           player: entry.player,
@@ -150,8 +148,22 @@ function App() {
           className,
           pulls: entry.pulls ?? result.pull_count ?? 0,
           metricTotals: metricTotalsMap,
-          metricPerPull: metricPerPullMap,
           fuckupRate: entry.fuckup_rate ?? 0,
+          color,
+        };
+      });
+    }
+    if (currentTile?.mode === "dimensius-deaths") {
+      return (result.entries ?? []).map((entry) => {
+        const className = result.player_classes?.[entry.player] ?? null;
+        const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+        return {
+          player: entry.player,
+          role: entry.role ?? "Unknown",
+          className,
+          pulls: entry.pulls ?? result.pull_count ?? 0,
+          deaths: entry.deaths ?? 0,
+          deathRate: entry.death_rate ?? 0,
           color,
         };
       });
@@ -306,15 +318,6 @@ function App() {
         }
         return a.player.localeCompare(b.player);
       }
-      if (key.startsWith("metric_per_pull_")) {
-        const metricId = key.replace("metric_per_pull_", "");
-        const aVal = a.metricPerPull?.[metricId] ?? 0;
-        const bVal = b.metricPerPull?.[metricId] ?? 0;
-        if (aVal !== bVal) {
-          return (aVal - bVal) * dir;
-        }
-        return a.player.localeCompare(b.player);
-      }
       if (key === "ghostMisses") {
         if (a.ghostMisses !== b.ghostMisses) {
           return (a.ghostMisses - b.ghostMisses) * dir;
@@ -342,6 +345,18 @@ function App() {
       if (key === "fuckupRate") {
         if (a.fuckupRate !== b.fuckupRate) {
           return (a.fuckupRate - b.fuckupRate) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "deaths") {
+        if ((a.deaths ?? 0) !== (b.deaths ?? 0)) {
+          return ((a.deaths ?? 0) - (b.deaths ?? 0)) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "deathRate") {
+        if ((a.deathRate ?? 0) !== (b.deathRate ?? 0)) {
+          return ((a.deathRate ?? 0) - (b.deathRate ?? 0)) * dir;
         }
         return a.player.localeCompare(b.player);
       }
@@ -386,6 +401,19 @@ function App() {
       label: "Fuck-up rate / Pull",
       value: formatFloat(result?.totals?.combined_per_pull ?? result?.combined_per_pull ?? 0, 3),
     });
+  } else if (currentTile?.mode === "dimensius-deaths") {
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Total deaths", value: formatInt(result?.totals?.total_deaths ?? 0) },
+      { label: "Avg deaths / Pull", value: formatFloat(result?.totals?.avg_deaths_per_pull ?? 0, 3) },
+    ];
+  } else if (currentTile?.mode === "dimensius-deaths") {
+    if (filters.ignore_after_deaths) {
+      const deaths = Number(filters.ignore_after_deaths);
+      if (!Number.isNaN(deaths) && deaths > 0) {
+        filterTags.push(`Stop after ${formatInt(deaths)} deaths`);
+      }
+    }
   } else {
     summaryMetrics = [
       { label: "Pulls counted", value: formatInt(pullCount) },
@@ -435,6 +463,18 @@ function App() {
     if (filters.reverse_gravity_excess_mass === "true") {
       filterTags.push("Reverse Gravity + Excess Mass overlap");
     }
+    if (filters.early_mass_before_rg === "true") {
+      filterTags.push("Excess Mass < 1s before Reverse Gravity");
+    }
+    if (filters.dark_energy_hits === "true") {
+      filterTags.push("Dark Energy hits");
+    }
+    if (filters.ignore_after_deaths) {
+      const deaths = Number(filters.ignore_after_deaths);
+      if (!Number.isNaN(deaths) && deaths > 0) {
+        filterTags.push(`Stop after ${formatInt(deaths)} deaths`);
+      }
+    }
   } else {
     if (hitFilters.ignore_after_deaths) {
       filterTags.push(`Stop after ${formatInt(hitFilters.ignore_after_deaths)} deaths`);
@@ -451,12 +491,7 @@ function App() {
       }
       const defaultDirection =
         DEFAULT_SORT_DIRECTIONS[key] ||
-        (key.startsWith("total_phase_") ||
-        key.startsWith("avg_phase_") ||
-        key.startsWith("metric_total_") ||
-        key.startsWith("metric_per_pull_")
-          ? "desc"
-          : "asc");
+        (key.startsWith("total_phase_") || key.startsWith("avg_phase_") || key.startsWith("metric_total_") ? "desc" : "asc");
       return { key, direction: defaultDirection };
     });
   };

@@ -18,6 +18,7 @@ from who_messed_up.jobs import job_manager
 from who_messed_up.service import (
     AddDamageSummary,
     DimensiusPhaseOneSummary,
+    DimensiusDeathSummary,
     FightSelectionError,
     GhostSummary,
     HitSummary,
@@ -30,6 +31,7 @@ from who_messed_up.service import (
     fetch_ghost_summary,
     fetch_hit_summary,
     fetch_dimensius_phase_one_summary,
+    fetch_dimensius_death_summary,
     fetch_dimensius_add_damage_summary,
     fetch_phase_damage_summary,
     fetch_phase_summary,
@@ -393,6 +395,15 @@ class DimensiusPhaseOneResponse(BaseModel):
             "reverse_gravity_excess_mass": "true"
             if any(metric.id == "rg_em_overlap" for metric in summary.metrics)
             else "false",
+            "early_mass_before_rg": "true"
+            if any(metric.id == "early_mass" for metric in summary.metrics)
+            else "false",
+            "dark_energy_hits": "true"
+            if any(metric.id == "dark_energy" for metric in summary.metrics)
+            else "false",
+            "ignore_after_deaths": str(summary.ignore_after_deaths)
+            if summary.ignore_after_deaths is not None
+            else None,
         }
         metric_models = [
             DimensiusMetricModel(id=metric.id, label=metric.label, per_pull_label=metric.per_pull_label)
@@ -469,6 +480,103 @@ class DimensiusPhaseOneResponse(BaseModel):
             combined_per_pull=summary.combined_per_pull,
             ability_ids=ability_models,
             totals={"combined_per_pull": summary.combined_per_pull},
+            player_events=player_events_map,
+        )
+
+
+class DimensiusDeathEventModel(BaseModel):
+    player: str
+    fight_id: int
+    fight_name: Optional[str]
+    pull: int
+    timestamp: float
+    offset_ms: float
+    ability_id: Optional[int]
+    ability_label: Optional[str]
+
+
+class DimensiusDeathEntryModel(BaseModel):
+    player: str
+    role: str
+    class_name: Optional[str]
+    pulls: int
+    deaths: int
+    death_rate: float
+    events: List[DimensiusDeathEventModel]
+
+
+class DimensiusDeathSummaryResponse(BaseModel):
+    report: str
+    filters: Dict[str, Optional[str]]
+    pull_count: int
+    totals: Dict[str, float]
+    entries: List[DimensiusDeathEntryModel]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+    player_events: Dict[str, List[DimensiusDeathEventModel]]
+
+    @classmethod
+    def from_summary(cls, summary: DimensiusDeathSummary) -> "DimensiusDeathSummaryResponse":
+        filters: Dict[str, Optional[str]] = {
+            "fight_name": summary.fight_filter,
+            "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+            "ignore_after_deaths": str(summary.ignore_after_deaths) if summary.ignore_after_deaths else None,
+        }
+        entries: List[DimensiusDeathEntryModel] = []
+        for entry in summary.entries:
+            event_models = [
+                DimensiusDeathEventModel(
+                    player=event.player,
+                    fight_id=event.fight_id,
+                    fight_name=event.fight_name,
+                    pull=event.pull_index,
+                    timestamp=event.timestamp,
+                    offset_ms=event.offset_ms,
+                    ability_id=event.ability_id,
+                    ability_label=event.ability_label,
+                )
+                for event in entry.events
+            ]
+            entries.append(
+                DimensiusDeathEntryModel(
+                    player=entry.player,
+                    role=entry.role,
+                    class_name=entry.class_name,
+                    pulls=entry.pulls,
+                    deaths=entry.deaths,
+                    death_rate=entry.death_rate,
+                    events=event_models,
+                )
+            )
+        totals = {
+            "total_deaths": float(summary.total_deaths),
+            "avg_deaths_per_pull": summary.total_deaths / summary.pull_count if summary.pull_count else 0.0,
+        }
+        player_events_map: Dict[str, List[DimensiusDeathEventModel]] = {}
+        for player, events in summary.player_events.items():
+            player_events_map[player] = [
+                DimensiusDeathEventModel(
+                    player=event.player,
+                    fight_id=event.fight_id,
+                    fight_name=event.fight_name,
+                    pull=event.pull_index,
+                    timestamp=event.timestamp,
+                    offset_ms=event.offset_ms,
+                    ability_id=event.ability_id,
+                    ability_label=event.ability_label,
+                )
+                for event in events
+            ]
+        return cls(
+            report=summary.report_code,
+            filters=filters,
+            pull_count=summary.pull_count,
+            totals=totals,
+            entries=entries,
+            player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
             player_events=player_events_map,
         )
 
@@ -631,6 +739,7 @@ JOB_NEXUS_PHASE1 = "nexus_phase1"
 JOB_PHASE_DAMAGE = "nexus_phase_damage"
 JOB_DIMENSIUS_ADD_DAMAGE = "dimensius_add_damage"
 JOB_DIMENSIUS_PHASE1 = "dimensius_phase1"
+JOB_DIMENSIUS_DEATHS = "dimensius_deaths"
 
 
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -702,14 +811,33 @@ def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         client_id=credentials["client_id"],
         client_secret=credentials["client_secret"],
         include_rg_em_overlap=bool(payload.get("reverse_gravity_excess_mass", False)),
+        include_early_mass=bool(payload.get("early_mass_before_rg", False)),
+        include_dark_energy_hits=bool(payload.get("dark_energy_hits", False)),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
     )
     return DimensiusPhaseOneResponse.from_summary(summary).dict()
+
+
+def _execute_dimensius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    summary = fetch_dimensius_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+    )
+    return DimensiusDeathSummaryResponse.from_summary(summary).dict()
 
 
 job_manager.register_handler(JOB_NEXUS_PHASE1, _execute_nexus_phase1_job)
 job_manager.register_handler(JOB_PHASE_DAMAGE, _execute_phase_damage_job)
 job_manager.register_handler(JOB_DIMENSIUS_ADD_DAMAGE, _execute_dimensius_add_damage_job)
 job_manager.register_handler(JOB_DIMENSIUS_PHASE1, _execute_dimensius_phase1_job)
+job_manager.register_handler(JOB_DIMENSIUS_DEATHS, _execute_dimensius_deaths_job)
 
 
 @app.get("/health")
@@ -986,16 +1114,29 @@ def get_dimensius_phase_one(
     reverse_gravity_excess_mass: bool = Query(
         True, description="Track players who had Reverse Gravity and Excess Mass simultaneously."
     ),
+    early_mass_before_rg: bool = Query(
+        False, description="Track players who gained Excess Mass less than 1s before Reverse Gravity sets."
+    ),
+    dark_energy_hits: bool = Query(
+        False, description="Track each Dark Energy hit taken by a player during Stage One."
+    ),
+    ignore_after_deaths: Optional[int] = Query(
+        None, description="Stop counting events after this many total player deaths in a pull."
+    ),
     fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> DimensiusPhaseOneResponse:
     fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
     primary_report = _normalize_report_code(report)
+    death_threshold = ignore_after_deaths if ignore_after_deaths and ignore_after_deaths > 0 else None
     payload: Dict[str, Any] = {
         "report": primary_report,
         "fight": fight,
         "fight_ids": fight_ids_payload,
         "reverse_gravity_excess_mass": bool(reverse_gravity_excess_mass),
+        "early_mass_before_rg": bool(early_mass_before_rg),
+        "dark_energy_hits": bool(dark_energy_hits),
+        "ignore_after_deaths": death_threshold,
     }
     if token:
         payload["token"] = token
@@ -1007,6 +1148,43 @@ def get_dimensius_phase_one(
 
     if job.status == "completed":
         return DimensiusPhaseOneResponse.parse_obj(job.result)
+
+    snapshot = job_manager.snapshot(job.id)
+    if snapshot is None:
+        raise HTTPException(status_code=500, detail="Job tracking failed.")
+    return JSONResponse(status_code=202, content={"job": snapshot})
+
+
+@app.get("/api/dimensius-deaths", response_model=DimensiusDeathSummaryResponse)
+def get_dimensius_deaths(
+    report: str = Query(..., description="Warcraft Logs report code."),
+    fight: Optional[str] = Query(None, description="Substring match on fight name."),
+    fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    ignore_after_deaths: Optional[int] = Query(
+        None, description="Stop counting deaths after this many occurrences per pull."
+    ),
+    fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
+    token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+) -> DimensiusDeathSummaryResponse:
+    fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    primary_report = _normalize_report_code(report)
+    death_threshold = ignore_after_deaths if ignore_after_deaths and ignore_after_deaths > 0 else None
+    payload: Dict[str, Any] = {
+        "report": primary_report,
+        "fight": fight,
+        "fight_ids": fight_ids_payload,
+        "ignore_after_deaths": death_threshold,
+    }
+    if token:
+        payload["token"] = token
+
+    try:
+        job, immediate = job_manager.enqueue(JOB_DIMENSIUS_DEATHS, payload, bust_cache=fresh)
+    except KeyError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if job.status == "completed":
+        return DimensiusDeathSummaryResponse.parse_obj(job.result)
 
     snapshot = job_manager.snapshot(job.id)
     if snapshot is None:

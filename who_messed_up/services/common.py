@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Literal
 
-from ..api import Fight, filter_fights, get_token_from_client
+from ..api import Fight, filter_fights, get_token_from_client, fetch_events
 
 # Role/Spec metadata ---------------------------------------------------------
 
@@ -366,3 +366,50 @@ def _resolve_event_source_player(
         resolved_name = actor_names.get(resolved_id, resolved_name)
 
     return resolved_name, resolved_id
+
+
+def compute_death_cutoffs(
+    session,
+    bearer: str,
+    *,
+    fights: Iterable[Fight],
+    report_code: str,
+    actor_names: Dict[int, str],
+    max_deaths: Optional[int],
+) -> Dict[int, float]:
+    """
+    Determine the earliest timestamp per fight when ``max_deaths`` deaths have occurred.
+    """
+    if not max_deaths or max_deaths <= 0:
+        return {}
+    cutoffs: Dict[int, float] = {}
+    for fight in fights:
+        total_deaths = 0
+        cutoff_ts: Optional[float] = None
+        for event in fetch_events(
+            session,
+            bearer,
+            code=report_code,
+            data_type="Deaths",
+            start=fight.start,
+            end=fight.end,
+            limit=1000,
+            actor_names=actor_names,
+        ):
+            event_type = (event.get("type") or "").lower()
+            if event_type not in {"death", "instakill"}:
+                continue
+            timestamp = event.get("timestamp")
+            if timestamp is None:
+                continue
+            try:
+                ts_val = float(timestamp)
+            except (TypeError, ValueError):
+                continue
+            total_deaths += 1
+            if total_deaths >= max_deaths:
+                cutoff_ts = ts_val
+                break
+        if cutoff_ts is not None:
+            cutoffs[fight.id] = cutoff_ts
+    return cutoffs

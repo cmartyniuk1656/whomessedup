@@ -63,7 +63,6 @@ const buildCsvContent = (tile, data, tableRows, phases, labels, metrics = []) =>
     const headers = ["Player", "Role", "Class", "Pulls"];
     metricList.forEach((metric) => {
       headers.push(metric.label || metric.id);
-      headers.push(metric.per_pull_label || `${metric.label || metric.id} / Pull`);
     });
     headers.push("Fuck-up Rate");
     const lines = [headers.map(escapeCsv).join(",")];
@@ -72,9 +71,19 @@ const buildCsvContent = (tile, data, tableRows, phases, labels, metrics = []) =>
       const values = [row.player, row.role, className, row.pulls ?? 0];
       metricList.forEach((metric) => {
         values.push(row.metricTotals?.[metric.id] ?? 0);
-        values.push(row.metricPerPull?.[metric.id] ?? 0);
       });
       values.push(row.fuckupRate ?? 0);
+      lines.push(values.map(escapeCsv).join(","));
+    });
+    return `\ufeff${lines.join("\n")}`;
+  }
+
+  if (tile.mode === "dimensius-deaths") {
+    const headers = ["Player", "Role", "Class", "Pulls", "Deaths", "Death Rate"];
+    const lines = [headers.map(escapeCsv).join(",")];
+    tableRows.forEach((row) => {
+      const className = row.className ?? data.player_classes?.[row.player] ?? "";
+      const values = [row.player, row.role, className, row.pulls ?? 0, row.deaths ?? 0, row.deathRate ?? 0];
       lines.push(values.map(escapeCsv).join(","));
     });
     return `\ufeff${lines.join("\n")}`;
