@@ -655,18 +655,19 @@ function App() {
       <div aria-hidden className="liquid-blob liquid-blob--cyan -z-20 opacity-65" />
       <div aria-hidden className="liquid-blob liquid-blob--magenta -z-20 opacity-55" />
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 mix-blend-overlay opacity-25 [background-image:var(--noise)]" />
-      <LiquidHero />
-      <ReportControls
-        reportInput={reportInput}
-        onReportInputChange={setReportInput}
-        fightOverride={fightOverride}
-        onFightOverrideChange={setFightOverride}
-        ignoreAfterDeaths={ignoreAfterDeaths}
-        onIgnoreAfterDeathsChange={setIgnoreAfterDeaths}
-        ignoreFinalSeconds={ignoreFinalSeconds}
-        onIgnoreFinalSecondsChange={setIgnoreFinalSeconds}
-        isBusy={isBusy}
-      />
+      <div className="relative z-10">
+        <LiquidHero />
+        <ReportControls
+          reportInput={reportInput}
+          onReportInputChange={setReportInput}
+          fightOverride={fightOverride}
+          onFightOverrideChange={setFightOverride}
+          ignoreAfterDeaths={ignoreAfterDeaths}
+          onIgnoreAfterDeathsChange={setIgnoreAfterDeaths}
+          ignoreFinalSeconds={ignoreFinalSeconds}
+          onIgnoreFinalSecondsChange={setIgnoreFinalSeconds}
+          isBusy={isBusy}
+        />
 
       <main className="mx-auto max-w-6xl px-6 pb-16">
         <TileCatalog
@@ -732,18 +733,19 @@ function App() {
         </section>
       </main>
 
-      <ConfigDrawer
-        visible={showConfig}
-        tile={pendingTile}
-        configValues={configValues}
-        onOptionChange={handleConfigOptionChange}
-        onMultiTextChange={handleMultiTextChange}
-        onMultiTextAdd={handleMultiTextAdd}
-        onMultiTextRemove={handleMultiTextRemove}
-        onCancel={handleConfigCancel}
-        onConfirm={handleConfigConfirm}
-        isBusy={isBusy}
-      />
+        <ConfigDrawer
+          visible={showConfig}
+          tile={pendingTile}
+          configValues={configValues}
+          onOptionChange={handleConfigOptionChange}
+          onMultiTextChange={handleMultiTextChange}
+          onMultiTextAdd={handleMultiTextAdd}
+          onMultiTextRemove={handleMultiTextRemove}
+          onCancel={handleConfigCancel}
+          onConfirm={handleConfigConfirm}
+          isBusy={isBusy}
+        />
+      </div>
     </div>
   );
 }
