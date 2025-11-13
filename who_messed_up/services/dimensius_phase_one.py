@@ -41,6 +41,17 @@ class MetricValue:
 
 
 @dataclass
+class TrackedEvent:
+    player: str
+    fight_id: int
+    fight_name: Optional[str]
+    pull_index: int
+    timestamp: float
+    offset_ms: float
+    metric_id: str
+
+
+@dataclass
 class DimensiusPhaseOneEntry:
     player: str
     role: str
@@ -48,6 +59,7 @@ class DimensiusPhaseOneEntry:
     pulls: int
     metrics: Dict[str, MetricValue]
     fuckup_rate: float
+    events: List[TrackedEvent]
 
 
 @dataclass
@@ -64,6 +76,7 @@ class DimensiusPhaseOneSummary:
     metric_totals: Dict[str, MetricValue]
     combined_per_pull: float
     ability_ids: Dict[str, int]
+    player_events: Dict[str, List[TrackedEvent]]
 
 
 def fetch_dimensius_phase_one_summary(
@@ -112,6 +125,9 @@ def fetch_dimensius_phase_one_summary(
         )
 
     overlap_counts_by_player: DefaultDict[str, int] = defaultdict(int)
+    player_events: DefaultDict[str, List[TrackedEvent]] = defaultdict(list)
+    pull_index_by_fight: Dict[int, int] = {fight.id: idx + 1 for idx, fight in enumerate(chosen)}
+
     if include_rg_em_overlap:
         rg_intervals = _collect_debuff_intervals(
             session,
@@ -134,9 +150,22 @@ def fetch_dimensius_phase_one_summary(
             fight_em = em_intervals.get(fight.id, {})
             players = set(fight_rg.keys()) | set(fight_em.keys())
             for player in players:
-                overlaps = _count_interval_overlaps(fight_rg.get(player, []), fight_em.get(player, []))
-                if overlaps > 0:
-                    overlap_counts_by_player[player] += overlaps
+                overlaps = _detect_interval_overlaps(fight_rg.get(player, []), fight_em.get(player, []))
+                if overlaps:
+                    overlap_counts_by_player[player] += len(overlaps)
+                    for overlap_ts in overlaps:
+                        offset = overlap_ts - float(fight.start)
+                        player_events[player].append(
+                            TrackedEvent(
+                                player=player,
+                                fight_id=fight.id,
+                                fight_name=fight.name or "",
+                                pull_index=pull_index_by_fight.get(fight.id, 0),
+                                timestamp=overlap_ts,
+                                offset_ms=offset,
+                                metric_id="rg_em_overlap",
+                            )
+                        )
 
     pull_count = len(chosen)
     name_to_class: Dict[str, Optional[str]] = {}
@@ -144,7 +173,12 @@ def fetch_dimensius_phase_one_summary(
         if name:
             name_to_class[name] = actor_classes.get(actor_id)
 
-    all_players = set(player_roles.keys()) | set(pulls_by_player.keys()) | set(overlap_counts_by_player.keys())
+    all_players = (
+        set(player_roles.keys())
+        | set(pulls_by_player.keys())
+        | set(overlap_counts_by_player.keys())
+        | set(player_events.keys())
+    )
     if not all_players and participants_by_fight:
         for participants in participants_by_fight.values():
             all_players.update(participants)
@@ -186,6 +220,7 @@ def fetch_dimensius_phase_one_summary(
                 pulls=pulls,
                 metrics=metrics_map,
                 fuckup_rate=fuckup_rate,
+                events=list(player_events.get(player, [])),
             )
         )
 
@@ -216,6 +251,7 @@ def fetch_dimensius_phase_one_summary(
         metric_totals=metric_totals,
         combined_per_pull=combined_per_pull,
         ability_ids=ability_ids,
+        player_events={player: list(events) for player, events in player_events.items()},
     )
 
 
@@ -282,25 +318,25 @@ def _collect_debuff_intervals(
     return intervals_by_fight
 
 
-def _count_interval_overlaps(
+def _detect_interval_overlaps(
     first: List[Tuple[float, float]],
     second: List[Tuple[float, float]],
-) -> int:
+) -> List[float]:
     if not first or not second:
-        return 0
-    count = 0
+        return []
+    overlaps: List[float] = []
     i = 0
     j = 0
     while i < len(first) and j < len(second):
         start = max(first[i][0], second[j][0])
         end = min(first[i][1], second[j][1])
         if start < end:
-            count += 1
+            overlaps.append(start)
         if first[i][1] <= second[j][1]:
             i += 1
         else:
             j += 1
-    return count
+    return overlaps
 
 
 __all__ = [
@@ -308,6 +344,7 @@ __all__ = [
     "DimensiusPhaseOneSummary",
     "MetricDefinition",
     "MetricValue",
+    "TrackedEvent",
     "fetch_dimensius_phase_one_summary",
     "REVERSE_GRAVITY_ID",
     "EXCESS_MASS_ID",

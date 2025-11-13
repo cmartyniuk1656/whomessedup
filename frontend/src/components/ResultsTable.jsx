@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { ROLE_BADGE_STYLES } from "../config/constants";
 import { formatFloat, formatInt } from "../utils/numberFormat";
 
@@ -8,12 +8,29 @@ export function ResultsTable({
   phaseOrder,
   phaseLabels,
   metricColumns = [],
+  playerEvents = {},
   mobileViewMode,
   onMobileViewModeChange,
   renderSortIcon,
   handleSort,
 }) {
+  const [expandedPlayers, setExpandedPlayers] = useState({});
+  useEffect(() => {
+    setExpandedPlayers({});
+  }, [rows, playerEvents]);
+
   const showMobileToggle = mode !== "phase-damage" && mode !== "add-damage";
+
+  const togglePlayerRow = (player) => {
+    const events = playerEvents?.[player];
+    if (!events || events.length === 0) {
+      return;
+    }
+    setExpandedPlayers((prev) => ({
+      ...prev,
+      [player]: !prev[player],
+    }));
+  };
 
   return (
     <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/40">
@@ -48,6 +65,9 @@ export function ResultsTable({
           <MetricTable
             rows={rows}
             metricColumns={metricColumns}
+            playerEvents={playerEvents}
+            expandedPlayers={expandedPlayers}
+            onTogglePlayer={togglePlayerRow}
             mobileViewMode={mobileViewMode}
             handleSort={handleSort}
             renderSortIcon={renderSortIcon}
@@ -73,6 +93,9 @@ export function ResultsTable({
           ) : null}
           <CombinedTable
             rows={rows}
+            playerEvents={playerEvents}
+            expandedPlayers={expandedPlayers}
+            onTogglePlayer={togglePlayerRow}
             mobileViewMode={mobileViewMode}
             handleSort={handleSort}
             renderSortIcon={renderSortIcon}
@@ -282,7 +305,16 @@ function AddDamageTable({ rows, handleSort, renderSortIcon }) {
   );
 }
 
-function MetricTable({ rows, metricColumns = [], mobileViewMode, handleSort, renderSortIcon }) {
+function MetricTable({
+  rows,
+  metricColumns = [],
+  playerEvents = {},
+  expandedPlayers = {},
+  onTogglePlayer,
+  mobileViewMode,
+  handleSort,
+  renderSortIcon,
+}) {
   const totalColumns = 4 + Math.max(metricColumns.length, 0) * 2;
   return (
     <>
@@ -315,24 +347,37 @@ function MetricTable({ rows, metricColumns = [], mobileViewMode, handleSort, ren
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
-            {rows.map((row) => (
-              <tr key={`${row.player}-${row.role}`}>
-                <td className="px-4 py-3 font-medium">
-                  <span style={{ color: row.color }}>{row.player}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <RoleBadge role={row.role} />
-                </td>
-                <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
-                {metricColumns.map((metric) => (
-                  <Fragment key={`metric-row-${row.player}-${metric.id}`}>
-                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.metricTotals?.[metric.id] ?? 0)}</td>
-                    <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.metricPerPull?.[metric.id] ?? 0, 3)}</td>
-                  </Fragment>
-                ))}
-                <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const events = playerEvents?.[row.player] ?? [];
+              const hasEvents = events.length > 0;
+              const isExpanded = !!expandedPlayers[row.player];
+              return (
+                <Fragment key={`${row.player}-${row.role}`}>
+                  <tr
+                    className={hasEvents ? "cursor-pointer hover:bg-slate-900/80" : ""}
+                    onClick={() => hasEvents && onTogglePlayer?.(row.player)}
+                  >
+                    <td className="px-4 py-3 font-medium">
+                      <span style={{ color: row.color }}>{row.player}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <RoleBadge role={row.role} />
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                    {metricColumns.map((metric) => (
+                      <Fragment key={`metric-row-${row.player}-${metric.id}`}>
+                        <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.metricTotals?.[metric.id] ?? 0)}</td>
+                        <td className="px-4 py-3 text-right text-slate-200">
+                          {formatFloat(row.metricPerPull?.[metric.id] ?? 0, 3)}
+                        </td>
+                      </Fragment>
+                    ))}
+                    <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
+                  </tr>
+                  {hasEvents && isExpanded ? <EventDetailsRow colSpan={totalColumns} events={events} /> : null}
+                </Fragment>
+              );
+            })}
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={totalColumns} className="px-4 py-6 text-center text-slate-400">
@@ -389,6 +434,22 @@ function MetricTable({ rows, metricColumns = [], mobileViewMode, handleSort, ren
                   <span>Fuck-up Rate</span>
                   <span>{formatFloat(row.fuckupRate ?? 0, 3)}</span>
                 </div>
+                {playerEvents?.[row.player]?.length ? (
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      className="text-xs text-emerald-300 underline"
+                      onClick={() => onTogglePlayer?.(row.player)}
+                    >
+                      {expandedPlayers[row.player] ? "Hide events" : "Show events"}
+                    </button>
+                    {expandedPlayers[row.player] ? (
+                      <div className="mt-2 rounded-lg border border-slate-800/60 bg-slate-900/50 p-2">
+                        <EventList events={playerEvents[row.player]} />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </dl>
             </div>
           ))
@@ -432,7 +493,15 @@ function MetricTable({ rows, metricColumns = [], mobileViewMode, handleSort, ren
   );
 }
 
-function CombinedTable({ rows, mobileViewMode, handleSort, renderSortIcon }) {
+function CombinedTable({
+  rows,
+  playerEvents = {},
+  expandedPlayers = {},
+  onTogglePlayer,
+  mobileViewMode,
+  handleSort,
+  renderSortIcon,
+}) {
   return (
     <>
       <div className="hidden sm:block overflow-x-auto">
@@ -474,22 +543,33 @@ function CombinedTable({ rows, mobileViewMode, handleSort, renderSortIcon }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
-            {rows.map((row) => (
-              <tr key={`${row.player}-${row.role}`}>
-                <td className="px-4 py-3 font-medium">
-                  <span style={{ color: row.color }}>{row.player}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <RoleBadge role={row.role} />
-                </td>
-                <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
-                <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.besiegeHits ?? 0)}</td>
-                <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.besiegePerPull ?? 0, 3)}</td>
-                <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.ghostMisses ?? 0)}</td>
-                <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.ghostPerPull ?? 0, 3)}</td>
-                <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const events = playerEvents?.[row.player] ?? [];
+              const hasEvents = events.length > 0;
+              const isExpanded = !!expandedPlayers[row.player];
+              return (
+                <Fragment key={`${row.player}-${row.role}`}>
+                  <tr
+                    className={hasEvents ? "cursor-pointer hover:bg-slate-900/80" : ""}
+                    onClick={() => hasEvents && onTogglePlayer?.(row.player)}
+                  >
+                    <td className="px-4 py-3 font-medium">
+                      <span style={{ color: row.color }}>{row.player}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <RoleBadge role={row.role} />
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.besiegeHits ?? 0)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.besiegePerPull ?? 0, 3)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.ghostMisses ?? 0)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.ghostPerPull ?? 0, 3)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
+                  </tr>
+                  {hasEvents && isExpanded ? <EventDetailsRow colSpan={8} events={events} /> : null}
+                </Fragment>
+              );
+            })}
             {rows.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
@@ -540,6 +620,22 @@ function CombinedTable({ rows, mobileViewMode, handleSort, renderSortIcon }) {
                   <span>Fuck-up Rate</span>
                   <span>{formatFloat(row.fuckupRate ?? 0, 3)}</span>
                 </div>
+                {playerEvents?.[row.player]?.length ? (
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      className="text-xs text-emerald-300 underline"
+                      onClick={() => onTogglePlayer?.(row.player)}
+                    >
+                      {expandedPlayers[row.player] ? "Hide events" : "Show events"}
+                    </button>
+                    {expandedPlayers[row.player] ? (
+                      <div className="mt-2 rounded-lg border border-slate-800/60 bg-slate-900/50 p-2">
+                        <EventList events={playerEvents[row.player]} />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </dl>
             </div>
           ))
@@ -616,6 +712,46 @@ function CombinedTable({ rows, mobileViewMode, handleSort, renderSortIcon }) {
     </>
   );
 }
+
+function EventDetailsRow({ colSpan, events }) {
+  if (!events || events.length === 0) {
+    return null;
+  }
+  return (
+    <tr className="bg-slate-950/60">
+      <td colSpan={colSpan} className="px-6 py-3 text-sm text-slate-200">
+        <EventList events={events} />
+      </td>
+    </tr>
+  );
+}
+
+function EventList({ events }) {
+  if (!events || events.length === 0) {
+    return null;
+  }
+  const sorted = [...events].sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+  return (
+    <ul className="space-y-1">
+      {sorted.map((event, index) => (
+        <li key={`${event.metric_id}-${event.player}-${event.timestamp}-${index}`} className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-emerald-300">{event.label || "Event"}</span>
+          <span className="text-slate-300">
+            Pull {event.pull ?? "?"} – {formatSeconds(event.offset_ms)} ({formatInt(Math.round(event.timestamp ?? 0))})
+          </span>
+          {event.fight_name ? <span className="text-slate-400">[{event.fight_name}]</span> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const formatSeconds = (value) => {
+  if (!Number.isFinite(value)) {
+    return "?";
+  }
+  return `${(value / 1000).toFixed(2)}s`;
+};
 
 const SortableHeader = ({ label, column, handleSort, renderSortIcon, align = "left", small }) => {
   const paddingClass = small ? "px-3 py-2" : "px-4 py-3";

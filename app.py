@@ -227,6 +227,17 @@ class PhasePlayerModel(BaseModel):
     fuckup_rate: float
 
 
+class TrackedEventModel(BaseModel):
+    player: str
+    fight_id: int
+    fight_name: Optional[str]
+    pull: int
+    timestamp: float
+    offset_ms: float
+    metric_id: str
+    label: Optional[str]
+
+
 class PhaseSummaryResponse(BaseModel):
     report: str
     filters: Dict[str, Optional[str]]
@@ -239,6 +250,7 @@ class PhaseSummaryResponse(BaseModel):
     ghost_events: List[GhostEventModel]
     ability_ids: Dict[str, int]
     hit_filters: Dict[str, Optional[Any]]
+    player_events: Dict[str, List[TrackedEventModel]]
 
     @classmethod
     def from_summary(cls, summary: PhaseSummary) -> "PhaseSummaryResponse":
@@ -285,6 +297,19 @@ class PhaseSummaryResponse(BaseModel):
             )
             for event in summary.ghost_events
         ]
+        player_events_map: Dict[str, List[TrackedEventModel]] = {}
+        for event in ghost_events:
+            tracked = TrackedEventModel(
+                player=event.player,
+                fight_id=event.fight_id,
+                fight_name=event.fight_name,
+                pull=event.pull,
+                timestamp=event.timestamp,
+                offset_ms=event.offset_ms,
+                metric_id="ghost_miss",
+                label="Ghost miss",
+            )
+            player_events_map.setdefault(event.player, []).append(tracked)
         ability_ids = {
             "besiege": summary.besiege_ability_id,
             "ghost": summary.ghost_ability_id,
@@ -315,6 +340,7 @@ class PhaseSummaryResponse(BaseModel):
             ghost_events=ghost_events,
             ability_ids=ability_ids,
             hit_filters=hit_filters,
+            player_events=player_events_map,
         )
 
 
@@ -341,6 +367,7 @@ class DimensiusPhaseOnePlayerModel(BaseModel):
     pulls: int
     metrics: Dict[str, MetricValueModel]
     fuckup_rate: float
+    events: List[TrackedEventModel]
 
 
 class DimensiusPhaseOneResponse(BaseModel):
@@ -356,6 +383,7 @@ class DimensiusPhaseOneResponse(BaseModel):
     combined_per_pull: float
     totals: Dict[str, float]
     ability_ids: Dict[str, AbilityDescriptorModel]
+    player_events: Dict[str, List[TrackedEventModel]]
 
     @classmethod
     def from_summary(cls, summary: DimensiusPhaseOneSummary) -> "DimensiusPhaseOneResponse":
@@ -370,12 +398,26 @@ class DimensiusPhaseOneResponse(BaseModel):
             DimensiusMetricModel(id=metric.id, label=metric.label, per_pull_label=metric.per_pull_label)
             for metric in summary.metrics
         ]
+        metric_label_lookup = {metric.id: metric.label for metric in summary.metrics}
         entry_models: List[DimensiusPhaseOnePlayerModel] = []
         for entry in summary.entries:
             metrics_map = {
                 metric_id: MetricValueModel(total=value.total, per_pull=value.per_pull)
                 for metric_id, value in entry.metrics.items()
             }
+            event_models = [
+                TrackedEventModel(
+                    player=event.player,
+                    fight_id=event.fight_id,
+                    fight_name=event.fight_name,
+                    pull=event.pull_index,
+                    timestamp=event.timestamp,
+                    offset_ms=event.offset_ms,
+                    metric_id=event.metric_id,
+                    label=metric_label_lookup.get(event.metric_id),
+                )
+                for event in entry.events
+            ]
             entry_models.append(
                 DimensiusPhaseOnePlayerModel(
                     player=entry.player,
@@ -384,6 +426,7 @@ class DimensiusPhaseOneResponse(BaseModel):
                     pulls=entry.pulls,
                     metrics=metrics_map,
                     fuckup_rate=entry.fuckup_rate,
+                    events=event_models,
                 )
             )
         metric_totals = {
@@ -398,6 +441,21 @@ class DimensiusPhaseOneResponse(BaseModel):
                 continue
             label = " ".join(part.capitalize() for part in key.split("_"))
             ability_models[key] = AbilityDescriptorModel(id=numeric_id, label=label)
+        player_events_map: Dict[str, List[TrackedEventModel]] = {}
+        for player, events in summary.player_events.items():
+            player_events_map[player] = [
+                TrackedEventModel(
+                    player=event.player,
+                    fight_id=event.fight_id,
+                    fight_name=event.fight_name,
+                    pull=event.pull_index,
+                    timestamp=event.timestamp,
+                    offset_ms=event.offset_ms,
+                    metric_id=event.metric_id,
+                    label=metric_label_lookup.get(event.metric_id),
+                )
+                for event in events
+            ]
         return cls(
             report=summary.report_code,
             filters=filters,
@@ -411,6 +469,7 @@ class DimensiusPhaseOneResponse(BaseModel):
             combined_per_pull=summary.combined_per_pull,
             ability_ids=ability_models,
             totals={"combined_per_pull": summary.combined_per_pull},
+            player_events=player_events_map,
         )
 
 

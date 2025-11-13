@@ -88,6 +88,7 @@ function App() {
   const filters = result?.filters ?? {};
   const metricColumns = result?.metrics ?? [];
   const metricTotals = result?.metric_totals ?? {};
+  const playerEvents = result?.player_events ?? {};
 
   const rows = useMemo(() => {
     if (!result) {
@@ -677,6 +678,7 @@ function App() {
                 phaseOrder={phaseOrder}
                 phaseLabels={phaseLabels}
                 metricColumns={metricColumns}
+                playerEvents={playerEvents}
                 mobileViewMode={mobileViewMode}
                 onMobileViewModeChange={setMobileViewMode}
                 handleSort={handleSort}
