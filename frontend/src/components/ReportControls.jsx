@@ -17,7 +17,7 @@ export function ReportControls({
 
   return (
     <section className="px-6 pb-10">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] border border-white/10 bg-white/5 px-6 py-10 shadow-[0_35px_80px_-40px_rgba(15,118,110,0.8)] backdrop-blur-2xl sm:px-12">
+      <div className="glass-panel relative mx-auto max-w-6xl overflow-hidden rounded-[32px] border border-white/10 bg-white/5 px-6 py-10 shadow-[0_35px_80px_-40px_rgba(15,118,110,0.8)] backdrop-blur-2xl sm:px-12">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.45),_transparent_60%)] opacity-40" />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>

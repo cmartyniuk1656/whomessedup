@@ -93,3 +93,18 @@
   background-color: hsl(var(--primary)/0.35);
   color: hsl(var(--bg));
 }
+
+.glass-panel {
+  position: relative;
+  isolation: isolate;
+}
+
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: -120px;
+  background: inherit;
+  opacity: 0.9;
+  filter: blur(60px);
+  z-index: -1;
+}
