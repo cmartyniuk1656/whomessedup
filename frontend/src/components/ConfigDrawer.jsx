@@ -18,7 +18,7 @@ export function ConfigDrawer({
 
   const inputClasses =
     "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-content placeholder:text-muted/70 focus:border-primary focus:ring focus:ring-primary/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60";
-  const selectClasses = `${inputClasses} [&>option]:text-bg`;
+  const selectClasses = `${inputClasses} themed-select`;
   const secondaryButtonClasses =
     "inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-content hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60";
   const primaryButtonClasses =

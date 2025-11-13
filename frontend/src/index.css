@@ -3,3 +3,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.themed-select option,
+.themed-select optgroup {
+  background-color: hsl(var(--surface));
+  color: hsl(var(--content));
+}
+
+.themed-select option:checked {
+  background-color: hsl(var(--primary)/0.35);
+  color: hsl(var(--bg));
+}

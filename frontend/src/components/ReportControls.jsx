@@ -13,7 +13,7 @@ export function ReportControls({
 }) {
   const fieldClasses =
     "mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-base text-content placeholder:text-muted/70 focus:border-primary focus:ring focus:ring-primary/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60";
-  const selectClasses = `${fieldClasses} [&>option]:text-bg`;
+  const selectClasses = `${fieldClasses} themed-select`;
 
   return (
     <section className="px-6 pb-10">
