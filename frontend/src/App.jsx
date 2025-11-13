@@ -648,7 +648,7 @@ function App() {
   };
 
   return (
-    <div className="liquid-bg min-h-dvh text-content relative overflow-hidden">
+    <div className="liquid-bg min-h-dvh text-content relative overflow-hidden" style={{ isolation: "isolate" }}>
       <div aria-hidden className="liquid-glow liquid-glow--top -z-30" />
       <div aria-hidden className="liquid-glow liquid-glow--bottom -z-30" />
       <div aria-hidden className="liquid-blob liquid-blob--emerald -z-20 opacity-70" />
