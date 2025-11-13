@@ -22,3 +22,14 @@
     transition: none !important;
   }
 }
+
+/* Optional accents (disabled by default) */
+[data-theme="violet"] {
+  --primary: 258 90% 66%;
+  --primary-2: 292 84% 61%;
+}
+
+[data-theme="amber"] {
+  --primary: 38 92% 50%;
+  --primary-2: 23 92% 54%;
+}
