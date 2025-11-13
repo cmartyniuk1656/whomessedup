@@ -51,7 +51,7 @@ export function ResultsTable({
               <label className="flex w-full flex-col text-sm font-medium text-slate-300">
                 Mobile layout
                 <select
-                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-base text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-base text-content focus:border-primary focus:ring focus:ring-primary/40 focus:outline-none"
                   value={mobileViewMode}
                   onChange={(event) => onMobileViewModeChange(event.target.value)}
                 >
@@ -80,7 +80,7 @@ export function ResultsTable({
               <label className="flex w-full flex-col text-sm font-medium text-slate-300">
                 Mobile layout
                 <select
-                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-base text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-base text-content focus:border-primary focus:ring focus:ring-primary/40 focus:outline-none"
                   value={mobileViewMode}
                   onChange={(event) => onMobileViewModeChange(event.target.value)}
                 >
@@ -108,7 +108,7 @@ export function ResultsTable({
               <label className="flex w-full flex-col text-sm font-medium text-slate-300">
                 Mobile layout
                 <select
-                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-base text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-base text-content focus:border-primary focus:ring focus:ring-primary/40 focus:outline-none"
                   value={mobileViewMode}
                   onChange={(event) => onMobileViewModeChange(event.target.value)}
                 >
@@ -449,7 +449,7 @@ function MetricTable({
                   <div className="pt-2">
                     <button
                       type="button"
-                      className="text-xs text-emerald-300 underline"
+                      className="text-xs font-medium text-primary underline decoration-transparent transition hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface"
                       onClick={() => onTogglePlayer?.(row.player)}
                     >
                       {expandedPlayers[row.player] ? "Hide events" : "Show events"}
@@ -585,7 +585,7 @@ function DeathsTable({ rows, playerEvents = {}, expandedPlayers = {}, onTogglePl
                   <div className="pt-2">
                     <button
                       type="button"
-                      className="text-xs text-emerald-300 underline"
+                      className="text-xs font-medium text-primary underline decoration-transparent transition hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface"
                       onClick={() => onTogglePlayer?.(row.player)}
                     >
                       {expandedPlayers[row.player] ? "Hide events" : "Show events"}
@@ -764,7 +764,7 @@ function CombinedTable({
                   <div className="pt-2">
                     <button
                       type="button"
-                      className="text-xs text-emerald-300 underline"
+                      className="text-xs font-medium text-primary underline decoration-transparent transition hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface"
                       onClick={() => onTogglePlayer?.(row.player)}
                     >
                       {expandedPlayers[row.player] ? "Hide events" : "Show events"}
@@ -907,7 +907,7 @@ const SortableHeader = ({ label, column, handleSort, renderSortIcon, align = "le
     <th className={`${paddingClass} ${textClass}`}>
       <button
         type="button"
-        className={`flex w-full items-center gap-1 ${justifyClass} ${textClass} text-slate-300 hover:text-white`}
+        className={`flex w-full items-center gap-1 ${justifyClass} ${textClass} text-muted transition hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface`}
         onClick={() => handleSort(column)}
       >
         {align === "right" ? (

@@ -16,14 +16,21 @@ export function ConfigDrawer({
     return null;
   }
 
+  const inputClasses =
+    "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-content placeholder:text-muted/70 focus:border-primary focus:ring focus:ring-primary/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60";
+  const secondaryButtonClasses =
+    "inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-content hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60";
+  const primaryButtonClasses =
+    "inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl shadow-emerald-500/10">
-        <h2 className="text-lg font-semibold text-white">Report Configuration</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          Adjust settings before running <span className="font-medium text-slate-200">{tile.title}</span>.
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/80 px-4 py-6 backdrop-blur">
+      <div className="w-full max-w-lg rounded-xl2 border border-border/60 bg-glass-gradient p-6 shadow-glass backdrop-blur-md">
+        <h2 className="text-lg font-semibold text-content">Report Configuration</h2>
+        <p className="mt-1 text-sm text-muted">
+          Adjust settings before running <span className="font-medium text-content">{tile.title}</span>.
         </p>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-3 text-content">
           {tile.configOptions?.map((option) => {
             const optionType = option.type ?? "checkbox";
             if (optionType === "multi-text") {
@@ -34,14 +41,14 @@ export function ConfigDrawer({
                 : [""];
               const values = rawValues.length ? rawValues : [""];
               return (
-                <div key={option.id} className="flex flex-col gap-2 text-sm text-slate-200">
+                <div key={option.id} className="flex flex-col gap-2 text-sm">
                   <span>{option.label}</span>
                   <div className="space-y-2">
                     {values.map((entryValue, index) => (
                       <div key={`${option.id}-${index}`} className="flex items-center gap-2">
                         <input
                           type="text"
-                          className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                          className={`${inputClasses} flex-1`}
                           value={entryValue ?? ""}
                           placeholder={option.placeholder ?? "Report code or URL"}
                           onChange={(event) => onMultiTextChange(option.id, index, event.target.value)}
@@ -50,7 +57,7 @@ export function ConfigDrawer({
                         <button
                           type="button"
                           onClick={() => onMultiTextRemove(option.id, index)}
-                          className="rounded-lg border border-slate-600 px-2 py-1 text-xs font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 disabled:opacity-40"
+                          className={secondaryButtonClasses}
                           disabled={isBusy || values.length <= 1}
                         >
                           Remove
@@ -61,7 +68,7 @@ export function ConfigDrawer({
                   <button
                     type="button"
                     onClick={() => onMultiTextAdd(option.id)}
-                    className="self-start rounded-lg border border-dashed border-slate-600 px-3 py-1 text-xs font-medium text-slate-200 transition hover:border-emerald-500 hover:text-emerald-400 disabled:opacity-40"
+                    className={`${secondaryButtonClasses} border-dashed px-4`}
                     disabled={isBusy}
                   >
                     + Add another
@@ -77,10 +84,10 @@ export function ConfigDrawer({
                   ? option.default
                   : "";
               return (
-                <label key={option.id} className="flex flex-col gap-2 text-sm text-slate-200">
+                <label key={option.id} className="flex flex-col gap-2 text-sm">
                   <span>{option.label}</span>
                   <select
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    className={inputClasses}
                     value={selectValue}
                     onChange={(event) => onOptionChange(option.id, event.target.value)}
                     disabled={isBusy}
@@ -95,10 +102,10 @@ export function ConfigDrawer({
               );
             }
             return (
-              <label key={option.id} className="flex items-start gap-3 text-sm text-slate-200">
+              <label key={option.id} className="flex items-start gap-3 text-sm">
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-400"
+                  className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary"
                   checked={
                     typeof configValues[option.id] === "boolean"
                       ? configValues[option.id]
@@ -115,9 +122,9 @@ export function ConfigDrawer({
           })}
         </div>
         {tile.footnotes?.length ? (
-          <div className="mt-4 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Notes</p>
-            <ul className="mt-2 space-y-1 text-xs text-slate-400">
+          <div className="mt-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">Notes</p>
+            <ul className="mt-2 space-y-1 text-xs text-muted">
               {tile.footnotes.map((note) => (
                 <li key={note}>* {note}</li>
               ))}
@@ -125,20 +132,10 @@ export function ConfigDrawer({
           </div>
         ) : null}
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
-            disabled={isBusy}
-          >
+          <button type="button" onClick={onCancel} className={`${secondaryButtonClasses} px-5 py-2 text-sm`} disabled={isBusy}>
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
-            disabled={isBusy}
-          >
+          <button type="button" onClick={onConfirm} className={primaryButtonClasses} disabled={isBusy}>
             Run Report
           </button>
         </div>
