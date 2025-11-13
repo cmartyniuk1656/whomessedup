@@ -649,9 +649,9 @@ function App() {
 
   return (
     <div className="liquid-bg min-h-dvh text-content relative overflow-hidden">
-      <div aria-hidden className="liquid-blob liquid-blob--emerald -z-20" />
-      <div aria-hidden className="liquid-blob liquid-blob--cyan -z-20" />
-      <div aria-hidden className="liquid-blob liquid-blob--magenta -z-20" />
+      <div aria-hidden className="liquid-blob liquid-blob--emerald -z-20 opacity-70" />
+      <div aria-hidden className="liquid-blob liquid-blob--cyan -z-20 opacity-65" />
+      <div aria-hidden className="liquid-blob liquid-blob--magenta -z-20 opacity-55" />
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 mix-blend-overlay opacity-25 [background-image:var(--noise)]" />
       <LiquidHero />
       <ReportControls
