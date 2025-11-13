@@ -4,6 +4,81 @@
 @tailwind components;
 @tailwind utilities;
 
+.liquid-bg {
+  background-color: hsl(var(--bg));
+  background-image: radial-gradient(120% 80% at 10% 0%, hsl(var(--primary-2)/0.35), transparent 60%),
+    radial-gradient(80% 60% at 90% 10%, hsl(var(--glow)/0.18), transparent 65%),
+    linear-gradient(180deg, hsl(var(--bg-soft)), hsl(var(--bg-deep)));
+}
+
+.liquid-bg::before,
+.liquid-bg::after {
+  content: "";
+  position: fixed;
+  inset: -20% -10% auto;
+  height: 65vh;
+  pointer-events: none;
+  background: radial-gradient(circle at 30% 20%, hsl(var(--blob-glow)/0.18), transparent 55%),
+    radial-gradient(circle at 70% 60%, hsl(var(--blob-cyan)/0.14), transparent 60%);
+  filter: blur(120px);
+  opacity: 0.65;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.6s ease;
+}
+
+.liquid-bg::after {
+  inset: auto -15% -25%;
+  height: 70vh;
+  background: radial-gradient(circle at 50% 40%, hsl(var(--blob-emerald)/0.4), transparent 55%),
+    radial-gradient(circle at 80% 20%, hsl(var(--blob-cyan)/0.2), transparent 65%);
+}
+
+.liquid-blob {
+  position: fixed;
+  width: 480px;
+  height: 480px;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.45;
+  transform: translate3d(0, 0, 0);
+  animation: liquid-float 26s ease-in-out infinite alternate;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.liquid-blob--emerald {
+  top: 10%;
+  left: 5%;
+  background: radial-gradient(circle, hsl(var(--blob-emerald)/0.65), transparent 55%);
+  animation-duration: 32s;
+}
+
+.liquid-blob--cyan {
+  top: 50%;
+  right: 10%;
+  background: radial-gradient(circle, hsl(var(--blob-cyan)/0.5), transparent 60%);
+  animation-duration: 28s;
+}
+
+.liquid-blob--magenta {
+  bottom: 5%;
+  left: 35%;
+  background: radial-gradient(circle, hsl(var(--blob-glow)/0.45), transparent 65%);
+  animation-duration: 34s;
+}
+
+@keyframes liquid-float {
+  0% {
+    transform: translate3d(-5%, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(8%, -6%, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(-3%, 6%, 0) scale(0.95);
+  }
+}
+
 .themed-select option,
 .themed-select optgroup {
   background-color: hsl(var(--surface));
