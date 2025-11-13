@@ -4,7 +4,7 @@ type GlassCardProps = PropsWithChildren<{ title?: string; className?: string }>;
 
 export function GlassCard({ title, children, className }: GlassCardProps) {
   const cardClasses = [
-    "relative overflow-hidden rounded-[26px] bg-[#152435] backdrop-blur-xl ring-1 ring-white/5",
+    "relative overflow-hidden rounded-[26px] bg-[color:rgba(21,36,53,0.92)] backdrop-blur-xl ring-1 ring-white/5",
     "before:absolute before:inset-px before:rounded-[inherit] before:bg-gradient-to-b before:from-white/6 before:via-white/1 before:to-transparent before:opacity-25 before:pointer-events-none",
     "after:pointer-events-none after:absolute after:inset-0 after:bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.04),_transparent_55%)] after:opacity-6",
     className,
