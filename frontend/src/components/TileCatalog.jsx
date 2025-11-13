@@ -1,6 +1,6 @@
 export function TileCatalog({ tiles, loadingId, pendingJob, isBusy, onTileClick }) {
   return (
-    <section aria-label="Tool tiles" className="mt-[30px]">
+    <section aria-label="Tool tiles" id="tiles" className="mt-[30px]">
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {tiles.map((tile) => {
           const isLoading = loadingId === tile.id;

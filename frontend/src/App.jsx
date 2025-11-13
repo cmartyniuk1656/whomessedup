@@ -15,6 +15,7 @@ import { ConfigDrawer } from "./components/ConfigDrawer";
 import { ResultHeader } from "./components/ResultHeader";
 import { ResultsTable } from "./components/ResultsTable";
 import { formatFloat, formatInt } from "./utils/numberFormat";
+import LiquidHero from "./components/ui/LiquidHero";
 
 function extractReportCode(input) {
   if (!input) return "";
@@ -650,6 +651,7 @@ function App() {
     <div className="min-h-dvh bg-bg text-content relative overflow-hidden">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-radial-pool" />
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 mix-blend-overlay opacity-20 [background-image:var(--noise)]" />
+      <LiquidHero />
       <ReportControls
         reportInput={reportInput}
         onReportInputChange={setReportInput}
