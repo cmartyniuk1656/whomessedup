@@ -9,7 +9,7 @@ const escapeCsv = (value) => {
   return str;
 };
 
-const buildCsvContent = (tile, data, tableRows, phases, labels) => {
+const buildCsvContent = (tile, data, tableRows, phases, labels, metrics = []) => {
   if (!tile) {
     throw new Error("No tile selected");
   }
@@ -58,6 +58,28 @@ const buildCsvContent = (tile, data, tableRows, phases, labels) => {
     return `\ufeff${lines.join("\n")}`;
   }
 
+  if (tile.mode === "dimensius-phase1") {
+    const metricList = Array.isArray(metrics) ? metrics : [];
+    const headers = ["Player", "Role", "Class", "Pulls"];
+    metricList.forEach((metric) => {
+      headers.push(metric.label || metric.id);
+      headers.push(metric.per_pull_label || `${metric.label || metric.id} / Pull`);
+    });
+    headers.push("Fuck-up Rate");
+    const lines = [headers.map(escapeCsv).join(",")];
+    tableRows.forEach((row) => {
+      const className = row.className ?? data.player_classes?.[row.player] ?? "";
+      const values = [row.player, row.role, className, row.pulls ?? 0];
+      metricList.forEach((metric) => {
+        values.push(row.metricTotals?.[metric.id] ?? 0);
+        values.push(row.metricPerPull?.[metric.id] ?? 0);
+      });
+      values.push(row.fuckupRate ?? 0);
+      lines.push(values.map(escapeCsv).join(","));
+    });
+    return `\ufeff${lines.join("\n")}`;
+  }
+
   const headers = [
     "Player",
     "Role",
@@ -90,12 +112,12 @@ const buildCsvContent = (tile, data, tableRows, phases, labels) => {
 
 export function useCsvExporter(setError) {
   const downloadCsv = useCallback(
-    ({ tile, result, rows, phases, labels }) => {
+    ({ tile, result, rows, phases, labels, metrics }) => {
       if (!tile || !result) {
         return;
       }
       try {
-        const csvContent = buildCsvContent(tile, result, rows, phases, labels);
+        const csvContent = buildCsvContent(tile, result, rows, phases, labels, metrics);
         const safeReport = (result.report || "report").replace(/[^a-zA-Z0-9-_]/g, "_");
         const filename = `${safeReport}_${tile.id}.csv`;
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

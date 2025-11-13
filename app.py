@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse
@@ -17,6 +17,7 @@ from who_messed_up.api import Fight
 from who_messed_up.jobs import job_manager
 from who_messed_up.service import (
     AddDamageSummary,
+    DimensiusPhaseOneSummary,
     FightSelectionError,
     GhostSummary,
     HitSummary,
@@ -28,6 +29,7 @@ from who_messed_up.service import (
     normalize_ghost_miss_mode,
     fetch_ghost_summary,
     fetch_hit_summary,
+    fetch_dimensius_phase_one_summary,
     fetch_dimensius_add_damage_summary,
     fetch_phase_damage_summary,
     fetch_phase_summary,
@@ -316,6 +318,102 @@ class PhaseSummaryResponse(BaseModel):
         )
 
 
+class AbilityDescriptorModel(BaseModel):
+    id: int
+    label: Optional[str]
+
+
+class MetricValueModel(BaseModel):
+    total: float
+    per_pull: float
+
+
+class DimensiusMetricModel(BaseModel):
+    id: str
+    label: str
+    per_pull_label: str
+
+
+class DimensiusPhaseOnePlayerModel(BaseModel):
+    player: str
+    role: str
+    class_name: Optional[str]
+    pulls: int
+    metrics: Dict[str, MetricValueModel]
+    fuckup_rate: float
+
+
+class DimensiusPhaseOneResponse(BaseModel):
+    report: str
+    filters: Dict[str, Optional[str]]
+    pull_count: int
+    metrics: List[DimensiusMetricModel]
+    entries: List[DimensiusPhaseOnePlayerModel]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+    metric_totals: Dict[str, MetricValueModel]
+    combined_per_pull: float
+    totals: Dict[str, float]
+    ability_ids: Dict[str, AbilityDescriptorModel]
+
+    @classmethod
+    def from_summary(cls, summary: DimensiusPhaseOneSummary) -> "DimensiusPhaseOneResponse":
+        filters: Dict[str, Optional[str]] = {
+            "fight_name": summary.fight_filter,
+            "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+            "reverse_gravity_excess_mass": "true"
+            if any(metric.id == "rg_em_overlap" for metric in summary.metrics)
+            else "false",
+        }
+        metric_models = [
+            DimensiusMetricModel(id=metric.id, label=metric.label, per_pull_label=metric.per_pull_label)
+            for metric in summary.metrics
+        ]
+        entry_models: List[DimensiusPhaseOnePlayerModel] = []
+        for entry in summary.entries:
+            metrics_map = {
+                metric_id: MetricValueModel(total=value.total, per_pull=value.per_pull)
+                for metric_id, value in entry.metrics.items()
+            }
+            entry_models.append(
+                DimensiusPhaseOnePlayerModel(
+                    player=entry.player,
+                    role=entry.role,
+                    class_name=entry.class_name,
+                    pulls=entry.pulls,
+                    metrics=metrics_map,
+                    fuckup_rate=entry.fuckup_rate,
+                )
+            )
+        metric_totals = {
+            metric_id: MetricValueModel(total=value.total, per_pull=value.per_pull)
+            for metric_id, value in summary.metric_totals.items()
+        }
+        ability_models: Dict[str, AbilityDescriptorModel] = {}
+        for key, ability_id in summary.ability_ids.items():
+            try:
+                numeric_id = int(ability_id)
+            except (TypeError, ValueError):
+                continue
+            label = " ".join(part.capitalize() for part in key.split("_"))
+            ability_models[key] = AbilityDescriptorModel(id=numeric_id, label=label)
+        return cls(
+            report=summary.report_code,
+            filters=filters,
+            pull_count=summary.pull_count,
+            metrics=metric_models,
+            entries=entry_models,
+            player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
+            metric_totals=metric_totals,
+            combined_per_pull=summary.combined_per_pull,
+            ability_ids=ability_models,
+            totals={"combined_per_pull": summary.combined_per_pull},
+        )
+
+
 class PhaseMetricModel(BaseModel):
     phase_id: str
     phase_label: str
@@ -473,6 +571,7 @@ def _normalize_report_code(value: str) -> str:
 JOB_NEXUS_PHASE1 = "nexus_phase1"
 JOB_PHASE_DAMAGE = "nexus_phase_damage"
 JOB_DIMENSIUS_ADD_DAMAGE = "dimensius_add_damage"
+JOB_DIMENSIUS_PHASE1 = "dimensius_phase1"
 
 
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -533,9 +632,25 @@ def _execute_dimensius_add_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]
     return DimensiusAddDamageResponse.from_summary(summary).dict()
 
 
+def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    summary = fetch_dimensius_phase_one_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+        include_rg_em_overlap=bool(payload.get("reverse_gravity_excess_mass", False)),
+    )
+    return DimensiusPhaseOneResponse.from_summary(summary).dict()
+
+
 job_manager.register_handler(JOB_NEXUS_PHASE1, _execute_nexus_phase1_job)
 job_manager.register_handler(JOB_PHASE_DAMAGE, _execute_phase_damage_job)
 job_manager.register_handler(JOB_DIMENSIUS_ADD_DAMAGE, _execute_dimensius_add_damage_job)
+job_manager.register_handler(JOB_DIMENSIUS_PHASE1, _execute_dimensius_phase1_job)
 
 
 @app.get("/health")
@@ -797,6 +912,42 @@ def get_dimensius_add_damage(
 
     if job.status == "completed":
         return DimensiusAddDamageResponse.parse_obj(job.result)
+
+    snapshot = job_manager.snapshot(job.id)
+    if snapshot is None:
+        raise HTTPException(status_code=500, detail="Job tracking failed.")
+    return JSONResponse(status_code=202, content={"job": snapshot})
+
+
+@app.get("/api/dimensius-phase1", response_model=DimensiusPhaseOneResponse)
+def get_dimensius_phase_one(
+    report: str = Query(..., description="Warcraft Logs report code."),
+    fight: Optional[str] = Query(None, description="Substring match on fight name."),
+    fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    reverse_gravity_excess_mass: bool = Query(
+        True, description="Track players who had Reverse Gravity and Excess Mass simultaneously."
+    ),
+    fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
+    token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+) -> DimensiusPhaseOneResponse:
+    fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    primary_report = _normalize_report_code(report)
+    payload: Dict[str, Any] = {
+        "report": primary_report,
+        "fight": fight,
+        "fight_ids": fight_ids_payload,
+        "reverse_gravity_excess_mass": bool(reverse_gravity_excess_mass),
+    }
+    if token:
+        payload["token"] = token
+
+    try:
+        job, immediate = job_manager.enqueue(JOB_DIMENSIUS_PHASE1, payload, bust_cache=fresh)
+    except KeyError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if job.status == "completed":
+        return DimensiusPhaseOneResponse.parse_obj(job.result)
 
     snapshot = job_manager.snapshot(job.id)
     if snapshot is None:

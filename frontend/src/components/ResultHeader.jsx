@@ -1,3 +1,9 @@
+const formatKey = (key) =>
+  key
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
 export function ResultHeader({
   title,
   reportCode,
@@ -8,6 +14,35 @@ export function ResultHeader({
   disableDownload,
   summaryMetrics,
 }) {
+  const abilityTags = [];
+  if (abilityIds && typeof abilityIds === "object") {
+    Object.entries(abilityIds).forEach(([key, value]) => {
+      if (value == null) {
+        return;
+      }
+      if (typeof value === "object") {
+        const label = value.label || formatKey(key);
+        if (value.id != null) {
+          abilityTags.push(`${label} ${value.id}`);
+        }
+      } else {
+        const label = key === "besiege" ? "Besiege" : key === "ghost" ? "Ghost" : formatKey(key);
+        abilityTags.push(`${label} ${value}`);
+      }
+    });
+  }
+
+  const detailParts = [];
+  if (filters?.fight_name) {
+    detailParts.push(`Fight filter: ${filters.fight_name}`);
+  }
+  if (abilityTags.length) {
+    detailParts.push(abilityTags.join(", "));
+  }
+  if (filterTags?.length) {
+    detailParts.push(filterTags.join(" - "));
+  }
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
@@ -15,10 +50,7 @@ export function ResultHeader({
         <h3 className="mt-1 text-2xl font-semibold text-white">{title}</h3>
         <p className="mt-1 text-sm text-slate-400">
           Report {reportCode}
-          {filters?.fight_name ? ` · Fight filter: ${filters.fight_name}` : ""}
-          {abilityIds?.besiege ? ` · Besiege ${abilityIds.besiege}` : ""}
-          {abilityIds?.ghost ? ` · Ghost ${abilityIds.ghost}` : ""}
-          {filterTags?.length ? ` · ${filterTags.join(" · ")}` : ""}
+          {detailParts.length ? ` - ${detailParts.join(" - ")}` : ""}
         </p>
       </div>
       <div className="flex flex-col items-end gap-2 text-right text-sm text-slate-300">

@@ -247,6 +247,35 @@ export const TILES = [
     ],
   },
   {
+    id: "dimensius-phase1",
+    title: "Dimensius Phase One Analysis",
+    description:
+      "Surface Dimensius fuck-ups such as overlapping Reverse Gravity and Excess Mass during Stage One pulls.",
+    defaultFight: "Dimensius, the All-Devouring",
+    endpoint: "/api/dimensius-phase1",
+    mode: "dimensius-phase1",
+    defaultSort: { key: "role", direction: "asc" },
+    configOptions: [
+      {
+        id: "dim_rg_em_overlap",
+        type: "checkbox",
+        label: "Players who got Reverse Gravity and Excess Mass at the same time",
+        default: true,
+        param: "reverse_gravity_excess_mass",
+      },
+      {
+        id: "dim_phase1_fresh_run",
+        type: "checkbox",
+        label: "Force fresh run (skip cache)",
+        default: false,
+        param: "fresh",
+      },
+    ],
+    footnotes: [
+      "Counts a fuck-up each time Reverse Gravity and Excess Mass overlap on the same player during Stage One pulls.",
+    ],
+  },
+  {
     id: "dimensius-add-damage",
     title: "Dimensius - Phase 1 Add Damage",
     description:

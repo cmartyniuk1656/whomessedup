@@ -17,6 +17,11 @@ from .services.dimensius import (
     AddDamageSummary,
     fetch_dimensius_add_damage_summary,
 )
+from .services.dimensius_phase_one import (
+    DimensiusPhaseOneEntry,
+    DimensiusPhaseOneSummary,
+    fetch_dimensius_phase_one_summary,
+)
 from .services.ghosts import (
     GhostEntry,
     GhostEvent,
@@ -51,9 +56,12 @@ __all__ = [
     "ROLE_UNKNOWN",
     "TokenError",
     "fetch_dimensius_add_damage_summary",
+    "fetch_dimensius_phase_one_summary",
     "fetch_ghost_summary",
     "fetch_hit_summary",
     "fetch_phase_damage_summary",
     "fetch_phase_summary",
     "normalize_ghost_miss_mode",
+    "DimensiusPhaseOneEntry",
+    "DimensiusPhaseOneSummary",
 ]
