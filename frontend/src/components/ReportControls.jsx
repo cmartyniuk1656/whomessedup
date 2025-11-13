@@ -16,13 +16,14 @@ export function ReportControls({
 
   return (
     <section className="px-6 pb-10">
-      <div className="mx-auto max-w-6xl rounded-xl2 border border-border/60 bg-glass-gradient px-6 py-10 shadow-glass backdrop-blur-md sm:px-10">
-        <p className="text-xs uppercase tracking-[0.3em] text-muted">Who Messed Up</p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-content sm:text-4xl">Raid Analysis Dashboard</h2>
-        <p className="mt-3 max-w-3xl text-base text-muted">
-          Pick a tile, paste a Warcraft Logs report URL or code, and review the culprits in seconds. Tiles run curated queries
-          against the report and return a player-by-player summary.
-        </p>
+      <div className="mx-auto max-w-6xl rounded-xl2 border border-border/60 bg-glass-gradient px-6 py-8 shadow-glass backdrop-blur-md sm:px-10">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-muted">Report controls</p>
+            <p className="mt-1 text-sm text-muted/90">Paste a Warcraft Logs report and optionally scope the fight.</p>
+          </div>
+          <span className="text-xs text-muted/70">All inputs optional except the report URL or code.</span>
+        </div>
         <div className="mt-8 flex flex-col gap-4 sm:flex-row">
           <label className="flex w-full flex-col text-sm font-medium text-content sm:max-w-md">
             Report URL or code
