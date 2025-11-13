@@ -4,9 +4,9 @@ type GlassCardProps = PropsWithChildren<{ title?: string; className?: string }>;
 
 export function GlassCard({ title, children, className }: GlassCardProps) {
   const cardClasses = [
-    "relative overflow-hidden rounded-xl2 border border-white/12 bg-[hsl(var(--surface))] backdrop-blur-xl",
-    "before:absolute before:inset-px before:rounded-[inherit] before:bg-gradient-to-b before:from-white/12 before:via-white/2 before:to-transparent before:opacity-35 before:pointer-events-none",
-    "after:pointer-events-none after:absolute after:inset-0 after:bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_55%)] after:opacity-12",
+    "relative overflow-hidden rounded-[26px] bg-[hsl(var(--surface)/0.95)] backdrop-blur-xl ring-1 ring-white/5",
+    "before:absolute before:inset-px before:rounded-[inherit] before:bg-gradient-to-b before:from-white/8 before:via-white/2 before:to-transparent before:opacity-30 before:pointer-events-none",
+    "after:pointer-events-none after:absolute after:inset-0 after:bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.05),_transparent_55%)] after:opacity-10",
     className,
   ]
     .filter(Boolean)
