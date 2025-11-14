@@ -931,7 +931,16 @@ function EventList({ events }) {
               {pullLabel} - {formatSeconds(reference.offset_ms)} ({formatInt(Math.round(reference.timestamp ?? 0))}) {fightLabel}
             </p>
             <ul className="mt-2 ml-5 list-disc space-y-1 text-slate-300">
-              {group.events.map((event, idx) => (
+              {group.events
+                .slice()
+                .sort((a, b) => {
+                  const aIsDeath = (a.label || "").toLowerCase() === "death";
+                  const bIsDeath = (b.label || "").toLowerCase() === "death";
+                  if (aIsDeath && !bIsDeath) return -1;
+                  if (!aIsDeath && bIsDeath) return 1;
+                  return (a.timestamp ?? 0) - (b.timestamp ?? 0);
+                })
+                .map((event, idx) => (
                 <li key={`${key}-${idx}`}>
                   <span className="font-semibold text-emerald-300">{event.label || "Event"}</span>{" "}
                   {event.description ? (

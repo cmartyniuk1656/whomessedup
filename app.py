@@ -533,6 +533,8 @@ class DimensiusDeathSummaryResponse(BaseModel):
         }
         if summary.bled_out_filter:
             filters["bled_out_filter"] = summary.bled_out_filter
+        if summary.bled_out_mode:
+            filters["bled_out_mode"] = summary.bled_out_mode
         entries: List[DimensiusDeathEntryModel] = []
         for entry in summary.entries:
             event_models = [
@@ -1247,6 +1249,10 @@ def get_dimensius_bled_out(
     ignore_after_deaths: Optional[int] = Query(
         None, description="Stop counting deaths after this many occurrences per pull."
     ),
+    bled_out_mode: str = Query(
+        "no_forgiveness",
+        description="How strictly to exclude deaths based on consumable usage (no_forgiveness or lenient).",
+    ),
     fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> DimensiusDeathSummaryResponse:
@@ -1258,6 +1264,7 @@ def get_dimensius_bled_out(
         "fight": fight,
         "fight_ids": fight_ids_payload,
         "ignore_after_deaths": death_threshold,
+        "bled_out_mode": bled_out_mode,
     }
     if token:
         payload["token"] = token

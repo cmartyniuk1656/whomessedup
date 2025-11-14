@@ -42,6 +42,7 @@ def fetch_dimensius_bled_out_summary(
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
     ignore_after_deaths: Optional[int] = None,
+    bled_out_mode: str = "no_forgiveness",
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
@@ -125,7 +126,7 @@ def fetch_dimensius_bled_out_summary(
             if not _matches_bleed_cause(ability_id, ability_label):
                 continue
             player_consumables = fight_consumables.get(target_name)
-            if player_consumables:
+            if _should_exclude_for_consumables(player_consumables, bled_out_mode):
                 continue
             death_counts[target_name] += 1
             offset_ms = ts_val - float(fight.start)
@@ -199,6 +200,7 @@ def fetch_dimensius_bled_out_summary(
         ignore_after_deaths=death_limit,
         oblivion_filter="exclude_without_recent",
         bled_out_filter="no_consumable_heals",
+        bled_out_mode=bled_out_mode,
         total_deaths=total_deaths,
         entries=entries,
         player_classes={player: name_to_class.get(player) for player in all_players},
@@ -308,6 +310,18 @@ def _append_consumable_summary_events(
                     description="Not used during this pull.",
                 )
             )
+
+def _should_exclude_for_consumables(
+    player_consumables: Optional[Dict[str, List[float]]],
+    mode: str,
+) -> bool:
+    if not player_consumables:
+        return False
+    has_healthstone = bool(player_consumables.get("Healthstone"))
+    has_potion = bool(player_consumables.get("Invigorating Healing Potion"))
+    if mode == "lenient":
+        return has_healthstone or has_potion
+    return has_healthstone and has_potion
 
 
 __all__ = ["fetch_dimensius_bled_out_summary"]

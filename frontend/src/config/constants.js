@@ -353,6 +353,17 @@ export const TILES = [
     defaultSort: { key: "deathRate", direction: "desc" },
     configOptions: [
       {
+        id: "dim_bled_out_mode",
+        type: "select",
+        label: "Consumable forgiveness",
+        default: "no_forgiveness",
+        param: "bled_out_mode",
+        options: [
+          { value: "no_forgiveness", label: "No Forgiveness - exclude deaths only if BOTH consumables were used" },
+          { value: "lenient", label: "Lenient - exclude deaths when at least one consumable was used" },
+        ],
+      },
+      {
         id: "dim_bled_out_fresh_run",
         type: "checkbox",
         label: "Force fresh run (skip cache)",

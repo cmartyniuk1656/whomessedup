@@ -485,6 +485,11 @@ function App() {
     if (filters.bled_out_filter === "no_consumable_heals") {
       filterTags.push("No Invigorating Potion or Healthstone healing in pull");
     }
+    if (filters.bled_out_mode === "lenient") {
+      filterTags.push("Lenient consumable filter");
+    } else if (filters.bled_out_mode === "no_forgiveness") {
+      filterTags.push("No Forgiveness filter");
+    }
     if (filters.ignore_after_deaths) {
       const deaths = Number(filters.ignore_after_deaths);
       if (!Number.isNaN(deaths) && deaths > 0) {

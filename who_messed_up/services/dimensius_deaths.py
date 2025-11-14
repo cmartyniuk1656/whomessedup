@@ -87,6 +87,7 @@ class DimensiusDeathSummary:
     player_events: Dict[str, List[DimensiusDeathEvent]]
     ability_labels: Dict[int, str]
     bled_out_filter: Optional[str] = None
+    bled_out_mode: Optional[str] = None
 
 
 def fetch_dimensius_death_summary(
