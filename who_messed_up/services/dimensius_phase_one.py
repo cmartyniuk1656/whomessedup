@@ -27,7 +27,10 @@ DARK_ENERGY_ID = 1231002
 
 APPLY_EVENTS = {"applydebuff", "applydebuffstack", "refreshdebuff"}
 REMOVE_EVENTS = {"removedebuff", "removedebuffstack"}
-EARLY_MASS_WINDOW_MS = 1000.0
+EARLY_MASS_WINDOW_SECONDS = 1
+EARLY_MASS_WINDOW_MS = EARLY_MASS_WINDOW_SECONDS * 1000.0
+EARLY_MASS_WINDOW_MIN_SECONDS = 1
+EARLY_MASS_WINDOW_MAX_SECONDS = 15
 REVERSE_GRAVITY_SET_GAP_MS = 1500.0
 
 
@@ -73,6 +76,7 @@ class DimensiusPhaseOneSummary:
     fight_ids: Optional[List[int]]
     pull_count: int
     ignore_after_deaths: Optional[int]
+    early_mass_window_seconds: Optional[int]
     metrics: List[MetricDefinition]
     entries: List[DimensiusPhaseOneEntry]
     player_classes: Dict[str, Optional[str]]
@@ -91,6 +95,7 @@ def fetch_dimensius_phase_one_summary(
     fight_ids: Optional[Iterable[int]] = None,
     include_rg_em_overlap: bool = True,
     include_early_mass: bool = False,
+    early_mass_window_seconds: Optional[int] = None,
     include_dark_energy_hits: bool = False,
     ignore_after_deaths: Optional[int] = None,
     token: Optional[str] = None,
@@ -163,6 +168,10 @@ def fetch_dimensius_phase_one_summary(
     pull_index_by_fight: Dict[int, int] = {fight.id: idx + 1 for idx, fight in enumerate(chosen)}
     early_mass_counts_by_player: DefaultDict[str, int] = defaultdict(int)
     dark_energy_counts_by_player: DefaultDict[str, int] = defaultdict(int)
+    early_mass_window_value: Optional[int] = None
+    early_mass_window_ms = EARLY_MASS_WINDOW_MS
+    if include_early_mass:
+        early_mass_window_value, early_mass_window_ms = _normalize_early_mass_window(early_mass_window_seconds)
 
     if include_rg_em_overlap:
         rg_intervals, rg_apply_events = _collect_debuff_intervals(
@@ -237,7 +246,7 @@ def fetch_dimensius_phase_one_summary(
             for player, intervals in em_map.items():
                 for start_ts, _ in intervals:
                     for set_start in set_starts:
-                        if set_start - EARLY_MASS_WINDOW_MS <= start_ts < set_start:
+                        if set_start - early_mass_window_ms <= start_ts < set_start:
                             key = (player, set_start)
                             if key in seen_pairs:
                                 continue
@@ -421,8 +430,25 @@ def fetch_dimensius_phase_one_summary(
         combined_per_pull=combined_per_pull,
         ability_ids=ability_ids,
         ignore_after_deaths=death_limit,
+        early_mass_window_seconds=early_mass_window_value,
         player_events={player: list(events) for player, events in player_events.items()},
     )
+
+
+def _normalize_early_mass_window(candidate: Optional[int]) -> Tuple[int, float]:
+    seconds = EARLY_MASS_WINDOW_SECONDS
+    if isinstance(candidate, (int, float)):
+        seconds = int(candidate)
+    elif isinstance(candidate, str):
+        try:
+            seconds = int(candidate)
+        except ValueError:
+            seconds = EARLY_MASS_WINDOW_SECONDS
+    if seconds < EARLY_MASS_WINDOW_MIN_SECONDS:
+        seconds = EARLY_MASS_WINDOW_MIN_SECONDS
+    elif seconds > EARLY_MASS_WINDOW_MAX_SECONDS:
+        seconds = EARLY_MASS_WINDOW_MAX_SECONDS
+    return seconds, float(seconds) * 1000.0
 
 
 def _collect_debuff_intervals(

@@ -268,9 +268,22 @@ export const TILES = [
       {
         id: "dim_early_mass",
         type: "checkbox",
-        label: "Early Mass (Players who grabbed Excess Mass < 1 second before Reverse Gravities)",
+        label: "Early Mass (Players who grabbed Excess Mass shortly before Reverse Gravities)",
         default: false,
         param: "early_mass_before_rg",
+      },
+      {
+        id: "dim_early_mass_window",
+        type: "number",
+        label: "Early Mass window (seconds, 1-15)",
+        default: 1,
+        param: "early_mass_window_seconds",
+        min: 1,
+        max: 15,
+        dependsOn: "dim_early_mass",
+        placeholder: "1-15",
+        required: true,
+        requiredMessage: "Provide a window in seconds for Early Mass.",
       },
       {
         id: "dim_dark_energy",
@@ -288,20 +301,35 @@ export const TILES = [
       },
     ],
     footnotes: [
-      "A single event can be counted for both Mass Gravity Overlap and Early Mass if the Mass was collected < 1 second before Reverse Gravity was applied to them.",
-      "Dark Energy circle damage appears to be entirely avoidable as long as you move right as it drops. Shadowstepping on top of one still counts :(",
+      "A single event can be counted for both Mass Gravity Overlap and Early Mass if the Mass was collected within the configured Early Mass window before Reverse Gravity was applied to them.",
+      "Dark Energy circle damage appears to be entirely avoidable as long as you move right as it drops. It can on occasion be necessary to move through them on purpose to avoid orbs while getting into the soak during late P1.",
     ],
   },
   {
     id: "dimensius-deaths",
     title: "Dimensius Death Counter",
     description:
-      "Count player deaths during Dimensius pulls, excluding Oblivion deaths without a recent Airborne, Fists of the Voidlord, or Devour event.",
+      "Count player deaths during Dimensius pulls with configurable handling for Oblivion mechanics.",
     defaultFight: "Dimensius, the All-Devouring",
     endpoint: "/api/dimensius-deaths",
     mode: "dimensius-deaths",
     defaultSort: { key: "deathRate", direction: "desc" },
     configOptions: [
+      {
+        id: "dim_deaths_oblivion_filter",
+        type: "select",
+        label: "Oblivion",
+        default: "exclude_without_recent",
+        param: "oblivion_filter",
+        options: [
+          { value: "include_all", label: "Count all Oblivion deaths" },
+          {
+            value: "exclude_without_recent",
+            label: "Exclude Oblivion deaths preceeded by instances of Airborne, Fists of the Voidlord, or Devour",
+          },
+          { value: "exclude_all", label: "Exclude all Oblivion deaths" },
+        ],
+      },
       {
         id: "dim_deaths_fresh_run",
         type: "checkbox",
@@ -311,7 +339,29 @@ export const TILES = [
       },
     ],
     footnotes: [
-      "Oblivion deaths are excluded unless Airborne, Fists of the Voidlord, or Devour affected the player within the previous 8 seconds.",
+      "Oblivion deaths can be counted as-is, ignored unless recently hit by Airborne/Fists/Devour, or removed entirely depending on this report's configuration.",
+    ],
+  },
+  {
+    id: "dimensius-bled-out",
+    title: "Dimensius - Bled Out Without Healing",
+    description:
+      "Track deaths to Devour, Cosmic Radiation, Dark Energy, or Fission when the player never used a Healthstone or Invigorating Healing Potion that pull.",
+    defaultFight: "Dimensius, the All-Devouring",
+    endpoint: "/api/dimensius-bled-out",
+    mode: "dimensius-deaths",
+    defaultSort: { key: "deathRate", direction: "desc" },
+    configOptions: [
+      {
+        id: "dim_bled_out_fresh_run",
+        type: "checkbox",
+        label: "Force fresh run (skip cache)",
+        default: false,
+        param: "fresh",
+      },
+    ],
+    footnotes: [
+      "Players must die to Devour, Cosmic Radiation, Dark Energy, or Fission without receiving Invigorating Healing Potion or Healthstone healing during the pull.",
     ],
   },
   {

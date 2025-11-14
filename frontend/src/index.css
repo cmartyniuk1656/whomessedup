@@ -92,3 +92,34 @@
   background-color: hsl(var(--primary)/0.35);
   color: hsl(var(--bg));
 }
+
+.numeric-input {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  color-scheme: dark;
+}
+
+.numeric-input::-webkit-outer-spin-button,
+.numeric-input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.truncated-select {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-right: 2.75rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, hsl(var(--content)) 50%),
+    linear-gradient(135deg, hsl(var(--content)) 50%, transparent 50%);
+  background-position: right 1.2rem center, right 0.7rem center;
+  background-size: 0.55rem 0.55rem, 0.55rem 0.55rem;
+  background-repeat: no-repeat;
+}
+
+.truncated-select::-ms-expand {
+  display: none;
+}

@@ -16,6 +16,7 @@ import { ResultHeader } from "./components/ResultHeader";
 import { ResultsTable } from "./components/ResultsTable";
 import { formatFloat, formatInt } from "./utils/numberFormat";
 import LiquidHero from "./components/ui/LiquidHero";
+import { isOptionEnabled } from "./utils/configOptions";
 
 function extractReportCode(input) {
   if (!input) return "";
@@ -60,6 +61,7 @@ function App() {
   const [showConfig, setShowConfig] = useState(false);
   const [configValues, setConfigValues] = useState({});
   const [savedConfigs, setSavedConfigs] = useState({});
+  const [configError, setConfigError] = useState("");
   const [mobileViewMode, setMobileViewMode] = useState("table");
 
   const { result, error, setError, loadingId, pendingJob, runTile: runTileRequest } = useTileRunner();
@@ -408,13 +410,6 @@ function App() {
       { label: "Total deaths", value: formatInt(result?.totals?.total_deaths ?? 0) },
       { label: "Avg deaths / Pull", value: formatFloat(result?.totals?.avg_deaths_per_pull ?? 0, 3) },
     ];
-  } else if (currentTile?.mode === "dimensius-deaths") {
-    if (filters.ignore_after_deaths) {
-      const deaths = Number(filters.ignore_after_deaths);
-      if (!Number.isNaN(deaths) && deaths > 0) {
-        filterTags.push(`Stop after ${formatInt(deaths)} deaths`);
-      }
-    }
   } else {
     summaryMetrics = [
       { label: "Pulls counted", value: formatInt(pullCount) },
@@ -465,10 +460,30 @@ function App() {
       filterTags.push("Reverse Gravity + Excess Mass overlap");
     }
     if (filters.early_mass_before_rg === "true") {
-      filterTags.push("Excess Mass < 1s before Reverse Gravity");
+      const windowSeconds = Number(filters.early_mass_window_seconds);
+      const seconds = !Number.isNaN(windowSeconds) && windowSeconds > 0 ? windowSeconds : 1;
+      filterTags.push(`Excess Mass < ${formatInt(seconds)}s before Reverse Gravity`);
     }
     if (filters.dark_energy_hits === "true") {
       filterTags.push("Dark Energy hits");
+    }
+    if (filters.ignore_after_deaths) {
+      const deaths = Number(filters.ignore_after_deaths);
+      if (!Number.isNaN(deaths) && deaths > 0) {
+        filterTags.push(`Stop after ${formatInt(deaths)} deaths`);
+      }
+    }
+  } else if (currentTile?.mode === "dimensius-deaths") {
+    const oblivionFilter = filters.oblivion_filter;
+    const oblivionTagMap = {
+      exclude_without_recent: "Exclude Oblivion deaths preceeded by instances of Airborne, Fists of the Voidlord, or Devour",
+      exclude_all: "Exclude all Oblivion deaths",
+    };
+    if (oblivionFilter && oblivionTagMap[oblivionFilter]) {
+      filterTags.push(oblivionTagMap[oblivionFilter]);
+    }
+    if (filters.bled_out_filter === "no_consumable_heals") {
+      filterTags.push("No Invigorating Potion or Healthstone healing in pull");
     }
     if (filters.ignore_after_deaths) {
       const deaths = Number(filters.ignore_after_deaths);
@@ -559,6 +574,18 @@ function App() {
           } else {
             initial[opt.id] = [typeof savedValue === "string" && savedValue.trim() ? savedValue : ""];
           }
+        } else if (optionType === "number") {
+          if (typeof savedValue === "string" && savedValue.trim()) {
+            initial[opt.id] = savedValue;
+          } else if (typeof savedValue === "number") {
+            initial[opt.id] = String(savedValue);
+          } else if (typeof opt.default === "number") {
+            initial[opt.id] = String(opt.default);
+          } else if (typeof opt.default === "string" && opt.default.trim()) {
+            initial[opt.id] = opt.default;
+          } else {
+            initial[opt.id] = "";
+          }
         } else {
           if (typeof savedValue === "boolean") {
             initial[opt.id] = savedValue;
@@ -571,6 +598,7 @@ function App() {
       });
       setConfigValues(initial);
       setPendingTile(tile);
+      setConfigError("");
       setShowConfig(true);
     } else {
       runTile(tile);
@@ -578,10 +606,12 @@ function App() {
   };
 
   const handleConfigOptionChange = (id, value) => {
+    setConfigError("");
     setConfigValues((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleMultiTextChange = (id, index, value) => {
+    setConfigError("");
     setConfigValues((prev) => {
       const current = Array.isArray(prev[id]) ? [...prev[id]] : [];
       while (current.length <= index) {
@@ -593,6 +623,7 @@ function App() {
   };
 
   const handleMultiTextAdd = (id) => {
+    setConfigError("");
     setConfigValues((prev) => {
       const current = Array.isArray(prev[id]) ? [...prev[id]] : [""];
       current.push("");
@@ -601,6 +632,7 @@ function App() {
   };
 
   const handleMultiTextRemove = (id, index) => {
+    setConfigError("");
     setConfigValues((prev) => {
       let current = Array.isArray(prev[id]) ? [...prev[id]] : [""];
       if (current.length <= 1) {
@@ -618,10 +650,59 @@ function App() {
   const handleConfigCancel = () => {
     setShowConfig(false);
     setPendingTile(null);
+    setConfigError("");
+  };
+
+  const validateConfigForTile = (tile, values) => {
+    if (!tile?.configOptions?.length) {
+      return "";
+    }
+    for (const opt of tile.configOptions) {
+      if (!opt.required) {
+        continue;
+      }
+      if (!isOptionEnabled(opt, values)) {
+        continue;
+      }
+      const optionType = opt.type ?? "checkbox";
+      const rawValue = values?.[opt.id];
+      if (optionType === "number") {
+        const normalized =
+          typeof rawValue === "number"
+            ? String(rawValue)
+            : typeof rawValue === "string"
+            ? rawValue.trim()
+            : "";
+        if (!normalized) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      } else if (optionType === "multi-text") {
+        const list = Array.isArray(rawValue) ? rawValue : [];
+        if (!list.some((entry) => String(entry ?? "").trim().length > 0)) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      } else if (optionType === "select") {
+        const normalized = typeof rawValue === "string" ? rawValue.trim() : "";
+        if (!normalized) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      } else {
+        if (!rawValue) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      }
+    }
+    return "";
   };
 
   const handleConfigConfirm = () => {
     if (!pendingTile) return;
+    const validationMessage = validateConfigForTile(pendingTile, configValues);
+    if (validationMessage) {
+      setConfigError(validationMessage);
+      return;
+    }
+    setConfigError("");
     const overrides = Object.entries(configValues).reduce((acc, [key, value]) => {
       acc[key] = Array.isArray(value) ? value.map((entry) => (entry == null ? "" : String(entry))) : value;
       return acc;
@@ -737,6 +818,7 @@ function App() {
           visible={showConfig}
           tile={pendingTile}
           configValues={configValues}
+          validationError={configError}
           onOptionChange={handleConfigOptionChange}
           onMultiTextChange={handleMultiTextChange}
           onMultiTextAdd={handleMultiTextAdd}

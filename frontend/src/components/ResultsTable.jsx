@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { ROLE_BADGE_STYLES } from "../config/constants";
 import { formatFloat, formatInt } from "../utils/numberFormat";
 
@@ -872,16 +872,26 @@ function EventDetailsRow({ colSpan, events, isExpanded }) {
   if (!events || events.length === 0) {
     return null;
   }
-  const estimatedHeight = Math.min(96 + events.length * 34, 1200);
+  const [contentHeight, setContentHeight] = useState(0);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (isExpanded && contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight);
+    } else {
+      setContentHeight(0);
+    }
+  }, [isExpanded, events]);
+
   return (
     <tr aria-hidden={!isExpanded}>
       <td colSpan={colSpan} className="px-0">
         <div
           className={`overflow-hidden px-6 transition-all duration-300 ease-out ${isExpanded ? "opacity-100 py-3" : "opacity-0 py-0"}`}
-          style={{ maxHeight: isExpanded ? `${estimatedHeight}px` : "0px" }}
+          style={{ maxHeight: isExpanded ? `${contentHeight}px` : "0px" }}
           aria-hidden={!isExpanded}
         >
-          <div className="rounded-2xl bg-slate-950/60 px-6 py-4 text-sm text-slate-200 shadow-inner shadow-black/20">
+          <div ref={contentRef} className="rounded-2xl bg-slate-950/60 px-6 py-4 text-sm text-slate-200 shadow-inner shadow-black/20">
             <EventList events={events} />
           </div>
         </div>
@@ -895,23 +905,47 @@ function EventList({ events }) {
     return null;
   }
   const sorted = [...events].sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+  const grouped = sorted.reduce((acc, event) => {
+    const fightId = event.fight_id ?? "unknown";
+    const pull = event.pull ?? "?";
+    const key = `${fightId}-${pull}`;
+    if (!acc[key]) {
+      acc[key] = { fightName: event.fight_name, fightId: event.fight_id, pull, events: [] };
+    }
+    acc[key].events.push(event);
+    return acc;
+  }, {});
   return (
-    <ul className="space-y-1">
-      {sorted.map((event, index) => (
-        <li key={`${event.metric_id}-${event.player}-${event.timestamp}-${index}`} className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-emerald-300">{event.label || "Event"}</span>
-          <span className="text-slate-300">
-            Pull {event.pull ?? "?"} – {formatSeconds(event.offset_ms)} ({formatInt(Math.round(event.timestamp ?? 0))})
-          </span>
-          {event.ability_label ? <span className="text-slate-200">via {event.ability_label}</span> : null}
-          {event.fight_name ? (
-            <span className="text-slate-400">[{event.fight_name}{event.fight_id ? ` • Fight ${event.fight_id}` : ""}]</span>
-          ) : event.fight_id ? (
-            <span className="text-slate-400">[Fight {event.fight_id}]</span>
-          ) : null}
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-3">
+      {Object.entries(grouped).map(([key, group]) => {
+        const reference = group.events[0];
+        const pullLabel = `Pull ${group.pull}`;
+        const fightLabel = group.fightName
+          ? `[${group.fightName}${group.fightId ? ` - Fight ${group.fightId}` : ""}]`
+          : group.fightId
+          ? `[Fight ${group.fightId}]`
+          : "";
+        return (
+          <div key={key} className="rounded-lg border border-white/5 bg-white/5 px-4 py-3">
+            <p className="text-sm font-semibold text-slate-100">
+              {pullLabel} - {formatSeconds(reference.offset_ms)} ({formatInt(Math.round(reference.timestamp ?? 0))}) {fightLabel}
+            </p>
+            <ul className="mt-2 ml-5 list-disc space-y-1 text-slate-300">
+              {group.events.map((event, idx) => (
+                <li key={`${key}-${idx}`}>
+                  <span className="font-semibold text-emerald-300">{event.label || "Event"}</span>{" "}
+                  {event.description ? (
+                    <span className="text-slate-200">{event.description}</span>
+                  ) : event.ability_label ? (
+                    <span className="text-slate-200">via {event.ability_label}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -963,3 +997,4 @@ const RoleBadge = ({ role, small }) => (
 const EmptyMessage = () => (
   <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">No events matched the filters.</div>
 );
+
