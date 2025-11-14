@@ -377,7 +377,11 @@ function MetricTable({
               return (
                 <Fragment key={`${row.player}-${row.role}`}>
                   <tr
-                    className={hasEvents ? "cursor-pointer hover:bg-slate-900/80" : ""}
+                    className={
+                      hasEvents
+                        ? "cursor-pointer transition-colors duration-200 hover:bg-emerald-500/10 hover:text-white focus-within:bg-emerald-500/10 focus-within:text-white"
+                        : ""
+                    }
                     onClick={() => hasEvents && onTogglePlayer?.(row.player)}
                   >
                     <td className="px-4 py-3 font-medium">
@@ -394,7 +398,7 @@ function MetricTable({
                     ))}
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
                   </tr>
-                  {hasEvents && isExpanded ? <EventDetailsRow colSpan={totalColumns} events={events} /> : null}
+                  {hasEvents ? <EventDetailsRow colSpan={totalColumns} events={events} isExpanded={isExpanded} /> : null}
                 </Fragment>
               );
             })}
@@ -529,7 +533,11 @@ function DeathsTable({ rows, playerEvents = {}, expandedPlayers = {}, onTogglePl
               return (
                 <Fragment key={`${row.player}-${row.role}-death`}>
                   <tr
-                    className={hasEvents ? "cursor-pointer hover:bg-slate-900/80" : ""}
+                    className={
+                      hasEvents
+                        ? "cursor-pointer transition-colors duration-200 hover:bg-emerald-500/10 hover:text-white focus-within:bg-emerald-500/10 focus-within:text-white"
+                        : ""
+                    }
                     onClick={() => hasEvents && onTogglePlayer?.(row.player)}
                   >
                     <td className="px-4 py-3 font-medium">
@@ -542,7 +550,7 @@ function DeathsTable({ rows, playerEvents = {}, expandedPlayers = {}, onTogglePl
                     <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.deaths ?? 0)}</td>
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.deathRate ?? 0, 3)}</td>
                   </tr>
-                  {hasEvents && isExpanded ? <EventDetailsRow colSpan={5} events={events} /> : null}
+                  {hasEvents ? <EventDetailsRow colSpan={5} events={events} isExpanded={isExpanded} /> : null}
                 </Fragment>
               );
             })}
@@ -693,7 +701,11 @@ function CombinedTable({
               return (
                 <Fragment key={`${row.player}-${row.role}`}>
                   <tr
-                    className={hasEvents ? "cursor-pointer hover:bg-slate-900/80" : ""}
+                    className={
+                      hasEvents
+                        ? "cursor-pointer transition-colors duration-200 hover:bg-emerald-500/10 hover:text-white focus-within:bg-emerald-500/10 focus-within:text-white"
+                        : ""
+                    }
                     onClick={() => hasEvents && onTogglePlayer?.(row.player)}
                   >
                     <td className="px-4 py-3 font-medium">
@@ -709,7 +721,7 @@ function CombinedTable({
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.ghostPerPull ?? 0, 3)}</td>
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
                   </tr>
-                  {hasEvents && isExpanded ? <EventDetailsRow colSpan={8} events={events} /> : null}
+                  {hasEvents ? <EventDetailsRow colSpan={8} events={events} isExpanded={isExpanded} /> : null}
                 </Fragment>
               );
             })}
@@ -856,14 +868,23 @@ function CombinedTable({
   );
 }
 
-function EventDetailsRow({ colSpan, events }) {
+function EventDetailsRow({ colSpan, events, isExpanded }) {
   if (!events || events.length === 0) {
     return null;
   }
+  const estimatedHeight = Math.min(96 + events.length * 34, 1200);
   return (
-    <tr className="bg-slate-950/60">
-      <td colSpan={colSpan} className="px-6 py-3 text-sm text-slate-200">
-        <EventList events={events} />
+    <tr aria-hidden={!isExpanded}>
+      <td colSpan={colSpan} className="px-0">
+        <div
+          className={`overflow-hidden px-6 transition-all duration-300 ease-out ${isExpanded ? "opacity-100 py-3" : "opacity-0 py-0"}`}
+          style={{ maxHeight: isExpanded ? `${estimatedHeight}px` : "0px" }}
+          aria-hidden={!isExpanded}
+        >
+          <div className="rounded-2xl bg-slate-950/60 px-6 py-4 text-sm text-slate-200 shadow-inner shadow-black/20">
+            <EventList events={events} />
+          </div>
+        </div>
       </td>
     </tr>
   );

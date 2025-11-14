@@ -1,4 +1,5 @@
 import { BOSS_OPTIONS } from "../config/constants";
+import GlassCard from "./ui/GlassCard";
 
 export function ReportControls({
   reportInput,
@@ -17,8 +18,11 @@ export function ReportControls({
 
   return (
     <section className="px-6 pb-10">
-      <div className="glass-panel relative mx-auto max-w-6xl overflow-hidden rounded-[32px] border border-white/10 bg-white/5 px-6 py-10 shadow-[0_35px_80px_-40px_rgba(15,118,110,0.8)] backdrop-blur-2xl sm:px-12">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.45),_transparent_60%)] opacity-40" />
+      <GlassCard
+        className="mx-auto max-w-6xl isolate rounded-[32px] shadow-[0_35px_80px_-40px_rgba(15,118,110,0.8)] z-10"
+        bodyClassName="relative px-6 py-10 text-content sm:px-12"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_70%)] opacity-30" />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-muted">Report controls</p>
@@ -27,7 +31,7 @@ export function ReportControls({
           <span className="text-xs text-muted/70">All inputs optional except the report URL or code.</span>
         </div>
         <div className="relative mt-8 flex flex-col gap-4 sm:flex-row">
-          <label className="flex w-full flex-col text-sm font-medium text-content sm:max-w-md">
+          <label className="flex w-full flex-col text-sm font-medium sm:max-w-md">
             Report URL or code
             <input
               className={fieldClasses}
@@ -37,7 +41,7 @@ export function ReportControls({
               disabled={isBusy}
             />
           </label>
-          <label className="flex w-full flex-col text-sm font-medium text-content sm:max-w-xs">
+          <label className="flex w-full flex-col text-sm font-medium sm:max-w-xs">
             Fight filter (optional)
             <select
               className={selectClasses}
@@ -57,7 +61,7 @@ export function ReportControls({
           </label>
         </div>
         <div className="relative mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="flex w-full flex-col text-sm font-medium text-content">
+          <label className="flex w-full flex-col text-sm font-medium">
             Ignore hits after total deaths (per pull)
             <input
               className={fieldClasses}
@@ -67,7 +71,7 @@ export function ReportControls({
               disabled={isBusy}
             />
           </label>
-          <label className="flex w-full flex-col text-sm font-medium text-content">
+          <label className="flex w-full flex-col text-sm font-medium">
             Ignore final seconds of each pull
             <input
               className={fieldClasses}
@@ -78,7 +82,7 @@ export function ReportControls({
             />
           </label>
         </div>
-      </div>
+      </GlassCard>
     </section>
   );
 }
