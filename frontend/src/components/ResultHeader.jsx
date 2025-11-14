@@ -44,20 +44,20 @@ export function ResultHeader({
   }
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-4 text-content sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-xs uppercase tracking-widest text-emerald-400">Results</p>
-        <h3 className="mt-1 text-2xl font-semibold text-white">{title}</h3>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="text-xs uppercase tracking-widest text-muted">Results</p>
+        <h3 className="mt-1 text-2xl font-semibold text-content">{title}</h3>
+        <p className="mt-1 text-sm text-muted">
           Report {reportCode}
           {detailParts.length ? ` - ${detailParts.join(" - ")}` : ""}
         </p>
       </div>
-      <div className="flex flex-col items-end gap-2 text-right text-sm text-slate-300">
+      <div className="flex flex-col items-end gap-2 text-right text-sm text-muted">
         <button
           type="button"
           onClick={onDownloadCsv}
-          className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/50 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:border-emerald-400 hover:text-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-slate-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring focus-visible:ring-offset-2 ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60"
           disabled={disableDownload}
         >
           Download CSV
