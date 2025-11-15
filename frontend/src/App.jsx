@@ -134,6 +134,21 @@ function App() {
         };
       });
     }
+    if (currentTile?.mode === "priority-damage") {
+      return (result.entries ?? []).map((entry) => {
+        const className = result.player_classes?.[entry.player] ?? null;
+        const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+        return {
+          player: entry.player,
+          role: entry.role ?? "Unknown",
+          className,
+          pulls: entry.pulls ?? result.pull_count ?? 0,
+          priorityTotalDamage: entry.total_damage ?? 0,
+          priorityAverageDamage: entry.average_damage ?? 0,
+          color,
+        };
+      });
+    }
     if (currentTile?.mode === "dimensius-phase1") {
       return (result.entries ?? []).map((entry) => {
         const className = result.player_classes?.[entry.player] ?? null;
@@ -285,6 +300,45 @@ function App() {
       });
       return arr;
     }
+    if (currentTile?.mode === "priority-damage") {
+      arr.sort((a, b) => {
+        if (key === "role") {
+          const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+          const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+          if (aPriority !== bPriority) {
+            return (aPriority - bPriority) * dir;
+          }
+          const totalDiff = (b.priorityTotalDamage ?? 0) - (a.priorityTotalDamage ?? 0);
+          if (totalDiff !== 0) {
+            return dir === 1 ? totalDiff : -totalDiff;
+          }
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "player") {
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "pulls") {
+          if (a.pulls !== b.pulls) {
+            return (a.pulls - b.pulls) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "priorityTotalDamage") {
+          if ((a.priorityTotalDamage ?? 0) !== (b.priorityTotalDamage ?? 0)) {
+            return ((a.priorityTotalDamage ?? 0) - (b.priorityTotalDamage ?? 0)) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "priorityAverageDamage") {
+          if ((a.priorityAverageDamage ?? 0) !== (b.priorityAverageDamage ?? 0)) {
+            return ((a.priorityAverageDamage ?? 0) - (b.priorityAverageDamage ?? 0)) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        return 0;
+      });
+      return arr;
+    }
 
     arr.sort((a, b) => {
       if (key === "role") {
@@ -387,6 +441,12 @@ function App() {
       { label: "Combined add damage", value: formatInt(totals.total_damage ?? 0) },
       { label: "Avg add damage / Pull", value: formatFloat(totals.avg_damage_per_pull ?? 0, 3) },
     ];
+  } else if (currentTile?.mode === "priority-damage") {
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Total priority damage", value: formatInt(totals.total_damage ?? 0) },
+      { label: "Avg priority damage / Pull", value: formatFloat(totals.avg_damage_per_pull ?? 0, 3) },
+    ];
   } else if (currentTile?.mode === "dimensius-phase1") {
     summaryMetrics = [{ label: "Pulls counted", value: formatInt(pullCount) }];
     metricColumns.forEach((metric) => {
@@ -474,13 +534,15 @@ function App() {
       }
     }
   } else if (currentTile?.mode === "dimensius-deaths") {
-    const oblivionFilter = filters.oblivion_filter;
-    const oblivionTagMap = {
-      exclude_without_recent: "Exclude Oblivion deaths preceeded by instances of Airborne, Fists of the Voidlord, or Devour",
-      exclude_all: "Exclude all Oblivion deaths",
-    };
-    if (oblivionFilter && oblivionTagMap[oblivionFilter]) {
-      filterTags.push(oblivionTagMap[oblivionFilter]);
+    if (currentTile?.id === "dimensius-deaths") {
+      const oblivionFilter = filters.oblivion_filter;
+      const oblivionTagMap = {
+        exclude_without_recent: "Exclude Oblivion deaths preceeded by instances of Airborne, Fists of the Voidlord, or Devour",
+        exclude_all: "Exclude all Oblivion deaths",
+      };
+      if (oblivionFilter && oblivionTagMap[oblivionFilter]) {
+        filterTags.push(oblivionTagMap[oblivionFilter]);
+      }
     }
     if (filters.bled_out_filter === "no_consumable_heals") {
       filterTags.push("No Invigorating Potion or Healthstone healing in pull");
@@ -495,6 +557,13 @@ function App() {
       if (!Number.isNaN(deaths) && deaths > 0) {
         filterTags.push(`Stop after ${formatInt(deaths)} deaths`);
       }
+    }
+  } else if (currentTile?.mode === "priority-damage") {
+    if (filters.target) {
+      filterTags.push(`Target: ${filters.target}`);
+    }
+    if (filters.ignored_source) {
+      filterTags.push(`Ignoring ${filters.ignored_source}`);
     }
   } else {
     if (hitFilters.ignore_after_deaths) {

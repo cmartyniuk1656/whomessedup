@@ -50,6 +50,8 @@ export const DEFAULT_SORT_DIRECTIONS = {
   combinedAverage: "desc",
   addTotalDamage: "desc",
   addAverageDamage: "desc",
+  priorityTotalDamage: "desc",
+  priorityAverageDamage: "desc",
   ghostMisses: "desc",
   ghostPerPull: "desc",
   besiegeHits: "desc",
@@ -180,6 +182,9 @@ export const TILES = [
       "Single phase or full fight reports are recommended. Multi-phase reports will aggregate data and compute averages off the total pull count even if the player was dead during a phase, impacting their overall average.",
     ],
   },
+  // NOTE [2025-11-14]: Dimensius Phase Damage/Healing tile temporarily removed due to outstanding bugs.
+  // Commented out for easy restoration once the report is fixed.
+  /*
   {
     id: "dimensius-phase-damage",
     title: "Dimensius Phase Damage/Healing Report",
@@ -248,6 +253,7 @@ export const TILES = [
       "Single phase or full fight reports are recommended. Multi-phase reports will aggregate data and compute averages off the total pull count even if the player was dead during a phase, impacting their overall average.",
     ],
   },
+  */
   {
     id: "dimensius-phase1",
     title: "Dimensius Phase One Analysis",
@@ -376,6 +382,29 @@ export const TILES = [
     ],
   },
   {
+    id: "dimensius-priority-damage",
+    title: "Dimensius - Phase 2 Priority Damage",
+    description:
+      "Track player damage into Artoshion during Dimensius phase two (encounter phase 3). Only players alive when the phase begins are counted.",
+    defaultFight: "Dimensius, the All-Devouring",
+    endpoint: "/api/dimensius-priority-damage",
+    mode: "priority-damage",
+    defaultSort: { key: "priorityAverageDamage", direction: "desc" },
+    configOptions: [
+      {
+        id: "dim_priority_fresh_run",
+        type: "checkbox",
+        label: "Force fresh run (skip cache)",
+        default: false,
+        param: "fresh",
+      },
+    ],
+    footnotes: [
+      "Includes only pulls that reached Phase 2 and players who were alive at the start of that phase. Counts damage done to Artoshion.",
+      "Damage credited to Shooting Star is ignored.",
+    ],
+  },
+  {
     id: "dimensius-add-damage",
     title: "Dimensius - Phase 1 Add Damage",
     description:
@@ -397,7 +426,7 @@ export const TILES = [
         id: "dim_ignore_first_add_set",
         type: "checkbox",
         label: "Ignore first add set",
-        default: false,
+        default: true,
         param: "ignore_first_add_set",
       },
       {

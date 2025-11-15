@@ -18,6 +18,7 @@ from who_messed_up.jobs import job_manager
 from who_messed_up.service import (
     AddDamageSummary,
     DimensiusPhaseOneSummary,
+    DimensiusPriorityDamageSummary,
     DimensiusDeathSummary,
     FightSelectionError,
     GhostSummary,
@@ -32,6 +33,7 @@ from who_messed_up.service import (
     fetch_ghost_summary,
     fetch_hit_summary,
     fetch_dimensius_phase_one_summary,
+    fetch_dimensius_priority_damage_summary,
     fetch_dimensius_death_summary,
     fetch_dimensius_bled_out_summary,
     fetch_dimensius_add_damage_summary,
@@ -714,6 +716,59 @@ class DimensiusAddDamageResponse(BaseModel):
             source_reports=summary.source_reports,
         )
 
+class PriorityDamageEntryModel(BaseModel):
+    player: str
+    role: str
+    class_name: Optional[str]
+    pulls: int
+    total_damage: float
+    average_damage: float
+
+
+class DimensiusPriorityDamageResponse(BaseModel):
+    report: str
+    filters: Dict[str, Optional[str]]
+    pull_count: int
+    totals: Dict[str, float]
+    entries: List[PriorityDamageEntryModel]
+    player_classes: Dict[str, Optional[str]]
+    player_roles: Dict[str, str]
+    player_specs: Dict[str, Optional[str]]
+
+    @classmethod
+    def from_summary(cls, summary: DimensiusPriorityDamageSummary) -> "DimensiusPriorityDamageResponse":
+        filters: Dict[str, Optional[str]] = {
+            "fight_name": summary.fight_filter,
+            "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
+            "target": summary.target_name,
+            "ignored_source": summary.ignored_source,
+        }
+        entries = [
+            PriorityDamageEntryModel(
+                player=row.player,
+                role=row.role,
+                class_name=row.class_name,
+                pulls=row.pulls,
+                total_damage=row.total_damage,
+                average_damage=row.average_damage,
+            )
+            for row in summary.entries
+        ]
+        totals = {
+            "total_damage": summary.total_damage,
+            "avg_damage_per_pull": summary.avg_damage_per_pull,
+        }
+        return cls(
+            report=summary.report_code,
+            filters=filters,
+            pull_count=summary.pull_count,
+            totals=totals,
+            entries=entries,
+            player_classes=summary.player_classes,
+            player_roles=summary.player_roles,
+            player_specs=summary.player_specs,
+        )
+
 
 class JobStatusModel(BaseModel):
     id: str
@@ -756,6 +811,7 @@ JOB_PHASE_DAMAGE = "nexus_phase_damage"
 JOB_DIMENSIUS_ADD_DAMAGE = "dimensius_add_damage"
 JOB_DIMENSIUS_PHASE1 = "dimensius_phase1"
 JOB_DIMENSIUS_DEATHS = "dimensius_deaths"
+JOB_DIMENSIUS_PRIORITY_DAMAGE = "dimensius_priority_damage"
 JOB_DIMENSIUS_BLED_OUT = "dimensius_bled_out"
 
 
@@ -867,12 +923,27 @@ def _execute_dimensius_bled_out_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     return DimensiusDeathSummaryResponse.from_summary(summary).dict()
 
 
+def _execute_dimensius_priority_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    summary = fetch_dimensius_priority_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+    return DimensiusPriorityDamageResponse.from_summary(summary).dict()
+
+
 job_manager.register_handler(JOB_NEXUS_PHASE1, _execute_nexus_phase1_job)
 job_manager.register_handler(JOB_PHASE_DAMAGE, _execute_phase_damage_job)
 job_manager.register_handler(JOB_DIMENSIUS_ADD_DAMAGE, _execute_dimensius_add_damage_job)
 job_manager.register_handler(JOB_DIMENSIUS_PHASE1, _execute_dimensius_phase1_job)
 job_manager.register_handler(JOB_DIMENSIUS_DEATHS, _execute_dimensius_deaths_job)
 job_manager.register_handler(JOB_DIMENSIUS_BLED_OUT, _execute_dimensius_bled_out_job)
+job_manager.register_handler(JOB_DIMENSIUS_PRIORITY_DAMAGE, _execute_dimensius_priority_damage_job)
 
 
 @app.get("/health")
@@ -1276,6 +1347,38 @@ def get_dimensius_bled_out(
 
     if job.status == "completed":
         return DimensiusDeathSummaryResponse.parse_obj(job.result)
+
+    snapshot = job_manager.snapshot(job.id)
+    if snapshot is None:
+        raise HTTPException(status_code=500, detail="Job tracking failed.")
+    return JSONResponse(status_code=202, content={"job": snapshot})
+
+
+@app.get("/api/dimensius-priority-damage", response_model=DimensiusPriorityDamageResponse)
+def get_dimensius_priority_damage(
+    report: str = Query(..., description="Warcraft Logs report code."),
+    fight: Optional[str] = Query(None, description="Substring match on fight name."),
+    fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
+    token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
+) -> DimensiusPriorityDamageResponse:
+    fight_ids_payload = sorted(int(fid) for fid in fight_id) if fight_id else []
+    primary_report = _normalize_report_code(report)
+    payload: Dict[str, Any] = {
+        "report": primary_report,
+        "fight": fight,
+        "fight_ids": fight_ids_payload,
+    }
+    if token:
+        payload["token"] = token
+
+    try:
+        job, immediate = job_manager.enqueue(JOB_DIMENSIUS_PRIORITY_DAMAGE, payload, bust_cache=fresh)
+    except KeyError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if job.status == "completed":
+        return DimensiusPriorityDamageResponse.parse_obj(job.result)
 
     snapshot = job_manager.snapshot(job.id)
     if snapshot is None:
