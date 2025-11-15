@@ -6,7 +6,7 @@ from __future__ import annotations
 from bisect import bisect_left
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple, Set
+from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Tuple, Set, Union
 
 import requests
 
@@ -28,6 +28,16 @@ FISTS_OF_VOIDLORD_ID = 1227665
 DEVOUR_ID = 1243373
 RECENT_WINDOW_MS = 8000.0
 
+OBLIVION_FILTER_INCLUDE_ALL = "include_all"
+OBLIVION_FILTER_EXCLUDE_WITHOUT_RECENT = "exclude_without_recent"
+OBLIVION_FILTER_EXCLUDE_ALL = "exclude_all"
+OBLIVION_FILTER_DEFAULT = OBLIVION_FILTER_EXCLUDE_WITHOUT_RECENT
+_OBLIVION_FILTER_CHOICES = {
+    OBLIVION_FILTER_INCLUDE_ALL,
+    OBLIVION_FILTER_EXCLUDE_WITHOUT_RECENT,
+    OBLIVION_FILTER_EXCLUDE_ALL,
+}
+
 ABILITY_LABELS: Dict[int, str] = {
     OBLIVION_ID: "Oblivion",
     AIRBORNE_ID: "Airborne",
@@ -46,6 +56,8 @@ class DimensiusDeathEvent:
     offset_ms: float
     ability_id: Optional[int]
     ability_label: Optional[str]
+    label: Optional[str] = None
+    description: Optional[str] = None
 
 
 @dataclass
@@ -66,6 +78,7 @@ class DimensiusDeathSummary:
     fight_ids: Optional[List[int]]
     pull_count: int
     ignore_after_deaths: Optional[int]
+    oblivion_filter: str
     total_deaths: int
     entries: List[DimensiusDeathEntry]
     player_classes: Dict[str, Optional[str]]
@@ -73,6 +86,8 @@ class DimensiusDeathSummary:
     player_specs: Dict[str, Optional[str]]
     player_events: Dict[str, List[DimensiusDeathEvent]]
     ability_labels: Dict[int, str]
+    bled_out_filter: Optional[str] = None
+    bled_out_mode: Optional[str] = None
 
 
 def fetch_dimensius_death_summary(
@@ -81,6 +96,7 @@ def fetch_dimensius_death_summary(
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
     ignore_after_deaths: Optional[int] = None,
+    oblivion_filter: Optional[str] = None,
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
@@ -156,6 +172,7 @@ def fetch_dimensius_death_summary(
     events_by_player: DefaultDict[str, List[DimensiusDeathEvent]] = defaultdict(list)
     death_counts: DefaultDict[str, int] = defaultdict(int)
     ability_labels = _fetch_ability_labels(session, bearer, report_code)
+    oblivion_filter_mode = _normalize_oblivion_filter(oblivion_filter)
 
     for fight in chosen:
         cutoff = death_cutoffs.get(fight.id) if death_cutoffs else None
@@ -182,18 +199,18 @@ def fetch_dimensius_death_summary(
                 target_name = event["target"].get("name")
             if not target_name:
                 continue
-            ability_id = event.get("killingAbilityGameID") or event.get("abilityGameID")
-            ability_label = ability_labels.get(ability_id)
-            if ability_label is None:
-                ability_obj = event.get("ability") or {}
-                ability_label = ability_obj.get("name")
-                if ability_label and isinstance(ability_id, int):
-                    ability_labels[ability_id] = ability_label
+            ability_id, ability_label = _resolve_killing_ability(event, ability_labels)
             include_death = True
             if ability_id == OBLIVION_ID:
-                include_death = _has_recent_event(airborne_events, fight.id, target_name, ts_val) or _has_recent_event(
-                    fists_events, fight.id, target_name, ts_val
-                ) or _has_recent_event(devour_events, fight.id, target_name, ts_val)
+                include_death = _should_include_oblivion_death(
+                    oblivion_filter_mode,
+                    fight_id=fight.id,
+                    player=target_name,
+                    timestamp=ts_val,
+                    airborne_events=airborne_events,
+                    fists_events=fists_events,
+                    devour_events=devour_events,
+                )
             if not include_death:
                 continue
             death_counts[target_name] += 1
@@ -208,6 +225,7 @@ def fetch_dimensius_death_summary(
                     offset_ms=offset_ms,
                     ability_id=int(ability_id) if ability_id is not None else None,
                     ability_label=ability_label,
+                    label="Death",
                 )
             )
 
@@ -249,7 +267,7 @@ def fetch_dimensius_death_summary(
                 death_rate=death_rate,
                 events=sorted(events_by_player.get(player, []), key=lambda evt: evt.timestamp),
             )
-        )
+    )
 
     return DimensiusDeathSummary(
         report_code=report_code,
@@ -257,6 +275,7 @@ def fetch_dimensius_death_summary(
         fight_ids=[int(fid) for fid in fight_ids] if fight_ids else None,
         pull_count=pull_count,
         ignore_after_deaths=death_limit,
+        oblivion_filter=oblivion_filter_mode,
         total_deaths=total_deaths,
         entries=entries,
         player_classes={player: name_to_class.get(player) for player in all_players},
@@ -265,6 +284,68 @@ def fetch_dimensius_death_summary(
         player_events={player: list(events) for player, events in events_by_player.items()},
         ability_labels=ability_labels,
     )
+
+
+def _normalize_oblivion_filter(value: Optional[str]) -> str:
+    if isinstance(value, str):
+        candidate = value.strip().lower()
+        if candidate in _OBLIVION_FILTER_CHOICES:
+            return candidate
+    return OBLIVION_FILTER_DEFAULT
+
+
+def _should_include_oblivion_death(
+    mode: str,
+    *,
+    fight_id: int,
+    player: str,
+    timestamp: float,
+    airborne_events: Dict[int, Dict[str, List[float]]],
+    fists_events: Dict[int, Dict[str, List[float]]],
+    devour_events: Dict[int, Dict[str, List[float]]],
+) -> bool:
+    if mode == OBLIVION_FILTER_EXCLUDE_ALL:
+        return False
+    if mode == OBLIVION_FILTER_EXCLUDE_WITHOUT_RECENT:
+        return (
+            _has_recent_event(airborne_events, fight_id, player, timestamp)
+            or _has_recent_event(fists_events, fight_id, player, timestamp)
+            or _has_recent_event(devour_events, fight_id, player, timestamp)
+        )
+    return True
+
+
+def _resolve_killing_ability(event: Dict[str, Any], ability_labels: Dict[int, str]) -> Tuple[Optional[int], Optional[str]]:
+    ability_obj = event.get("killingAbility")
+    ability_id = None
+    ability_name = None
+    if isinstance(ability_obj, dict):
+        ability_id = _normalize_ability_id(ability_obj.get("id"))
+        ability_name = ability_obj.get("name")
+    if ability_id is None:
+        ability_id = _normalize_ability_id(event.get("killingAbilityGameID"))
+    if ability_id is None:
+        ability_id = _normalize_ability_id(event.get("abilityGameID"))
+    if ability_name is None and ability_id is not None:
+        ability_name = ability_labels.get(ability_id)
+    if ability_name is None:
+        generic_ability = event.get("ability")
+        if isinstance(generic_ability, dict):
+            ability_name = generic_ability.get("name")
+    if ability_name and ability_id is not None and ability_id not in ability_labels:
+        ability_labels[ability_id] = ability_name
+    return ability_id, ability_name
+
+
+def _normalize_ability_id(raw: Optional[Union[int, str]]) -> Optional[int]:
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, str):
+        try:
+            return int(raw)
+        except ValueError:
+            return None
+    return None
 
 
 def _collect_target_event_times(

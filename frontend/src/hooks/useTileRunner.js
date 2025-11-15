@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isOptionEnabled } from "../utils/configOptions";
 
 const normalizeBoolean = (value) => {
   if (typeof value === "boolean") {
@@ -48,6 +49,14 @@ const resolveConfigForTile = (tile, overrides) => {
         resolved[opt.id] = [rawValue];
       } else {
         resolved[opt.id] = [];
+      }
+      return;
+    }
+    if (optionType === "number") {
+      if (rawValue === undefined || rawValue === null) {
+        resolved[opt.id] = "";
+      } else {
+        resolved[opt.id] = String(rawValue);
       }
       return;
     }
@@ -185,6 +194,9 @@ export function useTileRunner() {
           if (value === undefined || value === null) {
             return;
           }
+           if (!isOptionEnabled(opt, resolvedConfig)) {
+             return;
+           }
           if (optionType === "select") {
             params.set(opt.param, String(value));
             return;
@@ -197,6 +209,26 @@ export function useTileRunner() {
               .forEach((entry) => {
                 params.append(opt.param, entry);
               });
+            return;
+          }
+          if (optionType === "number") {
+            const rawValue = typeof value === "number" ? String(value) : String(value ?? "").trim();
+            if (!rawValue) {
+              return;
+            }
+            let numeric = Number.parseInt(rawValue, 10);
+            if (Number.isNaN(numeric)) {
+              return;
+            }
+            const min = typeof opt.min === "number" ? opt.min : undefined;
+            const max = typeof opt.max === "number" ? opt.max : undefined;
+            if (typeof min === "number" && numeric < min) {
+              numeric = min;
+            }
+            if (typeof max === "number" && numeric > max) {
+              numeric = max;
+            }
+            params.set(opt.param, String(numeric));
             return;
           }
           const boolValue = normalizeBoolean(value);

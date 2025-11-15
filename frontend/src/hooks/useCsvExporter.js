@@ -58,6 +58,24 @@ const buildCsvContent = (tile, data, tableRows, phases, labels, metrics = []) =>
     return `\ufeff${lines.join("\n")}`;
   }
 
+  if (tile.mode === "priority-damage") {
+    const headers = ["Player", "Role", "Class", "Pulls", "Total Priority Damage", "Avg Priority Damage / Pull"];
+    const lines = [headers.map(escapeCsv).join(",")];
+    tableRows.forEach((row) => {
+      const className = row.className ?? data.player_classes?.[row.player] ?? "";
+      const values = [
+        row.player,
+        row.role,
+        className,
+        row.pulls ?? 0,
+        row.priorityTotalDamage ?? 0,
+        row.priorityAverageDamage ?? 0,
+      ];
+      lines.push(values.map(escapeCsv).join(","));
+    });
+    return `\ufeff${lines.join("\n")}`;
+  }
+
   if (tile.mode === "dimensius-phase1") {
     const metricList = Array.isArray(metrics) ? metrics : [];
     const headers = ["Player", "Role", "Class", "Pulls"];

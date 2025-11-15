@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { ROLE_BADGE_STYLES } from "../config/constants";
 import { formatFloat, formatInt } from "../utils/numberFormat";
 
@@ -44,6 +44,8 @@ export function ResultsTable({
         />
       ) : mode === "add-damage" ? (
         <AddDamageTable rows={rows} handleSort={handleSort} renderSortIcon={renderSortIcon} />
+      ) : mode === "priority-damage" ? (
+        <PriorityDamageTable rows={rows} handleSort={handleSort} renderSortIcon={renderSortIcon} />
       ) : mode === "dimensius-phase1" ? (
         <>
           {showMobileToggle ? (
@@ -326,6 +328,88 @@ function AddDamageTable({ rows, handleSort, renderSortIcon }) {
                 <div className="flex justify-between">
                   <span>Avg Add Damage / Pull</span>
                   <span>{formatFloat(row.addAverageDamage ?? 0, 3)}</span>
+                </div>
+              </dl>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PriorityDamageTable({ rows, handleSort, renderSortIcon }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-slate-800 text-sm">
+        <thead className="bg-slate-900/80 text-xs uppercase tracking-widest text-slate-400">
+          <tr>
+            <SortableHeader label="Player" column="player" handleSort={handleSort} renderSortIcon={renderSortIcon} align="left" />
+            <SortableHeader label="Role" column="role" handleSort={handleSort} renderSortIcon={renderSortIcon} align="left" />
+            <SortableHeader label="Pulls" column="pulls" handleSort={handleSort} renderSortIcon={renderSortIcon} align="right" />
+            <SortableHeader
+              label="Total Priority Damage"
+              column="priorityTotalDamage"
+              handleSort={handleSort}
+              renderSortIcon={renderSortIcon}
+              align="right"
+            />
+            <SortableHeader
+              label="Avg Priority Damage / Pull"
+              column="priorityAverageDamage"
+              handleSort={handleSort}
+              renderSortIcon={renderSortIcon}
+              align="right"
+            />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
+          {rows.map((row) => (
+            <tr key={`${row.player}-${row.role}-priority`}>
+              <td className="px-4 py-3 font-medium">
+                <span style={{ color: row.color }}>{row.player}</span>
+              </td>
+              <td className="px-4 py-3">
+                <RoleBadge role={row.role} />
+              </td>
+              <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
+              <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.priorityTotalDamage ?? 0)}</td>
+              <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.priorityAverageDamage ?? 0, 3)}</td>
+            </tr>
+          ))}
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                No events matched the filters.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <div className="sm:hidden p-4">
+        {rows.length === 0 ? (
+          <EmptyMessage />
+        ) : (
+          rows.map((row) => (
+            <div key={`${row.player}-${row.role}-priority-mobile`} className="rounded-lg border border-slate-800 bg-slate-900/70 p-4 shadow-sm shadow-emerald-500/5">
+              <div className="flex items-center justify-between">
+                <span className="text-base font-semibold" style={{ color: row.color }}>
+                  {row.player}
+                </span>
+                <RoleBadge role={row.role} />
+              </div>
+              <dl className="mt-3 space-y-1 text-sm text-slate-200">
+                <div className="flex justify-between">
+                  <span>Pulls</span>
+                  <span>{formatInt(row.pulls)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total priority damage</span>
+                  <span>{formatInt(row.priorityTotalDamage ?? 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Avg / Pull</span>
+                  <span>{formatFloat(row.priorityAverageDamage ?? 0, 3)}</span>
                 </div>
               </dl>
             </div>
@@ -872,16 +956,26 @@ function EventDetailsRow({ colSpan, events, isExpanded }) {
   if (!events || events.length === 0) {
     return null;
   }
-  const estimatedHeight = Math.min(96 + events.length * 34, 1200);
+  const [contentHeight, setContentHeight] = useState(0);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (isExpanded && contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight);
+    } else {
+      setContentHeight(0);
+    }
+  }, [isExpanded, events]);
+
   return (
     <tr aria-hidden={!isExpanded}>
       <td colSpan={colSpan} className="px-0">
         <div
           className={`overflow-hidden px-6 transition-all duration-300 ease-out ${isExpanded ? "opacity-100 py-3" : "opacity-0 py-0"}`}
-          style={{ maxHeight: isExpanded ? `${estimatedHeight}px` : "0px" }}
+          style={{ maxHeight: isExpanded ? `${contentHeight}px` : "0px" }}
           aria-hidden={!isExpanded}
         >
-          <div className="rounded-2xl bg-slate-950/60 px-6 py-4 text-sm text-slate-200 shadow-inner shadow-black/20">
+          <div ref={contentRef} className="rounded-2xl bg-slate-950/60 px-6 py-4 text-sm text-slate-200 shadow-inner shadow-black/20">
             <EventList events={events} />
           </div>
         </div>
@@ -895,23 +989,79 @@ function EventList({ events }) {
     return null;
   }
   const sorted = [...events].sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+  const grouped = sorted.reduce((acc, event) => {
+    const fightId = event.fight_id ?? "unknown";
+    const pull = event.pull ?? "?";
+    const key = `${fightId}-${pull}`;
+    if (!acc[key]) {
+      acc[key] = { fightName: event.fight_name, fightId: event.fight_id, pull, events: [] };
+    }
+    acc[key].events.push(event);
+    return acc;
+  }, {});
   return (
-    <ul className="space-y-1">
-      {sorted.map((event, index) => (
-        <li key={`${event.metric_id}-${event.player}-${event.timestamp}-${index}`} className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-emerald-300">{event.label || "Event"}</span>
-          <span className="text-slate-300">
-            Pull {event.pull ?? "?"} – {formatSeconds(event.offset_ms)} ({formatInt(Math.round(event.timestamp ?? 0))})
-          </span>
-          {event.ability_label ? <span className="text-slate-200">via {event.ability_label}</span> : null}
-          {event.fight_name ? (
-            <span className="text-slate-400">[{event.fight_name}{event.fight_id ? ` • Fight ${event.fight_id}` : ""}]</span>
-          ) : event.fight_id ? (
-            <span className="text-slate-400">[Fight {event.fight_id}]</span>
-          ) : null}
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-3">
+      {Object.entries(grouped).map(([key, group]) => {
+        const reference = group.events[0];
+        const pullLabel = `Pull ${group.pull}`;
+        const fightLabel = group.fightName
+          ? `[${group.fightName}${group.fightId ? ` - Fight ${group.fightId}` : ""}]`
+          : group.fightId
+          ? `[Fight ${group.fightId}]`
+          : "";
+        return (
+          <div key={key} className="rounded-lg border border-white/5 bg-white/5 px-4 py-3">
+            <p className="text-sm font-semibold text-slate-100">
+              {pullLabel} - {formatSeconds(reference.offset_ms)} ({formatInt(Math.round(reference.timestamp ?? 0))}) {fightLabel}
+            </p>
+            <ul className="mt-2 ml-5 list-disc space-y-1 text-slate-300">
+              {group.events
+                .slice()
+                .sort((a, b) => {
+                  const aIsDeath = (a.label || "").toLowerCase() === "death";
+                  const bIsDeath = (b.label || "").toLowerCase() === "death";
+                  if (aIsDeath && !bIsDeath) return -1;
+                  if (!aIsDeath && bIsDeath) return 1;
+                  return (a.timestamp ?? 0) - (b.timestamp ?? 0);
+                })
+                .map((event, idx) => {
+                  const label = (event.label || "").toLowerCase();
+                  const hasDescription = Boolean(event.description);
+                  const showTimestamp = label === "death" || (!hasDescription && label !== "death");
+                  return (
+                    <li key={`${key}-${idx}`}>
+                      <span className="font-semibold text-emerald-300">{event.label || "Event"}</span>{" "}
+                      {showTimestamp ? (
+                        <span className="text-slate-300">
+                          {formatSeconds(event.offset_ms)} ({formatInt(Math.round(event.timestamp ?? 0))})
+                        </span>
+                      ) : null}
+                      {label === "death" && event.ability_label ? (
+                        <>
+                          {" "}
+                          <span className="text-slate-200">via {event.ability_label}</span>
+                        </>
+                      ) : null}
+                      {!hasDescription && label !== "death" && event.ability_label ? (
+                        <>
+                          {" "}
+                          <span className="text-slate-200">via {event.ability_label}</span>
+                        </>
+                      ) : null}
+                      {hasDescription ? (
+                        <>
+                          {" "}
+                          <span className="text-slate-200">{event.description}</span>
+                        </>
+                      ) : null}
+                    </li>
+                  );
+                })}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -963,3 +1113,4 @@ const RoleBadge = ({ role, small }) => (
 const EmptyMessage = () => (
   <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">No events matched the filters.</div>
 );
+
