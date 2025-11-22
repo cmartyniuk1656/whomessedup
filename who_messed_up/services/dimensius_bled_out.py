@@ -18,6 +18,7 @@ from .common import (
     _resolve_token,
     _select_fights,
     compute_death_cutoffs,
+    compute_fight_duration_ms,
 )
 from .dimensius_deaths import (
     DimensiusDeathEntry,
@@ -97,6 +98,7 @@ def fetch_dimensius_bled_out_summary(
     pull_index_by_fight: Dict[int, int] = {fight.id: idx + 1 for idx, fight in enumerate(chosen)}
 
     for fight in chosen:
+        pull_duration = compute_fight_duration_ms(fight)
         fight_consumables = consumable_heals.get(fight.id, {})
         cutoff = death_cutoffs.get(fight.id) if death_cutoffs else None
         for event in fetch_events(
@@ -141,6 +143,7 @@ def fetch_dimensius_bled_out_summary(
                     ability_id=int(ability_id) if ability_id is not None else None,
                     ability_label=ability_label,
                     label="Death",
+                    pull_duration_ms=pull_duration,
                 )
             )
             _append_consumable_summary_events(
@@ -150,6 +153,7 @@ def fetch_dimensius_bled_out_summary(
                 pull_index=pull_index_by_fight.get(fight.id, 0),
                 reference_timestamp=ts_val,
                 consumable_usage=player_consumables,
+                pull_duration_ms=pull_duration,
             )
 
     pull_count = len(chosen)
@@ -266,6 +270,7 @@ def _append_consumable_summary_events(
     pull_index: int,
     reference_timestamp: float,
     consumable_usage: Optional[Dict[str, List[float]]],
+    pull_duration_ms: Optional[float],
 ) -> None:
     usage = consumable_usage or {}
     fight_start = float(fight.start)
@@ -293,6 +298,7 @@ def _append_consumable_summary_events(
                         ability_label=None,
                         label=ability_name,
                         description=description,
+                        pull_duration_ms=pull_duration_ms,
                     )
                 )
         else:
@@ -308,6 +314,7 @@ def _append_consumable_summary_events(
                     ability_label=None,
                     label=ability_name,
                     description="Not used during this pull.",
+                    pull_duration_ms=pull_duration_ms,
                 )
             )
 

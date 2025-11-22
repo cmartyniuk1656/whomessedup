@@ -878,6 +878,7 @@ function App() {
                 phaseLabels={phaseLabels}
                 metricColumns={metricColumns}
                 playerEvents={playerEvents}
+                reportCode={result.report}
                 mobileViewMode={mobileViewMode}
                 onMobileViewModeChange={setMobileViewMode}
                 handleSort={handleSort}

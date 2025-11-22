@@ -22,6 +22,7 @@ from .common import (
     _players_from_details,
     _resolve_token,
     _select_fights,
+    compute_fight_duration_ms,
 )
 
 
@@ -41,6 +42,7 @@ class GhostEvent:
     pull_index: int
     timestamp: float
     offset_ms: float
+    pull_duration_ms: Optional[float] = None
 
 
 @dataclass
@@ -158,6 +160,7 @@ def fetch_ghost_summary(
                 death_cutoffs_by_fight[fight.id] = cutoff_ts
 
     for pull_index, fight in enumerate(chosen, start=1):
+        pull_duration = compute_fight_duration_ms(fight)
         seen_targets: Set[str] = set()
         last_counted_ts: Dict[str, int] = {}
         fight_death_cutoff = death_cutoffs_by_fight.get(fight.id)
@@ -235,6 +238,7 @@ def fetch_ghost_summary(
                     pull_index=pull_index,
                     timestamp=float(timestamp),
                     offset_ms=offset_ms,
+                    pull_duration_ms=pull_duration,
                 )
             )
 
