@@ -20,6 +20,7 @@ from .common import (
     _resolve_token,
     _select_fights,
     compute_death_cutoffs,
+    compute_fight_duration_ms,
 )
 
 OBLIVION_ID = 1249077
@@ -58,6 +59,7 @@ class DimensiusDeathEvent:
     ability_label: Optional[str]
     label: Optional[str] = None
     description: Optional[str] = None
+    pull_duration_ms: Optional[float] = None
 
 
 @dataclass
@@ -175,6 +177,7 @@ def fetch_dimensius_death_summary(
     oblivion_filter_mode = _normalize_oblivion_filter(oblivion_filter)
 
     for fight in chosen:
+        pull_duration = compute_fight_duration_ms(fight)
         cutoff = death_cutoffs.get(fight.id) if death_cutoffs else None
         for event in fetch_events(
             session,
@@ -226,6 +229,7 @@ def fetch_dimensius_death_summary(
                     ability_id=int(ability_id) if ability_id is not None else None,
                     ability_label=ability_label,
                     label="Death",
+                    pull_duration_ms=pull_duration,
                 )
             )
 

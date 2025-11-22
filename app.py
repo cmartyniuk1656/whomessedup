@@ -78,6 +78,7 @@ class GhostEventModel(BaseModel):
     pull: int
     timestamp: float
     offset_ms: float
+    pull_duration_ms: Optional[float] = None
 
 
 class HitSummaryResponse(BaseModel):
@@ -215,6 +216,7 @@ class GhostSummaryResponse(BaseModel):
                     pull=event.pull_index,
                     timestamp=event.timestamp,
                     offset_ms=event.offset_ms,
+                    pull_duration_ms=event.pull_duration_ms,
                 )
                 for event in summary.ghost_events
             ],
@@ -242,6 +244,7 @@ class TrackedEventModel(BaseModel):
     offset_ms: float
     metric_id: str
     label: Optional[str]
+    pull_duration_ms: Optional[float] = None
 
 
 class PhaseSummaryResponse(BaseModel):
@@ -300,6 +303,7 @@ class PhaseSummaryResponse(BaseModel):
                 pull=event.pull_index,
                 timestamp=event.timestamp,
                 offset_ms=event.offset_ms,
+                pull_duration_ms=event.pull_duration_ms,
             )
             for event in summary.ghost_events
         ]
@@ -314,6 +318,7 @@ class PhaseSummaryResponse(BaseModel):
                 offset_ms=event.offset_ms,
                 metric_id="ghost_miss",
                 label="Ghost miss",
+                pull_duration_ms=event.pull_duration_ms,
             )
             player_events_map.setdefault(event.player, []).append(tracked)
         ability_ids = {
@@ -433,6 +438,7 @@ class DimensiusPhaseOneResponse(BaseModel):
                     offset_ms=event.offset_ms,
                     metric_id=event.metric_id,
                     label=metric_label_lookup.get(event.metric_id),
+                    pull_duration_ms=event.pull_duration_ms,
                 )
                 for event in entry.events
             ]
@@ -471,6 +477,7 @@ class DimensiusPhaseOneResponse(BaseModel):
                     offset_ms=event.offset_ms,
                     metric_id=event.metric_id,
                     label=metric_label_lookup.get(event.metric_id),
+                    pull_duration_ms=event.pull_duration_ms,
                 )
                 for event in events
             ]
@@ -502,6 +509,7 @@ class DimensiusDeathEventModel(BaseModel):
     ability_label: Optional[str]
     label: Optional[str]
     description: Optional[str]
+    pull_duration_ms: Optional[float] = None
 
 
 class DimensiusDeathEntryModel(BaseModel):
@@ -551,6 +559,7 @@ class DimensiusDeathSummaryResponse(BaseModel):
                     ability_label=event.ability_label,
                     label=event.label,
                     description=event.description,
+                    pull_duration_ms=event.pull_duration_ms,
                 )
                 for event in entry.events
             ]
@@ -583,6 +592,7 @@ class DimensiusDeathSummaryResponse(BaseModel):
                     ability_label=event.ability_label,
                     label=event.label,
                     description=event.description,
+                    pull_duration_ms=event.pull_duration_ms,
                 )
                 for event in events
             ]

@@ -9,6 +9,7 @@ export function ResultsTable({
   phaseLabels,
   metricColumns = [],
   playerEvents = {},
+  reportCode,
   mobileViewMode,
   onMobileViewModeChange,
   renderSortIcon,
@@ -71,6 +72,7 @@ export function ResultsTable({
             playerEvents={playerEvents}
             expandedPlayers={expandedPlayers}
             onTogglePlayer={togglePlayerRow}
+            reportCode={reportCode}
             mobileViewMode={mobileViewMode}
             handleSort={handleSort}
             renderSortIcon={renderSortIcon}
@@ -100,6 +102,7 @@ export function ResultsTable({
             playerEvents={playerEvents}
             expandedPlayers={expandedPlayers}
             onTogglePlayer={togglePlayerRow}
+            reportCode={reportCode}
             mobileViewMode={mobileViewMode}
             handleSort={handleSort}
             renderSortIcon={renderSortIcon}
@@ -129,6 +132,7 @@ export function ResultsTable({
             playerEvents={playerEvents}
             expandedPlayers={expandedPlayers}
             onTogglePlayer={togglePlayerRow}
+            reportCode={reportCode}
             mobileViewMode={mobileViewMode}
             handleSort={handleSort}
             renderSortIcon={renderSortIcon}
@@ -426,6 +430,7 @@ function MetricTable({
   playerEvents = {},
   expandedPlayers = {},
   onTogglePlayer,
+  reportCode,
   mobileViewMode,
   handleSort,
   renderSortIcon,
@@ -482,7 +487,9 @@ function MetricTable({
                     ))}
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
                   </tr>
-                  {hasEvents ? <EventDetailsRow colSpan={totalColumns} events={events} isExpanded={isExpanded} /> : null}
+                  {hasEvents ? (
+                    <EventDetailsRow colSpan={totalColumns} events={events} isExpanded={isExpanded} reportCode={reportCode} />
+                  ) : null}
                 </Fragment>
               );
             })}
@@ -547,7 +554,7 @@ function MetricTable({
                     </button>
                     {expandedPlayers[row.player] ? (
                       <div className="mt-2 rounded-lg border border-slate-800/60 bg-slate-900/50 p-2">
-                        <EventList events={playerEvents[row.player]} />
+                        <EventList events={playerEvents[row.player]} reportCode={reportCode} />
                       </div>
                     ) : null}
                   </div>
@@ -595,7 +602,16 @@ function MetricTable({
   );
 }
 
-function DeathsTable({ rows, playerEvents = {}, expandedPlayers = {}, onTogglePlayer, mobileViewMode, handleSort, renderSortIcon }) {
+function DeathsTable({
+  rows,
+  playerEvents = {},
+  expandedPlayers = {},
+  onTogglePlayer,
+  reportCode,
+  mobileViewMode,
+  handleSort,
+  renderSortIcon,
+}) {
   return (
     <>
       <div className="hidden sm:block overflow-x-auto">
@@ -634,7 +650,9 @@ function DeathsTable({ rows, playerEvents = {}, expandedPlayers = {}, onTogglePl
                     <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.deaths ?? 0)}</td>
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.deathRate ?? 0, 3)}</td>
                   </tr>
-                  {hasEvents ? <EventDetailsRow colSpan={5} events={events} isExpanded={isExpanded} /> : null}
+                  {hasEvents ? (
+                    <EventDetailsRow colSpan={5} events={events} isExpanded={isExpanded} reportCode={reportCode} />
+                  ) : null}
                 </Fragment>
               );
             })}
@@ -687,7 +705,7 @@ function DeathsTable({ rows, playerEvents = {}, expandedPlayers = {}, onTogglePl
                     </button>
                     {expandedPlayers[row.player] ? (
                       <div className="mt-2 rounded-lg border border-slate-800/60 bg-slate-900/50 p-2">
-                        <EventList events={playerEvents[row.player]} />
+                        <EventList events={playerEvents[row.player]} reportCode={reportCode} />
                       </div>
                     ) : null}
                   </div>
@@ -733,6 +751,7 @@ function CombinedTable({
   playerEvents = {},
   expandedPlayers = {},
   onTogglePlayer,
+  reportCode,
   mobileViewMode,
   handleSort,
   renderSortIcon,
@@ -805,7 +824,9 @@ function CombinedTable({
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.ghostPerPull ?? 0, 3)}</td>
                     <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.fuckupRate ?? 0, 3)}</td>
                   </tr>
-                  {hasEvents ? <EventDetailsRow colSpan={8} events={events} isExpanded={isExpanded} /> : null}
+                  {hasEvents ? (
+                    <EventDetailsRow colSpan={8} events={events} isExpanded={isExpanded} reportCode={reportCode} />
+                  ) : null}
                 </Fragment>
               );
             })}
@@ -870,7 +891,7 @@ function CombinedTable({
                     </button>
                     {expandedPlayers[row.player] ? (
                       <div className="mt-2 rounded-lg border border-slate-800/60 bg-slate-900/50 p-2">
-                        <EventList events={playerEvents[row.player]} />
+                        <EventList events={playerEvents[row.player]} reportCode={reportCode} />
                       </div>
                     ) : null}
                   </div>
@@ -952,7 +973,7 @@ function CombinedTable({
   );
 }
 
-function EventDetailsRow({ colSpan, events, isExpanded }) {
+function EventDetailsRow({ colSpan, events, isExpanded, reportCode }) {
   if (!events || events.length === 0) {
     return null;
   }
@@ -976,7 +997,7 @@ function EventDetailsRow({ colSpan, events, isExpanded }) {
           aria-hidden={!isExpanded}
         >
           <div ref={contentRef} className="rounded-2xl bg-slate-950/60 px-6 py-4 text-sm text-slate-200 shadow-inner shadow-black/20">
-            <EventList events={events} />
+            <EventList events={events} reportCode={reportCode} />
           </div>
         </div>
       </td>
@@ -984,17 +1005,29 @@ function EventDetailsRow({ colSpan, events, isExpanded }) {
   );
 }
 
-function EventList({ events }) {
+function EventList({ events, reportCode }) {
   if (!events || events.length === 0) {
     return null;
   }
   const sorted = [...events].sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
   const grouped = sorted.reduce((acc, event) => {
-    const fightId = event.fight_id ?? "unknown";
+    const rawFightId = event?.fight_id;
+    let fightId = null;
+    if (typeof rawFightId === "number" && Number.isFinite(rawFightId)) {
+      fightId = rawFightId;
+    } else if (rawFightId != null) {
+      const parsed = Number(rawFightId);
+      if (Number.isFinite(parsed)) {
+        fightId = parsed;
+      }
+    }
     const pull = event.pull ?? "?";
-    const key = `${fightId}-${pull}`;
+    const key = `${fightId ?? "unknown"}-${pull}`;
+    const pullDurationMs = Number.isFinite(event.pull_duration_ms) ? event.pull_duration_ms : null;
     if (!acc[key]) {
-      acc[key] = { fightName: event.fight_name, fightId: event.fight_id, pull, events: [] };
+      acc[key] = { fightName: event.fight_name, fightId, pull, pullDurationMs, events: [] };
+    } else if (pullDurationMs != null && acc[key].pullDurationMs == null) {
+      acc[key].pullDurationMs = pullDurationMs;
     }
     acc[key].events.push(event);
     return acc;
@@ -1009,10 +1042,26 @@ function EventList({ events }) {
           : group.fightId
           ? `[Fight ${group.fightId}]`
           : "";
+        const pullUrl = buildPullUrl(reportCode, group.fightId);
+        const durationLabel = formatDuration(group.pullDurationMs);
+        const timestampLabel = `${formatSeconds(reference.offset_ms)} (${formatInt(Math.round(reference.timestamp ?? 0))})`;
         return (
           <div key={key} className="rounded-lg border border-white/5 bg-white/5 px-4 py-3">
             <p className="text-sm font-semibold text-slate-100">
-              {pullLabel} - {formatSeconds(reference.offset_ms)} ({formatInt(Math.round(reference.timestamp ?? 0))}) {fightLabel}
+              {pullUrl ? (
+                <a
+                  href={pullUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-emerald-300 underline decoration-dotted underline-offset-2 transition hover:text-emerald-100"
+                >
+                  {pullLabel}
+                </a>
+              ) : (
+                pullLabel
+              )}
+              {durationLabel ? <span className="ml-2 text-xs font-normal text-slate-400">• Duration {durationLabel}</span> : null} -{" "}
+              {timestampLabel} {fightLabel}
             </p>
             <ul className="mt-2 ml-5 list-disc space-y-1 text-slate-300">
               {group.events
@@ -1070,6 +1119,33 @@ const formatSeconds = (value) => {
     return "?";
   }
   return `${(value / 1000).toFixed(2)}s`;
+};
+
+const formatDuration = (value) => {
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  const totalSeconds = Math.floor(value / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const paddedSeconds = String(seconds).padStart(2, "0");
+  const paddedMinutes = String(minutes).padStart(2, "0");
+  if (hours > 0) {
+    return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+  }
+  return `${minutes}:${paddedSeconds}`;
+};
+
+const buildPullUrl = (reportCode, fightId) => {
+  if (!reportCode) {
+    return null;
+  }
+  const numericFightId = Number(fightId);
+  if (!Number.isFinite(numericFightId)) {
+    return null;
+  }
+  return `https://www.warcraftlogs.com/reports/${reportCode}#fight=${Math.round(numericFightId)}`;
 };
 
 const SortableHeader = ({ label, column, handleSort, renderSortIcon, align = "left", small }) => {

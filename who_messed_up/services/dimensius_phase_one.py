@@ -19,6 +19,7 @@ from .common import (
     _resolve_token,
     _select_fights,
     compute_death_cutoffs,
+    compute_fight_duration_ms,
 )
 
 REVERSE_GRAVITY_ID = 1243577
@@ -56,6 +57,7 @@ class TrackedEvent:
     timestamp: float
     offset_ms: float
     metric_id: str
+    pull_duration_ms: Optional[float] = None
 
 
 @dataclass
@@ -194,6 +196,7 @@ def fetch_dimensius_phase_one_summary(
             death_cutoffs=death_cutoffs,
         )
         for fight in chosen:
+            pull_duration = compute_fight_duration_ms(fight)
             fight_rg = rg_intervals.get(fight.id, {})
             fight_em = em_intervals.get(fight.id, {})
             players = set(fight_rg.keys()) | set(fight_em.keys())
@@ -212,6 +215,7 @@ def fetch_dimensius_phase_one_summary(
                                 timestamp=overlap_ts,
                                 offset_ms=offset,
                                 metric_id="rg_em_overlap",
+                                pull_duration_ms=pull_duration,
                             )
                         )
     else:
@@ -238,6 +242,7 @@ def fetch_dimensius_phase_one_summary(
     if include_early_mass:
         set_starts_by_fight = _identify_reverse_gravity_sets(rg_apply_events or {})
         for fight in chosen:
+            pull_duration = compute_fight_duration_ms(fight)
             set_starts = set_starts_by_fight.get(fight.id, [])
             if not set_starts:
                 continue
@@ -262,12 +267,14 @@ def fetch_dimensius_phase_one_summary(
                                     timestamp=start_ts,
                                     offset_ms=offset,
                                     metric_id="early_mass",
+                                    pull_duration_ms=pull_duration,
                                 )
                             )
                             break
 
     if include_dark_energy_hits:
         for fight in chosen:
+            pull_duration = compute_fight_duration_ms(fight)
             for event in fetch_events(
                 session,
                 bearer,
@@ -313,6 +320,7 @@ def fetch_dimensius_phase_one_summary(
                         timestamp=ts_val,
                         offset_ms=offset,
                         metric_id="dark_energy",
+                        pull_duration_ms=pull_duration,
                     )
                 )
 

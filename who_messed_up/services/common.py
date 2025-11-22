@@ -103,6 +103,17 @@ DEFAULT_PHASE_PROFILE = "nexus"
 LIVING_MASS_NAME = "Living Mass"
 DIMENSIUS_LIVING_MASS_FILTER = f'encounterPhase = 1 and target.name = "{LIVING_MASS_NAME}"'
 DIMENSIUS_INITIAL_ADD_IGNORE_COUNT = 6
+def compute_fight_duration_ms(fight: Fight) -> Optional[float]:
+    """Return the duration of a fight in milliseconds, or `None` when unknown."""
+    try:
+        start = float(fight.start)
+        end = float(fight.end)
+    except (TypeError, ValueError):
+        return None
+    duration = end - start
+    if duration < 0:
+        return None
+    return duration
 
 # Exceptions -----------------------------------------------------------------
 
@@ -413,3 +424,4 @@ def compute_death_cutoffs(
         if cutoff_ts is not None:
             cutoffs[fight.id] = cutoff_ts
     return cutoffs
+
