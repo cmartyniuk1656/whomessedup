@@ -10,6 +10,7 @@ export function ResultsTable({
   metricColumns = [],
   playerEvents = {},
   reportCode,
+  priorityTargets = [],
   mobileViewMode,
   onMobileViewModeChange,
   renderSortIcon,
@@ -46,7 +47,7 @@ export function ResultsTable({
       ) : mode === "add-damage" ? (
         <AddDamageTable rows={rows} handleSort={handleSort} renderSortIcon={renderSortIcon} />
       ) : mode === "priority-damage" ? (
-        <PriorityDamageTable rows={rows} handleSort={handleSort} renderSortIcon={renderSortIcon} />
+        <PriorityDamageTable rows={rows} targets={priorityTargets} handleSort={handleSort} renderSortIcon={renderSortIcon} />
       ) : mode === "dimensius-phase1" ? (
         <>
           {showMobileToggle ? (
@@ -342,7 +343,9 @@ function AddDamageTable({ rows, handleSort, renderSortIcon }) {
   );
 }
 
-function PriorityDamageTable({ rows, handleSort, renderSortIcon }) {
+function PriorityDamageTable({ rows, targets = [], handleSort, renderSortIcon }) {
+  const targetList = Array.isArray(targets) ? targets : [];
+  const columnCount = 5 + targetList.length * 2;
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-slate-800 text-sm">
@@ -365,6 +368,28 @@ function PriorityDamageTable({ rows, handleSort, renderSortIcon }) {
               renderSortIcon={renderSortIcon}
               align="right"
             />
+            {targetList.map((target) => (
+              <Fragment key={`priority-target-${target.target}`}>
+                <SortableHeader
+                  label={`${target.label} Total`}
+                  column={`priorityTargetTotal_${target.target}`}
+                  handleSort={handleSort}
+                  renderSortIcon={renderSortIcon}
+                  align="right"
+                />
+                <SortableHeader
+                  label={
+                    target.averaging_mode === "damage_pulls"
+                      ? `${target.label} Avg / Pull (damage pulls)`
+                      : `${target.label} Avg / Pull`
+                  }
+                  column={`priorityTargetAverage_${target.target}`}
+                  handleSort={handleSort}
+                  renderSortIcon={renderSortIcon}
+                  align="right"
+                />
+              </Fragment>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800 bg-slate-900/40 text-slate-100">
@@ -379,11 +404,20 @@ function PriorityDamageTable({ rows, handleSort, renderSortIcon }) {
               <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.pulls)}</td>
               <td className="px-4 py-3 text-right text-slate-200">{formatInt(row.priorityTotalDamage ?? 0)}</td>
               <td className="px-4 py-3 text-right text-slate-200">{formatFloat(row.priorityAverageDamage ?? 0, 3)}</td>
+              {targetList.map((target) => {
+                const breakdown = row.priorityTargetTotals?.[target.target];
+                return (
+                  <Fragment key={`priority-target-row-${row.player}-${target.target}`}>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatInt(breakdown?.total_damage ?? 0)}</td>
+                    <td className="px-4 py-3 text-right text-slate-200">{formatFloat(breakdown?.average_damage ?? 0, 3)}</td>
+                  </Fragment>
+                );
+              })}
             </tr>
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+              <td colSpan={columnCount} className="px-4 py-6 text-center text-slate-400">
                 No events matched the filters.
               </td>
             </tr>
@@ -415,6 +449,25 @@ function PriorityDamageTable({ rows, handleSort, renderSortIcon }) {
                   <span>Avg / Pull</span>
                   <span>{formatFloat(row.priorityAverageDamage ?? 0, 3)}</span>
                 </div>
+                {targetList.map((target) => {
+                  const breakdown = row.priorityTargetTotals?.[target.target];
+                  const avgLabel =
+                    target.averaging_mode === "damage_pulls"
+                      ? `${target.label} Avg / Pull (damage pulls)`
+                      : `${target.label} Avg / Pull`;
+                  return (
+                    <Fragment key={`priority-target-card-${row.player}-${target.target}`}>
+                      <div className="flex justify-between">
+                        <span>{target.label} Total</span>
+                        <span>{formatInt(breakdown?.total_damage ?? 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{avgLabel}</span>
+                        <span>{formatFloat(breakdown?.average_damage ?? 0, 3)}</span>
+                      </div>
+                    </Fragment>
+                  );
+                })}
               </dl>
             </div>
           ))

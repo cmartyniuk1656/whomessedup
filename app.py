@@ -726,6 +726,22 @@ class DimensiusAddDamageResponse(BaseModel):
             source_reports=summary.source_reports,
         )
 
+class TargetBreakdownModel(BaseModel):
+    target: str
+    label: str
+    total_damage: float
+    average_damage: float
+    pulls_with_damage: int
+
+
+class PriorityTargetSummaryModel(BaseModel):
+    target: str
+    label: str
+    averaging_mode: str
+    total_damage: float
+    avg_damage_per_pull: float
+
+
 class PriorityDamageEntryModel(BaseModel):
     player: str
     role: str
@@ -733,6 +749,7 @@ class PriorityDamageEntryModel(BaseModel):
     pulls: int
     total_damage: float
     average_damage: float
+    target_totals: Dict[str, TargetBreakdownModel]
 
 
 class DimensiusPriorityDamageResponse(BaseModel):
@@ -744,13 +761,14 @@ class DimensiusPriorityDamageResponse(BaseModel):
     player_classes: Dict[str, Optional[str]]
     player_roles: Dict[str, str]
     player_specs: Dict[str, Optional[str]]
+    targets: List[PriorityTargetSummaryModel]
 
     @classmethod
     def from_summary(cls, summary: DimensiusPriorityDamageSummary) -> "DimensiusPriorityDamageResponse":
         filters: Dict[str, Optional[str]] = {
             "fight_name": summary.fight_filter,
             "fight_ids": ",".join(str(fid) for fid in summary.fight_ids) if summary.fight_ids else None,
-            "target": summary.target_name,
+            "targets": ",".join(target.target for target in summary.targets) if summary.targets else None,
             "ignored_source": summary.ignored_source,
         }
         entries = [
@@ -761,6 +779,16 @@ class DimensiusPriorityDamageResponse(BaseModel):
                 pulls=row.pulls,
                 total_damage=row.total_damage,
                 average_damage=row.average_damage,
+                target_totals={
+                    key: TargetBreakdownModel(
+                        target=value.target,
+                        label=value.label,
+                        total_damage=value.total_damage,
+                        average_damage=value.average_damage,
+                        pulls_with_damage=value.pulls_with_damage,
+                    )
+                    for key, value in row.target_totals.items()
+                },
             )
             for row in summary.entries
         ]
@@ -777,6 +805,16 @@ class DimensiusPriorityDamageResponse(BaseModel):
             player_classes=summary.player_classes,
             player_roles=summary.player_roles,
             player_specs=summary.player_specs,
+            targets=[
+                PriorityTargetSummaryModel(
+                    target=target.target,
+                    label=target.label,
+                    averaging_mode=target.averaging_mode,
+                    total_damage=target.total_damage,
+                    avg_damage_per_pull=target.avg_damage_per_pull,
+                )
+                for target in summary.targets
+            ],
         )
 
 
@@ -940,6 +978,7 @@ def _execute_dimensius_priority_damage_job(payload: Dict[str, Any]) -> Dict[str,
         report_code=payload["report"],
         fight_name=payload.get("fight"),
         fight_ids=fight_ids,
+        targets=payload.get("targets"),
         token=payload.get("token"),
         client_id=credentials["client_id"],
         client_secret=credentials["client_secret"],
@@ -1369,6 +1408,10 @@ def get_dimensius_priority_damage(
     report: str = Query(..., description="Warcraft Logs report code."),
     fight: Optional[str] = Query(None, description="Substring match on fight name."),
     fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
+    target: Optional[List[str]] = Query(
+        None,
+        description="Include one or more priority targets (artoshion, pargoth, nullbinder, voidwardem).",
+    ),
     fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),
 ) -> DimensiusPriorityDamageResponse:
@@ -1378,6 +1421,7 @@ def get_dimensius_priority_damage(
         "report": primary_report,
         "fight": fight,
         "fight_ids": fight_ids_payload,
+        "targets": target or [],
     }
     if token:
         payload["token"] = token

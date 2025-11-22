@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple
+from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple, Set
 
 import requests
 
@@ -15,6 +15,7 @@ from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
     _infer_player_roles,
+    _players_from_details,
     _resolve_event_source_player,
     _resolve_token,
     _select_fights,
@@ -24,6 +25,27 @@ ARTOSHION_NAME = "Artoshion"
 SHOOTING_STAR_NAME = "Shooting Star"
 SHOOTING_STAR_ID = 1246948
 PHASE_FILTER = f'encounterPhase = 3 and target.name = "{ARTOSHION_NAME}"'
+AVERAGING_MODE_PARTICIPATION = "participation"
+AVERAGING_MODE_DAMAGE_PULLS = "damage_pulls"
+
+
+@dataclass(frozen=True)
+class PriorityTargetConfig:
+    slug: str
+    label: str
+    enemy_name: str
+    averaging_mode: str = AVERAGING_MODE_PARTICIPATION
+
+
+PRIORITY_TARGETS: Dict[str, PriorityTargetConfig] = {
+    "artoshion": PriorityTargetConfig(slug="artoshion", label="Artoshion", enemy_name=ARTOSHION_NAME),
+    "pargoth": PriorityTargetConfig(
+        slug="pargoth", label="Pargoth", enemy_name="Pargoth", averaging_mode=AVERAGING_MODE_DAMAGE_PULLS
+    ),
+    "nullbinder": PriorityTargetConfig(slug="nullbinder", label="Nullbinder", enemy_name="Nullbinder"),
+    "voidwardem": PriorityTargetConfig(slug="voidwardem", label="Voidwardem", enemy_name="Voidwardem"),
+}
+DEFAULT_TARGET_SLUGS = ("artoshion",)
 
 
 @dataclass
@@ -34,6 +56,7 @@ class PriorityDamageEntry:
     pulls: int
     total_damage: float
     average_damage: float
+    target_totals: Dict[str, "TargetDamageBreakdown"]
 
 
 @dataclass
@@ -48,8 +71,26 @@ class DimensiusPriorityDamageSummary:
     pull_count: int
     total_damage: float
     avg_damage_per_pull: float
-    target_name: str
     ignored_source: str
+    targets: List["PriorityTargetSummary"]
+
+
+@dataclass
+class TargetDamageBreakdown:
+    target: str
+    label: str
+    total_damage: float
+    average_damage: float
+    pulls_with_damage: int
+
+
+@dataclass
+class PriorityTargetSummary:
+    target: str
+    label: str
+    averaging_mode: str
+    total_damage: float
+    avg_damage_per_pull: float
 
 
 def fetch_dimensius_priority_damage_summary(
@@ -57,6 +98,7 @@ def fetch_dimensius_priority_damage_summary(
     report_code: str,
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
+    targets: Optional[Iterable[str]] = None,
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
@@ -74,11 +116,15 @@ def fetch_dimensius_priority_damage_summary(
     player_roles_global, player_specs_global = _infer_player_roles(aggregated_details)
 
     roles_by_fight: Dict[int, Dict[str, str]] = {}
+    participants_by_fight: Dict[int, Set[str]] = {}
     for fight in chosen:
         details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
         fight_roles, _ = _infer_player_roles(details)
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
+        participants = set(_players_from_details(details))
+        if participants:
+            participants_by_fight[fight.id] = participants
 
     player_classes: Dict[str, Optional[str]] = {}
     for actor_id, name in actor_names.items():
@@ -96,26 +142,79 @@ def fetch_dimensius_priority_damage_summary(
     damage_totals: DefaultDict[str, float] = defaultdict(float)
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     fights_with_phase = 0
+    per_target_totals: Dict[str, DefaultDict[str, float]] = {
+        slug: defaultdict(float) for slug in PRIORITY_TARGETS.keys()
+    }
+    per_target_damage_pulls: Dict[str, DefaultDict[str, int]] = {
+        slug: defaultdict(int) for slug in PRIORITY_TARGETS.keys()
+    }
+    target_summary_totals: DefaultDict[str, float] = defaultdict(float)
+
+    active_targets = _resolve_priority_targets(targets)
+    selected_slugs = [cfg.slug for cfg in active_targets]
 
     for fight in chosen:
-        damage_map, phase_start = _collect_phase_damage(
+        art_damage_map, phase_start = _collect_target_damage(
             session,
             bearer,
             report_code=report_code,
             fight=fight,
             actor_names=actor_names,
             actor_owners=actor_owners,
+            target_name=ARTOSHION_NAME,
+            track_phase_start=True,
         )
         if phase_start is None:
             continue
         fights_with_phase += 1
-        if not damage_map:
+        participants = participants_by_fight.get(fight.id, set())
+        if not participants:
+            participants = set(roles_by_fight.get(fight.id, {}).keys())
+        death_times = _collect_first_death_times(
+            session,
+            bearer,
+            report_code=report_code,
+            fight=fight,
+            actor_names=actor_names,
+        )
+        alive_players = _players_alive_at_phase_start(participants, death_times, phase_start)
+        if not alive_players:
             continue
-        for player, total in damage_map.items():
-            if total <= 0:
-                continue
+        for player in alive_players:
             pulls_by_player[player] += 1
-            damage_totals[player] += total
+
+        fight_damage_maps: Dict[str, Dict[str, float]] = {}
+        if "artoshion" in selected_slugs:
+            fight_damage_maps["artoshion"] = art_damage_map
+        for cfg in active_targets:
+            if cfg.slug == "artoshion":
+                continue
+            damage_map, _ = _collect_target_damage(
+                session,
+                bearer,
+                report_code=report_code,
+                fight=fight,
+                actor_names=actor_names,
+                actor_owners=actor_owners,
+                target_name=cfg.enemy_name,
+            )
+            fight_damage_maps[cfg.slug] = damage_map
+
+        for slug, damage_map in fight_damage_maps.items():
+            if not damage_map:
+                continue
+            for player, total in damage_map.items():
+                if total <= 0 or player not in alive_players:
+                    continue
+                per_target_totals[slug][player] += total
+                per_target_damage_pulls[slug][player] += 1
+                target_summary_totals[slug] += total
+
+        for player in alive_players:
+            combined = 0.0
+            for slug in selected_slugs:
+                combined += fight_damage_maps.get(slug, {}).get(player, 0.0)
+            damage_totals[player] += combined
 
     for player in pulls_by_player.keys():
         player_classes.setdefault(player, None)
@@ -136,6 +235,21 @@ def fetch_dimensius_priority_damage_summary(
             continue
         total_damage = damage_totals.get(player, 0.0)
         average_damage = total_damage / pulls if pulls else 0.0
+        target_breakdowns: Dict[str, TargetDamageBreakdown] = {}
+        for cfg in active_targets:
+            player_target_total = per_target_totals[cfg.slug].get(player, 0.0)
+            if cfg.averaging_mode == AVERAGING_MODE_DAMAGE_PULLS:
+                denom = per_target_damage_pulls[cfg.slug].get(player, 0)
+            else:
+                denom = pulls
+            average = player_target_total / denom if denom else 0.0
+            target_breakdowns[cfg.slug] = TargetDamageBreakdown(
+                target=cfg.slug,
+                label=cfg.label,
+                total_damage=player_target_total,
+                average_damage=average,
+                pulls_with_damage=per_target_damage_pulls[cfg.slug].get(player, 0),
+            )
         entries.append(
             PriorityDamageEntry(
                 player=player,
@@ -144,11 +258,25 @@ def fetch_dimensius_priority_damage_summary(
                 pulls=pulls,
                 total_damage=total_damage,
                 average_damage=average_damage,
+                target_totals=target_breakdowns,
             )
         )
 
     total_damage_amount = sum(entry.total_damage for entry in entries)
     avg_damage_per_pull = total_damage_amount / fights_with_phase if fights_with_phase else 0.0
+    target_summaries: List[PriorityTargetSummary] = []
+    for cfg in active_targets:
+        total = target_summary_totals.get(cfg.slug, 0.0)
+        avg = total / fights_with_phase if fights_with_phase else 0.0
+        target_summaries.append(
+            PriorityTargetSummary(
+                target=cfg.slug,
+                label=cfg.label,
+                averaging_mode=cfg.averaging_mode,
+                total_damage=total,
+                avg_damage_per_pull=avg,
+            )
+        )
 
     return DimensiusPriorityDamageSummary(
         report_code=report_code,
@@ -161,12 +289,12 @@ def fetch_dimensius_priority_damage_summary(
         pull_count=fights_with_phase,
         total_damage=total_damage_amount,
         avg_damage_per_pull=avg_damage_per_pull,
-        target_name=ARTOSHION_NAME,
         ignored_source=SHOOTING_STAR_NAME,
+        targets=target_summaries,
     )
 
 
-def _collect_phase_damage(
+def _collect_target_damage(
     session: requests.Session,
     bearer: str,
     *,
@@ -174,6 +302,8 @@ def _collect_phase_damage(
     fight: Fight,
     actor_names: Dict[int, str],
     actor_owners: Dict[int, Optional[int]],
+    target_name: str,
+    track_phase_start: bool = False,
 ) -> Tuple[Dict[str, float], Optional[float]]:
     damage_by_player: DefaultDict[str, float] = defaultdict(float)
     phase_start: Optional[float] = None
@@ -184,7 +314,7 @@ def _collect_phase_damage(
         data_type="DamageDone",
         start=fight.start,
         end=fight.end,
-        extra_filter=PHASE_FILTER,
+        extra_filter=f'encounterPhase = 3 and target.name = "{target_name}"',
         actor_names=actor_names,
     ):
         source_name, _ = _resolve_event_source_player(event, actor_names, actor_owners)
@@ -202,7 +332,7 @@ def _collect_phase_damage(
             ts_val = float(timestamp)
         except (TypeError, ValueError):
             ts_val = None
-        if ts_val is not None and (phase_start is None or ts_val < phase_start):
+        if track_phase_start and ts_val is not None and (phase_start is None or ts_val < phase_start):
             phase_start = ts_val
         damage_by_player[source_name] += amount
     return damage_by_player, phase_start
@@ -259,8 +389,74 @@ def _is_shooting_star_event(source_name: str, ability_name: Optional[str], abili
     return False
 
 
+def _collect_first_death_times(
+    session: requests.Session,
+    bearer: str,
+    *,
+    report_code: str,
+    fight: Fight,
+    actor_names: Dict[int, str],
+) -> Dict[str, float]:
+    first_death: Dict[str, float] = {}
+    for event in fetch_events(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Deaths",
+        start=fight.start,
+        end=fight.end,
+        actor_names=actor_names,
+    ):
+        timestamp = event.get("timestamp")
+        if timestamp is None:
+            continue
+        try:
+            ts_val = float(timestamp)
+        except (TypeError, ValueError):
+            continue
+        target_name = event.get("targetName")
+        if not target_name and isinstance(event.get("target"), dict):
+            target_name = event["target"].get("name")
+        if not target_name:
+            continue
+        existing = first_death.get(target_name)
+        if existing is None or ts_val < existing:
+            first_death[target_name] = ts_val
+    return first_death
+
+
+def _players_alive_at_phase_start(participants: Set[str], death_times: Dict[str, float], phase_start: float) -> Set[str]:
+    alive = set()
+    for player in participants:
+        death_time = death_times.get(player)
+        if death_time is None or death_time >= phase_start:
+            alive.add(player)
+    return alive
+
+
+def _resolve_priority_targets(values: Optional[Iterable[str]]) -> List[PriorityTargetConfig]:
+    normalized: List[PriorityTargetConfig] = []
+    seen: Set[str] = set()
+    if values:
+        for value in values:
+            if value is None:
+                continue
+            slug = str(value).strip().lower()
+            if slug in PRIORITY_TARGETS and slug not in seen:
+                normalized.append(PRIORITY_TARGETS[slug])
+                seen.add(slug)
+    if not normalized:
+        for slug in DEFAULT_TARGET_SLUGS:
+            cfg = PRIORITY_TARGETS.get(slug)
+            if cfg:
+                normalized.append(cfg)
+    return normalized
+
+
 __all__ = [
     "DimensiusPriorityDamageSummary",
     "PriorityDamageEntry",
+    "PriorityTargetSummary",
+    "TargetDamageBreakdown",
     "fetch_dimensius_priority_damage_summary",
 ]

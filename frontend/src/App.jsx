@@ -92,6 +92,7 @@ function App() {
   const metricColumns = result?.metrics ?? [];
   const metricTotals = result?.metric_totals ?? {};
   const playerEvents = result?.player_events ?? {};
+  const priorityTargets = Array.isArray(result?.targets) ? result.targets : [];
 
   const rows = useMemo(() => {
     if (!result) {
@@ -145,6 +146,7 @@ function App() {
           pulls: entry.pulls ?? result.pull_count ?? 0,
           priorityTotalDamage: entry.total_damage ?? 0,
           priorityAverageDamage: entry.average_damage ?? 0,
+          priorityTargetTotals: entry.target_totals ?? {},
           color,
         };
       });
@@ -335,6 +337,24 @@ function App() {
           }
           return a.player.localeCompare(b.player);
         }
+        if (key.startsWith("priorityTargetTotal_")) {
+          const slug = key.replace("priorityTargetTotal_", "");
+          const aVal = a.priorityTargetTotals?.[slug]?.total_damage ?? 0;
+          const bVal = b.priorityTargetTotals?.[slug]?.total_damage ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key.startsWith("priorityTargetAverage_")) {
+          const slug = key.replace("priorityTargetAverage_", "");
+          const aVal = a.priorityTargetTotals?.[slug]?.average_damage ?? 0;
+          const bVal = b.priorityTargetTotals?.[slug]?.average_damage ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
         return 0;
       });
       return arr;
@@ -447,6 +467,14 @@ function App() {
       { label: "Total priority damage", value: formatInt(totals.total_damage ?? 0) },
       { label: "Avg priority damage / Pull", value: formatFloat(totals.avg_damage_per_pull ?? 0, 3) },
     ];
+    priorityTargets.forEach((target) => {
+      summaryMetrics.push({ label: `${target.label} Total`, value: formatInt(target.total_damage ?? 0) });
+      const avgLabel =
+        target.averaging_mode === "damage_pulls"
+          ? `${target.label} Avg / Pull (damage pulls)`
+          : `${target.label} Avg / Pull`;
+      summaryMetrics.push({ label: avgLabel, value: formatFloat(target.avg_damage_per_pull ?? 0, 3) });
+    });
   } else if (currentTile?.mode === "dimensius-phase1") {
     summaryMetrics = [{ label: "Pulls counted", value: formatInt(pullCount) }];
     metricColumns.forEach((metric) => {
@@ -559,8 +587,20 @@ function App() {
       }
     }
   } else if (currentTile?.mode === "priority-damage") {
-    if (filters.target) {
-      filterTags.push(`Target: ${filters.target}`);
+    const rawTargets = filters.targets || filters.target;
+    if (rawTargets) {
+      const selected = Array.isArray(rawTargets) ? rawTargets : String(rawTargets).split(",");
+      const labelMap = priorityTargets.reduce((acc, target) => {
+        acc[target.target] = target.label;
+        return acc;
+      }, {});
+      const names = selected
+        .map((slug) => (slug == null ? "" : String(slug).trim()))
+        .filter((slug) => slug.length > 0)
+        .map((slug) => labelMap[slug] || slug);
+      if (names.length) {
+        filterTags.push(`Targets: ${names.join(", ")}`);
+      }
     }
     if (filters.ignored_source) {
       filterTags.push(`Ignoring ${filters.ignored_source}`);
@@ -581,7 +621,13 @@ function App() {
       }
       const defaultDirection =
         DEFAULT_SORT_DIRECTIONS[key] ||
-        (key.startsWith("total_phase_") || key.startsWith("avg_phase_") || key.startsWith("metric_total_") ? "desc" : "asc");
+        (key.startsWith("total_phase_") ||
+        key.startsWith("avg_phase_") ||
+        key.startsWith("metric_total_") ||
+        key.startsWith("priorityTargetTotal_") ||
+        key.startsWith("priorityTargetAverage_")
+          ? "desc"
+          : "asc");
       return { key, direction: defaultDirection };
     });
   };
@@ -879,6 +925,7 @@ function App() {
                 metricColumns={metricColumns}
                 playerEvents={playerEvents}
                 reportCode={result.report}
+                priorityTargets={priorityTargets}
                 mobileViewMode={mobileViewMode}
                 onMobileViewModeChange={setMobileViewMode}
                 handleSort={handleSort}

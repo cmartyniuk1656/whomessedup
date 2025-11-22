@@ -59,7 +59,16 @@ const buildCsvContent = (tile, data, tableRows, phases, labels, metrics = []) =>
   }
 
   if (tile.mode === "priority-damage") {
+    const targets = Array.isArray(data.targets) ? data.targets : [];
     const headers = ["Player", "Role", "Class", "Pulls", "Total Priority Damage", "Avg Priority Damage / Pull"];
+    targets.forEach((target) => {
+      headers.push(`${target.label} Total`);
+      const avgLabel =
+        target.averaging_mode === "damage_pulls"
+          ? `${target.label} Avg / Pull (damage pulls)`
+          : `${target.label} Avg / Pull`;
+      headers.push(avgLabel);
+    });
     const lines = [headers.map(escapeCsv).join(",")];
     tableRows.forEach((row) => {
       const className = row.className ?? data.player_classes?.[row.player] ?? "";
@@ -71,6 +80,11 @@ const buildCsvContent = (tile, data, tableRows, phases, labels, metrics = []) =>
         row.priorityTotalDamage ?? 0,
         row.priorityAverageDamage ?? 0,
       ];
+      targets.forEach((target) => {
+        const breakdown = row.priorityTargetTotals?.[target.target];
+        values.push(breakdown?.total_damage ?? 0);
+        values.push(breakdown?.average_damage ?? 0);
+      });
       lines.push(values.map(escapeCsv).join(","));
     });
     return `\ufeff${lines.join("\n")}`;

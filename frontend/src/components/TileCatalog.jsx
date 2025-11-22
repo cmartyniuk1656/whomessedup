@@ -14,6 +14,8 @@ export function TileCatalog({ tiles, loadingId, pendingJob, isBusy, onTileClick 
               ? "Add Damage Report"
               : tile.mode === "ghost"
               ? "Ghost Analysis"
+              : tile.mode === "priority-damage"
+              ? "Damage Report"
               : "Combined Failures";
           return (
             <button

@@ -385,12 +385,44 @@ export const TILES = [
     id: "dimensius-priority-damage",
     title: "Dimensius - Phase 2 Priority Damage",
     description:
-      "Track player damage into Artoshion during Dimensius phase two (encounter phase 3). Only players alive when the phase begins are counted.",
+      "Track player damage into Dimensius phase-two priority targets (Artoshion, Pargoth, Nullbinder, Voidwardem). Only players alive when Phase 2 begins are counted.",
     defaultFight: "Dimensius, the All-Devouring",
     endpoint: "/api/dimensius-priority-damage",
     mode: "priority-damage",
     defaultSort: { key: "priorityAverageDamage", direction: "desc" },
     configOptions: [
+      {
+        id: "dim_priority_target_art",
+        type: "checkbox",
+        label: "Include Artoshion",
+        default: true,
+        param: "target",
+        value: "artoshion",
+      },
+      {
+        id: "dim_priority_target_pargoth",
+        type: "checkbox",
+        label: "Include Pargoth",
+        default: false,
+        param: "target",
+        value: "pargoth",
+      },
+      {
+        id: "dim_priority_target_nullbinder",
+        type: "checkbox",
+        label: "Include Nullbinder",
+        default: false,
+        param: "target",
+        value: "nullbinder",
+      },
+      {
+        id: "dim_priority_target_voidwardem",
+        type: "checkbox",
+        label: "Include Voidwardem",
+        default: false,
+        param: "target",
+        value: "voidwardem",
+      },
       {
         id: "dim_priority_fresh_run",
         type: "checkbox",
@@ -400,8 +432,9 @@ export const TILES = [
       },
     ],
     footnotes: [
-      "Includes only pulls that reached Phase 2 and players who were alive at the start of that phase. Counts damage done to Artoshion.",
+      "Includes only pulls that reached Phase 2 and players who were alive at the start of that phase.",
       "Damage credited to Shooting Star is ignored.",
+      "Pargoth averages only include pulls where the player dealt damage to Pargoth.",
     ],
   },
   {
