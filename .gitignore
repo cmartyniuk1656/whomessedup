@@ -32,3 +32,5 @@ frontend/dist/
 Thumbs.db
 regression_snapshots/
 regression_snapshots_current/
+
+AGENTS.md
