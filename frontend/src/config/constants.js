@@ -385,7 +385,7 @@ export const TILES = [
     id: "dimensius-priority-damage",
     title: "Dimensius - Phase 2 Priority Damage",
     description:
-      "Track player damage into Dimensius phase-two priority targets (Artoshion, Pargoth, Nullbinder, Voidwardem). Only players alive when Phase 2 begins are counted.",
+      "Track player damage into Dimensius phase-two priority targets (Artoshion, Pargoth, Nullbinder, Voidwarden). Only players alive when Phase 2 begins are counted.",
     defaultFight: "Dimensius, the All-Devouring",
     endpoint: "/api/dimensius-priority-damage",
     mode: "priority-damage",
@@ -416,12 +416,12 @@ export const TILES = [
         value: "nullbinder",
       },
       {
-        id: "dim_priority_target_voidwardem",
+        id: "dim_priority_target_voidwarden",
         type: "checkbox",
-        label: "Include Voidwardem",
+        label: "Include Voidwarden",
         default: false,
         param: "target",
-        value: "voidwardem",
+        value: "voidwarden",
       },
       {
         id: "dim_priority_fresh_run",

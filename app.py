@@ -1410,7 +1410,7 @@ def get_dimensius_priority_damage(
     fight_id: Optional[List[int]] = Query(None, description="Restrict to one or more fight IDs."),
     target: Optional[List[str]] = Query(
         None,
-        description="Include one or more priority targets (artoshion, pargoth, nullbinder, voidwardem).",
+        description="Include one or more priority targets (artoshion, pargoth, nullbinder, voidwarden).",
     ),
     fresh: bool = Query(False, description="Skip cache and force a fresh report run."),
     token: Optional[str] = Query(None, description="Optional bearer token to override client credentials."),

@@ -43,7 +43,7 @@ PRIORITY_TARGETS: Dict[str, PriorityTargetConfig] = {
         slug="pargoth", label="Pargoth", enemy_name="Pargoth", averaging_mode=AVERAGING_MODE_DAMAGE_PULLS
     ),
     "nullbinder": PriorityTargetConfig(slug="nullbinder", label="Nullbinder", enemy_name="Nullbinder"),
-    "voidwardem": PriorityTargetConfig(slug="voidwardem", label="Voidwardem", enemy_name="Voidwardem"),
+    "voidwarden": PriorityTargetConfig(slug="voidwarden", label="Voidwarden", enemy_name="Voidwarden"),
 }
 DEFAULT_TARGET_SLUGS = ("artoshion",)
 
