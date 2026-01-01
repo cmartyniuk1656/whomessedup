@@ -51,6 +51,7 @@ class PhaseSummary:
     player_specs: Dict[str, Optional[str]]
     hit_ignore_after_deaths: Optional[int]
     hit_exclude_final_ms: Optional[float]
+    hit_ignore_zero_damage_hits: bool
     first_hit_only_hits: bool
     ghost_miss_mode: GhostMissMode
 
@@ -70,6 +71,7 @@ def fetch_phase_summary(
     hit_exclude_final_ms: Optional[float] = None,
     hit_ignore_after_deaths: Optional[int] = None,
     first_hit_only_hits: bool = True,
+    ignore_zero_damage_hits: bool = False,
     ghost_miss_mode: Any = DEFAULT_GHOST_MISS_MODE,
 ) -> PhaseSummary:
     fight_id_filter = [int(fid) for fid in fight_ids] if fight_ids else None
@@ -87,6 +89,7 @@ def fetch_phase_summary(
         exclude_final_ms=hit_exclude_final_ms,
         ignore_after_deaths=hit_ignore_after_deaths,
         first_hit_only=first_hit_only_hits,
+        ignore_zero_damage_hits=ignore_zero_damage_hits,
     )
     normalized_ghost_mode = normalize_ghost_miss_mode(ghost_miss_mode)
 
@@ -231,6 +234,7 @@ def fetch_phase_summary(
         player_specs=player_specs,
         hit_ignore_after_deaths=hit_ignore_after_deaths,
         hit_exclude_final_ms=hit_exclude_final_ms,
+        hit_ignore_zero_damage_hits=ignore_zero_damage_hits,
         first_hit_only_hits=first_hit_only_hits,
         ghost_miss_mode=normalized_ghost_mode,
     )
