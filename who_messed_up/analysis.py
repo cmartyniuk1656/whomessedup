@@ -249,6 +249,7 @@ def count_hits(
     only_ability_id: Optional[str] = None,
     only_source: Optional[str] = None,
     dedupe_ms: Optional[float] = None,
+    ignore_zero_damage_hits: bool = False,
 ) -> HitAggregate:
     hits_by_player: Counter = Counter()
     hits_by_player_ability: Dict[Tuple[str, str], int] = defaultdict(int)
@@ -280,6 +281,10 @@ def count_hits(
         if not is_hit(normalized):
             continue
 
+        damage_value = normalized.get("amount")
+        if ignore_zero_damage_hits and isinstance(damage_value, (int, float)) and damage_value <= 0:
+            continue
+
         target = normalized["target_name"] or "Unknown Target"
         ability = normalized["ability_name"] or "Unknown Ability"
 
@@ -305,7 +310,6 @@ def count_hits(
             if fight_key is not None:
                 hits_by_player_fight[(target, fight_key)] += 1
 
-        damage_value = normalized.get("amount")
         if isinstance(damage_value, (int, float)):
             damage_by_player[target] += float(damage_value)
         fight_id = normalized.get("fight_id")

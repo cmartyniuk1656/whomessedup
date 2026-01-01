@@ -331,6 +331,7 @@ class PhaseSummaryResponse(BaseModel):
             else None,
             "ignore_final_seconds": summary.hit_exclude_final_ms / 1000.0 if summary.hit_exclude_final_ms else None,
             "first_hit_only": summary.first_hit_only_hits,
+            "ignore_zero_damage_hits": summary.hit_ignore_zero_damage_hits,
             "ghost_miss_mode": summary.ghost_miss_mode,
         }
         if summary.ghost_miss_mode == "first_per_pull":
@@ -883,6 +884,7 @@ def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         hit_exclude_final_ms=payload.get("ignore_final_ms"),
         hit_ignore_after_deaths=payload.get("ignore_after_deaths"),
         first_hit_only_hits=payload.get("first_hit_only", True),
+        ignore_zero_damage_hits=payload.get("ignore_zero_damage_hits", False),
         ghost_miss_mode=ghost_mode_value,
     )
     return PhaseSummaryResponse.from_summary(summary).dict()
@@ -1109,6 +1111,9 @@ def get_nexus_phase1(
         None, description="Ignore hits that occur within the final N seconds of each pull."
     ),
     first_hit_only: bool = Query(True, description="Count only the first Besiege hit per pull."),
+    ignore_zero_damage_hits: bool = Query(
+        True, description="Ignore Besiege hits that deal 0 damage (immunity/absorb)."
+    ),
     ghost_miss_mode: GhostMissMode = Query(
         DEFAULT_GHOST_MISS_MODE,
         description="How to count ghost misses: per set (default), per pull, or all misses.",
@@ -1140,6 +1145,7 @@ def get_nexus_phase1(
         "ignore_final_ms": final_ms,
         "hit_dedupe_ms": 1500.0,
         "first_hit_only": first_hit_only,
+        "ignore_zero_damage_hits": ignore_zero_damage_hits,
         "ghost_miss_mode": normalized_ghost_mode,
     }
     if token:

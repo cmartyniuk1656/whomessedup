@@ -84,6 +84,13 @@ export const TILES = [
         param: "first_hit_only",
       },
       {
+        id: "ignore_zero_damage_hits",
+        type: "checkbox",
+        label: "Ignore immuned besiege hits",
+        default: true,
+        param: "ignore_zero_damage_hits",
+      },
+      {
         id: "ghost_miss_mode",
         type: "select",
         label: "How should ghost misses be counted?",

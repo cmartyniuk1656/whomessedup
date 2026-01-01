@@ -98,6 +98,7 @@ def fetch_hit_summary(
     exclude_final_ms: Optional[float] = None,
     ignore_after_deaths: Optional[int] = None,
     first_hit_only: bool = True,
+    ignore_zero_damage_hits: bool = False,
 ) -> HitSummary:
     load_env()
 
@@ -206,6 +207,7 @@ def fetch_hit_summary(
         only_ability_id=str(ability_id) if ability_id is not None else None,
         only_source=source,
         dedupe_ms=dedupe_ms,
+        ignore_zero_damage_hits=ignore_zero_damage_hits,
     )
 
     name_to_class: Dict[str, Optional[str]] = {}
