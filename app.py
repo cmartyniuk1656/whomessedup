@@ -15,11 +15,29 @@ from pydantic import BaseModel
 from who_messed_up import load_env
 from who_messed_up.api import Fight
 from who_messed_up.jobs import job_manager
+from who_messed_up.services.report_registry import (
+    JOB_V2_DIMENSIUS_ADD_DAMAGE,
+    JOB_V2_DIMENSIUS_DEATHS,
+    JOB_V2_DIMENSIUS_PRIORITY_DAMAGE,
+    JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
+    build_report_job_request,
+    get_registered_report,
+    list_report_definitions,
+)
+from who_messed_up.services.view_models import ReportDefinitionsResponseModel, RunReportRequestModel
+from who_messed_up.services.view_models.common import ReportPageModel
+from who_messed_up.services.view_models.dimensius_add_damage import build_dimensius_add_damage_report_page
+from who_messed_up.services.view_models.dimensius_deaths import build_dimensius_deaths_report_page
+from who_messed_up.services.view_models.dimensius_priority_damage import build_dimensius_priority_damage_report_page
+from who_messed_up.services.view_models.imperator_averzian_damage import (
+    build_imperator_averzian_damage_report_page,
+)
 from who_messed_up.service import (
     AddDamageSummary,
     DimensiusPhaseOneSummary,
     DimensiusPriorityDamageSummary,
     DimensiusDeathSummary,
+    EncounterTargetDamageSummary,
     FightSelectionError,
     GhostSummary,
     HitSummary,
@@ -39,6 +57,7 @@ from who_messed_up.service import (
     fetch_dimensius_add_damage_summary,
     fetch_phase_damage_summary,
     fetch_phase_summary,
+    fetch_imperator_averzian_damage_summary,
 )
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
@@ -864,6 +883,71 @@ JOB_DIMENSIUS_PRIORITY_DAMAGE = "dimensius_priority_damage"
 JOB_DIMENSIUS_BLED_OUT = "dimensius_bled_out"
 
 
+def _fetch_dimensius_add_damage_summary_from_payload(payload: Dict[str, Any]) -> AddDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_dimensius_add_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+        extra_report_codes=payload.get("extra_reports"),
+        ignore_first_add_set=payload.get("ignore_first_add_set"),
+    )
+
+
+def _fetch_dimensius_deaths_summary_from_payload(payload: Dict[str, Any]) -> DimensiusDeathSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_dimensius_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        oblivion_filter=payload.get("oblivion_filter"),
+    )
+
+
+def _fetch_dimensius_priority_damage_summary_from_payload(payload: Dict[str, Any]) -> DimensiusPriorityDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_dimensius_priority_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_imperator_averzian_damage_summary_from_payload(
+    payload: Dict[str, Any]
+) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_imperator_averzian_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -908,19 +992,40 @@ def _execute_phase_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _execute_dimensius_add_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
-    credentials = _client_credentials()
-    fight_ids = payload.get("fight_ids") or None
-    summary = fetch_dimensius_add_damage_summary(
-        report_code=payload["report"],
-        fight_name=payload.get("fight"),
-        fight_ids=fight_ids,
-        token=payload.get("token"),
-        client_id=credentials["client_id"],
-        client_secret=credentials["client_secret"],
-        extra_report_codes=payload.get("extra_reports"),
-        ignore_first_add_set=payload.get("ignore_first_add_set"),
-    )
+    summary = _fetch_dimensius_add_damage_summary_from_payload(payload)
     return DimensiusAddDamageResponse.from_summary(summary).dict()
+
+
+def _execute_v2_dimensius_add_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_dimensius_add_damage_summary_from_payload(payload)
+    page = build_dimensius_add_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_dimensius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_dimensius_deaths_summary_from_payload(payload)
+    page = build_dimensius_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_dimensius_priority_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_dimensius_priority_damage_summary_from_payload(payload)
+    page = build_dimensius_priority_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_imperator_averzian_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_imperator_averzian_damage_summary_from_payload(payload)
+    page = build_imperator_averzian_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
 
 
 def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -943,18 +1048,7 @@ def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _execute_dimensius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
-    credentials = _client_credentials()
-    fight_ids = payload.get("fight_ids") or None
-    summary = fetch_dimensius_death_summary(
-        report_code=payload["report"],
-        fight_name=payload.get("fight"),
-        fight_ids=fight_ids,
-        token=payload.get("token"),
-        client_id=credentials["client_id"],
-        client_secret=credentials["client_secret"],
-        ignore_after_deaths=payload.get("ignore_after_deaths"),
-        oblivion_filter=payload.get("oblivion_filter"),
-    )
+    summary = _fetch_dimensius_deaths_summary_from_payload(payload)
     return DimensiusDeathSummaryResponse.from_summary(summary).dict()
 
 
@@ -974,17 +1068,7 @@ def _execute_dimensius_bled_out_job(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _execute_dimensius_priority_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
-    credentials = _client_credentials()
-    fight_ids = payload.get("fight_ids") or None
-    summary = fetch_dimensius_priority_damage_summary(
-        report_code=payload["report"],
-        fight_name=payload.get("fight"),
-        fight_ids=fight_ids,
-        targets=payload.get("targets"),
-        token=payload.get("token"),
-        client_id=credentials["client_id"],
-        client_secret=credentials["client_secret"],
-    )
+    summary = _fetch_dimensius_priority_damage_summary_from_payload(payload)
     return DimensiusPriorityDamageResponse.from_summary(summary).dict()
 
 
@@ -995,6 +1079,10 @@ job_manager.register_handler(JOB_DIMENSIUS_PHASE1, _execute_dimensius_phase1_job
 job_manager.register_handler(JOB_DIMENSIUS_DEATHS, _execute_dimensius_deaths_job)
 job_manager.register_handler(JOB_DIMENSIUS_BLED_OUT, _execute_dimensius_bled_out_job)
 job_manager.register_handler(JOB_DIMENSIUS_PRIORITY_DAMAGE, _execute_dimensius_priority_damage_job)
+job_manager.register_handler(JOB_V2_DIMENSIUS_ADD_DAMAGE, _execute_v2_dimensius_add_damage_job)
+job_manager.register_handler(JOB_V2_DIMENSIUS_DEATHS, _execute_v2_dimensius_deaths_job)
+job_manager.register_handler(JOB_V2_DIMENSIUS_PRIORITY_DAMAGE, _execute_v2_dimensius_priority_damage_job)
+job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DAMAGE, _execute_v2_imperator_averzian_damage_job)
 
 
 @app.get("/health")
@@ -1008,6 +1096,37 @@ def get_job_status(job_id: str) -> JobStatusModel:
     if snapshot is None:
         raise HTTPException(status_code=404, detail="Job not found.")
     return JobStatusModel.parse_obj(snapshot)
+
+
+@app.get("/api/v2/report-definitions", response_model=ReportDefinitionsResponseModel)
+def get_v2_report_definitions() -> ReportDefinitionsResponseModel:
+    return ReportDefinitionsResponseModel(reports=list_report_definitions())
+
+
+@app.post("/api/v2/reports/{report_id}/jobs")
+def create_v2_report_job(report_id: str, request: RunReportRequestModel):
+    try:
+        get_registered_report(report_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=exc.args[0]) from exc
+
+    try:
+        job_type, payload, bust_cache = build_report_job_request(report_id, request.values)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    try:
+        job, _immediate = job_manager.enqueue(job_type, payload, bust_cache=bust_cache)
+    except KeyError as exc:
+        raise HTTPException(status_code=500, detail=exc.args[0]) from exc
+
+    if job.status == "completed":
+        return ReportPageModel.parse_obj(job.result)
+
+    snapshot = job_manager.snapshot(job.id)
+    if snapshot is None:
+        raise HTTPException(status_code=500, detail="Job tracking failed.")
+    return JSONResponse(status_code=202, content={"job": snapshot})
 
 
 @app.get("/api/hits", response_model=HitSummaryResponse)
