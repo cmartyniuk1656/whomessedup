@@ -54,6 +54,10 @@ Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into act
 - Use `npm run build` to ensure the SPA compiles before deploying.
 - CSV exports are generated client-side, so if you modify table columns, update the CSV builder in `frontend/src/App.jsx`.
 
+## Architecture Plans
+
+- See `docs/report-view-model-refactor.md` for the planned frontend/backend decoupling work, target model contract, and migration phases.
+
 ## Repository Layout
 
 ```text
