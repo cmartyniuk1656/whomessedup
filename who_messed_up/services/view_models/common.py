@@ -115,6 +115,36 @@ class DamageTableFilterConfigModel(ViewModelBase):
     target_columns: List[DamageTableColumnGroupModel] = Field(default_factory=list, alias="targetColumns")
 
 
+class SpecAnalysisMetricModel(ViewModelBase):
+    id: str
+    label: str
+
+
+class SpecAnalysisSortOptionModel(ViewModelBase):
+    id: str
+    label: str
+
+
+class SpecAnalysisSeriesModel(ViewModelBase):
+    id: str
+    class_name: Optional[str] = Field(None, alias="className")
+    spec_name: str = Field(..., alias="specName")
+    color_token: Optional[str] = Field(None, alias="colorToken")
+    player_count: int = Field(..., alias="playerCount")
+    values: Dict[str, float] = Field(default_factory=dict)
+
+
+class SpecAnalysisModel(ViewModelBase):
+    button_label: str = Field(..., alias="buttonLabel")
+    title: str
+    subtitle: Optional[str] = None
+    basis_label: Optional[str] = Field(None, alias="basisLabel")
+    default_sort: str = Field(..., alias="defaultSort")
+    sort_options: List[SpecAnalysisSortOptionModel] = Field(default_factory=list, alias="sortOptions")
+    metrics: List[SpecAnalysisMetricModel] = Field(default_factory=list)
+    series: List[SpecAnalysisSeriesModel] = Field(default_factory=list)
+
+
 class TableColumnModel(ViewModelBase):
     id: str
     label: str
@@ -181,6 +211,7 @@ class ReportPageModel(ViewModelBase):
     summary: List[SummaryMetricModel] = Field(default_factory=list)
     content: ReportContentModel
     footnotes: List[str] = Field(default_factory=list)
+    spec_analysis: Optional[SpecAnalysisModel] = Field(None, alias="specAnalysis")
 
 
 __all__ = [
@@ -199,6 +230,10 @@ __all__ = [
     "ScalarValue",
     "SortDirection",
     "SortModel",
+    "SpecAnalysisMetricModel",
+    "SpecAnalysisModel",
+    "SpecAnalysisSeriesModel",
+    "SpecAnalysisSortOptionModel",
     "SummaryMetricModel",
     "TableFilterKind",
     "TableFilterModel",

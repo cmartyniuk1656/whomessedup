@@ -102,7 +102,7 @@ def build_dimensius_priority_damage_report_page(summary: DimensiusPriorityDamage
             sortable=True,
             cellKind=CellKind.NUMBER,
             format=ValueFormat.DECIMAL,
-            precision=3,
+            precision=0,
         ),
     ]
 
@@ -125,7 +125,7 @@ def build_dimensius_priority_damage_report_page(summary: DimensiusPriorityDamage
                 sortable=True,
                 cellKind=CellKind.NUMBER,
                 format=ValueFormat.DECIMAL,
-                precision=3,
+                precision=0,
             )
         )
 
@@ -173,7 +173,7 @@ def build_dimensius_priority_damage_report_page(summary: DimensiusPriorityDamage
             label="Avg priority damage / Pull",
             value=summary.avg_damage_per_pull,
             format=ValueFormat.DECIMAL,
-            precision=3,
+            precision=0,
         ),
     ]
     for target in summary.targets:
@@ -191,7 +191,7 @@ def build_dimensius_priority_damage_report_page(summary: DimensiusPriorityDamage
                 label=_target_average_label(target),
                 value=target.avg_damage_per_pull,
                 format=ValueFormat.DECIMAL,
-                precision=3,
+                precision=0,
             )
         )
 

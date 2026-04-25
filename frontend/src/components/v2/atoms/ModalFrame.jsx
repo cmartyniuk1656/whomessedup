@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
-export function ModalFrame({ titleId, onClose, children }) {
+export function ModalFrame({ titleId, onClose, closeLabel = "Close dialog", children }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -26,7 +26,7 @@ export function ModalFrame({ titleId, onClose, children }) {
     <>
       <button
         type="button"
-        aria-label="Close configuration"
+        aria-label={closeLabel}
         className="fixed inset-0 z-50 bg-slate-950/72 backdrop-blur-md"
         onClick={onClose}
       />

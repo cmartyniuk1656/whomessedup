@@ -105,7 +105,7 @@ def build_dimensius_add_damage_report_page(summary: AddDamageSummary) -> ReportP
                 label="Avg add damage / Pull",
                 value=summary.avg_damage_per_pull,
                 format=ValueFormat.DECIMAL,
-                precision=3,
+                precision=0,
             ),
         ],
         content=ReportContentModel(
@@ -150,7 +150,7 @@ def build_dimensius_add_damage_report_page(summary: AddDamageSummary) -> ReportP
                         sortable=True,
                         cellKind=CellKind.NUMBER,
                         format=ValueFormat.DECIMAL,
-                        precision=3,
+                        precision=0,
                     ),
                 ],
                 rows=rows,

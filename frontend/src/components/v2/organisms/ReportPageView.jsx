@@ -1,16 +1,23 @@
+import { useEffect, useState } from "react";
 import { useDamageTableFilters } from "../../../hooks/useDamageTableFilters";
 import { useTableSorting } from "../../../hooks/useTableSorting";
 import { DamageTableFilters } from "./DamageTableFilters";
 import { ReportPageHeader } from "../molecules/ReportPageHeader";
 import { ReportSummaryGrid } from "./ReportSummaryGrid";
 import { ReportTable } from "./ReportTable";
+import { SpecAnalysisModal } from "./SpecAnalysisModal";
 
 export function ReportPageView({ page }) {
+  const [isSpecAnalysisOpen, setIsSpecAnalysisOpen] = useState(false);
   const baseTable = page?.content?.table;
   const { config, selectedTargets, selectedMetrics, toggleTarget, toggleMetric, filteredTable } =
     useDamageTableFilters(baseTable);
   const table = filteredTable;
   const { sortConfig, sortedRows, handleSort } = useTableSorting(table);
+
+  useEffect(() => {
+    setIsSpecAnalysisOpen(false);
+  }, [page?.reportId, page?.reportCode]);
 
   if (!page || !table) {
     return null;
@@ -26,7 +33,7 @@ export function ReportPageView({ page }) {
 
   return (
     <section className="space-y-7">
-      <ReportPageHeader page={displayPage} rows={sortedRows} />
+      <ReportPageHeader page={displayPage} rows={sortedRows} onOpenSpecAnalysis={() => setIsSpecAnalysisOpen(true)} />
       <ReportSummaryGrid metrics={page.summary} />
       <DamageTableFilters
         config={config}
@@ -51,6 +58,9 @@ export function ReportPageView({ page }) {
             </p>
           ))}
         </div>
+      ) : null}
+      {isSpecAnalysisOpen && page.specAnalysis ? (
+        <SpecAnalysisModal analysis={page.specAnalysis} onClose={() => setIsSpecAnalysisOpen(false)} />
       ) : null}
     </section>
   );

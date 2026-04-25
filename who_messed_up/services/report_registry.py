@@ -174,6 +174,14 @@ def _build_additional_reports_field() -> RequestFieldModel:
     )
 
 
+def _format_target_field_label(target: Any) -> str:
+    bucket = getattr(target, "bucket", None)
+    if bucket is None:
+        return f"Include {target.label}"
+    bucket_value = str(getattr(bucket, "value", bucket)).replace("_", " ").title()
+    return f"Include {target.label} ({bucket_value})"
+
+
 def _build_dimensius_add_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     report_code_raw = _coerce_text(values, "report_code", required=True)
     assert report_code_raw is not None
@@ -218,6 +226,8 @@ def _build_dimensius_priority_damage_payload(values: Dict[str, Any]) -> Tuple[Di
 
     fight_name = _coerce_text(values, "fight_name", default=REPORT_PRIORITY_DEFAULT_FIGHT)
     fresh_run = _coerce_bool(values, "fresh_run", default=False)
+    kill_only = _coerce_bool(values, "kill_only", default=False)
+    omit_dead_players = _coerce_bool(values, "omit_dead_players", default=False)
 
     targets: List[str] = []
     target_field_map = {
@@ -244,12 +254,16 @@ def _build_imperator_averzian_damage_payload(values: Dict[str, Any]) -> Tuple[Di
     extra_reports = report_codes[1:]
 
     fresh_run = _coerce_bool(values, "fresh_run", default=False)
+    kill_only = _coerce_bool(values, "kill_only", default=False)
+    omit_dead_players = _coerce_bool(values, "omit_dead_players", default=False)
 
     targets: List[str] = []
     target_field_map = {
         "include_imperator_averzian": "imperator_averzian",
         "include_abyssal_voidshaper": "abyssal_voidshaper",
         "include_abyssal_annihilator": "abyssal_annihilator",
+        "include_abyssal_malus": "abyssal_malus",
+        "include_voidmaw": "voidmaw",
     }
     for field_id, slug in target_field_map.items():
         if _coerce_bool(values, field_id, default=True):
@@ -263,6 +277,8 @@ def _build_imperator_averzian_damage_payload(values: Dict[str, Any]) -> Tuple[Di
         "fight": REPORT_IMPERATOR_DEFAULT_FIGHT,
         "extra_reports": extra_reports,
         "targets": targets,
+        "kill_only": kill_only,
+        "omit_dead_players": omit_dead_players,
     }
     return payload, fresh_run
 
@@ -447,20 +463,46 @@ _REPORTS: Dict[str, RegisteredReport] = {
                     RequestFieldModel(
                         id="include_imperator_averzian",
                         kind=RequestFieldKind.CHECKBOX,
-                        label=f"Include {IMPERATOR_AVERZIAN_TARGETS['imperator_averzian'].label}",
+                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["imperator_averzian"]),
                         defaultValue=True,
                     ),
                     RequestFieldModel(
                         id="include_abyssal_voidshaper",
                         kind=RequestFieldKind.CHECKBOX,
-                        label=f"Include {IMPERATOR_AVERZIAN_TARGETS['abyssal_voidshaper'].label}",
+                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["abyssal_voidshaper"]),
                         defaultValue=True,
                     ),
                     RequestFieldModel(
                         id="include_abyssal_annihilator",
                         kind=RequestFieldKind.CHECKBOX,
-                        label=f"Include {IMPERATOR_AVERZIAN_TARGETS['abyssal_annihilator'].label}",
+                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["abyssal_annihilator"]),
                         defaultValue=True,
+                    ),
+                    RequestFieldModel(
+                        id="include_abyssal_malus",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["abyssal_malus"]),
+                        defaultValue=True,
+                    ),
+                    RequestFieldModel(
+                        id="include_voidmaw",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["voidmaw"]),
+                        defaultValue=True,
+                    ),
+                    RequestFieldModel(
+                        id="kill_only",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Include only kill pulls",
+                        description="Restrict the report to pulls where Imperator Averzian was killed.",
+                        defaultValue=False,
+                    ),
+                    RequestFieldModel(
+                        id="omit_dead_players",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Omit data from players who died",
+                        description="Exclude a player's data from any pull where they died so that pull does not affect their averages.",
+                        defaultValue=False,
                     ),
                     RequestFieldModel(
                         id="fresh_run",

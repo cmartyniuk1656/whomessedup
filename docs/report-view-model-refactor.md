@@ -608,3 +608,4 @@ The following implementation choices are now fixed for this refactor:
 9. Expandable report events live on the row model as an optional `details` object, starting with grouped event data.
 10. The initial v2 frontend scope is responsive table rendering only; mobile cards mode can be revisited later.
 11. The first migration slice is `dimensius-add-damage`.
+12. Damage-report pages may emit an optional `specAnalysis` block for modal visualizations; the first consumer is `imperator-averzian-damage`, using average damage per player per counted pull across boss, priority, and pad buckets.

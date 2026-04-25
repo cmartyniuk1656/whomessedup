@@ -942,6 +942,8 @@ def _fetch_imperator_averzian_damage_summary_from_payload(
         difficulty=payload.get("difficulty"),
         targets=payload.get("targets"),
         extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
         token=payload.get("token"),
         client_id=credentials["client_id"],
         client_secret=credentials["client_secret"],

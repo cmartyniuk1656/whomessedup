@@ -9,11 +9,12 @@ from .target_damage import TargetDamageReportConfig, build_target_damage_report_
 REPORT_ID = "imperator-averzian-damage"
 REPORT_TITLE = "Imperator Averzian - Damage Report"
 REPORT_DESCRIPTION = (
-    "Track player damage into Imperator Averzian, Abyssal Voidshaper, and Voidbound Annihilator."
+    "Track player damage into Imperator Averzian, Abyssal Voidshaper, Voidbound Annihilator, Abyssal Malus, and Voidmaw."
 )
 REPORT_DEFAULT_FIGHT = "Imperator Averzian"
 REPORT_FOOTNOTES = [
     "Use the target toggles to include or exclude specific Imperator Averzian encounter enemies.",
+    "Kill-only scope restricts the report to successful pulls, and the dead-player filter removes a player's data from pulls where they died.",
     "Additional Warcraft Logs reports can be combined when the same encounter spans multiple log reports.",
 ]
 
@@ -30,6 +31,9 @@ REPORT_CONFIG = TargetDamageReportConfig(
     show_target_total_summaries=False,
     show_target_average_summaries=False,
     footnotes=tuple(REPORT_FOOTNOTES),
+    enable_spec_analysis=True,
+    spec_analysis_title="Imperator Averzian Spec Analysis",
+    spec_analysis_subtitle="Average damage per player per counted pull across boss, priority, and pad targets.",
 )
 
 
