@@ -99,10 +99,16 @@ PHASE_LABEL_PRESETS: Dict[str, Dict[str, str]] = {
     "dimensius": DIMENSIUS_PHASE_LABELS,
 }
 DEFAULT_PHASE_PROFILE = "nexus"
+REPORT_DIFFICULTY_IDS: Dict[str, int] = {
+    "heroic": 4,
+    "mythic": 5,
+}
 
 LIVING_MASS_NAME = "Living Mass"
 DIMENSIUS_LIVING_MASS_FILTER = f'encounterPhase = 1 and target.name = "{LIVING_MASS_NAME}"'
 DIMENSIUS_INITIAL_ADD_IGNORE_COUNT = 6
+
+
 def compute_fight_duration_ms(fight: Fight) -> Optional[float]:
     """Return the duration of a fight in milliseconds, or `None` when unknown."""
     try:
@@ -264,16 +270,43 @@ def _resolve_token(
     return fetched
 
 
+def _normalize_fight_difficulty(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError(f"Invalid fight difficulty: {value}")
+    if isinstance(value, (int, float)):
+        try:
+            normalized = int(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid fight difficulty: {value}") from exc
+        return normalized if normalized > 0 else None
+    text = str(value).strip().lower()
+    if not text:
+        return None
+    if text in REPORT_DIFFICULTY_IDS:
+        return REPORT_DIFFICULTY_IDS[text]
+    try:
+        normalized = int(text)
+    except ValueError as exc:
+        raise ValueError(f"Invalid fight difficulty: {value}") from exc
+    return normalized if normalized > 0 else None
+
+
 def _select_fights(
     fights: List[Fight],
     *,
     name_filter: Optional[str],
     fight_ids: Optional[Iterable[int]],
+    difficulty: Any = None,
 ) -> List[Fight]:
     chosen = filter_fights(fights, name_filter)
     if fight_ids:
         id_set = {int(fid) for fid in fight_ids}
         chosen = [fight for fight in chosen if fight.id in id_set]
+    normalized_difficulty = _normalize_fight_difficulty(difficulty)
+    if normalized_difficulty is not None:
+        chosen = [fight for fight in chosen if fight.difficulty == normalized_difficulty]
     if not chosen:
         raise FightSelectionError("No fights matched the supplied criteria.")
     return chosen

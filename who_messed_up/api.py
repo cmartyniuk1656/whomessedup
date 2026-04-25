@@ -25,6 +25,7 @@ query($code: String!) {
         startTime
         endTime
         kill
+        difficulty
       }
       masterData {
         actors {
@@ -86,6 +87,7 @@ class Fight:
     start: float
     end: float
     kill: bool
+    difficulty: Optional[int] = None
 
 
 @dataclass
@@ -175,6 +177,11 @@ def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List
     for raw in report.get("fights") or []:
         if raw.get("startTime") is None or raw.get("endTime") is None:
             continue
+        difficulty = raw.get("difficulty")
+        try:
+            difficulty_value = int(difficulty) if difficulty not in (None, "") else None
+        except (TypeError, ValueError):
+            difficulty_value = None
         fights.append(
             Fight(
                 id=int(raw["id"]),
@@ -182,6 +189,7 @@ def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List
                 start=float(raw["startTime"]),
                 end=float(raw["endTime"]),
                 kill=bool(raw.get("kill")),
+                difficulty=difficulty_value,
             )
         )
     actor_names, actor_classes, actor_owners = _build_actor_maps(report)

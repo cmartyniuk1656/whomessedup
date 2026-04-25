@@ -35,6 +35,7 @@ from .services.dimensius_deaths import (
     OBLIVION_FILTER_DEFAULT,
 )
 from .services.dimensius_bled_out import fetch_dimensius_bled_out_summary
+from .services.imperator_averzian_damage import fetch_imperator_averzian_damage_summary
 from .services.ghosts import (
     GhostEntry,
     GhostEvent,
@@ -49,6 +50,13 @@ from .services.phase_damage import (
     fetch_phase_damage_summary,
 )
 from .services.phases import PhasePlayerEntry, PhaseSummary, fetch_phase_summary
+from .services.target_damage import (
+    EncounterTargetConfig,
+    EncounterTargetDamageBreakdown,
+    EncounterTargetDamageEntry,
+    EncounterTargetDamageSummary,
+    EncounterTargetSummary,
+)
 
 __all__ = [
     "AddDamageEntry",
@@ -86,4 +94,10 @@ __all__ = [
     "DimensiusDeathEvent",
     "DimensiusDeathSummary",
     "fetch_dimensius_bled_out_summary",
+    "EncounterTargetConfig",
+    "EncounterTargetDamageBreakdown",
+    "EncounterTargetDamageEntry",
+    "EncounterTargetDamageSummary",
+    "EncounterTargetSummary",
+    "fetch_imperator_averzian_damage_summary",
 ]
