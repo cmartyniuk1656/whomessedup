@@ -60,6 +60,7 @@ def _fetch_dimensius_add_damage_single(
     report_code: str,
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
+    difficulty: Optional[str | int] = None,
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
@@ -72,7 +73,7 @@ def _fetch_dimensius_add_damage_single(
     session = requests.Session()
     bearer = _resolve_token(token, client_id, client_secret)
     fights, actor_names, actor_classes, actor_owners = fetch_fights(session, bearer, report_code)
-    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_id_filter)
+    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_id_filter, difficulty=difficulty)
     fight_signature = [(fight.name, bool(fight.kill), int(fight.end - fight.start)) for fight in chosen]
 
     fight_id_list = [fight.id for fight in chosen]
@@ -213,6 +214,7 @@ def fetch_dimensius_add_damage_summary(
     report_code: str,
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
+    difficulty: Optional[str | int] = None,
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
@@ -225,6 +227,7 @@ def fetch_dimensius_add_damage_summary(
         report_code=primary_code,
         fight_name=fight_name,
         fight_ids=fight_ids,
+        difficulty=difficulty,
         token=token,
         client_id=client_id,
         client_secret=client_secret,
@@ -253,6 +256,7 @@ def fetch_dimensius_add_damage_summary(
             report_code=code,
             fight_name=fight_name,
             fight_ids=fight_ids,
+            difficulty=difficulty,
             token=token,
             client_id=client_id,
             client_secret=client_secret,

@@ -1,0 +1,961 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  CLASS_COLORS,
+  DEFAULT_PLAYER_COLOR,
+} from "../../config/presentation";
+import { DEFAULT_SORT_DIRECTIONS, ROLE_PRIORITY, TILES } from "./config/constants";
+import { useTileRunner } from "./hooks/useTileRunner";
+import { useCsvExporter } from "./hooks/useCsvExporter";
+import { ReportControls } from "./components/ReportControls";
+import { TileCatalog } from "./components/TileCatalog";
+import { ConfigDrawer } from "./components/ConfigDrawer";
+import { ResultHeader } from "./components/ResultHeader";
+import { ResultsTable } from "./components/ResultsTable";
+import { formatFloat, formatInt } from "../../utils/numberFormat";
+import LiquidHero from "./components/ui/LiquidHero";
+import { isOptionEnabled } from "./utils/configOptions";
+
+function extractReportCode(input) {
+  if (!input) return "";
+  const trimmed = input.trim();
+  try {
+    const url = new URL(trimmed);
+    if (url.pathname.includes("/reports/")) {
+      const segments = url.pathname.split("/").filter(Boolean);
+      const idx = segments.indexOf("reports");
+      if (idx !== -1 && segments[idx + 1]) {
+        return segments[idx + 1];
+      }
+    }
+    return trimmed;
+  } catch (_err) {
+    return trimmed;
+  }
+}
+
+const getAdditionalReportsTag = (raw) => {
+  if (typeof raw !== "string") {
+    return null;
+  }
+  const list = raw
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+  if (!list.length) {
+    return null;
+  }
+  return list.length === 1 ? "Merged 1 additional report" : `Merged ${list.length} additional reports`;
+};
+
+export default function LegacyReportsPage({ onSwitchToReports }) {
+  const [reportInput, setReportInput] = useState("");
+  const [fightOverride, setFightOverride] = useState(TILES[0]?.defaultFight ?? "");
+  const [ignoreAfterDeaths, setIgnoreAfterDeaths] = useState("");
+  const [ignoreFinalSeconds, setIgnoreFinalSeconds] = useState("");
+  const [activeTile, setActiveTile] = useState(TILES[0]?.id ?? null);
+  const [sortConfig, setSortConfig] = useState(TILES[0]?.defaultSort ?? { key: "role", direction: "asc" });
+  const [pendingTile, setPendingTile] = useState(null);
+  const [showConfig, setShowConfig] = useState(false);
+  const [configValues, setConfigValues] = useState({});
+  const [savedConfigs, setSavedConfigs] = useState({});
+  const [configError, setConfigError] = useState("");
+  const [mobileViewMode, setMobileViewMode] = useState("table");
+
+  const { result, error, setError, loadingId, pendingJob, runTile: runTileRequest } = useTileRunner();
+  const { downloadCsv } = useCsvExporter(setError);
+
+  const currentTile = useMemo(() => TILES.find((tile) => tile.id === activeTile) ?? TILES[0], [activeTile]);
+  const isBusy = Boolean(loadingId) || Boolean(pendingJob);
+
+  useEffect(() => {
+    if (!result?.ghost_events?.length) {
+      return;
+    }
+    const label = `[Ghost Debug] ${result.report ?? "report"} - ${result.ghost_events.length} events`;
+    console.groupCollapsed(label);
+    result.ghost_events.forEach((event) => {
+      const offsetSeconds = Number.isFinite(event.offset_ms) ? event.offset_ms / 1000 : null;
+      console.log(
+        `Pull ${event.pull}: ${event.player} at ${offsetSeconds !== null ? offsetSeconds.toFixed(2) : "?"}s (ts ${event.timestamp})`
+      );
+    });
+    console.groupEnd();
+  }, [result]);
+
+  const phaseLabels = result?.phase_labels ?? {};
+  const phaseOrder = result?.phases ?? [];
+  const abilityIds = result?.ability_ids ?? {};
+  const filters = result?.filters ?? {};
+  const metricColumns = result?.metrics ?? [];
+  const metricTotals = result?.metric_totals ?? {};
+  const playerEvents = result?.player_events ?? {};
+  const priorityTargets = Array.isArray(result?.targets) ? result.targets : [];
+
+  const rows = useMemo(() => {
+    if (!result) {
+      return [];
+    }
+    if (currentTile?.mode === "phase-damage") {
+      return (result.entries ?? []).map((entry) => {
+        const className = result.player_classes?.[entry.player] ?? null;
+        const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+        const phaseTotals = {};
+        const phaseAverages = {};
+        (entry.metrics ?? []).forEach((metric) => {
+          phaseTotals[metric.phase_id] = metric.total_amount ?? 0;
+          phaseAverages[metric.phase_id] = metric.average_per_pull ?? 0;
+        });
+        return {
+          player: entry.player,
+          role: entry.role ?? "Unknown",
+          className,
+          pulls: entry.pulls ?? result.pull_count ?? 0,
+          phaseTotals,
+          phaseAverages,
+          combinedAverage: (entry.metrics ?? []).reduce((sum, metric) => sum + (metric.average_per_pull ?? 0), 0),
+          color,
+        };
+      });
+    }
+    if (currentTile?.mode === "add-damage") {
+      return (result.entries ?? []).map((entry) => {
+        const className = result.player_classes?.[entry.player] ?? null;
+        const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+        return {
+          player: entry.player,
+          role: entry.role ?? "Unknown",
+          className,
+          pulls: entry.pulls ?? result.pull_count ?? 0,
+          addTotalDamage: entry.total_damage ?? 0,
+          addAverageDamage: entry.average_damage ?? 0,
+          color,
+        };
+      });
+    }
+    if (currentTile?.mode === "priority-damage") {
+      return (result.entries ?? []).map((entry) => {
+        const className = result.player_classes?.[entry.player] ?? null;
+        const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+        return {
+          player: entry.player,
+          role: entry.role ?? "Unknown",
+          className,
+          pulls: entry.pulls ?? result.pull_count ?? 0,
+          priorityTotalDamage: entry.total_damage ?? 0,
+          priorityAverageDamage: entry.average_damage ?? 0,
+          priorityTargetTotals: entry.target_totals ?? {},
+          color,
+        };
+      });
+    }
+    if (currentTile?.mode === "dimensius-phase1") {
+      return (result.entries ?? []).map((entry) => {
+        const className = result.player_classes?.[entry.player] ?? null;
+        const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+        const metricTotalsMap = {};
+        Object.entries(entry.metrics ?? {}).forEach(([metricId, values]) => {
+          if (!values) {
+            return;
+          }
+          metricTotalsMap[metricId] = values.total ?? 0;
+        });
+        return {
+          player: entry.player,
+          role: entry.role ?? "Unknown",
+          className,
+          pulls: entry.pulls ?? result.pull_count ?? 0,
+          metricTotals: metricTotalsMap,
+          fuckupRate: entry.fuckup_rate ?? 0,
+          color,
+        };
+      });
+    }
+    if (currentTile?.mode === "dimensius-deaths") {
+      return (result.entries ?? []).map((entry) => {
+        const className = result.player_classes?.[entry.player] ?? null;
+        const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+        return {
+          player: entry.player,
+          role: entry.role ?? "Unknown",
+          className,
+          pulls: entry.pulls ?? result.pull_count ?? 0,
+          deaths: entry.deaths ?? 0,
+          deathRate: entry.death_rate ?? 0,
+          color,
+        };
+      });
+    }
+    return (result.entries ?? []).map((entry) => {
+      const className = result.player_classes?.[entry.player] ?? null;
+      const color = CLASS_COLORS[(className || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
+      return {
+        player: entry.player,
+        role: entry.role ?? "Unknown",
+        className,
+        pulls: entry.pulls ?? result.pull_count ?? 0,
+        besiegeHits: entry.besiege_hits ?? entry.hits ?? 0,
+        besiegePerPull: entry.besiege_per_pull ?? entry.hits_per_pull ?? 0,
+        ghostMisses: entry.ghost_misses ?? 0,
+        ghostPerPull: entry.ghost_per_pull ?? 0,
+        fuckupRate: entry.fuckup_rate ?? 0,
+        color,
+      };
+    });
+  }, [result, currentTile]);
+
+  const sortedRows = useMemo(() => {
+    const arr = [...rows];
+    const { key, direction } = sortConfig;
+    const dir = direction === "asc" ? 1 : -1;
+
+    if (currentTile?.mode === "phase-damage") {
+      arr.sort((a, b) => {
+        if (key === "role") {
+          const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+          const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+          if (aPriority !== bPriority) {
+            return (aPriority - bPriority) * dir;
+          }
+          const pullDiff = (b.pulls ?? 0) - (a.pulls ?? 0);
+          if (pullDiff !== 0) {
+            return dir === 1 ? pullDiff : -pullDiff;
+          }
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "player") {
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "pulls") {
+          if (a.pulls !== b.pulls) {
+            return (a.pulls - b.pulls) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "combinedAverage") {
+          if (a.combinedAverage !== b.combinedAverage) {
+            return (a.combinedAverage - b.combinedAverage) * dir;
+          }
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key.startsWith("total_phase_")) {
+          const phaseId = key.replace("total_phase_", "");
+          const aVal = a.phaseTotals?.[phaseId] ?? 0;
+          const bVal = b.phaseTotals?.[phaseId] ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key.startsWith("avg_phase_")) {
+          const phaseId = key.replace("avg_phase_", "");
+          const aVal = a.phaseAverages?.[phaseId] ?? 0;
+          const bVal = b.phaseAverages?.[phaseId] ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        return 0;
+      });
+      return arr;
+    }
+
+    if (currentTile?.mode === "add-damage") {
+      arr.sort((a, b) => {
+        if (key === "role") {
+          const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+          const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+          if (aPriority !== bPriority) {
+            return (aPriority - bPriority) * dir;
+          }
+          const totalDiff = (b.addTotalDamage ?? 0) - (a.addTotalDamage ?? 0);
+          if (totalDiff !== 0) {
+            return dir === 1 ? totalDiff : -totalDiff;
+          }
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "player") {
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "pulls") {
+          if (a.pulls !== b.pulls) {
+            return (a.pulls - b.pulls) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "addTotalDamage") {
+          if (a.addTotalDamage !== b.addTotalDamage) {
+            return (a.addTotalDamage - b.addTotalDamage) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "addAverageDamage") {
+          if (a.addAverageDamage !== b.addAverageDamage) {
+            return (a.addAverageDamage - b.addAverageDamage) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        return 0;
+      });
+      return arr;
+    }
+    if (currentTile?.mode === "priority-damage") {
+      arr.sort((a, b) => {
+        if (key === "role") {
+          const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+          const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+          if (aPriority !== bPriority) {
+            return (aPriority - bPriority) * dir;
+          }
+          const totalDiff = (b.priorityTotalDamage ?? 0) - (a.priorityTotalDamage ?? 0);
+          if (totalDiff !== 0) {
+            return dir === 1 ? totalDiff : -totalDiff;
+          }
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "player") {
+          return a.player.localeCompare(b.player) * dir;
+        }
+        if (key === "pulls") {
+          if (a.pulls !== b.pulls) {
+            return (a.pulls - b.pulls) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "priorityTotalDamage") {
+          if ((a.priorityTotalDamage ?? 0) !== (b.priorityTotalDamage ?? 0)) {
+            return ((a.priorityTotalDamage ?? 0) - (b.priorityTotalDamage ?? 0)) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key === "priorityAverageDamage") {
+          if ((a.priorityAverageDamage ?? 0) !== (b.priorityAverageDamage ?? 0)) {
+            return ((a.priorityAverageDamage ?? 0) - (b.priorityAverageDamage ?? 0)) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key.startsWith("priorityTargetTotal_")) {
+          const slug = key.replace("priorityTargetTotal_", "");
+          const aVal = a.priorityTargetTotals?.[slug]?.total_damage ?? 0;
+          const bVal = b.priorityTargetTotals?.[slug]?.total_damage ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        if (key.startsWith("priorityTargetAverage_")) {
+          const slug = key.replace("priorityTargetAverage_", "");
+          const aVal = a.priorityTargetTotals?.[slug]?.average_damage ?? 0;
+          const bVal = b.priorityTargetTotals?.[slug]?.average_damage ?? 0;
+          if (aVal !== bVal) {
+            return (aVal - bVal) * dir;
+          }
+          return a.player.localeCompare(b.player);
+        }
+        return 0;
+      });
+      return arr;
+    }
+
+    arr.sort((a, b) => {
+      if (key === "role") {
+        const aPriority = ROLE_PRIORITY[a.role] ?? ROLE_PRIORITY.Unknown;
+        const bPriority = ROLE_PRIORITY[b.role] ?? ROLE_PRIORITY.Unknown;
+        if (aPriority !== bPriority) {
+          return (aPriority - bPriority) * dir;
+        }
+        const rateDiff = (b.fuckupRate ?? 0) - (a.fuckupRate ?? 0);
+        if (rateDiff !== 0) {
+          return dir === 1 ? rateDiff : -rateDiff;
+        }
+        const pullDiff = (b.pulls ?? 0) - (a.pulls ?? 0);
+        if (pullDiff !== 0) {
+          return dir === 1 ? pullDiff : -pullDiff;
+        }
+        return a.player.localeCompare(b.player) * dir;
+      }
+      if (key === "player") {
+        return a.player.localeCompare(b.player) * dir;
+      }
+      if (key === "pulls") {
+        if (a.pulls !== b.pulls) {
+          return (a.pulls - b.pulls) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key.startsWith("metric_total_")) {
+        const metricId = key.replace("metric_total_", "");
+        const aVal = a.metricTotals?.[metricId] ?? 0;
+        const bVal = b.metricTotals?.[metricId] ?? 0;
+        if (aVal !== bVal) {
+          return (aVal - bVal) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "ghostMisses") {
+        if (a.ghostMisses !== b.ghostMisses) {
+          return (a.ghostMisses - b.ghostMisses) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "ghostPerPull") {
+        if (a.ghostPerPull !== b.ghostPerPull) {
+          return (a.ghostPerPull - b.ghostPerPull) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "besiegeHits") {
+        if (a.besiegeHits !== b.besiegeHits) {
+          return (a.besiegeHits - b.besiegeHits) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "besiegePerPull") {
+        if (a.besiegePerPull !== b.besiegePerPull) {
+          return (a.besiegePerPull - b.besiegePerPull) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "fuckupRate") {
+        if (a.fuckupRate !== b.fuckupRate) {
+          return (a.fuckupRate - b.fuckupRate) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "deaths") {
+        if ((a.deaths ?? 0) !== (b.deaths ?? 0)) {
+          return ((a.deaths ?? 0) - (b.deaths ?? 0)) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      if (key === "deathRate") {
+        if ((a.deathRate ?? 0) !== (b.deathRate ?? 0)) {
+          return ((a.deathRate ?? 0) - (b.deathRate ?? 0)) * dir;
+        }
+        return a.player.localeCompare(b.player);
+      }
+      return 0;
+    });
+
+    return arr;
+  }, [rows, sortConfig, currentTile]);
+
+  const pullCount = result?.pull_count ?? 0;
+  const totals = result?.totals ?? {};
+  const totalBesieges = totals.total_besieges ?? 0;
+  const totalGhosts = totals.total_ghosts ?? 0;
+  const avgBesiegePerPull = totals.avg_besieges_per_pull ?? 0;
+  const avgGhostPerPull = totals.avg_ghosts_per_pull ?? 0;
+  const combinedPerPull = totals.combined_per_pull ?? 0;
+  const hitFilters = result?.hit_filters ?? {};
+
+  let summaryMetrics = [];
+  if (currentTile?.mode === "phase-damage") {
+    summaryMetrics = [];
+  } else if (currentTile?.mode === "add-damage") {
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Combined add damage", value: formatInt(totals.total_damage ?? 0) },
+      { label: "Avg add damage / Pull", value: formatFloat(totals.avg_damage_per_pull ?? 0, 3) },
+    ];
+  } else if (currentTile?.mode === "priority-damage") {
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Total priority damage", value: formatInt(totals.total_damage ?? 0) },
+      { label: "Avg priority damage / Pull", value: formatFloat(totals.avg_damage_per_pull ?? 0, 3) },
+    ];
+    priorityTargets.forEach((target) => {
+      summaryMetrics.push({ label: `${target.label} Total`, value: formatInt(target.total_damage ?? 0) });
+      const avgLabel =
+        target.averaging_mode === "damage_pulls"
+          ? `${target.label} Avg / Pull (damage pulls)`
+          : `${target.label} Avg / Pull`;
+      summaryMetrics.push({ label: avgLabel, value: formatFloat(target.avg_damage_per_pull ?? 0, 3) });
+    });
+  } else if (currentTile?.mode === "dimensius-phase1") {
+    summaryMetrics = [{ label: "Pulls counted", value: formatInt(pullCount) }];
+    metricColumns.forEach((metric) => {
+      const metricSummary = metricTotals?.[metric.id];
+      if (!metricSummary) {
+        return;
+      }
+      summaryMetrics.push({ label: metric.label, value: formatInt(metricSummary.total ?? 0) });
+      summaryMetrics.push({
+        label: metric.per_pull_label || `${metric.label} / Pull`,
+        value: formatFloat(metricSummary.per_pull ?? 0, 3),
+      });
+    });
+    summaryMetrics.push({
+      label: "Fuck-up rate / Pull",
+      value: formatFloat(result?.totals?.combined_per_pull ?? result?.combined_per_pull ?? 0, 3),
+    });
+  } else if (currentTile?.mode === "dimensius-deaths") {
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Total deaths", value: formatInt(result?.totals?.total_deaths ?? 0) },
+      { label: "Avg deaths / Pull", value: formatFloat(result?.totals?.avg_deaths_per_pull ?? 0, 3) },
+    ];
+  } else {
+    summaryMetrics = [
+      { label: "Pulls counted", value: formatInt(pullCount) },
+      { label: "Total Besieges", value: formatInt(totalBesieges) },
+      { label: "Total Ghost Misses", value: formatInt(totalGhosts) },
+      { label: "Avg Besieges / Pull", value: formatFloat(avgBesiegePerPull, 3) },
+      { label: "Avg Ghosts / Pull", value: formatFloat(avgGhostPerPull, 3) },
+      { label: "Fuck-up rate / Pull", value: formatFloat(combinedPerPull, 3) },
+    ];
+  }
+
+  const filterTags = [];
+  if (currentTile?.mode === "phase-damage") {
+    if (hitFilters.ignore_after_deaths) {
+      filterTags.push(`Stop after ${formatInt(hitFilters.ignore_after_deaths)} deaths`);
+    }
+    if (hitFilters.ignore_final_seconds) {
+      filterTags.push(`Ignore final ${formatFloat(hitFilters.ignore_final_seconds, 1)}s`);
+    }
+    if (typeof hitFilters.first_hit_only === "boolean") {
+      filterTags.push(hitFilters.first_hit_only ? "First Besiege per pull" : "All Besiege hits");
+    }
+    const ghostMode = hitFilters.ghost_miss_mode;
+    if (ghostMode === "first_per_set") {
+      filterTags.push("First Ghost per set");
+    } else if (ghostMode === "first_per_pull") {
+      filterTags.push("First Ghost per pull");
+    } else if (ghostMode === "all") {
+      filterTags.push("All Ghost misses");
+    }
+    if (phaseOrder.length) {
+      filterTags.unshift(`Phases: ${phaseOrder.map((id) => phaseLabels[id] ?? id).join(", ")}`);
+    }
+    const additionalTag = getAdditionalReportsTag(filters.additional_reports);
+    if (additionalTag) {
+      filterTags.push(additionalTag);
+    }
+  } else if (currentTile?.mode === "add-damage") {
+    if (filters.ignore_first_add_set === "true") {
+      filterTags.push("Ignoring first Living Mass set");
+    }
+    const additionalTag = getAdditionalReportsTag(filters.additional_reports);
+    if (additionalTag) {
+      filterTags.push(additionalTag);
+    }
+  } else if (currentTile?.mode === "dimensius-phase1") {
+    if (filters.reverse_gravity_excess_mass === "true") {
+      filterTags.push("Reverse Gravity + Excess Mass overlap");
+    }
+    if (filters.early_mass_before_rg === "true") {
+      const windowSeconds = Number(filters.early_mass_window_seconds);
+      const seconds = !Number.isNaN(windowSeconds) && windowSeconds > 0 ? windowSeconds : 1;
+      filterTags.push(`Excess Mass < ${formatInt(seconds)}s before Reverse Gravity`);
+    }
+    if (filters.dark_energy_hits === "true") {
+      filterTags.push("Dark Energy hits");
+    }
+    if (filters.ignore_after_deaths) {
+      const deaths = Number(filters.ignore_after_deaths);
+      if (!Number.isNaN(deaths) && deaths > 0) {
+        filterTags.push(`Stop after ${formatInt(deaths)} deaths`);
+      }
+    }
+  } else if (currentTile?.mode === "dimensius-deaths") {
+    if (currentTile?.id === "dimensius-deaths") {
+      const oblivionFilter = filters.oblivion_filter;
+      const oblivionTagMap = {
+        exclude_without_recent: "Exclude Oblivion deaths preceeded by instances of Airborne, Fists of the Voidlord, or Devour",
+        exclude_all: "Exclude all Oblivion deaths",
+      };
+      if (oblivionFilter && oblivionTagMap[oblivionFilter]) {
+        filterTags.push(oblivionTagMap[oblivionFilter]);
+      }
+    }
+    if (filters.bled_out_filter === "no_consumable_heals") {
+      filterTags.push("No Invigorating Potion or Healthstone healing in pull");
+    }
+    if (filters.bled_out_mode === "lenient") {
+      filterTags.push("Lenient consumable filter");
+    } else if (filters.bled_out_mode === "no_forgiveness") {
+      filterTags.push("No Forgiveness filter");
+    }
+    if (filters.ignore_after_deaths) {
+      const deaths = Number(filters.ignore_after_deaths);
+      if (!Number.isNaN(deaths) && deaths > 0) {
+        filterTags.push(`Stop after ${formatInt(deaths)} deaths`);
+      }
+    }
+  } else if (currentTile?.mode === "priority-damage") {
+    const rawTargets = filters.targets || filters.target;
+    if (rawTargets) {
+      const selected = Array.isArray(rawTargets) ? rawTargets : String(rawTargets).split(",");
+      const labelMap = priorityTargets.reduce((acc, target) => {
+        acc[target.target] = target.label;
+        return acc;
+      }, {});
+      const names = selected
+        .map((slug) => (slug == null ? "" : String(slug).trim()))
+        .filter((slug) => slug.length > 0)
+        .map((slug) => labelMap[slug] || slug);
+      if (names.length) {
+        filterTags.push(`Targets: ${names.join(", ")}`);
+      }
+    }
+    if (filters.ignored_source) {
+      filterTags.push(`Ignoring ${filters.ignored_source}`);
+    }
+  } else {
+    if (hitFilters.ignore_after_deaths) {
+      filterTags.push(`Stop after ${formatInt(hitFilters.ignore_after_deaths)} deaths`);
+    }
+    if (hitFilters.ignore_final_seconds) {
+      filterTags.push(`Ignore final ${formatFloat(hitFilters.ignore_final_seconds, 1)}s`);
+    }
+  }
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      const defaultDirection =
+        DEFAULT_SORT_DIRECTIONS[key] ||
+        (key.startsWith("total_phase_") ||
+        key.startsWith("avg_phase_") ||
+        key.startsWith("metric_total_") ||
+        key.startsWith("priorityTargetTotal_") ||
+        key.startsWith("priorityTargetAverage_")
+          ? "desc"
+          : "asc");
+      return { key, direction: defaultDirection };
+    });
+  };
+
+  const renderSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return <span className="ml-2 text-slate-500">↕</span>;
+    }
+    return <span className="ml-2 text-emerald-300">{sortConfig.direction === "asc" ? "▲" : "▼"}</span>;
+  };
+
+  const runTile = (tile, overrides = {}) => {
+    if (!tile) return;
+    const code = extractReportCode(reportInput);
+    if (!code) {
+      setError("Enter a Warcraft Logs report URL or code first.");
+      return;
+    }
+
+    let effectiveFight = fightOverride;
+    if (tile.defaultFight) {
+      effectiveFight = tile.defaultFight;
+      if (fightOverride !== tile.defaultFight) {
+        setFightOverride(tile.defaultFight);
+      }
+    }
+
+    setActiveTile(tile.id);
+    setSortConfig(tile.defaultSort ?? { key: "role", direction: "asc" });
+
+    runTileRequest({
+      tile,
+      reportCode: code,
+      fightName: effectiveFight,
+      ignoreAfterDeaths,
+      ignoreFinalSeconds,
+      configOverrides: overrides,
+    });
+  };
+
+  const handleTileClick = (tile) => {
+    if (isBusy) return;
+    if (tile.configOptions?.length) {
+      const saved = savedConfigs[tile.id] ?? {};
+      const initial = {};
+      tile.configOptions.forEach((opt) => {
+        const optionType = opt.type ?? "checkbox";
+        const savedValue = saved[opt.id];
+        if (optionType === "select") {
+          if (typeof savedValue === "string") {
+            initial[opt.id] = savedValue;
+          } else if (typeof opt.default === "string") {
+            initial[opt.id] = opt.default;
+          } else if (Array.isArray(opt.options) && opt.options.length > 0) {
+            initial[opt.id] = String(opt.options[0].value);
+          } else {
+            initial[opt.id] = "";
+          }
+        } else if (optionType === "multi-text") {
+          if (Array.isArray(savedValue)) {
+            initial[opt.id] = savedValue.map((entry) => (entry == null ? "" : String(entry)));
+          } else if (Array.isArray(opt.default)) {
+            initial[opt.id] = opt.default.map((entry) => (entry == null ? "" : String(entry)));
+          } else {
+            initial[opt.id] = [typeof savedValue === "string" && savedValue.trim() ? savedValue : ""];
+          }
+        } else if (optionType === "number") {
+          if (typeof savedValue === "string" && savedValue.trim()) {
+            initial[opt.id] = savedValue;
+          } else if (typeof savedValue === "number") {
+            initial[opt.id] = String(savedValue);
+          } else if (typeof opt.default === "number") {
+            initial[opt.id] = String(opt.default);
+          } else if (typeof opt.default === "string" && opt.default.trim()) {
+            initial[opt.id] = opt.default;
+          } else {
+            initial[opt.id] = "";
+          }
+        } else {
+          if (typeof savedValue === "boolean") {
+            initial[opt.id] = savedValue;
+          } else if (typeof opt.default === "boolean") {
+            initial[opt.id] = opt.default;
+          } else {
+            initial[opt.id] = false;
+          }
+        }
+      });
+      setConfigValues(initial);
+      setPendingTile(tile);
+      setConfigError("");
+      setShowConfig(true);
+    } else {
+      runTile(tile);
+    }
+  };
+
+  const handleConfigOptionChange = (id, value) => {
+    setConfigError("");
+    setConfigValues((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleMultiTextChange = (id, index, value) => {
+    setConfigError("");
+    setConfigValues((prev) => {
+      const current = Array.isArray(prev[id]) ? [...prev[id]] : [];
+      while (current.length <= index) {
+        current.push("");
+      }
+      current[index] = value;
+      return { ...prev, [id]: current };
+    });
+  };
+
+  const handleMultiTextAdd = (id) => {
+    setConfigError("");
+    setConfigValues((prev) => {
+      const current = Array.isArray(prev[id]) ? [...prev[id]] : [""];
+      current.push("");
+      return { ...prev, [id]: current };
+    });
+  };
+
+  const handleMultiTextRemove = (id, index) => {
+    setConfigError("");
+    setConfigValues((prev) => {
+      let current = Array.isArray(prev[id]) ? [...prev[id]] : [""];
+      if (current.length <= 1) {
+        current = [""];
+      } else {
+        current.splice(index, 1);
+        if (!current.length) {
+          current = [""];
+        }
+      }
+      return { ...prev, [id]: current };
+    });
+  };
+
+  const handleConfigCancel = () => {
+    setShowConfig(false);
+    setPendingTile(null);
+    setConfigError("");
+  };
+
+  const validateConfigForTile = (tile, values) => {
+    if (!tile?.configOptions?.length) {
+      return "";
+    }
+    for (const opt of tile.configOptions) {
+      if (!opt.required) {
+        continue;
+      }
+      if (!isOptionEnabled(opt, values)) {
+        continue;
+      }
+      const optionType = opt.type ?? "checkbox";
+      const rawValue = values?.[opt.id];
+      if (optionType === "number") {
+        const normalized =
+          typeof rawValue === "number"
+            ? String(rawValue)
+            : typeof rawValue === "string"
+            ? rawValue.trim()
+            : "";
+        if (!normalized) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      } else if (optionType === "multi-text") {
+        const list = Array.isArray(rawValue) ? rawValue : [];
+        if (!list.some((entry) => String(entry ?? "").trim().length > 0)) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      } else if (optionType === "select") {
+        const normalized = typeof rawValue === "string" ? rawValue.trim() : "";
+        if (!normalized) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      } else {
+        if (!rawValue) {
+          return opt.requiredMessage || `${opt.label} is required.`;
+        }
+      }
+    }
+    return "";
+  };
+
+  const handleConfigConfirm = () => {
+    if (!pendingTile) return;
+    const validationMessage = validateConfigForTile(pendingTile, configValues);
+    if (validationMessage) {
+      setConfigError(validationMessage);
+      return;
+    }
+    setConfigError("");
+    const overrides = Object.entries(configValues).reduce((acc, [key, value]) => {
+      acc[key] = Array.isArray(value) ? value.map((entry) => (entry == null ? "" : String(entry))) : value;
+      return acc;
+    }, {});
+    setSavedConfigs((prev) => ({ ...prev, [pendingTile.id]: overrides }));
+    setShowConfig(false);
+    const tileToRun = pendingTile;
+    setPendingTile(null);
+    runTile(tileToRun, overrides);
+  };
+
+  const handleDownloadCsv = () => {
+    if (!result || !currentTile) {
+      return;
+    }
+    downloadCsv({
+      tile: currentTile,
+      result,
+      rows: sortedRows,
+      phases: phaseOrder,
+      labels: phaseLabels,
+      metrics: metricColumns,
+    });
+  };
+
+  return (
+    <div className="liquid-bg min-h-dvh text-content relative overflow-hidden" style={{ isolation: "isolate" }}>
+      <div aria-hidden className="liquid-glow liquid-glow--top -z-30" />
+      <div aria-hidden className="liquid-glow liquid-glow--bottom -z-30" />
+      <div aria-hidden className="liquid-blob liquid-blob--emerald -z-20 opacity-70" />
+      <div aria-hidden className="liquid-blob liquid-blob--cyan -z-20 opacity-65" />
+      <div aria-hidden className="liquid-blob liquid-blob--magenta -z-20 opacity-55" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 mix-blend-overlay opacity-25 [background-image:var(--noise)]" />
+      <div className="relative z-10">
+        <div className="mx-auto flex max-w-6xl justify-end px-6 pt-6">
+          <button
+            type="button"
+            onClick={onSwitchToReports}
+            className="rounded-lg border border-white/10 bg-slate-950/40 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:text-white"
+          >
+            Open new UI
+          </button>
+        </div>
+        <LiquidHero />
+        <ReportControls
+          reportInput={reportInput}
+          onReportInputChange={setReportInput}
+          fightOverride={fightOverride}
+          onFightOverrideChange={setFightOverride}
+          ignoreAfterDeaths={ignoreAfterDeaths}
+          onIgnoreAfterDeathsChange={setIgnoreAfterDeaths}
+          ignoreFinalSeconds={ignoreFinalSeconds}
+          onIgnoreFinalSecondsChange={setIgnoreFinalSeconds}
+          isBusy={isBusy}
+        />
+
+      <main className="mx-auto max-w-6xl px-6 pb-16">
+        <TileCatalog
+          tiles={TILES}
+          loadingId={loadingId}
+          pendingJob={pendingJob}
+          isBusy={isBusy}
+          onTileClick={handleTileClick}
+        />
+
+        <section className="mt-12">
+          {error && (
+            <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>
+          )}
+
+          {!error && loadingId && (
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-5 text-sm text-slate-300">
+              {pendingJob ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-emerald-300">
+                    <span className="h-2 w-2 animate-ping rounded-full bg-emerald-300" />
+                    {pendingJob.status === "running" ? "Report is running..." : `Waiting to start ${currentTile?.title || "analysis"}...`}
+                  </div>
+                  {typeof pendingJob.position === "number" ? (
+                    <div className="text-xs text-slate-400">
+                      {pendingJob.position === 0 ? "Currently executing." : `Position in queue: ${pendingJob.position}`}
+                    </div>
+                  ) : null}
+                  <div className="text-xs text-slate-500">Job ID: {pendingJob.id}</div>
+                </div>
+              ) : (
+                <>Running {currentTile?.title || "analysis"}...</>
+              )}
+            </div>
+          )}
+
+          {!error && !loadingId && result && (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-lg shadow-emerald-500/10">
+              <ResultHeader
+                title={result.tileTitle || currentTile?.title}
+                reportCode={result.report}
+                filters={filters}
+                filterTags={filterTags}
+                abilityIds={abilityIds}
+                onDownloadCsv={handleDownloadCsv}
+                disableDownload={isBusy}
+                summaryMetrics={summaryMetrics}
+              />
+              <ResultsTable
+                mode={currentTile?.mode}
+                rows={sortedRows}
+                phaseOrder={phaseOrder}
+                phaseLabels={phaseLabels}
+                metricColumns={metricColumns}
+                playerEvents={playerEvents}
+                reportCode={result.report}
+                priorityTargets={priorityTargets}
+                mobileViewMode={mobileViewMode}
+                onMobileViewModeChange={setMobileViewMode}
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+            </div>
+          )}
+        </section>
+      </main>
+
+        <ConfigDrawer
+          visible={showConfig}
+          tile={pendingTile}
+          configValues={configValues}
+          validationError={configError}
+          onOptionChange={handleConfigOptionChange}
+          onMultiTextChange={handleMultiTextChange}
+          onMultiTextAdd={handleMultiTextAdd}
+          onMultiTextRemove={handleMultiTextRemove}
+          onCancel={handleConfigCancel}
+          onConfirm={handleConfigConfirm}
+          isBusy={isBusy}
+        />
+      </div>
+    </div>
+  );
+}

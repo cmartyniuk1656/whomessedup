@@ -1,4 +1,4 @@
-import GlassCard from "./ui/GlassCard";
+import GlassCard from "../../../components/ui/GlassCard";
 
 export function TileCatalog({ tiles, loadingId, pendingJob, isBusy, onTileClick }) {
   return (

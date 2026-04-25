@@ -98,6 +98,7 @@ def fetch_dimensius_priority_damage_summary(
     report_code: str,
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
+    difficulty: Optional[str | int] = None,
     targets: Optional[Iterable[str]] = None,
     token: Optional[str] = None,
     client_id: Optional[str] = None,
@@ -109,7 +110,7 @@ def fetch_dimensius_priority_damage_summary(
     bearer = _resolve_token(token, client_id, client_secret)
 
     fights, actor_names, actor_classes, actor_owners = fetch_fights(session, bearer, report_code)
-    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids)
+    chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids, difficulty=difficulty)
 
     fight_id_list = [fight.id for fight in chosen]
     aggregated_details = fetch_player_details(session, bearer, code=report_code, fight_ids=fight_id_list)

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { ROLE_BADGE_STYLES } from "../config/constants";
-import { formatFloat, formatInt } from "../utils/numberFormat";
+import { ROLE_BADGE_STYLES } from "../../../config/presentation";
+import { formatFloat, formatInt } from "../../../utils/numberFormat";
 
 export function ResultsTable({
   mode,
