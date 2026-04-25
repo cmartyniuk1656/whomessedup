@@ -1,5 +1,5 @@
 import { BOSS_OPTIONS } from "../config/constants";
-import GlassCard from "./ui/GlassCard";
+import GlassCard from "../../../components/ui/GlassCard";
 
 export function ReportControls({
   reportInput,
