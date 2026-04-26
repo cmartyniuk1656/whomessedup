@@ -4,6 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scrollbar-color: hsl(var(--primary) / 0.72) hsl(var(--surface) / 0.55);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.72) hsl(var(--surface) / 0.55);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: hsl(var(--surface) / 0.52);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, hsl(var(--primary-2) / 0.72), hsl(var(--primary) / 0.82));
+  border: 2px solid hsl(var(--surface) / 0.72);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, hsl(var(--primary-2) / 0.84), hsl(var(--primary) / 0.9));
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .liquid-bg {
   background-color: hsl(var(--bg));
   background-image: radial-gradient(120% 80% at 10% 0%, hsl(var(--primary-2)/0.35), transparent 60%),

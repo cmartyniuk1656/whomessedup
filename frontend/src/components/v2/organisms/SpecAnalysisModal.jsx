@@ -1,9 +1,9 @@
 import { Button } from "../atoms/Button";
 import { ModalFrame } from "../atoms/ModalFrame";
-import { SelectInput } from "../atoms/SelectInput";
 import { SurfacePanel } from "../atoms/SurfacePanel";
 import { useSpecAnalysisSorting } from "../../../hooks/useSpecAnalysisSorting";
 import { SpecAnalysisChart } from "../molecules/SpecAnalysisChart";
+import { ThemedSelectMenu } from "../molecules/ThemedSelectMenu";
 
 export function SpecAnalysisModal({ analysis, onClose }) {
   const { sortId, setSortId, sortedSeries } = useSpecAnalysisSorting(analysis);
@@ -30,21 +30,13 @@ export function SpecAnalysisModal({ analysis, onClose }) {
           </div>
 
           <div className="w-full max-w-[14rem]">
-            <label className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400" htmlFor="spec-analysis-sort">
-              Sort By
-            </label>
-            <SelectInput
+            <ThemedSelectMenu
               id="spec-analysis-sort"
-              className="mt-1"
+              label="Sort By"
               value={sortId}
-              onChange={(event) => setSortId(event.target.value)}
-            >
-              {(analysis.sortOptions ?? []).map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </SelectInput>
+              options={analysis.sortOptions ?? []}
+              onChange={setSortId}
+            />
           </div>
         </div>
 

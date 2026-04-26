@@ -1,6 +1,28 @@
 import GlassCard from "../../ui/GlassCard";
 import { PanelMessage } from "../atoms/PanelMessage";
 
+function formatReportDifficulty(difficulty) {
+  if (!difficulty) {
+    return null;
+  }
+  return `${difficulty.charAt(0).toUpperCase()}${difficulty.slice(1)}`;
+}
+
+function getReportKind(report) {
+  const title = String(report?.title ?? "").toLowerCase();
+  if (title.includes("death")) {
+    return "Death Report";
+  }
+  if (title.includes("damage")) {
+    return "Damage Report";
+  }
+  return "Report";
+}
+
+function getReportTypeLabel(report) {
+  return [formatReportDifficulty(report.difficulty), getReportKind(report)].filter(Boolean).join(" ");
+}
+
 export function ReportCatalog({
   reports,
   selectedReportId,
@@ -43,12 +65,11 @@ export function ReportCatalog({
                 >
                   <div className="flex h-full flex-col gap-4 text-content">
                     <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                      Backend-Owned View Model
+                      {getReportTypeLabel(report)}
                       <span className="h-1 w-1 rounded-full bg-primary" />
                       {isSelected ? "Selected" : "Available"}
                     </div>
                     <p className="text-sm text-muted">{report.description}</p>
-                    {report.footnotes?.[0] ? <p className="text-xs text-slate-400">{report.footnotes[0]}</p> : null}
                     <div className="mt-auto inline-flex items-center gap-2 text-sm font-medium text-primary">
                       {isSelected ? "Editing configuration" : "Open report"}
                     </div>

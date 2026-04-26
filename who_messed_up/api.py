@@ -56,10 +56,10 @@ query($code: String!, $fightIDs: [Int!]) {
 """
 
 EVENTS_QUERY = """
-query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String) {
+query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String, $includeResources: Boolean) {
   reportData {
     report(code: $code) {
-      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, filterExpression: $filter) {
+      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, filterExpression: $filter, includeResources: $includeResources) {
         data
         nextPageTimestamp
       }
@@ -275,6 +275,7 @@ def fetch_events(
     ability_id: Optional[int] = None,
     ability_name: Optional[str] = None,
     extra_filter: Optional[str] = None,
+    include_resources: Optional[bool] = None,
     actor_names: Optional[Dict[int, str]] = None,
     sleep_seconds: float = 0.1,
 ) -> Iterator[Dict[str, Any]]:
@@ -291,6 +292,7 @@ def fetch_events(
             "end": float(end),
             "limit": int(limit),
             "filter": _compose_filter_expression(ability_id=ability_id, ability_name=ability_name, extra_filter=extra_filter),
+            "includeResources": include_resources,
         }
         payload = gql(session, token, EVENTS_QUERY, variables)
         events_data = payload["reportData"]["report"]["events"]

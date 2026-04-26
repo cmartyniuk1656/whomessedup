@@ -5,37 +5,22 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum
 from typing import DefaultDict, Dict, Iterable, List, Optional, Set
 
 import requests
 
-from ..api import fetch_events, fetch_fights, fetch_player_details
+from ..api import fetch_events, fetch_fights, fetch_player_details, fetch_table
 from ..env import load_env
+from .boss_manifest_types import EncounterTargetBucket, EncounterTargetConfig
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
     _infer_player_roles,
     _players_from_details,
-    _resolve_event_source_player,
     _resolve_token,
     _sanitize_report_code,
     _select_fights,
 )
-
-
-class EncounterTargetBucket(str, Enum):
-    BOSS = "boss"
-    PRIORITY_ADD = "priority_add"
-    PAD_ADD = "pad_add"
-
-
-@dataclass(frozen=True)
-class EncounterTargetConfig:
-    slug: str
-    label: str
-    enemy_name: str
-    bucket: Optional[EncounterTargetBucket] = None
 
 
 @dataclass
@@ -253,31 +238,27 @@ def _fetch_single_encounter_target_damage_summary(
     target_summary_totals: DefaultDict[str, float] = defaultdict(float)
 
     for fight in chosen:
-        dead_players = dead_players_by_fight.get(fight.id, set())
         fight_participants = participants_by_fight.get(fight.id, set())
         fight_damage_maps: Dict[str, Dict[str, float]] = {}
         for cfg in active_targets:
-            damage_map = _collect_target_damage(
+            damage_map = _collect_target_damage_table(
                 session,
                 bearer,
                 report_code=report_code,
+                fight_id=fight.id,
                 fight_start=fight.start,
                 fight_end=fight.end,
                 actor_names=actor_names,
                 actor_classes=actor_classes,
                 actor_owners=actor_owners,
-                player_classes=player_classes,
                 player_roles=player_roles,
                 player_specs=player_specs,
-                known_players=known_players,
+                player_classes=player_classes,
+                eligible_players=fight_participants,
                 role_defaults=roles_by_fight.get(fight.id, {}),
                 global_specs=player_specs_global,
                 target_name=cfg.enemy_name,
             )
-            if dead_players:
-                damage_map = {
-                    player: total for player, total in damage_map.items() if player not in dead_players
-                }
             fight_damage_maps[cfg.slug] = damage_map
 
         for player in fight_participants:
@@ -418,7 +399,7 @@ def _merge_encounter_target_damage_summaries(
                     combined_target_totals[target_slug][entry.player] += breakdown.total_damage
 
     players = sorted(
-        set(combined_pulls.keys()) | set(combined_damage.keys()) | set(combined_player_roles.keys()),
+        set(combined_pulls.keys()) | set(combined_damage.keys()),
         key=lambda name: (
             ROLE_PRIORITY.get(combined_player_roles.get(name, ROLE_UNKNOWN), ROLE_PRIORITY[ROLE_UNKNOWN]),
             name.lower(),
@@ -515,6 +496,107 @@ def _collect_dead_players_in_fight(
     return dead_players
 
 
+def _collect_target_damage_table(
+    session: requests.Session,
+    bearer: str,
+    *,
+    report_code: str,
+    fight_id: int,
+    fight_start: float,
+    fight_end: float,
+    actor_names: Dict[int, str],
+    actor_classes: Dict[int, Optional[str]],
+    actor_owners: Dict[int, Optional[int]],
+    player_roles: Dict[str, str],
+    player_specs: Dict[str, Optional[str]],
+    player_classes: Dict[str, Optional[str]],
+    eligible_players: Set[str],
+    role_defaults: Dict[str, str],
+    global_specs: Dict[str, Optional[str]],
+    target_name: str,
+) -> Dict[str, float]:
+    damage_by_player: DefaultDict[str, float] = defaultdict(float)
+    safe_target_name = target_name.replace('"', '\\"')
+    table = fetch_table(
+        session,
+        bearer,
+        code=report_code,
+        data_type="DamageDone",
+        fight_id=fight_id,
+        start=fight_start,
+        end=fight_end,
+        filter_expr=f'target.name = "{safe_target_name}"',
+    )
+
+    entries = table.get("entries") or []
+    top_level_actor_ids = {
+        entry.get("id")
+        for entry in entries
+        if isinstance(entry.get("id"), int)
+    }
+
+    for entry in entries:
+        actor_key = entry.get("id")
+        owner_id, owner_name = _resolve_table_actor(actor_key, actor_names, actor_owners)
+        if (
+            isinstance(actor_key, int)
+            and owner_id is not None
+            and owner_id != actor_key
+            and owner_id in top_level_actor_ids
+        ):
+            continue
+        if not owner_name:
+            owner_name = entry.get("name")
+        if not owner_name or owner_name not in eligible_players:
+            continue
+
+        total_amount = _table_entry_total(entry)
+        if total_amount <= 0:
+            continue
+
+        if owner_id is not None and owner_name not in player_classes:
+            player_classes[owner_name] = actor_classes.get(owner_id)
+        elif owner_name not in player_classes:
+            player_classes[owner_name] = entry.get("type")
+
+        player_roles.setdefault(owner_name, role_defaults.get(owner_name) or ROLE_UNKNOWN)
+        player_specs.setdefault(owner_name, global_specs.get(owner_name))
+        damage_by_player[owner_name] += total_amount
+
+    return damage_by_player
+
+
+def _resolve_table_actor(
+    actor_key: object,
+    actor_names: Dict[int, str],
+    actor_owners: Dict[int, Optional[int]],
+) -> tuple[Optional[int], Optional[str]]:
+    if isinstance(actor_key, int):
+        current = actor_key
+        seen: Set[int] = set()
+        while True:
+            owner = actor_owners.get(current)
+            if owner in (None, 0) or owner in seen:
+                break
+            seen.add(current)
+            current = owner
+        name = actor_names.get(current) or actor_names.get(actor_key)
+        return current, name
+    if isinstance(actor_key, str):
+        return None, actor_key
+    return None, None
+
+
+def _table_entry_total(entry: Dict[str, object]) -> float:
+    value = entry.get("total")
+    if value is None:
+        value = entry.get("totalReduced")
+    try:
+        return float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _resolve_targets(
     *,
     values: Optional[Iterable[str]],
@@ -539,63 +621,6 @@ def _resolve_targets(
             normalized.append(cfg)
             seen.add(cfg.slug)
     return normalized
-
-
-def _collect_target_damage(
-    session: requests.Session,
-    bearer: str,
-    *,
-    report_code: str,
-    fight_start: float,
-    fight_end: float,
-    actor_names: Dict[int, str],
-    actor_classes: Dict[int, Optional[str]],
-    actor_owners: Dict[int, Optional[int]],
-    player_classes: Dict[str, Optional[str]],
-    player_roles: Dict[str, str],
-    player_specs: Dict[str, Optional[str]],
-    known_players: set[str],
-    role_defaults: Dict[str, str],
-    global_specs: Dict[str, Optional[str]],
-    target_name: str,
-) -> Dict[str, float]:
-    damage_by_player: DefaultDict[str, float] = defaultdict(float)
-    safe_target_name = target_name.replace('"', '\\"')
-
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="DamageDone",
-        start=fight_start,
-        end=fight_end,
-        limit=10000,
-        extra_filter=f'target.name = "{safe_target_name}"',
-        actor_names=actor_names,
-    ):
-        source_name, resolved_actor_id = _resolve_event_source_player(event, actor_names, actor_owners)
-        if not source_name or source_name not in known_players:
-            continue
-        if resolved_actor_id is not None:
-            player_classes.setdefault(source_name, actor_classes.get(resolved_actor_id))
-        player_roles.setdefault(source_name, role_defaults.get(source_name) or ROLE_UNKNOWN)
-        player_specs.setdefault(source_name, global_specs.get(source_name))
-
-        total_amount = _event_damage_amount(event)
-        if total_amount <= 0:
-            continue
-        damage_by_player[source_name] += total_amount
-
-    return damage_by_player
-
-
-def _event_damage_amount(event: Dict[str, object]) -> float:
-    total = 0.0
-    for field in ("amount", "absorbed", "overkill", "blocked", "resisted", "mitigated"):
-        value = event.get(field)
-        if isinstance(value, (int, float)):
-            total += float(value)
-    return total
 
 
 __all__ = [

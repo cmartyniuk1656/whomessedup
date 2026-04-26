@@ -609,3 +609,4 @@ The following implementation choices are now fixed for this refactor:
 10. The initial v2 frontend scope is responsive table rendering only; mobile cards mode can be revisited later.
 11. The first migration slice is `dimensius-add-damage`.
 12. Damage-report pages may emit an optional `specAnalysis` block for modal visualizations; the first consumer is `imperator-averzian-damage`, using average damage per player per counted pull across boss, priority, and pad buckets.
+13. Target-damage reports that are intended to mirror Warcraft Logs UI totals should source player damage from WCLogs `table(dataType: DamageDone)` aggregation rather than reconstructing totals from raw damage events.

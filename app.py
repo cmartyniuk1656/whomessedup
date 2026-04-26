@@ -19,7 +19,12 @@ from who_messed_up.services.report_registry import (
     JOB_V2_DIMENSIUS_ADD_DAMAGE,
     JOB_V2_DIMENSIUS_DEATHS,
     JOB_V2_DIMENSIUS_PRIORITY_DAMAGE,
+    JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
+    JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
+    JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
+    JOB_V2_VORASIUS_DAMAGE,
+    JOB_V2_VORASIUS_DEATHS,
     build_report_job_request,
     get_registered_report,
     list_report_definitions,
@@ -32,8 +37,21 @@ from who_messed_up.services.view_models.dimensius_priority_damage import build_d
 from who_messed_up.services.view_models.imperator_averzian_damage import (
     build_imperator_averzian_damage_report_page,
 )
+from who_messed_up.services.view_models.imperator_averzian_avoidable_damage import (
+    build_imperator_averzian_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.imperator_averzian_deaths import (
+    build_imperator_averzian_deaths_report_page,
+)
+from who_messed_up.services.view_models.vorasius_damage import build_vorasius_damage_report_page
+from who_messed_up.services.view_models.vorasius_avoidable_damage import (
+    build_vorasius_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.vorasius_deaths import build_vorasius_deaths_report_page
 from who_messed_up.service import (
     AddDamageSummary,
+    AvoidableDamageSummary,
+    DeathReportSummary,
     DimensiusPhaseOneSummary,
     DimensiusPriorityDamageSummary,
     DimensiusDeathSummary,
@@ -57,7 +75,12 @@ from who_messed_up.service import (
     fetch_dimensius_add_damage_summary,
     fetch_phase_damage_summary,
     fetch_phase_summary,
+    fetch_imperator_averzian_avoidable_damage_summary,
     fetch_imperator_averzian_damage_summary,
+    fetch_imperator_averzian_death_summary,
+    fetch_vorasius_avoidable_damage_summary,
+    fetch_vorasius_damage_summary,
+    fetch_vorasius_death_summary,
 )
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
@@ -518,6 +541,30 @@ class DimensiusPhaseOneResponse(BaseModel):
         )
 
 
+class DeathReportDamageHitModel(BaseModel):
+    source_report_code: Optional[str]
+    timestamp: float
+    offset_ms: float
+    ability_id: Optional[int]
+    ability_label: Optional[str]
+    damage_amount: Optional[float]
+    max_hit_points: Optional[float]
+    hit_points_percent: Optional[float]
+    ability_description: Optional[str] = None
+    ability_url: Optional[str] = None
+    ability_tags: List[str] = []
+    is_killing_blow: bool = False
+    is_avoidable: bool = False
+
+
+class DeathReportConsumableStatusModel(BaseModel):
+    consumable_id: str
+    label: str
+    used: bool
+    timestamps: List[float] = []
+    offsets_ms: List[float] = []
+
+
 class DimensiusDeathEventModel(BaseModel):
     player: str
     fight_id: int
@@ -527,6 +574,9 @@ class DimensiusDeathEventModel(BaseModel):
     offset_ms: float
     ability_id: Optional[int]
     ability_label: Optional[str]
+    damage_amount: Optional[float] = None
+    recent_hits: List[DeathReportDamageHitModel] = []
+    consumables: List[DeathReportConsumableStatusModel] = []
     label: Optional[str]
     description: Optional[str]
     pull_duration_ms: Optional[float] = None
@@ -577,6 +627,35 @@ class DimensiusDeathSummaryResponse(BaseModel):
                     offset_ms=event.offset_ms,
                     ability_id=event.ability_id,
                     ability_label=event.ability_label,
+                    damage_amount=getattr(event, "damage_amount", None),
+                    recent_hits=[
+                        DeathReportDamageHitModel(
+                            source_report_code=hit.source_report_code,
+                            timestamp=hit.timestamp,
+                            offset_ms=hit.offset_ms,
+                            ability_id=hit.ability_id,
+                            ability_label=hit.ability_label,
+                            damage_amount=hit.damage_amount,
+                            max_hit_points=hit.max_hit_points,
+                            hit_points_percent=hit.hit_points_percent,
+                            ability_description=getattr(hit, "ability_description", None),
+                            ability_url=getattr(hit, "ability_url", None),
+                            ability_tags=list(getattr(hit, "ability_tags", []) or []),
+                            is_killing_blow=hit.is_killing_blow,
+                            is_avoidable=getattr(hit, "is_avoidable", False),
+                        )
+                        for hit in getattr(event, "recent_hits", [])
+                    ],
+                    consumables=[
+                        DeathReportConsumableStatusModel(
+                            consumable_id=consumable.consumable_id,
+                            label=consumable.label,
+                            used=consumable.used,
+                            timestamps=list(consumable.timestamps),
+                            offsets_ms=list(consumable.offsets_ms),
+                        )
+                        for consumable in getattr(event, "consumables", [])
+                    ],
                     label=event.label,
                     description=event.description,
                     pull_duration_ms=event.pull_duration_ms,
@@ -610,6 +689,35 @@ class DimensiusDeathSummaryResponse(BaseModel):
                     offset_ms=event.offset_ms,
                     ability_id=event.ability_id,
                     ability_label=event.ability_label,
+                    damage_amount=getattr(event, "damage_amount", None),
+                    recent_hits=[
+                        DeathReportDamageHitModel(
+                            source_report_code=hit.source_report_code,
+                            timestamp=hit.timestamp,
+                            offset_ms=hit.offset_ms,
+                            ability_id=hit.ability_id,
+                            ability_label=hit.ability_label,
+                            damage_amount=hit.damage_amount,
+                            max_hit_points=hit.max_hit_points,
+                            hit_points_percent=hit.hit_points_percent,
+                            ability_description=getattr(hit, "ability_description", None),
+                            ability_url=getattr(hit, "ability_url", None),
+                            ability_tags=list(getattr(hit, "ability_tags", []) or []),
+                            is_killing_blow=hit.is_killing_blow,
+                            is_avoidable=getattr(hit, "is_avoidable", False),
+                        )
+                        for hit in getattr(event, "recent_hits", [])
+                    ],
+                    consumables=[
+                        DeathReportConsumableStatusModel(
+                            consumable_id=consumable.consumable_id,
+                            label=consumable.label,
+                            used=consumable.used,
+                            timestamps=list(consumable.timestamps),
+                            offsets_ms=list(consumable.offsets_ms),
+                        )
+                        for consumable in getattr(event, "consumables", [])
+                    ],
                     label=event.label,
                     description=event.description,
                     pull_duration_ms=event.pull_duration_ms,
@@ -950,6 +1058,90 @@ def _fetch_imperator_averzian_damage_summary_from_payload(
     )
 
 
+def _fetch_vorasius_damage_summary_from_payload(payload: Dict[str, Any]) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_vorasius_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_vorasius_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_vorasius_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_vorasius_avoidable_damage_summary_from_payload(payload: Dict[str, Any]) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_vorasius_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_imperator_averzian_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_imperator_averzian_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_imperator_averzian_avoidable_damage_summary_from_payload(payload: Dict[str, Any]) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_imperator_averzian_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -1030,6 +1222,46 @@ def _execute_v2_imperator_averzian_damage_job(payload: Dict[str, Any]) -> Dict[s
     return page.dict(by_alias=True)
 
 
+def _execute_v2_vorasius_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_vorasius_damage_summary_from_payload(payload)
+    page = build_vorasius_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_vorasius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_vorasius_deaths_summary_from_payload(payload)
+    page = build_vorasius_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_vorasius_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_vorasius_avoidable_damage_summary_from_payload(payload)
+    page = build_vorasius_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_imperator_averzian_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_imperator_averzian_deaths_summary_from_payload(payload)
+    page = build_imperator_averzian_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_imperator_averzian_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_imperator_averzian_avoidable_damage_summary_from_payload(payload)
+    page = build_imperator_averzian_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -1084,7 +1316,15 @@ job_manager.register_handler(JOB_DIMENSIUS_PRIORITY_DAMAGE, _execute_dimensius_p
 job_manager.register_handler(JOB_V2_DIMENSIUS_ADD_DAMAGE, _execute_v2_dimensius_add_damage_job)
 job_manager.register_handler(JOB_V2_DIMENSIUS_DEATHS, _execute_v2_dimensius_deaths_job)
 job_manager.register_handler(JOB_V2_DIMENSIUS_PRIORITY_DAMAGE, _execute_v2_dimensius_priority_damage_job)
+job_manager.register_handler(
+    JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE,
+    _execute_v2_imperator_averzian_avoidable_damage_job,
+)
 job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DAMAGE, _execute_v2_imperator_averzian_damage_job)
+job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DEATHS, _execute_v2_imperator_averzian_deaths_job)
+job_manager.register_handler(JOB_V2_VORASIUS_AVOIDABLE_DAMAGE, _execute_v2_vorasius_avoidable_damage_job)
+job_manager.register_handler(JOB_V2_VORASIUS_DAMAGE, _execute_v2_vorasius_damage_job)
+job_manager.register_handler(JOB_V2_VORASIUS_DEATHS, _execute_v2_vorasius_deaths_job)
 
 
 @app.get("/health")

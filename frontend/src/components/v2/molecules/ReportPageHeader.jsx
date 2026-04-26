@@ -13,7 +13,7 @@ export function ReportPageHeader({ page, rows, onOpenSpecAnalysis }) {
         {page.header?.subtitle ? <p className="mt-2 max-w-3xl text-sm text-slate-400">{page.header.subtitle}</p> : null}
         <ReportTags tags={page.header?.tags} />
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex shrink-0 flex-row items-center gap-2 self-start lg:justify-end">
         {hasSpecAnalysis ? (
           <Button type="button" variant="accent" size="sm" onClick={onOpenSpecAnalysis}>
             {page.specAnalysis.buttonLabel || "Spec Analysis"}

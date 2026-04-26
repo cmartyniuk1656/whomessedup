@@ -31,7 +31,7 @@ export function ReportRunCard({ report, isSubmitting, pendingJob }) {
           <p className="break-all">Job ID: {pendingJob.id}</p>
         </div>
       ) : (
-        <p className="border-t border-white/10 pt-4 text-xs text-slate-500">The result is rendered directly from the backend view model.</p>
+        <p className="border-t border-white/10 pt-4 text-xs text-slate-500">Results are generated after the report run completes.</p>
       )}
     </div>
   );

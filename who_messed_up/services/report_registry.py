@@ -6,6 +6,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Tuple
 
+from .avoidable_damage import ability_manifest_key, resolve_avoidable_manifest_abilities
+from .boss_manifests import IMPERATOR_AVERZIAN_MANIFEST, VORASIUS_MANIFEST
 from .common import _sanitize_report_code
 from .dimensius_deaths import (
     OBLIVION_FILTER_DEFAULT,
@@ -14,7 +16,6 @@ from .dimensius_deaths import (
     OBLIVION_FILTER_INCLUDE_ALL,
 )
 from .dimensius_priority_damage import PRIORITY_TARGETS
-from .imperator_averzian_damage import IMPERATOR_AVERZIAN_TARGETS
 from .view_models.dimensius_add_damage import (
     REPORT_DEFAULT_FIGHT,
     REPORT_DESCRIPTION,
@@ -43,12 +44,48 @@ from .view_models.imperator_averzian_damage import (
     REPORT_ID as REPORT_IMPERATOR_ID,
     REPORT_TITLE as REPORT_IMPERATOR_TITLE,
 )
+from .view_models.imperator_averzian_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_IMPERATOR_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_IMPERATOR_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_IMPERATOR_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_IMPERATOR_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_IMPERATOR_AVOIDABLE_TITLE,
+)
+from .view_models.imperator_averzian_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_IMPERATOR_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_IMPERATOR_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_IMPERATOR_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_IMPERATOR_DEATHS_ID,
+    REPORT_TITLE as REPORT_IMPERATOR_DEATHS_TITLE,
+)
+from .view_models.vorasius_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_VORASIUS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_VORASIUS_FOOTNOTES,
+    REPORT_ID as REPORT_VORASIUS_ID,
+    REPORT_TITLE as REPORT_VORASIUS_TITLE,
+)
+from .view_models.vorasius_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_VORASIUS_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_VORASIUS_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_VORASIUS_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_VORASIUS_AVOIDABLE_TITLE,
+)
+from .view_models.vorasius_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_VORASIUS_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_VORASIUS_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_VORASIUS_DEATHS_ID,
+    REPORT_TITLE as REPORT_VORASIUS_DEATHS_TITLE,
+)
 from .view_models.report_definitions import (
     ReportDifficulty,
     ReportDefinitionModel,
     RequestFieldKind,
     RequestFieldOptionModel,
     RequestFieldModel,
+    RequestFieldTooltipModel,
     RequestSchemaModel,
 )
 
@@ -58,9 +95,15 @@ JOB_V2_DIMENSIUS_ADD_DAMAGE = "v2_report_dimensius_add_damage"
 JOB_V2_DIMENSIUS_DEATHS = "v2_report_dimensius_deaths"
 JOB_V2_DIMENSIUS_PRIORITY_DAMAGE = "v2_report_dimensius_priority_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DAMAGE = "v2_report_imperator_averzian_damage"
+JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE = "v2_report_imperator_averzian_avoidable_damage"
+JOB_V2_IMPERATOR_AVERZIAN_DEATHS = "v2_report_imperator_averzian_deaths"
+JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
+JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
+JOB_V2_VORASIUS_DEATHS = "v2_report_vorasius_deaths"
 
 DIMENSIUS_FIGHT_ID = "dimensius-the-all-devouring"
 IMPERATOR_AVERZIAN_FIGHT_ID = "imperator-averzian"
+VORASIUS_FIGHT_ID = "vorasius"
 
 
 @dataclass(frozen=True)
@@ -104,6 +147,19 @@ def _coerce_bool(values: Dict[str, Any], field_id: str, *, default: bool = False
     if text in {"0", "false", "no", "off", ""}:
         return False
     raise ValueError(f"{field_id} must be a boolean.")
+
+
+def _coerce_positive_int(values: Dict[str, Any], field_id: str) -> int | None:
+    raw = values.get(field_id)
+    if raw in (None, ""):
+        return None
+    try:
+        value = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field_id} must be a whole number.") from exc
+    if value <= 0:
+        return None
+    return value
 
 
 def _coerce_multi_text(values: Dict[str, Any], field_id: str) -> List[str]:
@@ -174,12 +230,91 @@ def _build_additional_reports_field() -> RequestFieldModel:
     )
 
 
+def _build_ignore_after_deaths_field() -> RequestFieldModel:
+    return RequestFieldModel(
+        id="ignore_after_deaths",
+        kind=RequestFieldKind.NUMBER,
+        label="Ignore after deaths",
+        description="Stop counting report events after this many total player deaths in a pull.",
+        placeholder="No limit",
+        defaultValue="",
+    )
+
+
 def _format_target_field_label(target: Any) -> str:
     bucket = getattr(target, "bucket", None)
     if bucket is None:
         return f"Include {target.label}"
     bucket_value = str(getattr(bucket, "value", bucket)).replace("_", " ").title()
     return f"Include {target.label} ({bucket_value})"
+
+
+def _target_field_id(target: Any) -> str:
+    return f"include_{target.slug}"
+
+
+def _build_target_fields(manifest: Any) -> List[RequestFieldModel]:
+    fields: List[RequestFieldModel] = []
+    for target in getattr(manifest, "targets", ()) or ():
+        fields.append(
+            RequestFieldModel(
+                id=_target_field_id(target),
+                kind=RequestFieldKind.CHECKBOX,
+                label=_format_target_field_label(target),
+                defaultValue=bool(getattr(target, "default_enabled", True)),
+            )
+        )
+    return fields
+
+
+def _build_target_damage_scope_fields(boss_name: str) -> List[RequestFieldModel]:
+    return [
+        RequestFieldModel(
+            id="kill_only",
+            kind=RequestFieldKind.CHECKBOX,
+            label="Include only kill pulls",
+            description=f"Restrict the report to pulls where {boss_name} was killed.",
+            defaultValue=False,
+        ),
+        RequestFieldModel(
+            id="omit_dead_players",
+            kind=RequestFieldKind.CHECKBOX,
+            label="Omit data from players who died",
+            description=(
+                "Exclude a player's data from any pull where they died so that pull does not affect their "
+                "averages."
+            ),
+            defaultValue=False,
+        ),
+        RequestFieldModel(
+            id="fresh_run",
+            kind=RequestFieldKind.CHECKBOX,
+            label="Force fresh run (skip cache)",
+            defaultValue=False,
+        ),
+    ]
+
+
+def _avoidable_ability_field_id(ability: Any) -> str:
+    return f"include_avoidable_{ability_manifest_key(ability)}"
+
+
+def _build_avoidable_ability_fields(manifest: Any) -> List[RequestFieldModel]:
+    fields: List[RequestFieldModel] = []
+    for ability in resolve_avoidable_manifest_abilities(manifest):
+        fields.append(
+            RequestFieldModel(
+                id=_avoidable_ability_field_id(ability),
+                kind=RequestFieldKind.CHECKBOX,
+                label=ability.name,
+                defaultValue=True,
+                tooltip=RequestFieldTooltipModel(
+                    description=ability.description,
+                    tags=list(ability.tags),
+                ),
+            )
+        )
+    return fields
 
 
 def _build_dimensius_add_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
@@ -209,12 +344,14 @@ def _build_dimensius_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, A
 
     fight_name = _coerce_text(values, "fight_name", default=REPORT_DEATHS_DEFAULT_FIGHT)
     oblivion_filter = _coerce_text(values, "oblivion_filter", default=OBLIVION_FILTER_DEFAULT)
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
     fresh_run = _coerce_bool(values, "fresh_run", default=False)
 
     payload: Dict[str, Any] = {
         "report": report_code,
         "fight": fight_name,
         "oblivion_filter": oblivion_filter,
+        "ignore_after_deaths": ignore_after_deaths,
     }
     return payload, fresh_run
 
@@ -248,7 +385,12 @@ def _build_dimensius_priority_damage_payload(values: Dict[str, Any]) -> Tuple[Di
     return payload, fresh_run
 
 
-def _build_imperator_averzian_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+def _build_target_damage_payload(
+    values: Dict[str, Any],
+    *,
+    manifest: Any,
+    default_fight: str,
+) -> Tuple[Dict[str, Any], bool]:
     report_codes = _coerce_report_code_list(values)
     report_code = report_codes[0]
     extra_reports = report_codes[1:]
@@ -258,29 +400,122 @@ def _build_imperator_averzian_damage_payload(values: Dict[str, Any]) -> Tuple[Di
     omit_dead_players = _coerce_bool(values, "omit_dead_players", default=False)
 
     targets: List[str] = []
-    target_field_map = {
-        "include_imperator_averzian": "imperator_averzian",
-        "include_abyssal_voidshaper": "abyssal_voidshaper",
-        "include_abyssal_annihilator": "abyssal_annihilator",
-        "include_abyssal_malus": "abyssal_malus",
-        "include_voidmaw": "voidmaw",
-    }
-    for field_id, slug in target_field_map.items():
-        if _coerce_bool(values, field_id, default=True):
-            targets.append(slug)
+    for target in getattr(manifest, "targets", ()) or ():
+        default_enabled = bool(getattr(target, "default_enabled", True))
+        if _coerce_bool(values, _target_field_id(target), default=default_enabled):
+            targets.append(target.slug)
 
     if not targets:
         raise ValueError("Select at least one target.")
 
     payload: Dict[str, Any] = {
         "report": report_code,
-        "fight": REPORT_IMPERATOR_DEFAULT_FIGHT,
+        "fight": default_fight,
         "extra_reports": extra_reports,
         "targets": targets,
         "kill_only": kill_only,
         "omit_dead_players": omit_dead_players,
     }
     return payload, fresh_run
+
+
+def _build_imperator_averzian_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=IMPERATOR_AVERZIAN_MANIFEST,
+        default_fight=REPORT_IMPERATOR_DEFAULT_FIGHT,
+    )
+
+
+def _build_vorasius_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=VORASIUS_MANIFEST,
+        default_fight=REPORT_VORASIUS_DEFAULT_FIGHT,
+    )
+
+
+def _build_death_report_payload(
+    values: Dict[str, Any],
+    *,
+    default_fight: str,
+) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    payload: Dict[str, Any] = {
+        "report": report_code,
+        "fight": default_fight,
+        "extra_reports": extra_reports,
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
+
+
+def _build_imperator_averzian_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_IMPERATOR_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_vorasius_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_VORASIUS_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_avoidable_damage_payload(
+    values: Dict[str, Any],
+    *,
+    manifest: Any,
+    default_fight: str,
+) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    ability_keys: List[str] = []
+    for ability in resolve_avoidable_manifest_abilities(manifest):
+        ability_key = ability_manifest_key(ability)
+        if _coerce_bool(values, _avoidable_ability_field_id(ability), default=True):
+            ability_keys.append(ability_key)
+
+    if not ability_keys:
+        raise ValueError("Select at least one avoidable damage source.")
+
+    payload: Dict[str, Any] = {
+        "report": report_code,
+        "fight": default_fight,
+        "extra_reports": extra_reports,
+        "ability_keys": ability_keys,
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
+
+
+def _build_imperator_averzian_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=IMPERATOR_AVERZIAN_MANIFEST,
+        default_fight=REPORT_IMPERATOR_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_vorasius_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=VORASIUS_MANIFEST,
+        default_fight=REPORT_VORASIUS_AVOIDABLE_DEFAULT_FIGHT,
+    )
 
 
 _REPORTS: Dict[str, RegisteredReport] = {
@@ -374,6 +609,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
                             ),
                         ],
                     ),
+                    _build_ignore_after_deaths_field(),
                     RequestFieldModel(
                         id="fresh_run",
                         kind=RequestFieldKind.CHECKBOX,
@@ -385,6 +621,112 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_DIMENSIUS_DEATHS,
         build_payload=_build_dimensius_deaths_payload,
+    ),
+    REPORT_IMPERATOR_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_IMPERATOR_DEATHS_ID,
+            title=REPORT_IMPERATOR_DEATHS_TITLE,
+            description=REPORT_IMPERATOR_DEATHS_DESCRIPTION,
+            fightId=IMPERATOR_AVERZIAN_FIGHT_ID,
+            fightName=REPORT_IMPERATOR_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_IMPERATOR_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_IMPERATOR_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
+        build_payload=_build_imperator_averzian_deaths_payload,
+    ),
+    REPORT_VORASIUS_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VORASIUS_DEATHS_ID,
+            title=REPORT_VORASIUS_DEATHS_TITLE,
+            description=REPORT_VORASIUS_DEATHS_DESCRIPTION,
+            fightId=VORASIUS_FIGHT_ID,
+            fightName=REPORT_VORASIUS_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_VORASIUS_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VORASIUS_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VORASIUS_DEATHS,
+        build_payload=_build_vorasius_deaths_payload,
+    ),
+    REPORT_IMPERATOR_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_IMPERATOR_AVOIDABLE_ID,
+            title=REPORT_IMPERATOR_AVOIDABLE_TITLE,
+            description=REPORT_IMPERATOR_AVOIDABLE_DESCRIPTION,
+            fightId=IMPERATOR_AVERZIAN_FIGHT_ID,
+            fightName=REPORT_IMPERATOR_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_IMPERATOR_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_IMPERATOR_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(IMPERATOR_AVERZIAN_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE,
+        build_payload=_build_imperator_averzian_avoidable_damage_payload,
+    ),
+    REPORT_VORASIUS_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VORASIUS_AVOIDABLE_ID,
+            title=REPORT_VORASIUS_AVOIDABLE_TITLE,
+            description=REPORT_VORASIUS_AVOIDABLE_DESCRIPTION,
+            fightId=VORASIUS_FIGHT_ID,
+            fightName=REPORT_VORASIUS_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_VORASIUS_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VORASIUS_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(VORASIUS_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
+        build_payload=_build_vorasius_avoidable_damage_payload,
     ),
     REPORT_PRIORITY_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -460,61 +802,34 @@ _REPORTS: Dict[str, RegisteredReport] = {
             requestSchema=RequestSchemaModel(
                 fields=[
                     _build_report_codes_field(),
-                    RequestFieldModel(
-                        id="include_imperator_averzian",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["imperator_averzian"]),
-                        defaultValue=True,
-                    ),
-                    RequestFieldModel(
-                        id="include_abyssal_voidshaper",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["abyssal_voidshaper"]),
-                        defaultValue=True,
-                    ),
-                    RequestFieldModel(
-                        id="include_abyssal_annihilator",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["abyssal_annihilator"]),
-                        defaultValue=True,
-                    ),
-                    RequestFieldModel(
-                        id="include_abyssal_malus",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["abyssal_malus"]),
-                        defaultValue=True,
-                    ),
-                    RequestFieldModel(
-                        id="include_voidmaw",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label=_format_target_field_label(IMPERATOR_AVERZIAN_TARGETS["voidmaw"]),
-                        defaultValue=True,
-                    ),
-                    RequestFieldModel(
-                        id="kill_only",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label="Include only kill pulls",
-                        description="Restrict the report to pulls where Imperator Averzian was killed.",
-                        defaultValue=False,
-                    ),
-                    RequestFieldModel(
-                        id="omit_dead_players",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label="Omit data from players who died",
-                        description="Exclude a player's data from any pull where they died so that pull does not affect their averages.",
-                        defaultValue=False,
-                    ),
-                    RequestFieldModel(
-                        id="fresh_run",
-                        kind=RequestFieldKind.CHECKBOX,
-                        label="Force fresh run (skip cache)",
-                        defaultValue=False,
-                    ),
+                    *_build_target_fields(IMPERATOR_AVERZIAN_MANIFEST),
+                    *_build_target_damage_scope_fields("Imperator Averzian"),
                 ]
             ),
         ),
         job_type=JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
         build_payload=_build_imperator_averzian_damage_payload,
+    ),
+    REPORT_VORASIUS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VORASIUS_ID,
+            title=REPORT_VORASIUS_TITLE,
+            description=REPORT_VORASIUS_DESCRIPTION,
+            fightId=VORASIUS_FIGHT_ID,
+            fightName=REPORT_VORASIUS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_VORASIUS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VORASIUS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(VORASIUS_MANIFEST),
+                    *_build_target_damage_scope_fields("Vorasius"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VORASIUS_DAMAGE,
+        build_payload=_build_vorasius_damage_payload,
     ),
 }
 
@@ -544,7 +859,12 @@ __all__ = [
     "JOB_V2_DIMENSIUS_ADD_DAMAGE",
     "JOB_V2_DIMENSIUS_DEATHS",
     "JOB_V2_DIMENSIUS_PRIORITY_DAMAGE",
+    "JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DAMAGE",
+    "JOB_V2_IMPERATOR_AVERZIAN_DEATHS",
+    "JOB_V2_VORASIUS_DAMAGE",
+    "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
+    "JOB_V2_VORASIUS_DEATHS",
     "RegisteredReport",
     "build_report_job_request",
     "get_registered_report",

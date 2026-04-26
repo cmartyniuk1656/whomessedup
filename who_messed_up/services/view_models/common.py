@@ -155,6 +155,12 @@ class TableColumnModel(ViewModelBase):
     precision: Optional[int] = None
 
 
+class TableCellIndicatorModel(ViewModelBase):
+    id: str
+    label: str
+    tone: Optional[str] = None
+
+
 class TableCellModel(ViewModelBase):
     value: ScalarValue
     display: Optional[str] = None
@@ -162,13 +168,36 @@ class TableCellModel(ViewModelBase):
     href: Optional[str] = None
     color_token: Optional[str] = Field(None, alias="colorToken")
     tone: Optional[str] = None
+    indicators: List[TableCellIndicatorModel] = Field(default_factory=list)
+
+
+class RowDetailChildItemModel(ViewModelBase):
+    id: str
+    label: str
+    kind: Optional[str] = None
+    ability_label: Optional[str] = Field(None, alias="abilityLabel")
+    ability_href: Optional[str] = Field(None, alias="abilityHref")
+    timestamp_label: Optional[str] = Field(None, alias="timestampLabel")
+    description: Optional[str] = None
+    tone: Optional[str] = None
+    tooltip: Optional[str] = None
+    tooltip_badges: List[str] = Field(default_factory=list, alias="tooltipBadges")
+    badges: List[str] = Field(default_factory=list)
 
 
 class RowDetailItemModel(ViewModelBase):
     id: str
     label: str
+    kind: Optional[str] = None
+    ability_label: Optional[str] = Field(None, alias="abilityLabel")
+    ability_href: Optional[str] = Field(None, alias="abilityHref")
     timestamp_label: Optional[str] = Field(None, alias="timestampLabel")
     description: Optional[str] = None
+    tone: Optional[str] = None
+    tooltip: Optional[str] = None
+    tooltip_badges: List[str] = Field(default_factory=list, alias="tooltipBadges")
+    badges: List[str] = Field(default_factory=list)
+    children: List[RowDetailChildItemModel] = Field(default_factory=list)
 
 
 class RowDetailGroupModel(ViewModelBase):
@@ -224,6 +253,7 @@ __all__ = [
     "ReportHeaderModel",
     "ReportPageModel",
     "RowDetailGroupModel",
+    "RowDetailChildItemModel",
     "RowDetailItemModel",
     "RowDetailsModel",
     "RowDetailsVariant",
@@ -239,6 +269,7 @@ __all__ = [
     "TableFilterModel",
     "TableFilterOptionModel",
     "TableCellModel",
+    "TableCellIndicatorModel",
     "TableColumnModel",
     "TableModel",
     "TableRowModel",
