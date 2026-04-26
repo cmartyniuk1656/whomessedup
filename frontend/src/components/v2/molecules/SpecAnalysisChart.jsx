@@ -80,7 +80,6 @@ export function SpecAnalysisChart({ analysis, series }) {
             );
           })}
         </div>
-        <p className="text-xs text-slate-400">Each color is scaled against the top spec for that metric, and the y-axis is cropped to the visible range.</p>
       </div>
 
       <div className="overflow-x-auto pb-2">

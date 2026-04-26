@@ -10,6 +10,9 @@ function formatReportDifficulty(difficulty) {
 
 function getReportKind(report) {
   const title = String(report?.title ?? "").toLowerCase();
+  if (title.includes("avoidable") && title.includes("damage")) {
+    return "Avoidable Damage Report";
+  }
   if (title.includes("death")) {
     return "Death Report";
   }
@@ -19,8 +22,8 @@ function getReportKind(report) {
   return "Report";
 }
 
-function getReportTypeLabel(report) {
-  return [formatReportDifficulty(report.difficulty), getReportKind(report)].filter(Boolean).join(" ");
+function getReportStatusLabel(report, isSelected) {
+  return [formatReportDifficulty(report.difficulty), isSelected ? "Selected" : "Available"].filter(Boolean).join(" • ");
 }
 
 export function ReportCatalog({
@@ -46,6 +49,7 @@ export function ReportCatalog({
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {reports.map((report) => {
             const isSelected = report.id === selectedReportId;
+            const reportKind = getReportKind(report);
             return (
               <button
                 key={report.id}
@@ -56,7 +60,7 @@ export function ReportCatalog({
                 aria-pressed={isSelected}
               >
                 <GlassCard
-                  title={report.title}
+                  title={reportKind}
                   className={
                     isSelected
                       ? "h-full ring-1 ring-emerald-400/60 shadow-[0_30px_80px_-40px_rgba(16,185,129,0.55)]"
@@ -65,9 +69,7 @@ export function ReportCatalog({
                 >
                   <div className="flex h-full flex-col gap-4 text-content">
                     <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                      {getReportTypeLabel(report)}
-                      <span className="h-1 w-1 rounded-full bg-primary" />
-                      {isSelected ? "Selected" : "Available"}
+                      {getReportStatusLabel(report, isSelected)}
                     </div>
                     <p className="text-sm text-muted">{report.description}</p>
                     <div className="mt-auto inline-flex items-center gap-2 text-sm font-medium text-primary">

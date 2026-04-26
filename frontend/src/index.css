@@ -156,3 +156,54 @@ html {
 .truncated-select::-ms-expand {
   display: none;
 }
+
+.wizard-step-enter {
+  animation: wizard-step-enter 240ms ease-out both;
+}
+
+.wizard-step-exit {
+  animation: wizard-step-exit 180ms ease-in both;
+}
+
+.running-progress-sweep {
+  animation: running-progress-sweep 1.35s ease-in-out infinite;
+}
+
+@keyframes wizard-step-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes wizard-step-exit {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes running-progress-sweep {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(320%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-step-enter,
+  .wizard-step-exit,
+  .running-progress-sweep {
+    animation: none;
+  }
+}
