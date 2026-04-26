@@ -25,6 +25,74 @@ function TextFieldControl({ field, value, onValueChange, density }) {
   );
 }
 
+function NumberFieldControl({ field, value, onValueChange, density }) {
+  const compact = density === "compact";
+  const parsedValue = Number.parseInt(value ?? "", 10);
+  const canDecrement = Number.isNaN(parsedValue) || parsedValue > 0;
+  const buttonClasses =
+    "flex h-full w-9 items-center justify-center text-emerald-100 transition hover:bg-emerald-300/12 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-emerald-300/60 disabled:cursor-not-allowed disabled:text-slate-600";
+
+  const changeBy = (delta) => {
+    const currentValue = Number.isNaN(parsedValue) ? 0 : parsedValue;
+    const nextValue = Math.max(0, currentValue + delta);
+    onValueChange(field.id, String(nextValue));
+  };
+
+  return (
+    <div className={compact ? "space-y-1.5" : undefined}>
+      <label className="text-sm font-medium text-slate-100" htmlFor={field.id}>
+        {field.label}
+      </label>
+      <FieldHint>{field.description}</FieldHint>
+      <div
+        className={[
+          "flex w-full overflow-hidden rounded-lg border border-white/10 bg-slate-950/40 text-sm text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-white/15 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-400/30",
+          compact ? "mt-1.5" : "mt-2",
+        ].join(" ")}
+      >
+        <input
+          id={field.id}
+          type="number"
+          min="0"
+          step="1"
+          inputMode="numeric"
+          value={value ?? ""}
+          placeholder={field.placeholder || ""}
+          onChange={(event) => onValueChange(field.id, event.target.value)}
+          className={[
+            "numeric-input min-w-0 flex-1 bg-transparent px-3 text-slate-100 placeholder:text-slate-500 focus:outline-none",
+            compact ? "py-2" : "py-2.5",
+          ].join(" ")}
+        />
+        <div className="grid w-9 shrink-0 grid-rows-[1fr_auto_1fr] border-l border-white/10 bg-slate-950/55">
+          <button
+            type="button"
+            className={buttonClasses}
+            aria-label={`Increase ${field.label}`}
+            onClick={() => changeBy(1)}
+          >
+            <svg aria-hidden="true" className="h-3 w-3" viewBox="0 0 12 12" fill="none">
+              <path d="M3 7.25 6 4.25l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <span aria-hidden className="h-px bg-emerald-300/15" />
+          <button
+            type="button"
+            className={buttonClasses}
+            aria-label={`Decrease ${field.label}`}
+            onClick={() => changeBy(-1)}
+            disabled={!canDecrement}
+          >
+            <svg aria-hidden="true" className="h-3 w-3" viewBox="0 0 12 12" fill="none">
+              <path d="M3 4.75 6 7.75l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SelectFieldControl({ field, value, onValueChange, density }) {
   const compact = density === "compact";
 
