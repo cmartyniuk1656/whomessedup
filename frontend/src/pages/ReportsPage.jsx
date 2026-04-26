@@ -284,15 +284,13 @@ export function ReportsPage() {
           </div>
         </header>
 
-        {selectedFight ? (
-          <div className="mt-6">
-            <WizardBreadcrumbs
-              steps={breadcrumbSteps}
-              activeStep={activeWizardStep}
-              onSelectStep={handleSelectBreadcrumb}
-            />
-          </div>
-        ) : null}
+        <div className="mt-6">
+          <WizardBreadcrumbs
+            steps={breadcrumbSteps}
+            activeStep={activeWizardStep}
+            onSelectStep={handleSelectBreadcrumb}
+          />
+        </div>
 
         <div className={selectedFight ? "mt-8" : "mt-10"}>{renderActiveStep()}</div>
 
