@@ -216,5 +216,9 @@ export function ReportFieldControl({
     return <SelectFieldControl field={field} value={value} onValueChange={onValueChange} density={density} />;
   }
 
+  if (field.kind === "number") {
+    return <NumberFieldControl field={field} value={value} onValueChange={onValueChange} density={density} />;
+  }
+
   return <TextFieldControl field={field} value={value} onValueChange={onValueChange} density={density} />;
 }
