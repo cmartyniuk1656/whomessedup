@@ -8,7 +8,7 @@ from typing import DefaultDict, Dict, Iterable, List, Optional
 
 import requests
 
-from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
+from ..api import Fight, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
@@ -20,6 +20,7 @@ from .common import (
     compute_death_cutoffs,
     compute_fight_duration_ms,
 )
+from .consumables import collect_healing_consumable_uses
 from .dimensius_deaths import (
     DimensiusDeathEntry,
     DimensiusDeathEvent,
@@ -83,7 +84,7 @@ def fetch_dimensius_bled_out_summary(
         max_deaths=death_limit,
     )
 
-    consumable_heals = _collect_consumable_heals(
+    consumable_heals = collect_healing_consumable_uses(
         session,
         bearer,
         fights=chosen,
@@ -222,44 +223,6 @@ def _matches_bleed_cause(ability_id: Optional[int], ability_label: Optional[str]
         if ability_label.lower() in BLEED_CAUSE_NAMES:
             return True
     return False
-
-
-def _collect_consumable_heals(
-    session: requests.Session,
-    bearer: str,
-    *,
-    fights: Iterable[Fight],
-    report_code: str,
-    ability_names: Iterable[str],
-    actor_names: Dict[int, str],
-) -> Dict[int, Dict[str, Dict[str, List[float]]]]:
-    healed_by_fight: Dict[int, Dict[str, Dict[str, List[float]]]] = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    for ability_name in ability_names:
-        for fight in fights:
-            for event in fetch_events(
-                session,
-                bearer,
-                code=report_code,
-                data_type="Healing",
-                start=fight.start,
-                end=fight.end,
-                ability_name=ability_name,
-                actor_names=actor_names,
-            ):
-                timestamp = event.get("timestamp")
-                if timestamp is None:
-                    continue
-                try:
-                    ts_val = float(timestamp)
-                except (TypeError, ValueError):
-                    continue
-                target_name = event.get("targetName")
-                if not target_name and isinstance(event.get("target"), dict):
-                    target_name = event["target"].get("name")
-                if not target_name:
-                    continue
-                healed_by_fight[fight.id][target_name][ability_name].append(ts_val)
-    return healed_by_fight
 
 
 def _append_consumable_summary_events(

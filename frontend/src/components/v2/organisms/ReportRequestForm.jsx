@@ -3,6 +3,34 @@ import { StatusPill } from "../atoms/StatusPill";
 import { ReportFieldControl } from "../molecules/ReportFieldControl";
 import { ReportRunCard } from "../molecules/ReportRunCard";
 
+const GLOBAL_CONFIGURATION_FIELD_IDS = new Set(["ignore_after_deaths", "kill_only", "omit_dead_players", "fresh_run"]);
+
+function splitFields(fields) {
+  return fields.reduce(
+    (sections, field) => {
+      if (GLOBAL_CONFIGURATION_FIELD_IDS.has(field.id)) {
+        sections.globalFields.push(field);
+      } else {
+        sections.primaryFields.push(field);
+      }
+      return sections;
+    },
+    { primaryFields: [], globalFields: [] },
+  );
+}
+
+function GlobalConfigurationSection({ children, compact = false }) {
+  return (
+    <section className={compact ? "rounded-lg border border-white/10 bg-slate-950/30 p-3.5" : "rounded-xl border border-white/10 bg-slate-950/25 p-4"}>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Global Configuration</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">These settings apply across the full report.</p>
+      </div>
+      <div className={compact ? "mt-3 space-y-2.5" : "mt-4 space-y-3"}>{children}</div>
+    </section>
+  );
+}
+
 export function ReportRequestForm({
   report,
   values,
@@ -20,6 +48,20 @@ export function ReportRequestForm({
   const notes = report?.footnotes ?? [];
   const statusLabel = pendingJob ? (pendingJob.status === "running" ? "Running" : "Queued") : "Ready";
   const statusTone = pendingJob ? (pendingJob.status === "running" ? "accent" : "warning") : "neutral";
+  const { primaryFields, globalFields } = splitFields(fields);
+
+  const renderField = (field, density) => (
+    <ReportFieldControl
+      key={field.id}
+      field={field}
+      value={values?.[field.id]}
+      onValueChange={onValueChange}
+      onMultiTextChange={onMultiTextChange}
+      onAddMultiTextRow={onAddMultiTextRow}
+      onRemoveMultiTextRow={onRemoveMultiTextRow}
+      density={density}
+    />
+  );
 
   if (layout === "modal") {
     return (
@@ -31,18 +73,11 @@ export function ReportRequestForm({
         }}
       >
         <div className="max-h-[min(58vh,30rem)] space-y-3.5 overflow-y-auto pr-1">
-          {fields.map((field) => (
-            <ReportFieldControl
-              key={field.id}
-              field={field}
-              value={values?.[field.id]}
-              onValueChange={onValueChange}
-              onMultiTextChange={onMultiTextChange}
-              onAddMultiTextRow={onAddMultiTextRow}
-              onRemoveMultiTextRow={onRemoveMultiTextRow}
-              density="compact"
-            />
-          ))}
+          {primaryFields.map((field) => renderField(field, "compact"))}
+
+          {globalFields.length ? (
+            <GlobalConfigurationSection compact>{globalFields.map((field) => renderField(field, "compact"))}</GlobalConfigurationSection>
+          ) : null}
 
           {notes.length ? (
             <div className="rounded-lg border border-white/10 bg-slate-950/30 p-3.5">
@@ -93,18 +128,8 @@ export function ReportRequestForm({
       }}
     >
       <div className="space-y-5">
-        {fields.map((field) => (
-          <ReportFieldControl
-            key={field.id}
-            field={field}
-            value={values?.[field.id]}
-            onValueChange={onValueChange}
-            onMultiTextChange={onMultiTextChange}
-            onAddMultiTextRow={onAddMultiTextRow}
-            onRemoveMultiTextRow={onRemoveMultiTextRow}
-            density="default"
-          />
-        ))}
+        {primaryFields.map((field) => renderField(field, "default"))}
+        {globalFields.length ? <GlobalConfigurationSection>{globalFields.map((field) => renderField(field, "default"))}</GlobalConfigurationSection> : null}
       </div>
 
       <aside className="border-t border-white/10 pt-6 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">

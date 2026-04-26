@@ -29,6 +29,11 @@ class RequestFieldOptionModel(ViewModelBase):
     label: str
 
 
+class RequestFieldTooltipModel(ViewModelBase):
+    description: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+
+
 class RequestFieldModel(ViewModelBase):
     id: str
     kind: RequestFieldKind
@@ -38,6 +43,7 @@ class RequestFieldModel(ViewModelBase):
     placeholder: Optional[str] = None
     default_value: Optional[Any] = Field(None, alias="defaultValue")
     options: List[RequestFieldOptionModel] = Field(default_factory=list)
+    tooltip: Optional[RequestFieldTooltipModel] = None
 
 
 class RequestSchemaModel(ViewModelBase):
@@ -71,6 +77,7 @@ __all__ = [
     "RequestFieldKind",
     "RequestFieldModel",
     "RequestFieldOptionModel",
+    "RequestFieldTooltipModel",
     "RequestSchemaModel",
     "RunReportRequestModel",
 ]

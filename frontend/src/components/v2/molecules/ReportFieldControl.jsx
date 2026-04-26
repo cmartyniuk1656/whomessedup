@@ -56,6 +56,7 @@ function CheckboxControl({ field, value, onValueChange, density }) {
       id={field.id}
       label={field.label}
       description={field.description}
+      tooltip={field.tooltip}
       checked={value}
       onChange={(event) => onValueChange(field.id, event.target.checked)}
       compact={density === "compact"}

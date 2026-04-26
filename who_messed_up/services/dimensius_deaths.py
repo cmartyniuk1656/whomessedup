@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from bisect import bisect_left
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Tuple, Set, Union
 
 import requests
@@ -21,6 +21,18 @@ from .common import (
     _select_fights,
     compute_death_cutoffs,
     compute_fight_duration_ms,
+)
+from .consumables import (
+    DEATH_REPORT_HEALING_CONSUMABLES,
+    HealingConsumableStatus,
+    build_healing_consumable_statuses,
+    collect_healing_consumable_uses,
+)
+from .death_reports import (
+    DeathReportDamageHit,
+    collect_recent_damage_hits,
+    recent_hits_for_death,
+    resolve_killing_damage,
 )
 
 OBLIVION_ID = 1249077
@@ -57,6 +69,9 @@ class DimensiusDeathEvent:
     offset_ms: float
     ability_id: Optional[int]
     ability_label: Optional[str]
+    damage_amount: Optional[float] = None
+    recent_hits: List[DeathReportDamageHit] = field(default_factory=list)
+    consumables: List[HealingConsumableStatus] = field(default_factory=list)
     label: Optional[str] = None
     description: Optional[str] = None
     pull_duration_ms: Optional[float] = None
@@ -176,10 +191,30 @@ def fetch_dimensius_death_summary(
     death_counts: DefaultDict[str, int] = defaultdict(int)
     ability_labels = _fetch_ability_labels(session, bearer, report_code)
     oblivion_filter_mode = _normalize_oblivion_filter(oblivion_filter)
+    consumable_usage_by_fight = collect_healing_consumable_uses(
+        session,
+        bearer,
+        fights=chosen,
+        report_code=report_code,
+        ability_names=[consumable.ability_name for consumable in DEATH_REPORT_HEALING_CONSUMABLES],
+        actor_names=actor_names,
+    )
 
     for fight in chosen:
         pull_duration = compute_fight_duration_ms(fight)
         cutoff = death_cutoffs.get(fight.id) if death_cutoffs else None
+        fight_consumables = consumable_usage_by_fight.get(fight.id, {})
+        fight_roles = roles_by_fight.get(fight.id, player_roles)
+        recent_damage_hits = collect_recent_damage_hits(
+            session,
+            bearer,
+            report_code=report_code,
+            fight=fight,
+            actor_names=actor_names,
+            ability_labels=ability_labels,
+            player_roles=fight_roles,
+        )
+        counted_deaths = 0
         for event in fetch_events(
             session,
             bearer,
@@ -203,6 +238,10 @@ def fetch_dimensius_death_summary(
                 target_name = event["target"].get("name")
             if not target_name:
                 continue
+            if death_limit is not None:
+                counted_deaths += 1
+                if counted_deaths > death_limit:
+                    continue
             ability_id, ability_label = _resolve_killing_ability(event, ability_labels)
             include_death = True
             if ability_id == OBLIVION_ID:
@@ -217,8 +256,19 @@ def fetch_dimensius_death_summary(
                 )
             if not include_death:
                 continue
-            death_counts[target_name] += 1
+            killing_damage = resolve_killing_damage(event)
             offset_ms = ts_val - float(fight.start)
+            recent_hits = recent_hits_for_death(
+                recent_damage_hits.get(target_name, []),
+                death_timestamp=ts_val,
+                death_offset_ms=offset_ms,
+                ability_id=ability_id,
+                ability_label=ability_label,
+                damage_amount=killing_damage,
+                source_report_code=report_code,
+                player_role=fight_roles.get(target_name) or player_roles.get(target_name),
+            )
+            death_counts[target_name] += 1
             events_by_player[target_name].append(
                 DimensiusDeathEvent(
                     player=target_name,
@@ -229,6 +279,13 @@ def fetch_dimensius_death_summary(
                     offset_ms=offset_ms,
                     ability_id=int(ability_id) if ability_id is not None else None,
                     ability_label=ability_label,
+                    damage_amount=killing_damage,
+                    recent_hits=recent_hits,
+                    consumables=build_healing_consumable_statuses(
+                        fight_consumables.get(target_name),
+                        fight_start=fight.start,
+                        reference_timestamp=ts_val,
+                    ),
                     label="Death",
                     pull_duration_ms=pull_duration,
                 )

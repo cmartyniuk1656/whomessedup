@@ -1,23 +1,20 @@
 """
-Imperator Averzian target-damage summary wrapper.
+Vorasius target-damage summary wrapper.
 """
 from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from .boss_manifests import IMPERATOR_AVERZIAN_MANIFEST
-from .target_damage import (
-    EncounterTargetDamageSummary,
-    fetch_encounter_target_damage_summary,
-)
+from .boss_manifests import VORASIUS_MANIFEST
+from .target_damage import EncounterTargetDamageSummary, fetch_encounter_target_damage_summary
 
-REPORT_DEFAULT_FIGHT = "Imperator Averzian"
+REPORT_DEFAULT_FIGHT = "Vorasius"
 
-IMPERATOR_AVERZIAN_TARGETS = IMPERATOR_AVERZIAN_MANIFEST.target_configs
-DEFAULT_TARGET_SLUGS = IMPERATOR_AVERZIAN_MANIFEST.default_target_slugs
+VORASIUS_TARGETS = VORASIUS_MANIFEST.target_configs
+DEFAULT_TARGET_SLUGS = VORASIUS_MANIFEST.default_target_slugs
 
 
-def fetch_imperator_averzian_damage_summary(
+def fetch_vorasius_damage_summary(
     *,
     report_code: str,
     fight_name: Optional[str] = None,
@@ -40,7 +37,7 @@ def fetch_imperator_averzian_damage_summary(
         extra_report_codes=extra_report_codes,
         kill_only=kill_only,
         omit_dead_players=omit_dead_players,
-        target_configs=IMPERATOR_AVERZIAN_TARGETS,
+        target_configs=VORASIUS_TARGETS,
         default_target_slugs=DEFAULT_TARGET_SLUGS,
         token=token,
         client_id=client_id,
@@ -50,7 +47,7 @@ def fetch_imperator_averzian_damage_summary(
 
 __all__ = [
     "DEFAULT_TARGET_SLUGS",
-    "IMPERATOR_AVERZIAN_TARGETS",
     "REPORT_DEFAULT_FIGHT",
-    "fetch_imperator_averzian_damage_summary",
+    "VORASIUS_TARGETS",
+    "fetch_vorasius_damage_summary",
 ]

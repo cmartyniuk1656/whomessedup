@@ -12,6 +12,21 @@ from .services.common import (
     TokenError,
     normalize_ghost_miss_mode,
 )
+from .services.consumables import (
+    DEATH_REPORT_HEALING_CONSUMABLES,
+    HealingConsumable,
+    HealingConsumableStatus,
+)
+from .services.boss_manifests import (
+    BOSS_MANIFESTS,
+    IMPERATOR_AVERZIAN_MANIFEST,
+    MANIFEST_TIERS,
+    VORASIUS_MANIFEST,
+    BossAbilityMetadata,
+    BossManifest,
+    get_boss_manifest,
+)
+from .services.avoidable_damage import AvoidableDamageEntry, AvoidableDamageEvent, AvoidableDamageSummary
 from .services.dimensius import (
     AddDamageEntry,
     AddDamageSummary,
@@ -35,7 +50,13 @@ from .services.dimensius_deaths import (
     OBLIVION_FILTER_DEFAULT,
 )
 from .services.dimensius_bled_out import fetch_dimensius_bled_out_summary
+from .services.death_reports import DeathReportDamageHit, DeathReportEntry, DeathReportEvent, DeathReportSummary
 from .services.imperator_averzian_damage import fetch_imperator_averzian_damage_summary
+from .services.imperator_averzian_avoidable_damage import fetch_imperator_averzian_avoidable_damage_summary
+from .services.imperator_averzian_deaths import fetch_imperator_averzian_death_summary
+from .services.vorasius_avoidable_damage import fetch_vorasius_avoidable_damage_summary
+from .services.vorasius_damage import fetch_vorasius_damage_summary
+from .services.vorasius_deaths import fetch_vorasius_death_summary
 from .services.ghosts import (
     GhostEntry,
     GhostEvent,
@@ -61,13 +82,28 @@ from .services.target_damage import (
 __all__ = [
     "AddDamageEntry",
     "AddDamageSummary",
+    "AvoidableDamageEntry",
+    "AvoidableDamageEvent",
+    "AvoidableDamageSummary",
+    "BOSS_MANIFESTS",
+    "BossAbilityMetadata",
+    "BossManifest",
     "DEFAULT_GHOST_MISS_MODE",
+    "DEATH_REPORT_HEALING_CONSUMABLES",
+    "DeathReportEntry",
+    "DeathReportEvent",
+    "DeathReportDamageHit",
+    "DeathReportSummary",
     "FightSelectionError",
     "GhostEntry",
     "GhostEvent",
     "GhostMissMode",
     "GhostSummary",
     "HitSummary",
+    "HealingConsumable",
+    "HealingConsumableStatus",
+    "IMPERATOR_AVERZIAN_MANIFEST",
+    "MANIFEST_TIERS",
     "PhaseDamageEntry",
     "PhaseDamageSummary",
     "PhaseMetric",
@@ -76,6 +112,7 @@ __all__ = [
     "ROLE_PRIORITY",
     "ROLE_UNKNOWN",
     "TokenError",
+    "VORASIUS_MANIFEST",
     "OBLIVION_FILTER_DEFAULT",
     "fetch_dimensius_add_damage_summary",
     "fetch_dimensius_phase_one_summary",
@@ -100,4 +137,10 @@ __all__ = [
     "EncounterTargetDamageSummary",
     "EncounterTargetSummary",
     "fetch_imperator_averzian_damage_summary",
+    "fetch_imperator_averzian_avoidable_damage_summary",
+    "fetch_imperator_averzian_death_summary",
+    "fetch_vorasius_avoidable_damage_summary",
+    "fetch_vorasius_damage_summary",
+    "fetch_vorasius_death_summary",
+    "get_boss_manifest",
 ]
