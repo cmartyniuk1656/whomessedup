@@ -15,7 +15,7 @@ function TextFieldControl({ field, value, onValueChange, density }) {
       <FieldHint>{field.description}</FieldHint>
       <TextInput
         id={field.id}
-        type={field.kind === "number" ? "number" : "text"}
+        type="text"
         value={value ?? ""}
         placeholder={field.placeholder || ""}
         onChange={(event) => onValueChange(field.id, event.target.value)}
