@@ -58,6 +58,13 @@ from .view_models.imperator_averzian_deaths import (
     REPORT_ID as REPORT_IMPERATOR_DEATHS_ID,
     REPORT_TITLE as REPORT_IMPERATOR_DEATHS_TITLE,
 )
+from .view_models.lightblinded_vanguard_dispels import (
+    REPORT_DEFAULT_FIGHT as REPORT_LIGHTBLINDED_DISPELS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_LIGHTBLINDED_DISPELS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_LIGHTBLINDED_DISPELS_FOOTNOTES,
+    REPORT_ID as REPORT_LIGHTBLINDED_DISPELS_ID,
+    REPORT_TITLE as REPORT_LIGHTBLINDED_DISPELS_TITLE,
+)
 from .view_models.vorasius_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_VORASIUS_DESCRIPTION,
@@ -97,12 +104,14 @@ JOB_V2_DIMENSIUS_PRIORITY_DAMAGE = "v2_report_dimensius_priority_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DAMAGE = "v2_report_imperator_averzian_damage"
 JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE = "v2_report_imperator_averzian_avoidable_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DEATHS = "v2_report_imperator_averzian_deaths"
+JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS = "v2_report_lightblinded_vanguard_dispels"
 JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
 JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
 JOB_V2_VORASIUS_DEATHS = "v2_report_vorasius_deaths"
 
 DIMENSIUS_FIGHT_ID = "dimensius-the-all-devouring"
 IMPERATOR_AVERZIAN_FIGHT_ID = "imperator-averzian"
+LIGHTBLINDED_VANGUARD_FIGHT_ID = "lightblinded-vanguard"
 VORASIUS_FIGHT_ID = "vorasius"
 
 
@@ -518,6 +527,25 @@ def _build_vorasius_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Di
     )
 
 
+def _build_lightblinded_vanguard_dispels_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    exclude_revival_dispels = _coerce_bool(values, "exclude_revival_dispels", default=True)
+    exclude_dead_player_sets = _coerce_bool(values, "exclude_dead_player_sets", default=False)
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    payload: Dict[str, Any] = {
+        "report": report_code,
+        "fight": REPORT_LIGHTBLINDED_DISPELS_DEFAULT_FIGHT,
+        "extra_reports": extra_reports,
+        "exclude_revival_dispels": exclude_revival_dispels,
+        "exclude_dead_player_sets": exclude_dead_player_sets,
+    }
+    return payload, fresh_run
+
+
 _REPORTS: Dict[str, RegisteredReport] = {
     REPORT_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -728,6 +756,48 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
         build_payload=_build_vorasius_avoidable_damage_payload,
     ),
+    REPORT_LIGHTBLINDED_DISPELS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_LIGHTBLINDED_DISPELS_ID,
+            title=REPORT_LIGHTBLINDED_DISPELS_TITLE,
+            description=REPORT_LIGHTBLINDED_DISPELS_DESCRIPTION,
+            fightId=LIGHTBLINDED_VANGUARD_FIGHT_ID,
+            fightName=REPORT_LIGHTBLINDED_DISPELS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_LIGHTBLINDED_DISPELS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_LIGHTBLINDED_DISPELS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    RequestFieldModel(
+                        id="exclude_revival_dispels",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Exclude Revival dispels",
+                        description=(
+                            "Exclude Revival and same-player same-timestamp multi-dispel bursts from successful "
+                            "dispel totals."
+                        ),
+                        defaultValue=True,
+                    ),
+                    RequestFieldModel(
+                        id="exclude_dead_player_sets",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Exclude sets after player death",
+                        description="Remove shield sets from a player's average denominator after that player has died.",
+                        defaultValue=False,
+                    ),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
+        build_payload=_build_lightblinded_vanguard_dispels_payload,
+    ),
     REPORT_PRIORITY_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_PRIORITY_ID,
@@ -862,6 +932,7 @@ __all__ = [
     "JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DEATHS",
+    "JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
     "JOB_V2_VORASIUS_DEATHS",

@@ -22,6 +22,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
+    JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
     JOB_V2_VORASIUS_DEATHS,
@@ -43,6 +44,9 @@ from who_messed_up.services.view_models.imperator_averzian_avoidable_damage impo
 from who_messed_up.services.view_models.imperator_averzian_deaths import (
     build_imperator_averzian_deaths_report_page,
 )
+from who_messed_up.services.view_models.lightblinded_vanguard_dispels import (
+    build_lightblinded_vanguard_dispel_report_page,
+)
 from who_messed_up.services.view_models.vorasius_damage import build_vorasius_damage_report_page
 from who_messed_up.services.view_models.vorasius_avoidable_damage import (
     build_vorasius_avoidable_damage_report_page,
@@ -59,6 +63,7 @@ from who_messed_up.service import (
     FightSelectionError,
     GhostSummary,
     HitSummary,
+    LightblindedVanguardDispelSummary,
     PhaseDamageSummary,
     PhaseSummary,
     TokenError,
@@ -78,6 +83,7 @@ from who_messed_up.service import (
     fetch_imperator_averzian_avoidable_damage_summary,
     fetch_imperator_averzian_damage_summary,
     fetch_imperator_averzian_death_summary,
+    fetch_lightblinded_vanguard_dispel_summary,
     fetch_vorasius_avoidable_damage_summary,
     fetch_vorasius_damage_summary,
     fetch_vorasius_death_summary,
@@ -1142,6 +1148,25 @@ def _fetch_imperator_averzian_avoidable_damage_summary_from_payload(payload: Dic
     )
 
 
+def _fetch_lightblinded_vanguard_dispel_summary_from_payload(
+    payload: Dict[str, Any],
+) -> LightblindedVanguardDispelSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_lightblinded_vanguard_dispel_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        extra_report_codes=payload.get("extra_reports"),
+        exclude_revival_dispels=bool(payload.get("exclude_revival_dispels", True)),
+        exclude_dead_player_sets=bool(payload.get("exclude_dead_player_sets", False)),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -1262,6 +1287,14 @@ def _execute_v2_imperator_averzian_avoidable_damage_job(payload: Dict[str, Any])
     return page.dict(by_alias=True)
 
 
+def _execute_v2_lightblinded_vanguard_dispel_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_lightblinded_vanguard_dispel_summary_from_payload(payload)
+    page = build_lightblinded_vanguard_dispel_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -1322,6 +1355,10 @@ job_manager.register_handler(
 )
 job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DAMAGE, _execute_v2_imperator_averzian_damage_job)
 job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DEATHS, _execute_v2_imperator_averzian_deaths_job)
+job_manager.register_handler(
+    JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
+    _execute_v2_lightblinded_vanguard_dispel_job,
+)
 job_manager.register_handler(JOB_V2_VORASIUS_AVOIDABLE_DAMAGE, _execute_v2_vorasius_avoidable_damage_job)
 job_manager.register_handler(JOB_V2_VORASIUS_DAMAGE, _execute_v2_vorasius_damage_job)
 job_manager.register_handler(JOB_V2_VORASIUS_DEATHS, _execute_v2_vorasius_deaths_job)

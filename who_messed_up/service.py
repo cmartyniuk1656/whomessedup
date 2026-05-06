@@ -54,6 +54,12 @@ from .services.death_reports import DeathReportDamageHit, DeathReportEntry, Deat
 from .services.imperator_averzian_damage import fetch_imperator_averzian_damage_summary
 from .services.imperator_averzian_avoidable_damage import fetch_imperator_averzian_avoidable_damage_summary
 from .services.imperator_averzian_deaths import fetch_imperator_averzian_death_summary
+from .services.lightblinded_vanguard_dispels import (
+    LightblindedVanguardDispelEntry,
+    LightblindedVanguardDispelEvent,
+    LightblindedVanguardDispelSummary,
+    fetch_lightblinded_vanguard_dispel_summary,
+)
 from .services.vorasius_avoidable_damage import fetch_vorasius_avoidable_damage_summary
 from .services.vorasius_damage import fetch_vorasius_damage_summary
 from .services.vorasius_deaths import fetch_vorasius_death_summary
@@ -100,6 +106,9 @@ __all__ = [
     "GhostMissMode",
     "GhostSummary",
     "HitSummary",
+    "LightblindedVanguardDispelEntry",
+    "LightblindedVanguardDispelEvent",
+    "LightblindedVanguardDispelSummary",
     "HealingConsumable",
     "HealingConsumableStatus",
     "IMPERATOR_AVERZIAN_MANIFEST",
@@ -139,6 +148,7 @@ __all__ = [
     "fetch_imperator_averzian_damage_summary",
     "fetch_imperator_averzian_avoidable_damage_summary",
     "fetch_imperator_averzian_death_summary",
+    "fetch_lightblinded_vanguard_dispel_summary",
     "fetch_vorasius_avoidable_damage_summary",
     "fetch_vorasius_damage_summary",
     "fetch_vorasius_death_summary",
