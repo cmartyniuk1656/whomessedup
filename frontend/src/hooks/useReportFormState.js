@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildInitialReportValues } from "../utils/reportFormValues";
 
 export function useReportFormState(reports) {
   const [selectedReportId, setSelectedReportId] = useState("");
   const [formValues, setFormValues] = useState({});
+  const pendingFormValuesRef = useRef(null);
 
   useEffect(() => {
     if (!reports.length) {
@@ -28,8 +29,19 @@ export function useReportFormState(reports) {
       setFormValues({});
       return;
     }
+    if (pendingFormValuesRef.current) {
+      setFormValues(pendingFormValuesRef.current);
+      pendingFormValuesRef.current = null;
+      return;
+    }
     setFormValues(buildInitialReportValues(selectedReport));
   }, [selectedReport]);
+
+  const setReportFormValues = useCallback((reportId, values) => {
+    pendingFormValuesRef.current = values ?? {};
+    setSelectedReportId(reportId);
+    setFormValues(values ?? {});
+  }, []);
 
   const handleValueChange = (fieldId, value) => {
     setFormValues((current) => ({ ...current, [fieldId]: value }));
@@ -70,6 +82,7 @@ export function useReportFormState(reports) {
     selectedReport,
     formValues,
     setSelectedReportId,
+    setReportFormValues,
     handleValueChange,
     handleMultiTextChange,
     handleAddMultiTextRow,

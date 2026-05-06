@@ -11,6 +11,7 @@ import { ReportWizardStepFrame } from "../components/v2/organisms/ReportWizardSt
 import { useReportBrowserState } from "../hooks/useReportBrowserState";
 import { useReportDefinitions } from "../hooks/useReportDefinitions";
 import { useReportJob } from "../hooks/useReportJob";
+import { buildCachedReportUrl, clearCachedReportParams, parseCachedReportParams } from "../utils/reportShareLink";
 
 const WIZARD_STEPS = {
   BOSS: "boss",
@@ -24,9 +25,20 @@ export function ReportsPage() {
   const [wizardTransitionPhase, setWizardTransitionPhase] = useState("enter");
   const [isConfigurationOpen, setIsConfigurationOpen] = useState(false);
   const [hasRunAttempt, setHasRunAttempt] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
   const transitionTimerRef = useRef(null);
+  const cachedLinkAttemptedRef = useRef(false);
   const { reports, error: definitionsError, loading: definitionsLoading } = useReportDefinitions();
-  const { page, error: jobError, isSubmitting, pendingJob, runReport, clearReportState } = useReportJob();
+  const {
+    page,
+    error: jobError,
+    isSubmitting,
+    pendingJob,
+    loadCachedReport,
+    runReport,
+    clearReportState,
+    setError: setJobError,
+  } = useReportJob();
   const {
     fightOptions,
     difficultyOptions,
@@ -42,6 +54,7 @@ export function ReportsPage() {
     selectedReport,
     formValues,
     setSelectedReportId,
+    setReportFormValues,
     handleValueChange,
     handleMultiTextChange,
     handleAddMultiTextRow,
@@ -101,9 +114,75 @@ export function ReportsPage() {
     }
   }, [activeWizardStep, goToWizardStep, page]);
 
+  useEffect(() => {
+    if (cachedLinkAttemptedRef.current || definitionsLoading || !reports.length) {
+      return;
+    }
+
+    let cachedParams = null;
+    try {
+      cachedParams = parseCachedReportParams(window.location.search);
+    } catch (err) {
+      cachedLinkAttemptedRef.current = true;
+      setHasRunAttempt(true);
+      setJobError(err.message || "Cached report link is invalid.");
+      goToWizardStep(WIZARD_STEPS.RUNNING);
+      return;
+    }
+
+    if (!cachedParams) {
+      return;
+    }
+
+    cachedLinkAttemptedRef.current = true;
+    const report = reports.find((candidate) => candidate.id === cachedParams.reportId);
+    if (!report) {
+      setHasRunAttempt(true);
+      setJobError("Cached report link references an unknown report.");
+      goToWizardStep(WIZARD_STEPS.RUNNING);
+      return;
+    }
+
+    setSelectedDifficulty(report.difficulty || selectedDifficulty);
+    setSelectedFightId(report.fightId || "");
+    setReportFormValues(report.id, cachedParams.values);
+    setHasRunAttempt(true);
+    setIsConfigurationOpen(false);
+    goToWizardStep(WIZARD_STEPS.RUNNING);
+    loadCachedReport({ reportId: report.id, values: cachedParams.values });
+  }, [
+    definitionsLoading,
+    goToWizardStep,
+    loadCachedReport,
+    reports,
+    selectedDifficulty,
+    setJobError,
+    setReportFormValues,
+    setSelectedDifficulty,
+    setSelectedFightId,
+  ]);
+
+  useEffect(() => {
+    if (!page || !selectedReportId || !Object.keys(formValues ?? {}).length) {
+      return;
+    }
+    const nextShareUrl = buildCachedReportUrl({ reportId: selectedReportId, values: formValues });
+    setShareUrl(nextShareUrl);
+    const nextUrl = new URL(nextShareUrl);
+    const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nextPath !== currentPath) {
+      window.history.replaceState(null, "", nextPath);
+    }
+  }, [formValues, page, selectedReportId]);
+
   const resetRunState = () => {
     setHasRunAttempt(false);
+    setShareUrl("");
     clearReportState();
+    if (window.location.search.includes("reportId=") || window.location.search.includes("values=")) {
+      window.history.replaceState(null, "", clearCachedReportParams());
+    }
   };
 
   const handleSelectDifficulty = (difficultyId) => {
@@ -241,7 +320,7 @@ export function ReportsPage() {
       title={page?.title || "Report results"}
       description="Review the completed report."
     >
-      {page ? <ReportResultsPanel page={page} /> : <PanelMessage>Run a report to view results.</PanelMessage>}
+      {page ? <ReportResultsPanel page={page} shareUrl={shareUrl} /> : <PanelMessage>Run a report to view results.</PanelMessage>}
     </ReportWizardStepFrame>
   );
 

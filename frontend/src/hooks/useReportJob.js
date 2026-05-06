@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { encodeReportValues } from "../utils/reportShareLink";
 
 export function useReportJob() {
   const [page, setPage] = useState(null);
@@ -130,12 +131,58 @@ export function useReportJob() {
     [requestJobStatus, stopPolling]
   );
 
+  const loadCachedReport = useCallback(
+    async ({ reportId, values }) => {
+      if (!reportId) {
+        setError("No report selected.");
+        return false;
+      }
+
+      stopPolling();
+      setError("");
+      setPendingJob(null);
+      setPage(null);
+      setIsSubmitting(true);
+
+      try {
+        const encodedValues = encodeReportValues(values);
+        const response = await fetch(
+          `/api/v2/reports/${reportId}/cached?values=${encodeURIComponent(encodedValues)}`
+        );
+
+        if (!response.ok) {
+          const detail = await response.json().catch(() => ({}));
+          const message =
+            response.status === 404
+              ? "Cached report link was not found or has expired. Run the report again to refresh it."
+              : detail?.detail || `Cached report request failed (${response.status}).`;
+          throw new Error(message);
+        }
+
+        const data = await response.json();
+        setPage(data);
+        return true;
+      } catch (err) {
+        const message =
+          err instanceof TypeError
+            ? "Cached report request failed. Confirm the backend is running on http://localhost:8088."
+            : err.message || "Cached report request failed.";
+        setError(message);
+        return false;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [stopPolling]
+  );
+
   return {
     clearReportState,
     page,
     error,
     isSubmitting,
     pendingJob,
+    loadCachedReport,
     runReport,
     setError,
   };
