@@ -317,6 +317,16 @@ def _build_ignore_after_deaths_field() -> RequestFieldModel:
     )
 
 
+def _build_ignore_stasis_field() -> RequestFieldModel:
+    return RequestFieldModel(
+        id="ignore_stasis",
+        kind=RequestFieldKind.CHECKBOX,
+        label="Ignore Stasis",
+        description="Exclude Stasis (Store) and Stasis (Release) assignments from cooldown scoring.",
+        defaultValue=True,
+    )
+
+
 def _build_ignore_unavoidable_after_healer_deaths_field() -> RequestFieldModel:
     return RequestFieldModel(
         id="ignore_unavoidable_after_healer_deaths",
@@ -667,6 +677,7 @@ def _build_cooldown_usage_payload(
     )
     ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
     ignore_after_healer_death = _coerce_bool(values, "ignore_after_healer_death", default=False)
+    ignore_stasis = _coerce_bool(values, "ignore_stasis", default=True)
     fresh_run = _coerce_bool(values, "fresh_run", default=False)
 
     payload: Dict[str, Any] = {
@@ -679,6 +690,7 @@ def _build_cooldown_usage_payload(
         "tolerance_seconds": tolerance_seconds,
         "ignore_after_deaths": ignore_after_deaths,
         "ignore_after_healer_death": ignore_after_healer_death,
+        "ignore_stasis": ignore_stasis,
     }
     return payload, fresh_run
 
@@ -1039,6 +1051,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
                         maxValue=15,
                         step=0.5,
                     ),
+                    _build_ignore_stasis_field(),
                     _build_ignore_after_deaths_field(),
                     RequestFieldModel(
                         id="ignore_after_healer_death",
@@ -1199,6 +1212,7 @@ def _build_cooldown_usage_definition(*, report_id: str, fight_id: str, fight_nam
                         maxValue=15,
                         step=0.5,
                     ),
+                    _build_ignore_stasis_field(),
                     _build_ignore_after_deaths_field(),
                     RequestFieldModel(
                         id="ignore_after_healer_death",

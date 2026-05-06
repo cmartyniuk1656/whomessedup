@@ -54,6 +54,10 @@ BATTLE_RESURRECTION_SPELL_IDS = {
     20707,  # Soulstone
     391054,  # Intercession
 }
+STASIS_SPELL_IDS = {
+    370537,  # Stasis (Store)
+    370564,  # Stasis (Release)
+}
 
 
 @dataclass(frozen=True)
@@ -88,6 +92,7 @@ class CooldownCastEvent:
     timestamp: float
     offset_ms: float
     ability_label: Optional[str]
+    target: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -119,6 +124,10 @@ class CooldownUsageEvent:
     boss_ability_label: Optional[str] = None
     ignore_reason: Optional[str] = None
     pull_duration_ms: Optional[float] = None
+    intended_target: Optional[str] = None
+    actual_target: Optional[str] = None
+    target_was_alive: Optional[bool] = None
+    target_mismatch: bool = False
 
 
 @dataclass
@@ -159,6 +168,7 @@ class CooldownUsageSummary:
     tolerance_seconds: float
     ignore_after_deaths: Optional[int]
     ignore_after_healer_death: bool
+    ignore_stasis: bool
     plan: CooldownReminderPlan
     pulls: List[CooldownUsagePull]
     entries: List[CooldownUsageEntry]
@@ -259,6 +269,23 @@ def validate_cooldown_plan(
         )
 
 
+def _filter_cooldown_plan(
+    plan: CooldownReminderPlan,
+    *,
+    ignored_spell_ids: Set[int],
+) -> CooldownReminderPlan:
+    if not ignored_spell_ids:
+        return plan
+    ignored = {int(spell_id) for spell_id in ignored_spell_ids}
+    assignments = [assignment for assignment in plan.assignments if int(assignment.spell_id) not in ignored]
+    if len(assignments) == len(plan.assignments):
+        return plan
+    return CooldownReminderPlan(
+        header=plan.header,
+        assignments=assignments,
+    )
+
+
 def fetch_cooldown_usage_summary(
     *,
     report_code: str,
@@ -272,6 +299,7 @@ def fetch_cooldown_usage_summary(
     tolerance_seconds: float = 7.5,
     ignore_after_deaths: Optional[int] = None,
     ignore_after_healer_death: bool = False,
+    ignore_stasis: bool = True,
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
@@ -282,6 +310,8 @@ def fetch_cooldown_usage_summary(
         expected_encounter_id=expected_encounter_id,
         expected_difficulty=expected_difficulty,
     )
+    if ignore_stasis:
+        plan = _filter_cooldown_plan(plan, ignored_spell_ids=STASIS_SPELL_IDS)
 
     primary_code = _sanitize_report_code(report_code)
     normalized_tolerance = _normalize_tolerance_seconds(tolerance_seconds)
@@ -294,6 +324,7 @@ def fetch_cooldown_usage_summary(
         tolerance_seconds=normalized_tolerance,
         ignore_after_deaths=ignore_after_deaths,
         ignore_after_healer_death=ignore_after_healer_death,
+        ignore_stasis=ignore_stasis,
         token=token,
         client_id=client_id,
         client_secret=client_secret,
@@ -327,6 +358,7 @@ def fetch_cooldown_usage_summary(
                 tolerance_seconds=normalized_tolerance,
                 ignore_after_deaths=ignore_after_deaths,
                 ignore_after_healer_death=ignore_after_healer_death,
+                ignore_stasis=ignore_stasis,
                 token=token,
                 client_id=client_id,
                 client_secret=client_secret,
@@ -346,6 +378,7 @@ def _fetch_single_cooldown_usage_summary(
     tolerance_seconds: float,
     ignore_after_deaths: Optional[int],
     ignore_after_healer_death: bool,
+    ignore_stasis: bool,
     token: Optional[str],
     client_id: Optional[str],
     client_secret: Optional[str],
@@ -360,7 +393,8 @@ def _fetch_single_cooldown_usage_summary(
     fight_id_list = [fight.id for fight in chosen]
 
     note_players = _note_players(plan)
-    player_lookup = {_normalize_player_name(player): player for player in note_players}
+    player_lookup = _player_lookup_for_names(actor_names, note_players)
+    target_player_lookup = _player_lookup_for_names(actor_names, [*note_players, *_assignment_target_players(plan)])
     player_classes = _player_classes_for_note_players(actor_names, actor_classes, note_players)
 
     aggregated_details = fetch_player_details(session, bearer, code=report_code, fight_ids=fight_id_list)
@@ -408,7 +442,7 @@ def _fetch_single_cooldown_usage_summary(
         participants_by_fight=participants_by_fight,
         roles_by_fight=roles_by_fight,
         player_roles_global=player_roles_global,
-        note_player_lookup=player_lookup,
+        watched_player_lookup=target_player_lookup,
         ignore_after_deaths=ignore_after_deaths,
         ignore_after_healer_death=ignore_after_healer_death,
     )
@@ -436,6 +470,7 @@ def _fetch_single_cooldown_usage_summary(
             pull=pull,
             plan=plan,
             note_player_lookup=player_lookup,
+            target_player_lookup=target_player_lookup,
             participants=participants_by_fight.get(fight.id, set()),
             cast_events=cast_events,
             life_events=life_events_by_fight.get(fight.id, {}),
@@ -463,6 +498,7 @@ def _fetch_single_cooldown_usage_summary(
         tolerance_seconds=tolerance_seconds,
         ignore_after_deaths=ignore_after_deaths,
         ignore_after_healer_death=ignore_after_healer_death,
+        ignore_stasis=ignore_stasis,
         plan=plan,
         pulls=pulls,
         entries=entries,
@@ -482,6 +518,7 @@ def _match_assignments_for_fight(
     pull: CooldownUsagePull,
     plan: CooldownReminderPlan,
     note_player_lookup: Dict[str, str],
+    target_player_lookup: Dict[str, str],
     participants: Set[str],
     cast_events: Dict[Tuple[int, str, int], List[CooldownCastEvent]],
     life_events: Dict[str, List[CooldownLifeEvent]],
@@ -572,6 +609,13 @@ def _match_assignments_for_fight(
         ordered_assignments = sorted(assignment_items, key=lambda item: (item[1], item[0].line_number))
 
         for assignment, scheduled_timestamp in ordered_assignments:
+            intended_target, intended_target_key, target_was_alive = _assignment_target_state(
+                assignment,
+                target_player_lookup=target_player_lookup,
+                participants=participants,
+                life_events=life_events,
+                scheduled_timestamp=scheduled_timestamp,
+            )
             window_start = scheduled_timestamp - tolerance_seconds * 1000.0
             window_end = scheduled_timestamp + tolerance_seconds * 1000.0
             candidate = _nearest_cast_index(
@@ -580,6 +624,7 @@ def _match_assignments_for_fight(
                 used_cast_indexes=used_cast_indexes,
                 min_timestamp=window_start,
                 max_timestamp=window_end,
+                required_target_key=intended_target_key if target_was_alive else None,
             )
             if candidate is None:
                 continue
@@ -597,33 +642,45 @@ def _match_assignments_for_fight(
                     ability_labels=ability_labels,
                     scheduled_timestamp=scheduled_timestamp,
                     cast=cast,
+                    intended_target=intended_target,
+                    target_was_alive=target_was_alive,
                 )
             )
 
         for assignment, scheduled_timestamp in ordered_assignments:
             if assignment.line_number in matched_line_numbers:
                 continue
-            if _is_dead_at(life_events.get(player_key, []), scheduled_timestamp):
-                events.append(
-                    _build_usage_event(
-                        report_code=report_code,
-                        fight=fight,
-                        pull=pull,
-                        assignment=assignment,
-                        player=note_player_lookup.get(player_key, assignment.player),
-                        status=COOLDOWN_STATUS_IGNORED_DEAD,
-                        ability_labels=ability_labels,
-                        scheduled_timestamp=scheduled_timestamp,
-                        ignore_reason="dead",
-                    )
-                )
-                continue
+            intended_target, intended_target_key, target_was_alive = _assignment_target_state(
+                assignment,
+                target_player_lookup=target_player_lookup,
+                participants=participants,
+                life_events=life_events,
+                scheduled_timestamp=scheduled_timestamp,
+            )
+            dead_at_scheduled_time = _is_dead_at(life_events.get(player_key, []), scheduled_timestamp)
             candidate = _nearest_cast_index(
                 casts,
                 scheduled_timestamp=scheduled_timestamp,
                 used_cast_indexes=used_cast_indexes,
             )
             if candidate is None:
+                if dead_at_scheduled_time:
+                    events.append(
+                        _build_usage_event(
+                            report_code=report_code,
+                            fight=fight,
+                            pull=pull,
+                            assignment=assignment,
+                            player=note_player_lookup.get(player_key, assignment.player),
+                            status=COOLDOWN_STATUS_IGNORED_DEAD,
+                            ability_labels=ability_labels,
+                            scheduled_timestamp=scheduled_timestamp,
+                            ignore_reason="dead",
+                            intended_target=intended_target,
+                            target_was_alive=target_was_alive,
+                        )
+                    )
+                    continue
                 events.append(
                     _build_usage_event(
                         report_code=report_code,
@@ -634,11 +691,18 @@ def _match_assignments_for_fight(
                         status=COOLDOWN_STATUS_MISSED,
                         ability_labels=ability_labels,
                         scheduled_timestamp=scheduled_timestamp,
+                        intended_target=intended_target,
+                        target_was_alive=target_was_alive,
                     )
                 )
                 continue
             used_cast_indexes.add(candidate)
             cast = casts[candidate]
+            target_mismatch = bool(
+                intended_target_key
+                and target_was_alive
+                and not _cast_matches_target(cast, intended_target_key)
+            )
             events.append(
                 _build_usage_event(
                     report_code=report_code,
@@ -650,6 +714,9 @@ def _match_assignments_for_fight(
                     ability_labels=ability_labels,
                     scheduled_timestamp=scheduled_timestamp,
                     cast=cast,
+                    intended_target=intended_target,
+                    target_was_alive=target_was_alive,
+                    target_mismatch=target_mismatch,
                 )
             )
 
@@ -668,6 +735,9 @@ def _build_usage_event(
     scheduled_timestamp: Optional[float],
     cast: Optional[CooldownCastEvent] = None,
     ignore_reason: Optional[str] = None,
+    intended_target: Optional[str] = None,
+    target_was_alive: Optional[bool] = None,
+    target_mismatch: bool = False,
 ) -> CooldownUsageEvent:
     scheduled_offset = scheduled_timestamp - float(fight.start) if scheduled_timestamp is not None else None
     delta_seconds = None
@@ -695,6 +765,10 @@ def _build_usage_event(
         boss_ability_label=ability_labels.get(assignment.boss_spell_id) if assignment.boss_spell_id is not None else None,
         ignore_reason=ignore_reason,
         pull_duration_ms=pull.duration_ms,
+        intended_target=intended_target,
+        actual_target=cast.target if cast else None,
+        target_was_alive=target_was_alive,
+        target_mismatch=target_mismatch,
     )
 
 
@@ -813,6 +887,7 @@ def _merge_cooldown_usage_summaries(summaries: List[CooldownUsageSummary]) -> Co
         tolerance_seconds=primary.tolerance_seconds,
         ignore_after_deaths=primary.ignore_after_deaths,
         ignore_after_healer_death=primary.ignore_after_healer_death,
+        ignore_stasis=primary.ignore_stasis,
         plan=primary.plan,
         pulls=pulls,
         entries=entries,
@@ -867,6 +942,7 @@ def _collect_cast_events(
             if ability_label:
                 ability_labels.setdefault(spell_id, ability_label)
             timestamp = _event_timestamp(event)
+            target_name = _event_target_name(event, actor_names)
             casts[(fight.id, player_key, spell_id)].append(
                 CooldownCastEvent(
                     player=player,
@@ -874,6 +950,7 @@ def _collect_cast_events(
                     timestamp=timestamp,
                     offset_ms=timestamp - float(fight.start),
                     ability_label=ability_label,
+                    target=target_name,
                 )
             )
     for events in casts.values():
@@ -891,7 +968,7 @@ def _collect_life_events_and_cutoffs(
     participants_by_fight: Dict[int, Set[str]],
     roles_by_fight: Dict[int, Dict[str, str]],
     player_roles_global: Dict[str, str],
-    note_player_lookup: Dict[str, str],
+    watched_player_lookup: Dict[str, str],
     ignore_after_deaths: Optional[int],
     ignore_after_healer_death: bool,
 ) -> Tuple[Dict[int, Dict[str, List[CooldownLifeEvent]]], Dict[int, float], Dict[int, float]]:
@@ -921,7 +998,7 @@ def _collect_life_events_and_cutoffs(
                 continue
             target_key = _normalize_player_name(target_name)
             timestamp = _event_timestamp(event)
-            if target_key in note_player_lookup:
+            if target_key in watched_player_lookup:
                 normalized_type = "resurrect" if event_type == "resurrect" else "death"
                 life_events[target_key].append(CooldownLifeEvent(timestamp=timestamp, event_type=normalized_type))
 
@@ -940,7 +1017,7 @@ def _collect_life_events_and_cutoffs(
             report_code=report_code,
             fight=fight,
             actor_names=actor_names,
-            note_player_lookup=note_player_lookup,
+            watched_player_lookup=watched_player_lookup,
             life_events=life_events,
         )
         life_events_by_fight[fight.id] = {
@@ -958,7 +1035,7 @@ def _append_resurrection_cast_life_events(
     report_code: str,
     fight: Any,
     actor_names: Dict[int, str],
-    note_player_lookup: Dict[str, str],
+    watched_player_lookup: Dict[str, str],
     life_events: DefaultDict[str, List[CooldownLifeEvent]],
 ) -> None:
     filter_expr = _build_spell_filter(BATTLE_RESURRECTION_SPELL_IDS)
@@ -977,7 +1054,7 @@ def _append_resurrection_cast_life_events(
         if not target_name:
             continue
         target_key = _normalize_player_name(target_name)
-        if target_key not in note_player_lookup:
+        if target_key not in watched_player_lookup:
             continue
         life_events[target_key].append(CooldownLifeEvent(timestamp=_event_timestamp(event), event_type="resurrect"))
 
@@ -1082,6 +1159,65 @@ def _note_players(plan: CooldownReminderPlan) -> List[str]:
         players.append(assignment.player)
         seen.add(key)
     return players
+
+
+def _assignment_target_players(plan: CooldownReminderPlan) -> List[str]:
+    players: List[str] = []
+    seen: Set[str] = set()
+    for assignment in plan.assignments:
+        target = _assignment_target_text(assignment)
+        key = _normalize_player_name(target)
+        if not key or key in seen:
+            continue
+        players.append(str(target).strip())
+        seen.add(key)
+    return players
+
+
+def _assignment_target_text(assignment: CooldownReminderAssignment) -> Optional[str]:
+    target = assignment.fields.get("glowunit")
+    if target is None:
+        return None
+    text = str(target).strip()
+    return text or None
+
+
+def _player_lookup_for_names(actor_names: Dict[int, str], players: Iterable[str]) -> Dict[str, str]:
+    actor_lookup = {
+        _normalize_player_name(name): name
+        for name in actor_names.values()
+        if name and _normalize_player_name(name)
+    }
+    lookup: Dict[str, str] = {}
+    for player in players:
+        key = _normalize_player_name(player)
+        if not key:
+            continue
+        lookup[key] = actor_lookup.get(key, str(player).strip())
+    return lookup
+
+
+def _assignment_target_state(
+    assignment: CooldownReminderAssignment,
+    *,
+    target_player_lookup: Dict[str, str],
+    participants: Set[str],
+    life_events: Dict[str, List[CooldownLifeEvent]],
+    scheduled_timestamp: float,
+) -> Tuple[Optional[str], Optional[str], Optional[bool]]:
+    target = _assignment_target_text(assignment)
+    if not target:
+        return None, None, None
+    target_key = _normalize_player_name(target)
+    if not target_key:
+        return None, None, None
+    target_name = target_player_lookup.get(target_key, str(target).strip())
+    target_is_alive = target_key in participants and not _is_dead_at(life_events.get(target_key, []), scheduled_timestamp)
+    return target_name, target_key, target_is_alive
+
+
+def _cast_matches_target(cast: CooldownCastEvent, target_key: str) -> bool:
+    return bool(target_key) and _normalize_player_name(cast.target) == target_key
 
 
 def _lookup_by_normalized(mapping: Dict[str, Any], player: str) -> Any:
@@ -1251,10 +1387,13 @@ def _nearest_cast_index(
     used_cast_indexes: Set[int],
     min_timestamp: Optional[float] = None,
     max_timestamp: Optional[float] = None,
+    required_target_key: Optional[str] = None,
 ) -> Optional[int]:
     candidates: List[Tuple[float, int]] = []
     for index, cast in enumerate(casts):
         if index in used_cast_indexes:
+            continue
+        if required_target_key and not _cast_matches_target(cast, required_target_key):
             continue
         if min_timestamp is not None and cast.timestamp < min_timestamp:
             continue

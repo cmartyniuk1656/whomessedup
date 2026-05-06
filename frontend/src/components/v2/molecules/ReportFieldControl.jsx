@@ -188,13 +188,14 @@ function SelectFieldControl({ field, value, onValueChange, density }) {
 }
 
 function CheckboxControl({ field, value, onValueChange, density }) {
+  const checked = value ?? field.defaultValue ?? false;
   return (
     <CheckboxField
       id={field.id}
       label={field.label}
       description={field.description}
       tooltip={field.tooltip}
-      checked={value}
+      checked={checked}
       onChange={(event) => onValueChange(field.id, event.target.checked)}
       compact={density === "compact"}
     />

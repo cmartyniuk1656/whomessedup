@@ -348,6 +348,8 @@ def _build_header_tags(
         HeaderTagModel(id="encounter", label="Encounter", value=str(summary.plan.header.encounter_id)),
         HeaderTagModel(id="tolerance", label="Tolerance", value=f"+/- {summary.tolerance_seconds:g}s"),
     ]
+    if summary.ignore_stasis:
+        tags.append(HeaderTagModel(id="ignore_stasis", label="Stasis", value="Ignored"))
     if summary.ignore_after_deaths:
         tags.append(HeaderTagModel(id="ignore_after_deaths", label="Death cutoff", value=f"After {summary.ignore_after_deaths} deaths"))
     if summary.ignore_after_healer_death:
@@ -424,6 +426,12 @@ def _build_event_item(event: CooldownUsageEvent, index: int) -> RowDetailItemMod
     if event.boss_spell_id is not None:
         boss_label = event.boss_ability_label or str(event.boss_spell_id)
         badges.append(f"Boss {boss_label}")
+    if event.intended_target:
+        badges.append(f"Target {event.intended_target}")
+        if event.target_was_alive is False:
+            badges.append("Target dead")
+    if event.target_mismatch:
+        badges.append("Target mismatch")
     if event.ignore_reason:
         badges.append(_ignore_reason_label(event.ignore_reason))
 
@@ -442,10 +450,22 @@ def _build_event_item(event: CooldownUsageEvent, index: int) -> RowDetailItemMod
 
 def _event_description(event: CooldownUsageEvent) -> str:
     phase_label = f"P{event.phase} + {event.phase_time_seconds:g}s"
+    actual_target = f" on {event.actual_target}" if event.actual_target else ""
+    target_dead_suffix = (
+        f"; intended target {event.intended_target} was dead"
+        if event.intended_target and event.target_was_alive is False
+        else ""
+    )
     if event.status == COOLDOWN_STATUS_CORRECT:
-        return f"{phase_label}; cast at {format_offset_seconds(event.actual_offset_ms)} ({_format_signed_delta(event.delta_seconds)})"
+        return f"{phase_label}; cast{actual_target} at {format_offset_seconds(event.actual_offset_ms)} ({_format_signed_delta(event.delta_seconds)}){target_dead_suffix}"
     if event.status == COOLDOWN_STATUS_INCORRECT:
-        return f"{phase_label}; cast outside window at {format_offset_seconds(event.actual_offset_ms)} ({_format_signed_delta(event.delta_seconds)})"
+        if event.target_mismatch and event.intended_target:
+            actual = event.actual_target or "unknown target"
+            return (
+                f"{phase_label}; cast on {actual} at {format_offset_seconds(event.actual_offset_ms)} "
+                f"({_format_signed_delta(event.delta_seconds)}) instead of {event.intended_target}"
+            )
+        return f"{phase_label}; cast outside window{actual_target} at {format_offset_seconds(event.actual_offset_ms)} ({_format_signed_delta(event.delta_seconds)}){target_dead_suffix}"
     if event.status == COOLDOWN_STATUS_MISSED:
         return f"{phase_label}; no same-spell cast found"
     if event.status == COOLDOWN_STATUS_IGNORED_DEAD:

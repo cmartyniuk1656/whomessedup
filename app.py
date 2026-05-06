@@ -1240,6 +1240,7 @@ def _fetch_lightblinded_vanguard_cooldown_summary_from_payload(
         tolerance_seconds=payload.get("tolerance_seconds", 7.5),
         ignore_after_deaths=payload.get("ignore_after_deaths"),
         ignore_after_healer_death=bool(payload.get("ignore_after_healer_death", False)),
+        ignore_stasis=bool(payload.get("ignore_stasis", True)),
         token=payload.get("token"),
         client_id=credentials["client_id"],
         client_secret=credentials["client_secret"],
