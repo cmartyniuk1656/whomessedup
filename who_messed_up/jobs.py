@@ -128,6 +128,10 @@ class JobManager:
                 return None
             return job.result
 
+    def cached_result(self, job_type: str, payload: Dict[str, Any]) -> Optional[Any]:
+        cache_key = self._cache.make_key(job_type, payload)
+        return self._cache.get(cache_key)
+
     def _position_locked(self, job_id: str, status: str) -> Optional[int]:
         if status == "pending":
             try:
@@ -161,7 +165,7 @@ class JobManager:
                 result = handler(job.payload)
                 job.result = result
                 job.status = "completed"
-                if job.cache_key and not job.bust_cache:
+                if job.cache_key:
                     self._cache.set(job.cache_key, result)
             except Exception as exc:  # pragma: no cover - defensive
                 job.error = str(exc)
@@ -172,4 +176,3 @@ class JobManager:
 
 
 job_manager = JobManager(result_cache)
-

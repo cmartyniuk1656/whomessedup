@@ -3,6 +3,8 @@ FastAPI application entry point exposing Warcraft Logs hit summaries.
 """
 from __future__ import annotations
 
+import base64
+import json
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -1406,6 +1408,46 @@ def create_v2_report_job(report_id: str, request: RunReportRequestModel):
     if snapshot is None:
         raise HTTPException(status_code=500, detail="Job tracking failed.")
     return JSONResponse(status_code=202, content={"job": snapshot})
+
+
+def _decode_cached_report_values(encoded_values: str) -> Dict[str, Any]:
+    text = str(encoded_values or "").strip()
+    if not text:
+        raise ValueError("values query parameter is required.")
+    try:
+        padding = "=" * (-len(text) % 4)
+        raw = base64.urlsafe_b64decode((text + padding).encode("ascii")).decode("utf-8")
+    except Exception:
+        raw = text
+    try:
+        values = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("values query parameter must be base64url encoded JSON.") from exc
+    if not isinstance(values, dict):
+        raise ValueError("values query parameter must decode to an object.")
+    return values
+
+
+@app.get("/api/v2/reports/{report_id}/cached", response_model=ReportPageModel)
+def get_cached_v2_report(
+    report_id: str,
+    values: str = Query(..., description="Base64url encoded report form values."),
+):
+    try:
+        get_registered_report(report_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=exc.args[0]) from exc
+
+    try:
+        decoded_values = _decode_cached_report_values(values)
+        job_type, payload, _bust_cache = build_report_job_request(report_id, decoded_values)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    result = job_manager.cached_result(job_type, payload)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Cached report not found or expired.")
+    return ReportPageModel.parse_obj(result)
 
 
 @app.get("/api/hits", response_model=HitSummaryResponse)
