@@ -25,6 +25,8 @@ from who_messed_up.services.report_registry import (
     JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
     JOB_V2_COOLDOWN_USAGE,
+    JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE,
+    JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS,
     JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
@@ -52,6 +54,12 @@ from who_messed_up.services.view_models.lightblinded_vanguard_dispels import (
 )
 from who_messed_up.services.view_models.lightblinded_vanguard_cooldowns import (
     build_cooldown_usage_report_page,
+)
+from who_messed_up.services.view_models.lightblinded_vanguard_avoidable_damage import (
+    build_lightblinded_vanguard_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.lightblinded_vanguard_deaths import (
+    build_lightblinded_vanguard_deaths_report_page,
 )
 from who_messed_up.services.view_models.vorasius_damage import build_vorasius_damage_report_page
 from who_messed_up.services.view_models.vorasius_avoidable_damage import (
@@ -91,6 +99,8 @@ from who_messed_up.service import (
     fetch_imperator_averzian_damage_summary,
     fetch_imperator_averzian_death_summary,
     fetch_cooldown_usage_summary,
+    fetch_lightblinded_vanguard_avoidable_damage_summary,
+    fetch_lightblinded_vanguard_death_summary,
     fetch_lightblinded_vanguard_dispel_summary,
     fetch_vorasius_avoidable_damage_summary,
     fetch_vorasius_damage_summary,
@@ -1099,6 +1109,7 @@ def _fetch_vorasius_deaths_summary_from_payload(payload: Dict[str, Any]) -> Deat
         fight_ids=fight_ids,
         difficulty=payload.get("difficulty"),
         ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
         extra_report_codes=payload.get("extra_reports"),
         token=payload.get("token"),
         client_id=credentials["client_id"],
@@ -1132,6 +1143,7 @@ def _fetch_imperator_averzian_deaths_summary_from_payload(payload: Dict[str, Any
         fight_ids=fight_ids,
         difficulty=payload.get("difficulty"),
         ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
         extra_report_codes=payload.get("extra_reports"),
         token=payload.get("token"),
         client_id=credentials["client_id"],
@@ -1169,6 +1181,42 @@ def _fetch_lightblinded_vanguard_dispel_summary_from_payload(
         extra_report_codes=payload.get("extra_reports"),
         exclude_revival_dispels=bool(payload.get("exclude_revival_dispels", True)),
         exclude_dead_player_sets=bool(payload.get("exclude_dead_player_sets", False)),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_lightblinded_vanguard_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_lightblinded_vanguard_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_lightblinded_vanguard_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_lightblinded_vanguard_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
         token=payload.get("token"),
         client_id=credentials["client_id"],
         client_secret=credentials["client_secret"],
@@ -1326,6 +1374,22 @@ def _execute_v2_lightblinded_vanguard_dispel_job(payload: Dict[str, Any]) -> Dic
     return page.dict(by_alias=True)
 
 
+def _execute_v2_lightblinded_vanguard_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_lightblinded_vanguard_deaths_summary_from_payload(payload)
+    page = build_lightblinded_vanguard_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_lightblinded_vanguard_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_lightblinded_vanguard_avoidable_damage_summary_from_payload(payload)
+    page = build_lightblinded_vanguard_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_lightblinded_vanguard_cooldown_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_lightblinded_vanguard_cooldown_summary_from_payload(payload)
     page = build_cooldown_usage_report_page(
@@ -1401,8 +1465,16 @@ job_manager.register_handler(
 job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DAMAGE, _execute_v2_imperator_averzian_damage_job)
 job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DEATHS, _execute_v2_imperator_averzian_deaths_job)
 job_manager.register_handler(
+    JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE,
+    _execute_v2_lightblinded_vanguard_avoidable_damage_job,
+)
+job_manager.register_handler(
     JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
     _execute_v2_lightblinded_vanguard_dispel_job,
+)
+job_manager.register_handler(
+    JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS,
+    _execute_v2_lightblinded_vanguard_deaths_job,
 )
 job_manager.register_handler(
     JOB_V2_COOLDOWN_USAGE,

@@ -20,6 +20,7 @@ from .services.consumables import (
 from .services.boss_manifests import (
     BOSS_MANIFESTS,
     IMPERATOR_AVERZIAN_MANIFEST,
+    LIGHTBLINDED_VANGUARD_MANIFEST,
     MANIFEST_TIERS,
     VORASIUS_MANIFEST,
     BossAbilityMetadata,
@@ -60,6 +61,9 @@ from .services.lightblinded_vanguard_dispels import (
     LightblindedVanguardDispelSummary,
     fetch_lightblinded_vanguard_dispel_summary,
 )
+from .services.lightblinded_vanguard_avoidable_damage import (
+    fetch_lightblinded_vanguard_avoidable_damage_summary,
+)
 from .services.cooldown_usage import (
     CooldownUsageEntry,
     CooldownUsageEvent,
@@ -67,6 +71,7 @@ from .services.cooldown_usage import (
     fetch_cooldown_usage_summary,
 )
 from .services.lightblinded_vanguard_cooldowns import fetch_lightblinded_vanguard_cooldown_summary
+from .services.lightblinded_vanguard_deaths import fetch_lightblinded_vanguard_death_summary
 from .services.vorasius_avoidable_damage import fetch_vorasius_avoidable_damage_summary
 from .services.vorasius_damage import fetch_vorasius_damage_summary
 from .services.vorasius_deaths import fetch_vorasius_death_summary
@@ -116,6 +121,7 @@ __all__ = [
     "LightblindedVanguardDispelEntry",
     "LightblindedVanguardDispelEvent",
     "LightblindedVanguardDispelSummary",
+    "LIGHTBLINDED_VANGUARD_MANIFEST",
     "CooldownUsageEntry",
     "CooldownUsageEvent",
     "CooldownUsageSummary",
@@ -159,7 +165,9 @@ __all__ = [
     "fetch_imperator_averzian_damage_summary",
     "fetch_imperator_averzian_avoidable_damage_summary",
     "fetch_imperator_averzian_death_summary",
+    "fetch_lightblinded_vanguard_avoidable_damage_summary",
     "fetch_lightblinded_vanguard_cooldown_summary",
+    "fetch_lightblinded_vanguard_death_summary",
     "fetch_lightblinded_vanguard_dispel_summary",
     "fetch_vorasius_avoidable_damage_summary",
     "fetch_vorasius_damage_summary",

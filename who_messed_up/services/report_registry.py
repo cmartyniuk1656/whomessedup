@@ -7,7 +7,11 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Tuple
 
 from .avoidable_damage import ability_manifest_key, resolve_avoidable_manifest_abilities
-from .boss_manifests import IMPERATOR_AVERZIAN_MANIFEST, VORASIUS_MANIFEST
+from .boss_manifests import (
+    IMPERATOR_AVERZIAN_MANIFEST,
+    LIGHTBLINDED_VANGUARD_MANIFEST,
+    VORASIUS_MANIFEST,
+)
 from .common import _sanitize_report_code
 from .dimensius_deaths import (
     OBLIVION_FILTER_DEFAULT,
@@ -72,6 +76,20 @@ from .view_models.lightblinded_vanguard_cooldowns import (
     REPORT_ID as REPORT_LIGHTBLINDED_COOLDOWNS_ID,
     REPORT_TITLE as REPORT_LIGHTBLINDED_COOLDOWNS_TITLE,
 )
+from .view_models.lightblinded_vanguard_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_LIGHTBLINDED_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_LIGHTBLINDED_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_LIGHTBLINDED_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_LIGHTBLINDED_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_LIGHTBLINDED_AVOIDABLE_TITLE,
+)
+from .view_models.lightblinded_vanguard_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_LIGHTBLINDED_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_LIGHTBLINDED_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_LIGHTBLINDED_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_LIGHTBLINDED_DEATHS_ID,
+    REPORT_TITLE as REPORT_LIGHTBLINDED_DEATHS_TITLE,
+)
 from .view_models.vorasius_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_VORASIUS_DESCRIPTION,
@@ -112,7 +130,9 @@ JOB_V2_IMPERATOR_AVERZIAN_DAMAGE = "v2_report_imperator_averzian_damage"
 JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE = "v2_report_imperator_averzian_avoidable_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DEATHS = "v2_report_imperator_averzian_deaths"
 JOB_V2_COOLDOWN_USAGE = "v2_report_cooldown_usage"
+JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE = "v2_report_lightblinded_vanguard_avoidable_damage"
 JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS = JOB_V2_COOLDOWN_USAGE
+JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS = "v2_report_lightblinded_vanguard_deaths"
 JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS = "v2_report_lightblinded_vanguard_dispels"
 JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
 JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
@@ -293,6 +313,20 @@ def _build_ignore_after_deaths_field() -> RequestFieldModel:
         label="Ignore after deaths",
         description="Stop counting report events after this many total player deaths in a pull.",
         placeholder="No limit",
+        defaultValue="",
+    )
+
+
+def _build_ignore_unavoidable_after_healer_deaths_field() -> RequestFieldModel:
+    return RequestFieldModel(
+        id="ignore_unavoidable_after_healer_deaths",
+        kind=RequestFieldKind.NUMBER,
+        label="Ignore unavoidable deaths while healers are dead",
+        description=(
+            "Exclude non-avoidable deaths while at least this many healers are currently dead in the same pull. "
+            "Battle resurrections reduce the dead-healer count, and avoidable deaths are still counted."
+        ),
+        placeholder="No dead-healer cutoff",
         defaultValue="",
     )
 
@@ -501,6 +535,10 @@ def _build_death_report_payload(
     extra_reports = report_codes[1:]
 
     ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    ignore_unavoidable_after_healer_deaths = _coerce_positive_int(
+        values,
+        "ignore_unavoidable_after_healer_deaths",
+    )
     fresh_run = _coerce_bool(values, "fresh_run", default=False)
 
     payload: Dict[str, Any] = {
@@ -508,6 +546,7 @@ def _build_death_report_payload(
         "fight": default_fight,
         "extra_reports": extra_reports,
         "ignore_after_deaths": ignore_after_deaths,
+        "ignore_unavoidable_after_healer_deaths": ignore_unavoidable_after_healer_deaths,
     }
     return payload, fresh_run
 
@@ -523,6 +562,13 @@ def _build_vorasius_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
     return _build_death_report_payload(
         values,
         default_fight=REPORT_VORASIUS_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_lightblinded_vanguard_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_LIGHTBLINDED_DEATHS_DEFAULT_FIGHT,
     )
 
 
@@ -571,6 +617,14 @@ def _build_vorasius_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Di
         values,
         manifest=VORASIUS_MANIFEST,
         default_fight=REPORT_VORASIUS_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_lightblinded_vanguard_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=LIGHTBLINDED_VANGUARD_MANIFEST,
+        default_fight=REPORT_LIGHTBLINDED_AVOIDABLE_DEFAULT_FIGHT,
     )
 
 
@@ -762,6 +816,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
                 fields=[
                     _build_report_codes_field(),
                     _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
                     RequestFieldModel(
                         id="fresh_run",
                         kind=RequestFieldKind.CHECKBOX,
@@ -788,6 +843,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
                 fields=[
                     _build_report_codes_field(),
                     _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
                     RequestFieldModel(
                         id="fresh_run",
                         kind=RequestFieldKind.CHECKBOX,
@@ -853,6 +909,60 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
         build_payload=_build_vorasius_avoidable_damage_payload,
+    ),
+    REPORT_LIGHTBLINDED_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_LIGHTBLINDED_DEATHS_ID,
+            title=REPORT_LIGHTBLINDED_DEATHS_TITLE,
+            description=REPORT_LIGHTBLINDED_DEATHS_DESCRIPTION,
+            fightId=LIGHTBLINDED_VANGUARD_FIGHT_ID,
+            fightName=REPORT_LIGHTBLINDED_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_LIGHTBLINDED_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_LIGHTBLINDED_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS,
+        build_payload=_build_lightblinded_vanguard_deaths_payload,
+    ),
+    REPORT_LIGHTBLINDED_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_LIGHTBLINDED_AVOIDABLE_ID,
+            title=REPORT_LIGHTBLINDED_AVOIDABLE_TITLE,
+            description=REPORT_LIGHTBLINDED_AVOIDABLE_DESCRIPTION,
+            fightId=LIGHTBLINDED_VANGUARD_FIGHT_ID,
+            fightName=REPORT_LIGHTBLINDED_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_LIGHTBLINDED_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_LIGHTBLINDED_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(LIGHTBLINDED_VANGUARD_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE,
+        build_payload=_build_lightblinded_vanguard_avoidable_damage_payload,
     ),
     REPORT_LIGHTBLINDED_DISPELS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -1151,7 +1261,9 @@ __all__ = [
     "JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DEATHS",
+    "JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE",
     "JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS",
+    "JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS",
     "JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",

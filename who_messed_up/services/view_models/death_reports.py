@@ -267,6 +267,15 @@ def _build_header_tags(summary: DeathReportSummary, extra_tags: Iterable[HeaderT
                 value=f"Stop after {summary.ignore_after_deaths} deaths",
             )
         )
+    healer_cutoff = getattr(summary, "ignore_unavoidable_after_healer_deaths", None)
+    if healer_cutoff:
+        tags.append(
+            HeaderTagModel(
+                id="ignore_unavoidable_after_healer_deaths",
+                label="Filter",
+                value=f"Hide unavoidable while {healer_cutoff} healers are dead",
+            )
+        )
     merged_label = merged_reports_label(summary.source_reports or [summary.report_code])
     if merged_label:
         tags.append(HeaderTagModel(id="merged_reports", label="Reports", value=merged_label))
@@ -284,6 +293,7 @@ def build_death_report_page(
     for entry in summary.entries:
         role = entry.role or ROLE_UNKNOWN
         role_priority = ROLE_PRIORITY.get(role, ROLE_PRIORITY[ROLE_UNKNOWN])
+        avoidable_death_rate = (getattr(entry, "avoidable_deaths", 0) / entry.pulls) if entry.pulls else 0.0
         rows.append(
             TableRowModel(
                 id=entry.player,
@@ -300,6 +310,8 @@ def build_death_report_page(
                     ),
                     "pulls": TableCellModel(value=entry.pulls),
                     "deaths": TableCellModel(value=entry.deaths),
+                    "avoidable_deaths": TableCellModel(value=getattr(entry, "avoidable_deaths", 0)),
+                    "avoidable_death_rate": TableCellModel(value=avoidable_death_rate),
                     "death_rate": TableCellModel(value=entry.death_rate),
                 },
                 details=_build_row_details(
@@ -330,6 +342,13 @@ def build_death_report_page(
                 label="Total deaths",
                 value=summary.total_deaths,
                 format=ValueFormat.INTEGER,
+            ),
+            SummaryMetricModel(
+                id="avoidable_deaths",
+                label="Avoidable deaths",
+                value=getattr(summary, "total_avoidable_deaths", 0),
+                format=ValueFormat.INTEGER,
+                display=f"{getattr(summary, 'total_avoidable_deaths', 0):,} / {summary.total_deaths:,}",
             ),
             SummaryMetricModel(
                 id="avg_deaths_per_pull",
@@ -373,6 +392,23 @@ def build_death_report_page(
                         sortable=True,
                         cellKind=CellKind.NUMBER,
                         format=ValueFormat.INTEGER,
+                    ),
+                    TableColumnModel(
+                        id="avoidable_deaths",
+                        label="Avoidable Deaths",
+                        align=TextAlign.RIGHT,
+                        sortable=True,
+                        cellKind=CellKind.NUMBER,
+                        format=ValueFormat.INTEGER,
+                    ),
+                    TableColumnModel(
+                        id="avoidable_death_rate",
+                        label="Avoidable Death Rate",
+                        align=TextAlign.RIGHT,
+                        sortable=True,
+                        cellKind=CellKind.NUMBER,
+                        format=ValueFormat.DECIMAL,
+                        precision=3,
                     ),
                     TableColumnModel(
                         id="death_rate",

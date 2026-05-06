@@ -1,17 +1,17 @@
 """
-Imperator Averzian death summary wrapper.
+Lightblinded Vanguard death summary wrapper.
 """
 from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from .boss_manifests import IMPERATOR_AVERZIAN_MANIFEST
+from .boss_manifests import LIGHTBLINDED_VANGUARD_MANIFEST
 from .death_reports import DeathReportSummary, fetch_death_report_summary
 
-REPORT_DEFAULT_FIGHT = "Imperator Averzian"
+REPORT_DEFAULT_FIGHT = "Lightblinded Vanguard"
 
 
-def fetch_imperator_averzian_death_summary(
+def fetch_lightblinded_vanguard_death_summary(
     *,
     report_code: str,
     fight_name: Optional[str] = None,
@@ -32,7 +32,7 @@ def fetch_imperator_averzian_death_summary(
         ignore_after_deaths=ignore_after_deaths,
         ignore_unavoidable_after_healer_deaths=ignore_unavoidable_after_healer_deaths,
         extra_report_codes=extra_report_codes,
-        boss_manifest=IMPERATOR_AVERZIAN_MANIFEST,
+        boss_manifest=LIGHTBLINDED_VANGUARD_MANIFEST,
         token=token,
         client_id=client_id,
         client_secret=client_secret,
@@ -41,5 +41,5 @@ def fetch_imperator_averzian_death_summary(
 
 __all__ = [
     "REPORT_DEFAULT_FIGHT",
-    "fetch_imperator_averzian_death_summary",
+    "fetch_lightblinded_vanguard_death_summary",
 ]
