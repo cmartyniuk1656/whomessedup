@@ -100,6 +100,18 @@ class TableFilterModel(ViewModelBase):
     options: List[TableFilterOptionModel] = Field(default_factory=list)
 
 
+class TableViewOptionModel(ViewModelBase):
+    value: str
+    label: str
+
+
+class TableViewControlModel(ViewModelBase):
+    id: str
+    label: str
+    default_value: str = Field(..., alias="defaultValue")
+    options: List[TableViewOptionModel] = Field(default_factory=list)
+
+
 class DamageTableColumnGroupModel(ViewModelBase):
     target_id: str = Field(..., alias="targetId")
     label: str
@@ -223,8 +235,10 @@ class TableModel(ViewModelBase):
     default_sort: SortModel = Field(..., alias="defaultSort")
     columns: List[TableColumnModel] = Field(default_factory=list)
     rows: List[TableRowModel] = Field(default_factory=list)
+    rows_by_view: Dict[str, List[TableRowModel]] = Field(default_factory=dict, alias="rowsByView")
     empty_state: str = Field(..., alias="emptyState")
     damage_filter_config: Optional[DamageTableFilterConfigModel] = Field(None, alias="damageFilterConfig")
+    view_control: Optional[TableViewControlModel] = Field(None, alias="viewControl")
 
 
 class ReportContentModel(ViewModelBase):
@@ -273,6 +287,8 @@ __all__ = [
     "TableColumnModel",
     "TableModel",
     "TableRowModel",
+    "TableViewControlModel",
+    "TableViewOptionModel",
     "TextAlign",
     "ValueFormat",
 ]

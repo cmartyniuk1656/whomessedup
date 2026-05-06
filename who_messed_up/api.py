@@ -21,6 +21,7 @@ query($code: String!) {
       endTime
       fights {
         id
+        encounterID
         name
         startTime
         endTime
@@ -88,6 +89,7 @@ class Fight:
     end: float
     kill: bool
     difficulty: Optional[int] = None
+    encounter_id: Optional[int] = None
 
 
 @dataclass
@@ -170,6 +172,15 @@ def _build_actor_maps(report: Dict[str, Any]) -> Tuple[Dict[int, str], Dict[int,
     return names, classes, owners
 
 
+def _coerce_optional_int(value: Any) -> Optional[int]:
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List[Fight], Dict[int, str], Dict[int, Optional[str]], Dict[int, Optional[int]]]:
     overview = gql(session, token, REPORT_OVERVIEW_QUERY, {"code": code})
     report = overview["reportData"]["report"]
@@ -190,6 +201,7 @@ def fetch_fights(session: requests.Session, token: str, code: str) -> Tuple[List
                 end=float(raw["endTime"]),
                 kill=bool(raw.get("kill")),
                 difficulty=difficulty_value,
+                encounter_id=_coerce_optional_int(raw.get("encounterID")),
             )
         )
     actor_names, actor_classes, actor_owners = _build_actor_maps(report)

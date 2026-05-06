@@ -135,7 +135,7 @@ export function useReportJob() {
     async ({ reportId, values }) => {
       if (!reportId) {
         setError("No report selected.");
-        return false;
+        return { ok: false, cacheMiss: false };
       }
 
       stopPolling();
@@ -150,25 +150,25 @@ export function useReportJob() {
           `/api/v2/reports/${reportId}/cached?values=${encodeURIComponent(encodedValues)}`
         );
 
+        if (response.status === 404) {
+          return { ok: false, cacheMiss: true };
+        }
+
         if (!response.ok) {
           const detail = await response.json().catch(() => ({}));
-          const message =
-            response.status === 404
-              ? "Cached report link was not found or has expired. Run the report again to refresh it."
-              : detail?.detail || `Cached report request failed (${response.status}).`;
-          throw new Error(message);
+          throw new Error(detail?.detail || `Cached report request failed (${response.status}).`);
         }
 
         const data = await response.json();
         setPage(data);
-        return true;
+        return { ok: true, cacheMiss: false };
       } catch (err) {
         const message =
           err instanceof TypeError
             ? "Cached report request failed. Confirm the backend is running on http://localhost:8088."
             : err.message || "Cached report request failed.";
         setError(message);
-        return false;
+        return { ok: false, cacheMiss: false };
       } finally {
         setIsSubmitting(false);
       }

@@ -49,9 +49,10 @@ REPORT_ID = "lightblinded-vanguard-dispels"
 REPORT_TITLE = "Mythic Lightblinded Vanguard - Dispel Report"
 REPORT_DESCRIPTION = "Track Avenger's Shield dispels and dispel casts during Mythic Lightblinded Vanguard pulls."
 REPORT_FOOTNOTES = [
-    "Shield sets are counted only when exactly four Avenger's Shield applications occur together.",
+    "Shield sets are counted for every simultaneous Avenger's Shield application group unless it applies to every alive raid member.",
     "The default Revival filter excludes Revival and any same-player same-timestamp multi-dispel bursts.",
-    "Set Dispels is the subset of successful dispels tied to counted 4-application sets and is used for Avg Dispels / Set."
+    "Non-set dispels are marked only when the source application group applied to every alive raid member.",
+    "Set Dispels excludes raid-wide non-set application waves and is used for Avg Dispels / Set.",
 ]
 
 
@@ -265,7 +266,7 @@ def _build_summary_metrics(summary: LightblindedVanguardDispelSummary) -> List[S
         metrics.append(
             SummaryMetricModel(
                 id="excluded_application_groups",
-                label="Excluded application groups",
+                label="Raid-wide application groups",
                 value=summary.excluded_application_groups,
                 format=ValueFormat.INTEGER,
             )

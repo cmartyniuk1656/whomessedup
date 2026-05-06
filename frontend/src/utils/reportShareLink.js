@@ -51,9 +51,3 @@ export function parseCachedReportParams(search = window.location.search) {
   };
 }
 
-export function clearCachedReportParams(location = window.location) {
-  const url = new URL(location.href);
-  url.searchParams.delete(REPORT_ID_PARAM);
-  url.searchParams.delete(REPORT_VALUES_PARAM);
-  return `${url.pathname}${url.search}${url.hash}`;
-}

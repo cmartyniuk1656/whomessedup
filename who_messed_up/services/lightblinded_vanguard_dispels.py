@@ -29,7 +29,6 @@ from .common import (
 
 REPORT_DEFAULT_FIGHT = "Lightblinded Vanguard"
 AVENGERS_SHIELD_DEBUFF_ID = 1246502
-AVENGERS_SHIELD_SET_SIZE = 4
 APPLICATION_SET_WINDOW_MS = 250.0
 REVIVAL_ABILITY_ID = 115310
 
@@ -235,17 +234,13 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
                 player_roles[player] = role or ROLE_UNKNOWN
             player_specs.setdefault(player, player_specs_global.get(player))
 
-    death_timestamps_by_fight = (
-        _collect_death_timestamps_by_fight(
-            session,
-            bearer,
-            report_code=report_code,
-            fights=chosen,
-            actor_names=actor_names,
-            known_players=known_players,
-        )
-        if exclude_dead_player_sets
-        else {}
+    death_timestamps_by_fight = _collect_death_timestamps_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+        known_players=known_players,
     )
 
     set_counts_by_player: DefaultDict[str, int] = defaultdict(int)
@@ -269,12 +264,17 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
         target_applications: DefaultDict[str, List[Tuple[float, bool]]] = defaultdict(list)
         for group in _group_events_by_timestamp(apply_events, window_ms=APPLICATION_SET_WINDOW_MS):
             group_timestamp = _event_timestamp(group[0])
-            is_counted_set = len(group) == AVENGERS_SHIELD_SET_SIZE
+            is_raidwide_non_set = _is_raidwide_application_group(
+                group,
+                participants=participants_by_fight.get(fight.id, set()),
+                death_timestamps=death_timestamps_by_fight.get(fight.id, {}),
+                timestamp=group_timestamp,
+            )
             for event in group:
                 target_name = _target_name_from_event(event)
                 if target_name:
-                    target_applications[target_name].append((group_timestamp, is_counted_set))
-            if not is_counted_set:
+                    target_applications[target_name].append((group_timestamp, is_raidwide_non_set))
+            if is_raidwide_non_set:
                 excluded_application_groups += 1
                 excluded_application_count += len(group)
                 continue
@@ -350,7 +350,7 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
                 total_multi_dispels += 1
 
             target_name = _target_name_from_event(event)
-            is_non_set_dispel = not _matches_counted_application(
+            is_non_set_dispel = _matches_raidwide_application(
                 applications_by_fight_target.get(fight.id, {}).get(target_name or "", []),
                 timestamp,
             )
@@ -744,14 +744,39 @@ def _player_was_dead_before(death_timestamps: List[float], timestamp: float) -> 
     return any(death_timestamp <= timestamp for death_timestamp in death_timestamps)
 
 
-def _matches_counted_application(applications: List[Tuple[float, bool]], dispel_timestamp: float) -> bool:
-    matched: Optional[bool] = None
-    for application_timestamp, is_counted_set in applications:
+def _is_raidwide_application_group(
+    group: List[Dict[str, object]],
+    *,
+    participants: Set[str],
+    death_timestamps: Dict[str, List[float]],
+    timestamp: float,
+) -> bool:
+    if not participants:
+        return False
+    target_names = {
+        target_name
+        for event in group
+        for target_name in [_target_name_from_event(event)]
+        if target_name
+    }
+    if not target_names:
+        return False
+    alive_players = {
+        player
+        for player in participants
+        if not _player_was_dead_before(death_timestamps.get(player, []), timestamp)
+    }
+    return bool(alive_players) and target_names == alive_players
+
+
+def _matches_raidwide_application(applications: List[Tuple[float, bool]], dispel_timestamp: float) -> bool:
+    matched = False
+    for application_timestamp, is_raidwide_application in applications:
         if application_timestamp <= dispel_timestamp:
-            matched = is_counted_set
+            matched = is_raidwide_application
         else:
             break
-    return bool(matched)
+    return matched
 
 
 def _event_timestamp(event: Dict[str, object]) -> float:

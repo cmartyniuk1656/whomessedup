@@ -93,6 +93,75 @@ function NumberFieldControl({ field, value, onValueChange, density }) {
   );
 }
 
+function TextareaFieldControl({ field, value, onValueChange, density }) {
+  const compact = density === "compact";
+
+  return (
+    <div className={compact ? "space-y-1.5" : undefined}>
+      <label className="text-sm font-medium text-slate-100" htmlFor={field.id}>
+        {field.label}
+      </label>
+      <FieldHint>{field.description}</FieldHint>
+      <textarea
+        id={field.id}
+        value={value ?? ""}
+        placeholder={field.placeholder || ""}
+        onChange={(event) => onValueChange(field.id, event.target.value)}
+        className={[
+          "mt-2 min-h-48 w-full resize-y rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2.5 font-mono text-sm leading-5 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] placeholder:text-slate-500 transition hover:border-white/15 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30",
+          compact ? "mt-1.5 min-h-36 py-2" : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      />
+    </div>
+  );
+}
+
+function RangeFieldControl({ field, value, onValueChange, density }) {
+  const compact = density === "compact";
+  const min = field.minValue ?? 0;
+  const max = field.maxValue ?? 100;
+  const step = field.step ?? 1;
+  const current = value ?? field.defaultValue ?? min;
+  const numericValue = Number.parseFloat(current);
+  const displayValue = Number.isFinite(numericValue) ? numericValue : min;
+  const displayLabel = `${Number.isInteger(displayValue) ? displayValue.toFixed(0) : displayValue.toFixed(1)}s`;
+
+  return (
+    <div className={compact ? "space-y-2" : "space-y-3"}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <label className="text-sm font-medium text-slate-100" htmlFor={field.id}>
+            {field.label}
+          </label>
+          <FieldHint>{field.description}</FieldHint>
+        </div>
+        <output
+          className="shrink-0 rounded-md border border-emerald-300/20 bg-emerald-300/10 px-2 py-1 text-xs font-semibold text-emerald-100"
+          htmlFor={field.id}
+        >
+          {displayLabel}
+        </output>
+      </div>
+      <input
+        id={field.id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={current}
+        onChange={(event) => onValueChange(field.id, event.target.value)}
+        className="h-2 w-full cursor-pointer accent-emerald-300"
+      />
+      <div className="flex justify-between text-[11px] text-slate-500">
+        <span>{min}s</span>
+        <span>{max}s</span>
+      </div>
+    </div>
+  );
+}
+
 function SelectFieldControl({ field, value, onValueChange, density }) {
   const compact = density === "compact";
 
@@ -214,6 +283,14 @@ export function ReportFieldControl({
 
   if (field.kind === "select") {
     return <SelectFieldControl field={field} value={value} onValueChange={onValueChange} density={density} />;
+  }
+
+  if (field.kind === "textarea") {
+    return <TextareaFieldControl field={field} value={value} onValueChange={onValueChange} density={density} />;
+  }
+
+  if (field.kind === "range") {
+    return <RangeFieldControl field={field} value={value} onValueChange={onValueChange} density={density} />;
   }
 
   if (field.kind === "number") {

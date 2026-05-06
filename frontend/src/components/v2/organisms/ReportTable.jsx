@@ -1,24 +1,61 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { EventGroupList } from "../molecules/EventGroupList";
 import { SortableColumnHeader } from "../molecules/SortableColumnHeader";
 import { TableCellContent } from "../molecules/TableCellContent";
 
+const DETAIL_ANIMATION_MS = 220;
+
 export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
   const [expandedRows, setExpandedRows] = useState({});
+  const [mountedDetailRows, setMountedDetailRows] = useState({});
+  const closingTimersRef = useRef({});
+
+  const clearClosingTimer = (rowId) => {
+    const timer = closingTimersRef.current[rowId];
+    if (timer) {
+      window.clearTimeout(timer);
+      delete closingTimersRef.current[rowId];
+    }
+  };
 
   useEffect(() => {
+    Object.values(closingTimersRef.current).forEach((timer) => window.clearTimeout(timer));
+    closingTimersRef.current = {};
     setExpandedRows({});
+    setMountedDetailRows({});
   }, [pageKey]);
+
+  useEffect(
+    () => () => {
+      Object.values(closingTimersRef.current).forEach((timer) => window.clearTimeout(timer));
+    },
+    []
+  );
 
   if (!table) {
     return null;
   }
 
   const toggleRow = (rowId) => {
-    setExpandedRows((current) => ({
-      ...current,
-      [rowId]: !current[rowId],
-    }));
+    if (expandedRows[rowId]) {
+      setExpandedRows((current) => ({ ...current, [rowId]: false }));
+      clearClosingTimer(rowId);
+      closingTimersRef.current[rowId] = window.setTimeout(() => {
+        setMountedDetailRows((current) => {
+          const next = { ...current };
+          delete next[rowId];
+          return next;
+        });
+        delete closingTimersRef.current[rowId];
+      }, DETAIL_ANIMATION_MS);
+      return;
+    }
+
+    clearClosingTimer(rowId);
+    setMountedDetailRows((current) => ({ ...current, [rowId]: true }));
+    window.requestAnimationFrame(() => {
+      setExpandedRows((current) => ({ ...current, [rowId]: true }));
+    });
   };
 
   return (
@@ -42,6 +79,7 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
             rows.map((row) => {
               const hasDetails = Boolean(row?.details?.groups?.length);
               const isExpanded = Boolean(expandedRows[row.id]);
+              const shouldRenderDetails = hasDetails && Boolean(mountedDetailRows[row.id]);
 
               return (
                 <Fragment key={row.id}>
@@ -77,10 +115,25 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
                       );
                     })}
                   </tr>
-                  {hasDetails && isExpanded ? (
-                    <tr className="bg-slate-950/25">
-                      <td colSpan={table.columns.length} className="px-4 py-4">
-                        <EventGroupList details={row.details} />
+                  {shouldRenderDetails ? (
+                    <tr className={isExpanded ? "bg-slate-950/25" : "bg-slate-950/10"}>
+                      <td
+                        colSpan={table.columns.length}
+                        className={[
+                          "px-4 transition-[padding] duration-200 ease-out motion-reduce:transition-none",
+                          isExpanded ? "py-4" : "py-0",
+                        ].join(" ")}
+                      >
+                        <div
+                          className={[
+                            "grid transition-[grid-template-rows,opacity,transform] duration-200 ease-out motion-reduce:translate-y-0 motion-reduce:transition-none",
+                            isExpanded ? "grid-rows-[1fr] translate-y-0 opacity-100" : "grid-rows-[0fr] -translate-y-1 opacity-0",
+                          ].join(" ")}
+                        >
+                          <div className="overflow-hidden">
+                            <EventGroupList details={row.details} />
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ) : null}

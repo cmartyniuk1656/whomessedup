@@ -65,6 +65,13 @@ from .view_models.lightblinded_vanguard_dispels import (
     REPORT_ID as REPORT_LIGHTBLINDED_DISPELS_ID,
     REPORT_TITLE as REPORT_LIGHTBLINDED_DISPELS_TITLE,
 )
+from .view_models.lightblinded_vanguard_cooldowns import (
+    REPORT_DEFAULT_FIGHT as REPORT_LIGHTBLINDED_COOLDOWNS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_LIGHTBLINDED_COOLDOWNS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_LIGHTBLINDED_COOLDOWNS_FOOTNOTES,
+    REPORT_ID as REPORT_LIGHTBLINDED_COOLDOWNS_ID,
+    REPORT_TITLE as REPORT_LIGHTBLINDED_COOLDOWNS_TITLE,
+)
 from .view_models.vorasius_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_VORASIUS_DESCRIPTION,
@@ -104,15 +111,35 @@ JOB_V2_DIMENSIUS_PRIORITY_DAMAGE = "v2_report_dimensius_priority_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DAMAGE = "v2_report_imperator_averzian_damage"
 JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE = "v2_report_imperator_averzian_avoidable_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DEATHS = "v2_report_imperator_averzian_deaths"
+JOB_V2_COOLDOWN_USAGE = "v2_report_cooldown_usage"
+JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS = JOB_V2_COOLDOWN_USAGE
 JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS = "v2_report_lightblinded_vanguard_dispels"
 JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
 JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
 JOB_V2_VORASIUS_DEATHS = "v2_report_vorasius_deaths"
 
+BELOREN_FIGHT_ID = "beloren-child-of-alar"
+CHIMAERUS_FIGHT_ID = "chimaerus-the-undreamt-god"
+CROWN_OF_THE_COSMOS_FIGHT_ID = "crown-of-the-cosmos"
 DIMENSIUS_FIGHT_ID = "dimensius-the-all-devouring"
+FALLEN_KING_SALHADAAR_FIGHT_ID = "fallen-king-salhadaar"
 IMPERATOR_AVERZIAN_FIGHT_ID = "imperator-averzian"
 LIGHTBLINDED_VANGUARD_FIGHT_ID = "lightblinded-vanguard"
+MIDNIGHT_FALLS_FIGHT_ID = "midnight-falls"
+VAELGOR_AND_EZZORAK_FIGHT_ID = "vaelgor-and-ezzorak"
 VORASIUS_FIGHT_ID = "vorasius"
+
+COOLDOWN_USAGE_FIGHTS: Tuple[Tuple[str, str], ...] = (
+    (IMPERATOR_AVERZIAN_FIGHT_ID, "Imperator Averzian"),
+    (VORASIUS_FIGHT_ID, "Vorasius"),
+    (FALLEN_KING_SALHADAAR_FIGHT_ID, "Fallen-King Salhadaar"),
+    (VAELGOR_AND_EZZORAK_FIGHT_ID, "Vaelgor & Ezzorak"),
+    (LIGHTBLINDED_VANGUARD_FIGHT_ID, "Lightblinded Vanguard"),
+    (CROWN_OF_THE_COSMOS_FIGHT_ID, "Crown of the Cosmos"),
+    (CHIMAERUS_FIGHT_ID, "Chimaerus, the Undreamt God"),
+    (BELOREN_FIGHT_ID, "Belo'ren, Child of Al'ar"),
+    (MIDNIGHT_FALLS_FIGHT_ID, "Midnight Falls"),
+)
 
 
 @dataclass(frozen=True)
@@ -168,6 +195,26 @@ def _coerce_positive_int(values: Dict[str, Any], field_id: str) -> int | None:
         raise ValueError(f"{field_id} must be a whole number.") from exc
     if value <= 0:
         return None
+    return value
+
+
+def _coerce_float_range(
+    values: Dict[str, Any],
+    field_id: str,
+    *,
+    default: float,
+    min_value: float,
+    max_value: float,
+) -> float:
+    raw = values.get(field_id, default)
+    if raw in (None, ""):
+        return default
+    try:
+        value = float(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field_id} must be a number.") from exc
+    if value < min_value or value > max_value:
+        raise ValueError(f"{field_id} must be between {min_value:g} and {max_value:g}.")
     return value
 
 
@@ -546,6 +593,57 @@ def _build_lightblinded_vanguard_dispels_payload(values: Dict[str, Any]) -> Tupl
     return payload, fresh_run
 
 
+def _build_cooldown_usage_payload(
+    values: Dict[str, Any],
+    *,
+    report_id: str,
+    fight_name: str,
+) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    reminder_text = _coerce_text(values, "nsrt_reminders", required=True)
+    tolerance_seconds = _coerce_float_range(
+        values,
+        "tolerance_seconds",
+        default=7.5,
+        min_value=0.0,
+        max_value=15.0,
+    )
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    ignore_after_healer_death = _coerce_bool(values, "ignore_after_healer_death", default=False)
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    payload: Dict[str, Any] = {
+        "report_id": report_id,
+        "report_title": REPORT_LIGHTBLINDED_COOLDOWNS_TITLE,
+        "report": report_code,
+        "fight": fight_name,
+        "extra_reports": extra_reports,
+        "reminder_text": reminder_text,
+        "tolerance_seconds": tolerance_seconds,
+        "ignore_after_deaths": ignore_after_deaths,
+        "ignore_after_healer_death": ignore_after_healer_death,
+    }
+    return payload, fresh_run
+
+
+def _build_lightblinded_vanguard_cooldowns_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_cooldown_usage_payload(
+        values,
+        report_id=REPORT_LIGHTBLINDED_COOLDOWNS_ID,
+        fight_name=REPORT_LIGHTBLINDED_COOLDOWNS_DEFAULT_FIGHT,
+    )
+
+
+def _make_cooldown_usage_payload_builder(*, report_id: str, fight_name: str) -> ReportPayloadBuilder:
+    def build(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+        return _build_cooldown_usage_payload(values, report_id=report_id, fight_name=fight_name)
+
+    return build
+
+
 _REPORTS: Dict[str, RegisteredReport] = {
     REPORT_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -798,6 +896,59 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
         build_payload=_build_lightblinded_vanguard_dispels_payload,
     ),
+    REPORT_LIGHTBLINDED_COOLDOWNS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_LIGHTBLINDED_COOLDOWNS_ID,
+            title=REPORT_LIGHTBLINDED_COOLDOWNS_TITLE,
+            description=REPORT_LIGHTBLINDED_COOLDOWNS_DESCRIPTION,
+            fightId=LIGHTBLINDED_VANGUARD_FIGHT_ID,
+            fightName=REPORT_LIGHTBLINDED_COOLDOWNS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_LIGHTBLINDED_COOLDOWNS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_LIGHTBLINDED_COOLDOWNS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    RequestFieldModel(
+                        id="nsrt_reminders",
+                        kind=RequestFieldKind.TEXTAREA,
+                        label="NSRT cooldown reminders",
+                        description="Paste the NSRT cooldown-reminders string for Mythic Lightblinded Vanguard.",
+                        placeholder="EncounterID:3180;Name:Vanguard - Mythic;Difficulty:Mythic\n"
+                        "time:11;ph:1;tag:Player;spellid:31884;",
+                        defaultValue="",
+                        required=True,
+                    ),
+                    RequestFieldModel(
+                        id="tolerance_seconds",
+                        kind=RequestFieldKind.RANGE,
+                        label="Timing tolerance",
+                        description="Cooldown casts inside this +/- seconds window are counted as correct.",
+                        defaultValue=7.5,
+                        minValue=0,
+                        maxValue=15,
+                        step=0.5,
+                    ),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="ignore_after_healer_death",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Ignore events after a healer dies",
+                        description="Stop counting cooldown assignments after the first healer death in each pull.",
+                        defaultValue=False,
+                    ),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS,
+        build_payload=_build_lightblinded_vanguard_cooldowns_payload,
+    ),
     REPORT_PRIORITY_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_PRIORITY_ID,
@@ -904,6 +1055,73 @@ _REPORTS: Dict[str, RegisteredReport] = {
 }
 
 
+def _build_cooldown_usage_definition(*, report_id: str, fight_id: str, fight_name: str) -> RegisteredReport:
+    return RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=report_id,
+            title=REPORT_LIGHTBLINDED_COOLDOWNS_TITLE,
+            description=REPORT_LIGHTBLINDED_COOLDOWNS_DESCRIPTION,
+            fightId=fight_id,
+            fightName=fight_name,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=fight_name,
+            footnotes=list(REPORT_LIGHTBLINDED_COOLDOWNS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    RequestFieldModel(
+                        id="nsrt_reminders",
+                        kind=RequestFieldKind.TEXTAREA,
+                        label="NSRT cooldown reminders",
+                        description=f"Paste the NSRT cooldown-reminders string for Mythic {fight_name}.",
+                        placeholder="EncounterID:3180;Name:Boss - Mythic;Difficulty:Mythic\n"
+                        "time:11;ph:1;tag:Player;spellid:31884;",
+                        defaultValue="",
+                        required=True,
+                    ),
+                    RequestFieldModel(
+                        id="tolerance_seconds",
+                        kind=RequestFieldKind.RANGE,
+                        label="Timing tolerance",
+                        description="Cooldown casts inside this +/- seconds window are counted as correct.",
+                        defaultValue=7.5,
+                        minValue=0,
+                        maxValue=15,
+                        step=0.5,
+                    ),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="ignore_after_healer_death",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Ignore events after a healer dies",
+                        description="Stop counting cooldown assignments after the first healer death in each pull.",
+                        defaultValue=False,
+                    ),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_COOLDOWN_USAGE,
+        build_payload=_make_cooldown_usage_payload_builder(report_id=report_id, fight_name=fight_name),
+    )
+
+
+for _fight_id, _fight_name in COOLDOWN_USAGE_FIGHTS:
+    _report_id = f"{_fight_id}-cooldowns"
+    if _report_id in _REPORTS:
+        continue
+    _REPORTS[_report_id] = _build_cooldown_usage_definition(
+        report_id=_report_id,
+        fight_id=_fight_id,
+        fight_name=_fight_name,
+    )
+
+
 def list_report_definitions() -> List[ReportDefinitionModel]:
     return [registered.definition for registered in _REPORTS.values()]
 
@@ -926,12 +1144,14 @@ def build_report_job_request(report_id: str, values: Dict[str, Any]) -> Tuple[st
 
 
 __all__ = [
+    "JOB_V2_COOLDOWN_USAGE",
     "JOB_V2_DIMENSIUS_ADD_DAMAGE",
     "JOB_V2_DIMENSIUS_DEATHS",
     "JOB_V2_DIMENSIUS_PRIORITY_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DEATHS",
+    "JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS",
     "JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",

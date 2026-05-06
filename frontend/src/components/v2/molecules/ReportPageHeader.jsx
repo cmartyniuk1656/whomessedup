@@ -16,7 +16,7 @@ export function ReportPageHeader({ page, rows, shareUrl, onOpenSpecAnalysis }) {
       await navigator.clipboard.writeText(shareUrl);
       setCopyStatus("Copied");
       window.setTimeout(() => setCopyStatus(""), 1800);
-    } catch (_err) {
+    } catch {
       setCopyStatus("Copy failed");
       window.setTimeout(() => setCopyStatus(""), 1800);
     }
@@ -33,7 +33,7 @@ export function ReportPageHeader({ page, rows, shareUrl, onOpenSpecAnalysis }) {
       <div className="flex shrink-0 flex-row items-center gap-2 self-start lg:justify-end">
         {hasShareUrl ? (
           <Button type="button" variant="secondary" size="sm" onClick={handleCopyLink}>
-            {copyStatus || "Copy Link"}
+            {copyStatus || "Share Report"}
           </Button>
         ) : null}
         {hasSpecAnalysis ? (

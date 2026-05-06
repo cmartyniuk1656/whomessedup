@@ -24,6 +24,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
+    JOB_V2_COOLDOWN_USAGE,
     JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
@@ -49,6 +50,9 @@ from who_messed_up.services.view_models.imperator_averzian_deaths import (
 from who_messed_up.services.view_models.lightblinded_vanguard_dispels import (
     build_lightblinded_vanguard_dispel_report_page,
 )
+from who_messed_up.services.view_models.lightblinded_vanguard_cooldowns import (
+    build_cooldown_usage_report_page,
+)
 from who_messed_up.services.view_models.vorasius_damage import build_vorasius_damage_report_page
 from who_messed_up.services.view_models.vorasius_avoidable_damage import (
     build_vorasius_avoidable_damage_report_page,
@@ -66,6 +70,7 @@ from who_messed_up.service import (
     GhostSummary,
     HitSummary,
     LightblindedVanguardDispelSummary,
+    CooldownUsageSummary,
     PhaseDamageSummary,
     PhaseSummary,
     TokenError,
@@ -85,6 +90,7 @@ from who_messed_up.service import (
     fetch_imperator_averzian_avoidable_damage_summary,
     fetch_imperator_averzian_damage_summary,
     fetch_imperator_averzian_death_summary,
+    fetch_cooldown_usage_summary,
     fetch_lightblinded_vanguard_dispel_summary,
     fetch_vorasius_avoidable_damage_summary,
     fetch_vorasius_damage_summary,
@@ -1169,6 +1175,29 @@ def _fetch_lightblinded_vanguard_dispel_summary_from_payload(
     )
 
 
+def _fetch_lightblinded_vanguard_cooldown_summary_from_payload(
+    payload: Dict[str, Any],
+) -> CooldownUsageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_cooldown_usage_summary(
+        report_code=payload["report"],
+        reminder_text=payload["reminder_text"],
+        expected_encounter_id=payload.get("expected_encounter_id"),
+        expected_difficulty=payload.get("difficulty") or "mythic",
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        extra_report_codes=payload.get("extra_reports"),
+        tolerance_seconds=payload.get("tolerance_seconds", 7.5),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_after_healer_death=bool(payload.get("ignore_after_healer_death", False)),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _execute_nexus_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -1297,6 +1326,20 @@ def _execute_v2_lightblinded_vanguard_dispel_job(payload: Dict[str, Any]) -> Dic
     return page.dict(by_alias=True)
 
 
+def _execute_v2_lightblinded_vanguard_cooldown_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_lightblinded_vanguard_cooldown_summary_from_payload(payload)
+    page = build_cooldown_usage_report_page(
+        summary,
+        report_id=payload.get("report_id") or "cooldown-usage",
+        title=payload.get("report_title") or "Cooldown Usage Report",
+        fight_name=payload.get("fight"),
+        difficulty=payload.get("difficulty"),
+    )
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -1360,6 +1403,10 @@ job_manager.register_handler(JOB_V2_IMPERATOR_AVERZIAN_DEATHS, _execute_v2_imper
 job_manager.register_handler(
     JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
     _execute_v2_lightblinded_vanguard_dispel_job,
+)
+job_manager.register_handler(
+    JOB_V2_COOLDOWN_USAGE,
+    _execute_v2_lightblinded_vanguard_cooldown_job,
 )
 job_manager.register_handler(JOB_V2_VORASIUS_AVOIDABLE_DAMAGE, _execute_v2_vorasius_avoidable_damage_job)
 job_manager.register_handler(JOB_V2_VORASIUS_DAMAGE, _execute_v2_vorasius_damage_job)

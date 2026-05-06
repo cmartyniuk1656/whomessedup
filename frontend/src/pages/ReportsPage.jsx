@@ -11,7 +11,7 @@ import { ReportWizardStepFrame } from "../components/v2/organisms/ReportWizardSt
 import { useReportBrowserState } from "../hooks/useReportBrowserState";
 import { useReportDefinitions } from "../hooks/useReportDefinitions";
 import { useReportJob } from "../hooks/useReportJob";
-import { buildCachedReportUrl, clearCachedReportParams, parseCachedReportParams } from "../utils/reportShareLink";
+import { buildCachedReportUrl, parseCachedReportParams } from "../utils/reportShareLink";
 
 const WIZARD_STEPS = {
   BOSS: "boss",
@@ -25,7 +25,6 @@ export function ReportsPage() {
   const [wizardTransitionPhase, setWizardTransitionPhase] = useState("enter");
   const [isConfigurationOpen, setIsConfigurationOpen] = useState(false);
   const [hasRunAttempt, setHasRunAttempt] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
   const transitionTimerRef = useRef(null);
   const cachedLinkAttemptedRef = useRef(false);
   const { reports, error: definitionsError, loading: definitionsLoading } = useReportDefinitions();
@@ -64,6 +63,12 @@ export function ReportsPage() {
   const canSelectReport = Boolean(selectedFight);
   const canViewRunning = Boolean(selectedReport && (hasRunAttempt || pendingJob || isSubmitting || jobError));
   const canViewResults = Boolean(page);
+  const shareUrl = useMemo(() => {
+    if (!page || !selectedReportId || !Object.keys(formValues ?? {}).length) {
+      return "";
+    }
+    return buildCachedReportUrl({ reportId: selectedReportId, values: formValues });
+  }, [formValues, page, selectedReportId]);
 
   const breadcrumbSteps = useMemo(
     () => [
@@ -149,12 +154,26 @@ export function ReportsPage() {
     setHasRunAttempt(true);
     setIsConfigurationOpen(false);
     goToWizardStep(WIZARD_STEPS.RUNNING);
-    loadCachedReport({ reportId: report.id, values: cachedParams.values });
+    let isCancelled = false;
+    const loadSharedReport = async () => {
+      const cachedResult = await loadCachedReport({ reportId: report.id, values: cachedParams.values });
+      if (isCancelled || cachedResult?.ok) {
+        return;
+      }
+      if (cachedResult?.cacheMiss) {
+        await runReport({ reportId: report.id, values: cachedParams.values });
+      }
+    };
+    loadSharedReport();
+    return () => {
+      isCancelled = true;
+    };
   }, [
     definitionsLoading,
     goToWizardStep,
     loadCachedReport,
     reports,
+    runReport,
     selectedDifficulty,
     setJobError,
     setReportFormValues,
@@ -162,27 +181,9 @@ export function ReportsPage() {
     setSelectedFightId,
   ]);
 
-  useEffect(() => {
-    if (!page || !selectedReportId || !Object.keys(formValues ?? {}).length) {
-      return;
-    }
-    const nextShareUrl = buildCachedReportUrl({ reportId: selectedReportId, values: formValues });
-    setShareUrl(nextShareUrl);
-    const nextUrl = new URL(nextShareUrl);
-    const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (nextPath !== currentPath) {
-      window.history.replaceState(null, "", nextPath);
-    }
-  }, [formValues, page, selectedReportId]);
-
   const resetRunState = () => {
     setHasRunAttempt(false);
-    setShareUrl("");
     clearReportState();
-    if (window.location.search.includes("reportId=") || window.location.search.includes("values=")) {
-      window.history.replaceState(null, "", clearCachedReportParams());
-    }
   };
 
   const handleSelectDifficulty = (difficultyId) => {

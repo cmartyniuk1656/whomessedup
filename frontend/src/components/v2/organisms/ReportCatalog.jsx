@@ -19,6 +19,9 @@ function getReportKind(report) {
   if (title.includes("dispel")) {
     return "Dispel Report";
   }
+  if (title.includes("cooldown")) {
+    return "Cooldown Usage Report";
+  }
   if (title.includes("damage")) {
     return "Damage Report";
   }

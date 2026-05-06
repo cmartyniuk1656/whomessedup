@@ -34,6 +34,45 @@ const CONSUMABLE_STATUS_CLASSES = {
   },
 };
 
+const DETAIL_ITEM_TONE_CLASSES = {
+  danger: {
+    item: "",
+    label: "font-semibold text-rose-300",
+    timestamp: "ml-1 text-slate-300",
+    description: "ml-1 text-rose-100",
+    ability: "ml-1 font-semibold text-slate-100 underline decoration-dotted underline-offset-2 hover:text-rose-200",
+    abilityText: "ml-1 font-semibold text-slate-100",
+    badge: "border-rose-300/35 bg-rose-400/10 text-rose-100",
+  },
+  muted: {
+    item: "opacity-60",
+    label: "font-semibold text-slate-400",
+    timestamp: "ml-1 text-slate-500",
+    description: "ml-1 text-slate-500",
+    ability: "ml-1 font-semibold text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-300",
+    abilityText: "ml-1 font-semibold text-slate-400",
+    badge: "border-slate-500/25 bg-slate-500/10 text-slate-400",
+  },
+  success: {
+    item: "",
+    label: "font-semibold text-emerald-300",
+    timestamp: "ml-1 text-slate-300",
+    description: "ml-1 text-slate-200",
+    ability: "ml-1 font-semibold text-slate-100 underline decoration-dotted underline-offset-2 hover:text-emerald-200",
+    abilityText: "ml-1 font-semibold text-slate-100",
+    badge: "border-emerald-300/35 bg-emerald-400/10 text-emerald-100",
+  },
+  default: {
+    item: "",
+    label: "font-semibold text-emerald-300",
+    timestamp: "ml-1 text-slate-300",
+    description: "ml-1 text-slate-200",
+    ability: "ml-1 font-semibold text-slate-100 underline decoration-dotted underline-offset-2 hover:text-emerald-200",
+    abilityText: "ml-1 font-semibold text-slate-100",
+    badge: "border-amber-300/30 bg-amber-300/10 text-amber-100",
+  },
+};
+
 function CheckIcon() {
   return (
     <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true" focusable="false">
@@ -75,6 +114,7 @@ function AbilityText({ child }) {
     return null;
   }
 
+  const toneClasses = DETAIL_ITEM_TONE_CLASSES[child.tone] || DETAIL_ITEM_TONE_CLASSES.default;
   const tooltipBadges = child.tooltipBadges || child.badges || [];
   const hasTooltip = Boolean(child.tooltip || tooltipBadges.length);
   const content = child.abilityHref ? (
@@ -82,13 +122,13 @@ function AbilityText({ child }) {
       href={child.abilityHref}
       target="_blank"
       rel="noreferrer"
-      className="ml-1 font-semibold text-slate-100 underline decoration-dotted underline-offset-2 hover:text-emerald-200"
+      className={toneClasses.ability}
       onClick={(event) => event.stopPropagation()}
     >
       {child.abilityLabel}
     </a>
   ) : (
-    <span className="ml-1 font-semibold text-slate-100">{child.abilityLabel}</span>
+    <span className={toneClasses.abilityText}>{child.abilityLabel}</span>
   );
 
   if (!hasTooltip) {
@@ -132,12 +172,14 @@ function DetailItemBadges({ item }) {
     return null;
   }
 
+  const toneClasses = DETAIL_ITEM_TONE_CLASSES[item.tone] || DETAIL_ITEM_TONE_CLASSES.default;
+
   return (
     <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
       {item.badges.map((badge) => (
         <span
           key={`${item.id}-${badge}`}
-          className="inline-flex rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-100"
+          className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${toneClasses.badge}`}
         >
           {badge}
         </span>
@@ -174,52 +216,55 @@ export function EventGroupList({ details }) {
             {group.subtitle ? <p className="text-xs text-slate-400">{group.subtitle}</p> : null}
           </div>
           <ul className="mt-3 ml-5 list-disc space-y-1.5 text-sm text-slate-300">
-            {group.items.map((item) => (
-              <li key={item.id}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <span className="font-semibold text-emerald-300">{item.label}</span>
-                    {item.timestampLabel ? <span className="ml-1 text-slate-300">{item.timestampLabel}</span> : null}
-                    <AbilityText child={item} />
-                    {item.description ? <span className="ml-1 text-slate-200">{item.description}</span> : null}
+            {group.items.map((item) => {
+              const toneClasses = DETAIL_ITEM_TONE_CLASSES[item.tone] || DETAIL_ITEM_TONE_CLASSES.default;
+              return (
+                <li key={item.id} className={toneClasses.item}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <span className={toneClasses.label}>{item.label}</span>
+                      {item.timestampLabel ? <span className={toneClasses.timestamp}>{item.timestampLabel}</span> : null}
+                      <AbilityText child={item} />
+                      {item.description ? <span className={toneClasses.description}>{item.description}</span> : null}
+                    </div>
+                    <DetailItemBadges item={item} />
                   </div>
-                  <DetailItemBadges item={item} />
-                </div>
-                {item.children?.length ? (
-                  <ul className="mt-2 ml-1 space-y-1.5 border-l border-white/10 pl-3">
-                    {item.children.map((child) => {
-                      if (child.kind === "consumable") {
-                        return <ConsumableChildItem key={child.id} child={child} />;
-                      }
-                      const toneClasses = CHILD_TONE_CLASSES[child.tone] || CHILD_TONE_CLASSES.default;
-                      return (
-                        <li
-                          key={child.id}
-                          className={[
-                            "list-none rounded-md border px-3 py-2",
-                            toneClasses.row,
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <span className={toneClasses.label}>{child.label}</span>
-                              {child.timestampLabel ? <span className="ml-1 text-slate-400">{child.timestampLabel}</span> : null}
-                              <AbilityText child={child} />
-                              {child.description ? <span className="ml-1 text-slate-100">{child.description}</span> : null}
+                  {item.children?.length ? (
+                    <ul className="mt-2 ml-1 space-y-1.5 border-l border-white/10 pl-3">
+                      {item.children.map((child) => {
+                        if (child.kind === "consumable") {
+                          return <ConsumableChildItem key={child.id} child={child} />;
+                        }
+                        const toneClasses = CHILD_TONE_CLASSES[child.tone] || CHILD_TONE_CLASSES.default;
+                        return (
+                          <li
+                            key={child.id}
+                            className={[
+                              "list-none rounded-md border px-3 py-2",
+                              toneClasses.row,
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <span className={toneClasses.label}>{child.label}</span>
+                                {child.timestampLabel ? <span className="ml-1 text-slate-400">{child.timestampLabel}</span> : null}
+                                <AbilityText child={child} />
+                                {child.description ? <span className="ml-1 text-slate-100">{child.description}</span> : null}
+                              </div>
+                              {child.badges?.length ? (
+                                <DetailItemBadges item={child} />
+                              ) : null}
                             </div>
-                            {child.badges?.length ? (
-                              <DetailItemBadges item={child} />
-                            ) : null}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}

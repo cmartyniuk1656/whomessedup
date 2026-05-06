@@ -13,7 +13,9 @@ from .common import ViewModelBase
 
 class RequestFieldKind(str, Enum):
     TEXT = "text"
+    TEXTAREA = "textarea"
     NUMBER = "number"
+    RANGE = "range"
     CHECKBOX = "checkbox"
     SELECT = "select"
     MULTI_TEXT = "multi_text"
@@ -42,6 +44,9 @@ class RequestFieldModel(ViewModelBase):
     required: bool = False
     placeholder: Optional[str] = None
     default_value: Optional[Any] = Field(None, alias="defaultValue")
+    min_value: Optional[float] = Field(None, alias="minValue")
+    max_value: Optional[float] = Field(None, alias="maxValue")
+    step: Optional[float] = None
     options: List[RequestFieldOptionModel] = Field(default_factory=list)
     tooltip: Optional[RequestFieldTooltipModel] = None
 
