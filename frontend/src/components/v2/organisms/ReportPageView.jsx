@@ -7,7 +7,7 @@ import { ReportSummaryGrid } from "./ReportSummaryGrid";
 import { ReportTable } from "./ReportTable";
 import { SpecAnalysisModal } from "./SpecAnalysisModal";
 
-export function ReportPageView({ page }) {
+export function ReportPageView({ page, shareUrl }) {
   const [isSpecAnalysisOpen, setIsSpecAnalysisOpen] = useState(false);
   const baseTable = page?.content?.table;
   const { config, selectedTargets, selectedMetrics, toggleTarget, toggleMetric, filteredTable } =
@@ -33,7 +33,12 @@ export function ReportPageView({ page }) {
 
   return (
     <section className="space-y-7">
-      <ReportPageHeader page={displayPage} rows={sortedRows} onOpenSpecAnalysis={() => setIsSpecAnalysisOpen(true)} />
+      <ReportPageHeader
+        page={displayPage}
+        rows={sortedRows}
+        shareUrl={shareUrl}
+        onOpenSpecAnalysis={() => setIsSpecAnalysisOpen(true)}
+      />
       <ReportSummaryGrid metrics={page.summary} />
       <DamageTableFilters
         config={config}

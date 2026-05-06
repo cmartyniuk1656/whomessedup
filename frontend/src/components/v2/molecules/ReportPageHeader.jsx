@@ -1,9 +1,26 @@
+import { useState } from "react";
 import { Button } from "../atoms/Button";
 import { downloadReportTableCsv } from "../../../utils/reportTablePresentation";
 import { ReportTags } from "./ReportTags";
 
-export function ReportPageHeader({ page, rows, onOpenSpecAnalysis }) {
+export function ReportPageHeader({ page, rows, shareUrl, onOpenSpecAnalysis }) {
+  const [copyStatus, setCopyStatus] = useState("");
   const hasSpecAnalysis = Boolean(page?.specAnalysis?.series?.length);
+  const hasShareUrl = Boolean(shareUrl);
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyStatus("Copied");
+      window.setTimeout(() => setCopyStatus(""), 1800);
+    } catch (_err) {
+      setCopyStatus("Copy failed");
+      window.setTimeout(() => setCopyStatus(""), 1800);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -14,6 +31,11 @@ export function ReportPageHeader({ page, rows, onOpenSpecAnalysis }) {
         <ReportTags tags={page.header?.tags} />
       </div>
       <div className="flex shrink-0 flex-row items-center gap-2 self-start lg:justify-end">
+        {hasShareUrl ? (
+          <Button type="button" variant="secondary" size="sm" onClick={handleCopyLink}>
+            {copyStatus || "Copy Link"}
+          </Button>
+        ) : null}
         {hasSpecAnalysis ? (
           <Button type="button" variant="accent" size="sm" onClick={onOpenSpecAnalysis}>
             {page.specAnalysis.buttonLabel || "Spec Analysis"}
