@@ -10,7 +10,7 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-DEFAULT_CACHE_TTL = float(os.getenv("WHO_MESSED_UP_CACHE_TTL", "600"))
+DEFAULT_CACHE_TTL = float(os.getenv("WHO_MESSED_UP_CACHE_TTL", "86400"))
 
 
 class ResultCache:
@@ -58,4 +58,3 @@ class ResultCache:
 
 
 result_cache = ResultCache()
-
