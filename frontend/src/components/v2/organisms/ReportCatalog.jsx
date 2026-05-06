@@ -16,6 +16,9 @@ function getReportKind(report) {
   if (title.includes("death")) {
     return "Death Report";
   }
+  if (title.includes("dispel")) {
+    return "Dispel Report";
+  }
   if (title.includes("damage")) {
     return "Damage Report";
   }
