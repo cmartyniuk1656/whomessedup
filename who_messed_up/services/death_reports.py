@@ -11,6 +11,7 @@ import requests
 
 from ..api import REPORT_OVERVIEW_QUERY, fetch_events, fetch_fights, fetch_player_details, gql
 from ..env import load_env
+from .ability_event_filters import collect_avoidable_exclusion_events, is_avoidable_event_excluded
 from .boss_manifest_types import BossAbilityMetadata, BossManifest, is_avoidable_for_role
 from .common import (
     ROLE_PRIORITY,
@@ -672,6 +673,14 @@ def collect_recent_damage_hits(
     player_roles: Optional[Dict[str, str]] = None,
 ) -> Dict[str, List[DeathReportDamageHit]]:
     hits_by_player: DefaultDict[str, List[DeathReportDamageHit]] = defaultdict(list)
+    avoidable_exclusions = collect_avoidable_exclusion_events(
+        session,
+        bearer,
+        report_code=report_code,
+        fight=fight,
+        actor_names=actor_names,
+        abilities=boss_manifest.abilities if boss_manifest else (),
+    )
     for event in fetch_events(
         session,
         bearer,
@@ -705,6 +714,13 @@ def collect_recent_damage_hits(
             boss_manifest=boss_manifest,
         )
         player_role = player_roles.get(target_name) if player_roles else None
+        is_avoidable = is_avoidable_for_role(ability_metadata, player_role)
+        is_excluded_avoidable = is_avoidable_event_excluded(ability_metadata, event, target_name, avoidable_exclusions)
+        if is_excluded_avoidable:
+            is_avoidable = False
+        ability_tags = tuple(ability_metadata.tags) if ability_metadata else ()
+        if is_excluded_avoidable:
+            ability_tags = tuple(tag for tag in ability_tags if tag.strip().lower() != "avoidable")
         max_hit_points = resolve_max_hit_points(event)
         hits_by_player[target_name].append(
             DeathReportDamageHit(
@@ -718,8 +734,8 @@ def collect_recent_damage_hits(
                 hit_points_percent=(damage_amount / max_hit_points * 100.0) if max_hit_points else None,
                 ability_description=ability_metadata.description if ability_metadata else None,
                 ability_url=ability_metadata.url if ability_metadata else None,
-                ability_tags=tuple(ability_metadata.tags) if ability_metadata else (),
-                is_avoidable=is_avoidable_for_role(ability_metadata, player_role),
+                ability_tags=ability_tags,
+                is_avoidable=is_avoidable,
             )
         )
 

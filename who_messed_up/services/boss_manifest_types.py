@@ -41,6 +41,9 @@ class BossAbilityMetadata:
     url: Optional[str] = None
     tags: Tuple[str, ...] = ()
     avoidable: bool = False
+    avoidable_exclusion_debuff_ability_id: Optional[int] = None
+    avoidable_exclusion_debuff_event_types: Tuple[str, ...] = ()
+    avoidable_exclusion_debuff_window_ms: float = 0.0
 
 
 @dataclass(frozen=True)

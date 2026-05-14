@@ -8,24 +8,32 @@ function formatReportDifficulty(difficulty) {
   return `${difficulty.charAt(0).toUpperCase()}${difficulty.slice(1)}`;
 }
 
-function getReportKind(report) {
-  const title = String(report?.title ?? "").toLowerCase();
-  if (title.includes("avoidable") && title.includes("damage")) {
-    return "Avoidable Damage Report";
-  }
-  if (title.includes("death")) {
-    return "Death Report";
-  }
-  if (title.includes("dispel")) {
-    return "Dispel Report";
-  }
-  if (title.includes("cooldown")) {
-    return "Cooldown Usage Report";
-  }
-  if (title.includes("damage")) {
-    return "Damage Report";
-  }
-  return "Report";
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeTitlePart(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function getShortReportTitle(report) {
+  let title = normalizeTitlePart(report?.title || "Report");
+  const difficulty = normalizeTitlePart(formatReportDifficulty(report?.difficulty));
+  const fightName = normalizeTitlePart(report?.fightName || report?.defaultFight);
+  const shortFightName = normalizeTitlePart(fightName.split(",")[0]);
+  const prefixes = [
+    difficulty && fightName ? `${difficulty} ${fightName}` : null,
+    difficulty && shortFightName ? `${difficulty} ${shortFightName}` : null,
+    fightName,
+    shortFightName,
+    difficulty,
+  ].filter(Boolean);
+
+  prefixes.forEach((prefix) => {
+    title = title.replace(new RegExp(`^${escapeRegExp(prefix)}\\s*(?:[-:])?\\s*`, "i"), "").trim();
+  });
+
+  return title || report?.title || "Report";
 }
 
 function getReportStatusLabel(report, isSelected) {
@@ -55,7 +63,6 @@ export function ReportCatalog({
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {reports.map((report) => {
             const isSelected = report.id === selectedReportId;
-            const reportKind = getReportKind(report);
             return (
               <button
                 key={report.id}
@@ -66,7 +73,7 @@ export function ReportCatalog({
                 aria-pressed={isSelected}
               >
                 <GlassCard
-                  title={reportKind}
+                  title={getShortReportTitle(report)}
                   className={
                     isSelected
                       ? "h-full ring-1 ring-emerald-400/60 shadow-[0_30px_80px_-40px_rgba(16,185,129,0.55)]"

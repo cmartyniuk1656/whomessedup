@@ -11,6 +11,7 @@ import requests
 
 from ..api import fetch_events, fetch_fights, fetch_player_details
 from ..env import load_env
+from .ability_event_filters import collect_avoidable_exclusion_events, is_avoidable_event_excluded
 from .boss_manifest_types import (
     BossAbilityMetadata,
     BossManifest,
@@ -229,6 +230,15 @@ def _fetch_single_avoidable_damage_summary(
         pull_duration = compute_fight_duration_ms(fight)
         participants = participants_by_fight.get(fight.id, set())
         fight_roles = roles_by_fight.get(fight.id, player_roles)
+        avoidable_exclusions = collect_avoidable_exclusion_events(
+            session,
+            bearer,
+            report_code=report_code,
+            fight=fight,
+            actor_names=actor_names,
+            abilities=selected_abilities,
+            event_end=event_end,
+        )
         for ability in selected_abilities:
             for event in fetch_events(
                 session,
@@ -255,6 +265,8 @@ def _fetch_single_avoidable_damage_summary(
                 if not target_name or target_name not in known_players:
                     continue
                 if participants and target_name not in participants:
+                    continue
+                if is_avoidable_event_excluded(ability, event, target_name, avoidable_exclusions):
                     continue
 
                 damage_amount = resolve_damage_amount(event)

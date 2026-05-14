@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from .avoidable_damage import ability_manifest_key, resolve_avoidable_manifest_abilities
 from .boss_manifests import (
+    CROWN_OF_THE_COSMOS_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     VORASIUS_MANIFEST,
@@ -20,6 +21,11 @@ from .dimensius_deaths import (
     OBLIVION_FILTER_INCLUDE_ALL,
 )
 from .dimensius_priority_damage import PRIORITY_TARGETS
+from .crown_of_the_cosmos_silver_hits import DEFAULT_MATCH_WINDOW_MS as CROWN_SILVER_HIT_MATCH_WINDOW_MS
+from .crown_of_the_cosmos_null_corona_dispels import (
+    DEFAULT_HP_CEILING_PERCENT as CROWN_NULL_CORONA_HP_CEILING_PERCENT,
+    DEFAULT_HP_FLOOR_PERCENT as CROWN_NULL_CORONA_HP_FLOOR_PERCENT,
+)
 from .view_models.dimensius_add_damage import (
     REPORT_DEFAULT_FIGHT,
     REPORT_DESCRIPTION,
@@ -40,6 +46,34 @@ from .view_models.dimensius_priority_damage import (
     REPORT_FOOTNOTES as REPORT_PRIORITY_FOOTNOTES,
     REPORT_ID as REPORT_PRIORITY_ID,
     REPORT_TITLE as REPORT_PRIORITY_TITLE,
+)
+from .view_models.crown_of_the_cosmos_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_CROWN_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_CROWN_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_CROWN_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_CROWN_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_CROWN_AVOIDABLE_TITLE,
+)
+from .view_models.crown_of_the_cosmos_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_CROWN_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_CROWN_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_CROWN_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_CROWN_DEATHS_ID,
+    REPORT_TITLE as REPORT_CROWN_DEATHS_TITLE,
+)
+from .view_models.crown_of_the_cosmos_silver_hits import (
+    REPORT_DEFAULT_FIGHT as REPORT_CROWN_SILVER_HITS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_CROWN_SILVER_HITS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_CROWN_SILVER_HITS_FOOTNOTES,
+    REPORT_ID as REPORT_CROWN_SILVER_HITS_ID,
+    REPORT_TITLE as REPORT_CROWN_SILVER_HITS_TITLE,
+)
+from .view_models.crown_of_the_cosmos_null_corona_dispels import (
+    REPORT_DEFAULT_FIGHT as REPORT_CROWN_NULL_CORONA_DISPELS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_CROWN_NULL_CORONA_DISPELS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_CROWN_NULL_CORONA_DISPELS_FOOTNOTES,
+    REPORT_ID as REPORT_CROWN_NULL_CORONA_DISPELS_ID,
+    REPORT_TITLE as REPORT_CROWN_NULL_CORONA_DISPELS_TITLE,
 )
 from .view_models.imperator_averzian_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_IMPERATOR_DEFAULT_FIGHT,
@@ -134,6 +168,10 @@ JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE = "v2_report_lightblinded_vanguard
 JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS = JOB_V2_COOLDOWN_USAGE
 JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS = "v2_report_lightblinded_vanguard_deaths"
 JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS = "v2_report_lightblinded_vanguard_dispels"
+JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE = "v2_report_crown_of_the_cosmos_avoidable_damage"
+JOB_V2_CROWN_OF_THE_COSMOS_DEATHS = "v2_report_crown_of_the_cosmos_deaths"
+JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS = "v2_report_crown_of_the_cosmos_silver_hits"
+JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS = "v2_report_crown_of_the_cosmos_null_corona_dispels"
 JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
 JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
 JOB_V2_VORASIUS_DEATHS = "v2_report_vorasius_deaths"
@@ -582,6 +620,13 @@ def _build_lightblinded_vanguard_deaths_payload(values: Dict[str, Any]) -> Tuple
     )
 
 
+def _build_crown_of_the_cosmos_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_CROWN_DEATHS_DEFAULT_FIGHT,
+    )
+
+
 def _build_avoidable_damage_payload(
     values: Dict[str, Any],
     *,
@@ -636,6 +681,65 @@ def _build_lightblinded_vanguard_avoidable_damage_payload(values: Dict[str, Any]
         manifest=LIGHTBLINDED_VANGUARD_MANIFEST,
         default_fight=REPORT_LIGHTBLINDED_AVOIDABLE_DEFAULT_FIGHT,
     )
+
+
+def _build_crown_of_the_cosmos_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=CROWN_OF_THE_COSMOS_MANIFEST,
+        default_fight=REPORT_CROWN_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_crown_of_the_cosmos_silver_hits_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    payload: Dict[str, Any] = {
+        "report": report_code,
+        "fight": REPORT_CROWN_SILVER_HITS_DEFAULT_FIGHT,
+        "extra_reports": extra_reports,
+        "match_window_ms": CROWN_SILVER_HIT_MATCH_WINDOW_MS,
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
+
+
+def _build_crown_of_the_cosmos_null_corona_dispels_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    hp_floor_percent = _coerce_float_range(
+        values,
+        "hp_floor_percent",
+        default=CROWN_NULL_CORONA_HP_FLOOR_PERCENT,
+        min_value=0.0,
+        max_value=100.0,
+    )
+    hp_ceiling_percent = _coerce_float_range(
+        values,
+        "hp_ceiling_percent",
+        default=CROWN_NULL_CORONA_HP_CEILING_PERCENT,
+        min_value=0.0,
+        max_value=100.0,
+    )
+    if hp_floor_percent > hp_ceiling_percent:
+        raise ValueError("Great Dispel HP floor must be less than or equal to the ceiling.")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    payload: Dict[str, Any] = {
+        "report": report_code,
+        "fight": REPORT_CROWN_NULL_CORONA_DISPELS_DEFAULT_FIGHT,
+        "extra_reports": extra_reports,
+        "hp_floor_percent": hp_floor_percent,
+        "hp_ceiling_percent": hp_ceiling_percent,
+    }
+    return payload, fresh_run
 
 
 def _build_lightblinded_vanguard_dispels_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
@@ -976,6 +1080,133 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE,
         build_payload=_build_lightblinded_vanguard_avoidable_damage_payload,
     ),
+    REPORT_CROWN_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_CROWN_DEATHS_ID,
+            title=REPORT_CROWN_DEATHS_TITLE,
+            description=REPORT_CROWN_DEATHS_DESCRIPTION,
+            fightId=CROWN_OF_THE_COSMOS_FIGHT_ID,
+            fightName=REPORT_CROWN_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_CROWN_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_CROWN_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_CROWN_OF_THE_COSMOS_DEATHS,
+        build_payload=_build_crown_of_the_cosmos_deaths_payload,
+    ),
+    REPORT_CROWN_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_CROWN_AVOIDABLE_ID,
+            title=REPORT_CROWN_AVOIDABLE_TITLE,
+            description=REPORT_CROWN_AVOIDABLE_DESCRIPTION,
+            fightId=CROWN_OF_THE_COSMOS_FIGHT_ID,
+            fightName=REPORT_CROWN_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_CROWN_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_CROWN_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(CROWN_OF_THE_COSMOS_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE,
+        build_payload=_build_crown_of_the_cosmos_avoidable_damage_payload,
+    ),
+    REPORT_CROWN_SILVER_HITS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_CROWN_SILVER_HITS_ID,
+            title=REPORT_CROWN_SILVER_HITS_TITLE,
+            description=REPORT_CROWN_SILVER_HITS_DESCRIPTION,
+            fightId=CROWN_OF_THE_COSMOS_FIGHT_ID,
+            fightName=REPORT_CROWN_SILVER_HITS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_CROWN_SILVER_HITS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_CROWN_SILVER_HITS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS,
+        build_payload=_build_crown_of_the_cosmos_silver_hits_payload,
+    ),
+    REPORT_CROWN_NULL_CORONA_DISPELS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_CROWN_NULL_CORONA_DISPELS_ID,
+            title=REPORT_CROWN_NULL_CORONA_DISPELS_TITLE,
+            description=REPORT_CROWN_NULL_CORONA_DISPELS_DESCRIPTION,
+            fightId=CROWN_OF_THE_COSMOS_FIGHT_ID,
+            fightName=REPORT_CROWN_NULL_CORONA_DISPELS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_CROWN_NULL_CORONA_DISPELS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_CROWN_NULL_CORONA_DISPELS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    RequestFieldModel(
+                        id="hp_floor_percent",
+                        kind=RequestFieldKind.RANGE,
+                        label="Great Dispel HP floor",
+                        description="Do not count a Null Corona dispel as great when the target is below this HP percentage.",
+                        defaultValue=CROWN_NULL_CORONA_HP_FLOOR_PERCENT,
+                        minValue=0,
+                        maxValue=100,
+                        step=1,
+                        suffix="%",
+                    ),
+                    RequestFieldModel(
+                        id="hp_ceiling_percent",
+                        kind=RequestFieldKind.RANGE,
+                        label="Great Dispel HP ceiling",
+                        description="Count HP-window Null Corona dispels as great when the target is at or below this HP percentage.",
+                        defaultValue=CROWN_NULL_CORONA_HP_CEILING_PERCENT,
+                        minValue=0,
+                        maxValue=100,
+                        step=1,
+                        suffix="%",
+                    ),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS,
+        build_payload=_build_crown_of_the_cosmos_null_corona_dispels_payload,
+    ),
     REPORT_LIGHTBLINDED_DISPELS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_LIGHTBLINDED_DISPELS_ID,
@@ -1272,6 +1503,9 @@ __all__ = [
     "JOB_V2_DIMENSIUS_ADD_DAMAGE",
     "JOB_V2_DIMENSIUS_DEATHS",
     "JOB_V2_DIMENSIUS_PRIORITY_DAMAGE",
+    "JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE",
+    "JOB_V2_CROWN_OF_THE_COSMOS_DEATHS",
+    "JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS",
     "JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DAMAGE",
     "JOB_V2_IMPERATOR_AVERZIAN_DEATHS",

@@ -19,6 +19,7 @@ from .services.consumables import (
 )
 from .services.boss_manifests import (
     BOSS_MANIFESTS,
+    CROWN_OF_THE_COSMOS_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     MANIFEST_TIERS,
@@ -70,6 +71,20 @@ from .services.cooldown_usage import (
     CooldownUsageSummary,
     fetch_cooldown_usage_summary,
 )
+from .services.crown_of_the_cosmos_avoidable_damage import fetch_crown_of_the_cosmos_avoidable_damage_summary
+from .services.crown_of_the_cosmos_deaths import fetch_crown_of_the_cosmos_death_summary
+from .services.crown_of_the_cosmos_silver_hits import (
+    CrownSilverHitEntry,
+    CrownSilverHitEvent,
+    CrownSilverHitSummary,
+    fetch_crown_of_the_cosmos_silver_hit_summary,
+)
+from .services.crown_of_the_cosmos_null_corona_dispels import (
+    CrownNullCoronaDispelEntry,
+    CrownNullCoronaDispelEvent,
+    CrownNullCoronaDispelSummary,
+    fetch_crown_of_the_cosmos_null_corona_dispel_summary,
+)
 from .services.lightblinded_vanguard_cooldowns import fetch_lightblinded_vanguard_cooldown_summary
 from .services.lightblinded_vanguard_deaths import fetch_lightblinded_vanguard_death_summary
 from .services.vorasius_avoidable_damage import fetch_vorasius_avoidable_damage_summary
@@ -106,6 +121,13 @@ __all__ = [
     "BOSS_MANIFESTS",
     "BossAbilityMetadata",
     "BossManifest",
+    "CROWN_OF_THE_COSMOS_MANIFEST",
+    "CrownNullCoronaDispelEntry",
+    "CrownNullCoronaDispelEvent",
+    "CrownNullCoronaDispelSummary",
+    "CrownSilverHitEntry",
+    "CrownSilverHitEvent",
+    "CrownSilverHitSummary",
     "DEFAULT_GHOST_MISS_MODE",
     "DEATH_REPORT_HEALING_CONSUMABLES",
     "DeathReportEntry",
@@ -144,6 +166,10 @@ __all__ = [
     "fetch_dimensius_priority_damage_summary",
     "fetch_dimensius_death_summary",
     "fetch_cooldown_usage_summary",
+    "fetch_crown_of_the_cosmos_avoidable_damage_summary",
+    "fetch_crown_of_the_cosmos_death_summary",
+    "fetch_crown_of_the_cosmos_null_corona_dispel_summary",
+    "fetch_crown_of_the_cosmos_silver_hit_summary",
     "fetch_ghost_summary",
     "fetch_hit_summary",
     "fetch_phase_damage_summary",

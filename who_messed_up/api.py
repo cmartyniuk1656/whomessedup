@@ -57,10 +57,10 @@ query($code: String!, $fightIDs: [Int!]) {
 """
 
 EVENTS_QUERY = """
-query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String, $includeResources: Boolean) {
+query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String, $includeResources: Boolean, $useActorIDs: Boolean) {
   reportData {
     report(code: $code) {
-      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, filterExpression: $filter, includeResources: $includeResources) {
+      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, filterExpression: $filter, includeResources: $includeResources, useActorIDs: $useActorIDs) {
         data
         nextPageTimestamp
       }
@@ -288,6 +288,7 @@ def fetch_events(
     ability_name: Optional[str] = None,
     extra_filter: Optional[str] = None,
     include_resources: Optional[bool] = None,
+    use_actor_ids: Optional[bool] = None,
     actor_names: Optional[Dict[int, str]] = None,
     sleep_seconds: float = 0.1,
 ) -> Iterator[Dict[str, Any]]:
@@ -305,6 +306,7 @@ def fetch_events(
             "limit": int(limit),
             "filter": _compose_filter_expression(ability_id=ability_id, ability_name=ability_name, extra_filter=extra_filter),
             "includeResources": include_resources,
+            "useActorIDs": use_actor_ids,
         }
         payload = gql(session, token, EVENTS_QUERY, variables)
         events_data = payload["reportData"]["report"]["events"]
@@ -338,6 +340,7 @@ def events_for_fights(
     ability_name: Optional[str] = None,
     extra_filter: Optional[str] = None,
     actor_names: Optional[Dict[int, str]] = None,
+    use_actor_ids: Optional[bool] = None,
     sleep_seconds: float = 0.1,
 ) -> Iterator[Dict[str, Any]]:
     """
@@ -356,6 +359,7 @@ def events_for_fights(
             ability_name=ability_name,
             extra_filter=extra_filter,
             actor_names=actor_names,
+            use_actor_ids=use_actor_ids,
             sleep_seconds=sleep_seconds,
         ):
             yield event

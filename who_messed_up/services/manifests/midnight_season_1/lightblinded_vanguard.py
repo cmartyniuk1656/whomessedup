@@ -153,8 +153,7 @@ LIGHTBLINDED_VANGUARD_MANIFEST = BossManifest(
             game_id=1248652,
             description=DIVINE_TOLL_DESCRIPTION,
             url="https://www.wowhead.com/spell=1248652/divine-toll",
-            tags=("Avoidable", "Projectiles", "Silence"),
-            avoidable=True,
+            tags=("Raid Damage", "Travel Time", "Silence", "Unavoidable"),
         ),
         BossAbilityMetadata(
             name="Divine Hammer",

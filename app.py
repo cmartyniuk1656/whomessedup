@@ -18,6 +18,10 @@ from who_messed_up import load_env
 from who_messed_up.api import Fight
 from who_messed_up.jobs import job_manager
 from who_messed_up.services.report_registry import (
+    JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE,
+    JOB_V2_CROWN_OF_THE_COSMOS_DEATHS,
+    JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS,
+    JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS,
     JOB_V2_DIMENSIUS_ADD_DAMAGE,
     JOB_V2_DIMENSIUS_DEATHS,
     JOB_V2_DIMENSIUS_PRIORITY_DAMAGE,
@@ -40,6 +44,18 @@ from who_messed_up.services.view_models.common import ReportPageModel
 from who_messed_up.services.view_models.dimensius_add_damage import build_dimensius_add_damage_report_page
 from who_messed_up.services.view_models.dimensius_deaths import build_dimensius_deaths_report_page
 from who_messed_up.services.view_models.dimensius_priority_damage import build_dimensius_priority_damage_report_page
+from who_messed_up.services.view_models.crown_of_the_cosmos_avoidable_damage import (
+    build_crown_of_the_cosmos_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.crown_of_the_cosmos_deaths import (
+    build_crown_of_the_cosmos_deaths_report_page,
+)
+from who_messed_up.services.view_models.crown_of_the_cosmos_silver_hits import (
+    build_crown_of_the_cosmos_silver_hit_report_page,
+)
+from who_messed_up.services.view_models.crown_of_the_cosmos_null_corona_dispels import (
+    build_crown_of_the_cosmos_null_corona_dispel_report_page,
+)
 from who_messed_up.services.view_models.imperator_averzian_damage import (
     build_imperator_averzian_damage_report_page,
 )
@@ -79,6 +95,8 @@ from who_messed_up.service import (
     HitSummary,
     LightblindedVanguardDispelSummary,
     CooldownUsageSummary,
+    CrownNullCoronaDispelSummary,
+    CrownSilverHitSummary,
     PhaseDamageSummary,
     PhaseSummary,
     TokenError,
@@ -99,6 +117,10 @@ from who_messed_up.service import (
     fetch_imperator_averzian_damage_summary,
     fetch_imperator_averzian_death_summary,
     fetch_cooldown_usage_summary,
+    fetch_crown_of_the_cosmos_avoidable_damage_summary,
+    fetch_crown_of_the_cosmos_death_summary,
+    fetch_crown_of_the_cosmos_null_corona_dispel_summary,
+    fetch_crown_of_the_cosmos_silver_hit_summary,
     fetch_lightblinded_vanguard_avoidable_damage_summary,
     fetch_lightblinded_vanguard_death_summary,
     fetch_lightblinded_vanguard_dispel_summary,
@@ -1223,6 +1245,80 @@ def _fetch_lightblinded_vanguard_avoidable_damage_summary_from_payload(
     )
 
 
+def _fetch_crown_of_the_cosmos_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_crown_of_the_cosmos_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_crown_of_the_cosmos_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_crown_of_the_cosmos_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_crown_of_the_cosmos_silver_hit_summary_from_payload(
+    payload: Dict[str, Any],
+) -> CrownSilverHitSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_crown_of_the_cosmos_silver_hit_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        match_window_ms=payload.get("match_window_ms"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_crown_of_the_cosmos_null_corona_dispel_summary_from_payload(
+    payload: Dict[str, Any],
+) -> CrownNullCoronaDispelSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_crown_of_the_cosmos_null_corona_dispel_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        hp_floor_percent=payload.get("hp_floor_percent"),
+        hp_ceiling_percent=payload.get("hp_ceiling_percent"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_lightblinded_vanguard_cooldown_summary_from_payload(
     payload: Dict[str, Any],
 ) -> CooldownUsageSummary:
@@ -1391,6 +1487,38 @@ def _execute_v2_lightblinded_vanguard_avoidable_damage_job(payload: Dict[str, An
     return page.dict(by_alias=True)
 
 
+def _execute_v2_crown_of_the_cosmos_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_crown_of_the_cosmos_deaths_summary_from_payload(payload)
+    page = build_crown_of_the_cosmos_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_crown_of_the_cosmos_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_crown_of_the_cosmos_avoidable_damage_summary_from_payload(payload)
+    page = build_crown_of_the_cosmos_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_crown_of_the_cosmos_silver_hits_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_crown_of_the_cosmos_silver_hit_summary_from_payload(payload)
+    page = build_crown_of_the_cosmos_silver_hit_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_crown_of_the_cosmos_null_corona_dispels_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_crown_of_the_cosmos_null_corona_dispel_summary_from_payload(payload)
+    page = build_crown_of_the_cosmos_null_corona_dispel_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_lightblinded_vanguard_cooldown_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_lightblinded_vanguard_cooldown_summary_from_payload(payload)
     page = build_cooldown_usage_report_page(
@@ -1476,6 +1604,22 @@ job_manager.register_handler(
 job_manager.register_handler(
     JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS,
     _execute_v2_lightblinded_vanguard_deaths_job,
+)
+job_manager.register_handler(
+    JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE,
+    _execute_v2_crown_of_the_cosmos_avoidable_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_CROWN_OF_THE_COSMOS_DEATHS,
+    _execute_v2_crown_of_the_cosmos_deaths_job,
+)
+job_manager.register_handler(
+    JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS,
+    _execute_v2_crown_of_the_cosmos_silver_hits_job,
+)
+job_manager.register_handler(
+    JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS,
+    _execute_v2_crown_of_the_cosmos_null_corona_dispels_job,
 )
 job_manager.register_handler(
     JOB_V2_COOLDOWN_USAGE,

@@ -3,7 +3,13 @@ import { StatusPill } from "../atoms/StatusPill";
 import { ReportFieldControl } from "../molecules/ReportFieldControl";
 import { ReportRunCard } from "../molecules/ReportRunCard";
 
-const GLOBAL_CONFIGURATION_FIELD_IDS = new Set(["ignore_after_deaths", "kill_only", "omit_dead_players", "fresh_run"]);
+const GLOBAL_CONFIGURATION_FIELD_IDS = new Set([
+  "ignore_after_deaths",
+  "ignore_unavoidable_after_healer_deaths",
+  "kill_only",
+  "omit_dead_players",
+  "fresh_run",
+]);
 
 function splitFields(fields) {
   return fields.reduce(

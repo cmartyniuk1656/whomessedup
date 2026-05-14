@@ -11,6 +11,7 @@ from .boss_manifest_types import (
     normalize_manifest_difficulty,
 )
 from .manifests.midnight_season_1 import (
+    CROWN_OF_THE_COSMOS_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     MIDNIGHT_SEASON_1_MANIFESTS,
@@ -69,6 +70,7 @@ __all__ = [
     "MANIFEST_TIERS",
     "BossAbilityMetadata",
     "BossManifest",
+    "CROWN_OF_THE_COSMOS_MANIFEST",
     "EncounterTargetBucket",
     "EncounterTargetConfig",
     "IMPERATOR_AVERZIAN_MANIFEST",

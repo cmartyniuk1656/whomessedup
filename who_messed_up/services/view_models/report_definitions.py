@@ -47,6 +47,7 @@ class RequestFieldModel(ViewModelBase):
     min_value: Optional[float] = Field(None, alias="minValue")
     max_value: Optional[float] = Field(None, alias="maxValue")
     step: Optional[float] = None
+    suffix: Optional[str] = None
     options: List[RequestFieldOptionModel] = Field(default_factory=list)
     tooltip: Optional[RequestFieldTooltipModel] = None
 

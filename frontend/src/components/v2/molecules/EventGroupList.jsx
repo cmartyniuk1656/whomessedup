@@ -62,6 +62,15 @@ const DETAIL_ITEM_TONE_CLASSES = {
     abilityText: "ml-1 font-semibold text-slate-100",
     badge: "border-emerald-300/35 bg-emerald-400/10 text-emerald-100",
   },
+  warning: {
+    item: "",
+    label: "font-semibold text-amber-200",
+    timestamp: "ml-1 text-slate-300",
+    description: "ml-1 text-amber-50",
+    ability: "ml-1 font-semibold text-slate-100 underline decoration-dotted underline-offset-2 hover:text-amber-200",
+    abilityText: "ml-1 font-semibold text-slate-100",
+    badge: "border-amber-300/35 bg-amber-400/10 text-amber-100",
+  },
   default: {
     item: "",
     label: "font-semibold text-emerald-300",

@@ -3,6 +3,7 @@ Midnight Season 1 boss manifests.
 """
 from __future__ import annotations
 
+from .crown_of_the_cosmos import CROWN_OF_THE_COSMOS_MANIFEST
 from .imperator_averzian import IMPERATOR_AVERZIAN_MANIFEST
 from .lightblinded_vanguard import LIGHTBLINDED_VANGUARD_MANIFEST
 from .vorasius import VORASIUS_MANIFEST
@@ -11,9 +12,11 @@ MIDNIGHT_SEASON_1_MANIFESTS = (
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     VORASIUS_MANIFEST,
+    CROWN_OF_THE_COSMOS_MANIFEST,
 )
 
 __all__ = [
+    "CROWN_OF_THE_COSMOS_MANIFEST",
     "IMPERATOR_AVERZIAN_MANIFEST",
     "LIGHTBLINDED_VANGUARD_MANIFEST",
     "MIDNIGHT_SEASON_1_MANIFESTS",

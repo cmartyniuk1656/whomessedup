@@ -123,10 +123,11 @@ function RangeFieldControl({ field, value, onValueChange, density }) {
   const min = field.minValue ?? 0;
   const max = field.maxValue ?? 100;
   const step = field.step ?? 1;
+  const suffix = field.suffix ?? "s";
   const current = value ?? field.defaultValue ?? min;
   const numericValue = Number.parseFloat(current);
   const displayValue = Number.isFinite(numericValue) ? numericValue : min;
-  const displayLabel = `${Number.isInteger(displayValue) ? displayValue.toFixed(0) : displayValue.toFixed(1)}s`;
+  const displayLabel = `${Number.isInteger(displayValue) ? displayValue.toFixed(0) : displayValue.toFixed(1)}${suffix}`;
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
@@ -155,8 +156,8 @@ function RangeFieldControl({ field, value, onValueChange, density }) {
         className="h-2 w-full cursor-pointer accent-emerald-300"
       />
       <div className="flex justify-between text-[11px] text-slate-500">
-        <span>{min}s</span>
-        <span>{max}s</span>
+        <span>{min}{suffix}</span>
+        <span>{max}{suffix}</span>
       </div>
     </div>
   );

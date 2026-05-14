@@ -13,6 +13,7 @@ const BADGE_TONES = {
 const INDICATOR_TONES = {
   danger: "text-red-300 drop-shadow-[0_0_6px_rgba(248,113,113,0.45)]",
   warning: "text-amber-300 drop-shadow-[0_0_6px_rgba(252,211,77,0.35)]",
+  success: "text-emerald-300 drop-shadow-[0_0_6px_rgba(52,211,153,0.35)]",
   info: "text-sky-300 drop-shadow-[0_0_6px_rgba(125,211,252,0.35)]",
 };
 
