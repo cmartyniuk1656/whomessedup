@@ -18,6 +18,10 @@ from who_messed_up import load_env
 from who_messed_up.api import Fight
 from who_messed_up.jobs import job_manager
 from who_messed_up.services.report_registry import (
+    JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE,
+    JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE,
+    JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS,
+    JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES,
     JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE,
     JOB_V2_CROWN_OF_THE_COSMOS_DEATHS,
     JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS,
@@ -44,6 +48,18 @@ from who_messed_up.services.view_models.common import ReportPageModel
 from who_messed_up.services.view_models.dimensius_add_damage import build_dimensius_add_damage_report_page
 from who_messed_up.services.view_models.dimensius_deaths import build_dimensius_deaths_report_page
 from who_messed_up.services.view_models.dimensius_priority_damage import build_dimensius_priority_damage_report_page
+from who_messed_up.services.view_models.beloren_child_of_alar_damage import (
+    build_beloren_child_of_alar_damage_report_page,
+)
+from who_messed_up.services.view_models.beloren_child_of_alar_avoidable_damage import (
+    build_beloren_child_of_alar_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.beloren_child_of_alar_deaths import (
+    build_beloren_child_of_alar_deaths_report_page,
+)
+from who_messed_up.services.view_models.beloren_child_of_alar_light_void_mistakes import (
+    build_beloren_child_of_alar_light_void_mistake_report_page,
+)
 from who_messed_up.services.view_models.crown_of_the_cosmos_avoidable_damage import (
     build_crown_of_the_cosmos_avoidable_damage_report_page,
 )
@@ -85,6 +101,7 @@ from who_messed_up.services.view_models.vorasius_deaths import build_vorasius_de
 from who_messed_up.service import (
     AddDamageSummary,
     AvoidableDamageSummary,
+    BelorenLightVoidMistakeSummary,
     DeathReportSummary,
     DimensiusPhaseOneSummary,
     DimensiusPriorityDamageSummary,
@@ -106,6 +123,10 @@ from who_messed_up.service import (
     normalize_ghost_miss_mode,
     fetch_ghost_summary,
     fetch_hit_summary,
+    fetch_beloren_child_of_alar_avoidable_damage_summary,
+    fetch_beloren_child_of_alar_damage_summary,
+    fetch_beloren_child_of_alar_death_summary,
+    fetch_beloren_child_of_alar_light_void_mistake_summary,
     fetch_dimensius_phase_one_summary,
     fetch_dimensius_priority_damage_summary,
     fetch_dimensius_death_summary,
@@ -1122,10 +1143,47 @@ def _fetch_vorasius_damage_summary_from_payload(payload: Dict[str, Any]) -> Enco
     )
 
 
+def _fetch_beloren_child_of_alar_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_beloren_child_of_alar_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_vorasius_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
     return fetch_vorasius_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_beloren_child_of_alar_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_beloren_child_of_alar_death_summary(
         report_code=payload["report"],
         fight_name=payload.get("fight"),
         fight_ids=fight_ids,
@@ -1148,6 +1206,43 @@ def _fetch_vorasius_avoidable_damage_summary_from_payload(payload: Dict[str, Any
         fight_ids=fight_ids,
         difficulty=payload.get("difficulty"),
         ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_beloren_child_of_alar_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_beloren_child_of_alar_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_beloren_child_of_alar_light_void_mistake_summary_from_payload(
+    payload: Dict[str, Any],
+) -> BelorenLightVoidMistakeSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_beloren_child_of_alar_light_void_mistake_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
         ignore_after_deaths=payload.get("ignore_after_deaths"),
         extra_report_codes=payload.get("extra_reports"),
         token=payload.get("token"),
@@ -1431,6 +1526,14 @@ def _execute_v2_vorasius_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     return page.dict(by_alias=True)
 
 
+def _execute_v2_beloren_child_of_alar_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_beloren_child_of_alar_damage_summary_from_payload(payload)
+    page = build_beloren_child_of_alar_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_vorasius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_vorasius_deaths_summary_from_payload(payload)
     page = build_vorasius_deaths_report_page(summary)
@@ -1439,9 +1542,33 @@ def _execute_v2_vorasius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     return page.dict(by_alias=True)
 
 
+def _execute_v2_beloren_child_of_alar_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_beloren_child_of_alar_deaths_summary_from_payload(payload)
+    page = build_beloren_child_of_alar_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_vorasius_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_vorasius_avoidable_damage_summary_from_payload(payload)
     page = build_vorasius_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_beloren_child_of_alar_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_beloren_child_of_alar_avoidable_damage_summary_from_payload(payload)
+    page = build_beloren_child_of_alar_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_beloren_child_of_alar_light_void_mistake_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_beloren_child_of_alar_light_void_mistake_summary_from_payload(payload)
+    page = build_beloren_child_of_alar_light_void_mistake_report_page(summary)
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -1625,6 +1752,16 @@ job_manager.register_handler(
     JOB_V2_COOLDOWN_USAGE,
     _execute_v2_lightblinded_vanguard_cooldown_job,
 )
+job_manager.register_handler(
+    JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE,
+    _execute_v2_beloren_child_of_alar_avoidable_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES,
+    _execute_v2_beloren_child_of_alar_light_void_mistake_job,
+)
+job_manager.register_handler(JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE, _execute_v2_beloren_child_of_alar_damage_job)
+job_manager.register_handler(JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS, _execute_v2_beloren_child_of_alar_deaths_job)
 job_manager.register_handler(JOB_V2_VORASIUS_AVOIDABLE_DAMAGE, _execute_v2_vorasius_avoidable_damage_job)
 job_manager.register_handler(JOB_V2_VORASIUS_DAMAGE, _execute_v2_vorasius_damage_job)
 job_manager.register_handler(JOB_V2_VORASIUS_DEATHS, _execute_v2_vorasius_deaths_job)

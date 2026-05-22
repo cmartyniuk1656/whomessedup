@@ -258,6 +258,7 @@ def _fetch_single_encounter_target_damage_summary(
                 role_defaults=roles_by_fight.get(fight.id, {}),
                 global_specs=player_specs_global,
                 target_name=cfg.enemy_name,
+                target_filter=cfg.damage_filter,
             )
             fight_damage_maps[cfg.slug] = damage_map
 
@@ -514,9 +515,13 @@ def _collect_target_damage_table(
     role_defaults: Dict[str, str],
     global_specs: Dict[str, Optional[str]],
     target_name: str,
+    target_filter: Optional[str] = None,
 ) -> Dict[str, float]:
     damage_by_player: DefaultDict[str, float] = defaultdict(float)
-    safe_target_name = target_name.replace('"', '\\"')
+    filter_expr = target_filter
+    if not filter_expr:
+        safe_target_name = target_name.replace('"', '\\"')
+        filter_expr = f'target.name = "{safe_target_name}"'
     table = fetch_table(
         session,
         bearer,
@@ -525,7 +530,7 @@ def _collect_target_damage_table(
         fight_id=fight_id,
         start=fight_start,
         end=fight_end,
-        filter_expr=f'target.name = "{safe_target_name}"',
+        filter_expr=filter_expr,
     )
 
     entries = table.get("entries") or []

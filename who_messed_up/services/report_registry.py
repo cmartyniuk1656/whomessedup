@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from .avoidable_damage import ability_manifest_key, resolve_avoidable_manifest_abilities
 from .boss_manifests import (
+    BELOREN_CHILD_OF_ALAR_MANIFEST,
     CROWN_OF_THE_COSMOS_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
@@ -46,6 +47,34 @@ from .view_models.dimensius_priority_damage import (
     REPORT_FOOTNOTES as REPORT_PRIORITY_FOOTNOTES,
     REPORT_ID as REPORT_PRIORITY_ID,
     REPORT_TITLE as REPORT_PRIORITY_TITLE,
+)
+from .view_models.beloren_child_of_alar_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_BELOREN_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_BELOREN_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_BELOREN_FOOTNOTES,
+    REPORT_ID as REPORT_BELOREN_ID,
+    REPORT_TITLE as REPORT_BELOREN_TITLE,
+)
+from .view_models.beloren_child_of_alar_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_BELOREN_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_BELOREN_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_BELOREN_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_BELOREN_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_BELOREN_AVOIDABLE_TITLE,
+)
+from .view_models.beloren_child_of_alar_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_BELOREN_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_BELOREN_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_BELOREN_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_BELOREN_DEATHS_ID,
+    REPORT_TITLE as REPORT_BELOREN_DEATHS_TITLE,
+)
+from .view_models.beloren_child_of_alar_light_void_mistakes import (
+    REPORT_DEFAULT_FIGHT as REPORT_BELOREN_LIGHT_VOID_MISTAKES_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_BELOREN_LIGHT_VOID_MISTAKES_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_BELOREN_LIGHT_VOID_MISTAKES_FOOTNOTES,
+    REPORT_ID as REPORT_BELOREN_LIGHT_VOID_MISTAKES_ID,
+    REPORT_TITLE as REPORT_BELOREN_LIGHT_VOID_MISTAKES_TITLE,
 )
 from .view_models.crown_of_the_cosmos_avoidable_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_CROWN_AVOIDABLE_DEFAULT_FIGHT,
@@ -160,6 +189,10 @@ ReportPayloadBuilder = Callable[[Dict[str, Any]], Tuple[Dict[str, Any], bool]]
 JOB_V2_DIMENSIUS_ADD_DAMAGE = "v2_report_dimensius_add_damage"
 JOB_V2_DIMENSIUS_DEATHS = "v2_report_dimensius_deaths"
 JOB_V2_DIMENSIUS_PRIORITY_DAMAGE = "v2_report_dimensius_priority_damage"
+JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE = "v2_report_beloren_child_of_alar_damage"
+JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE = "v2_report_beloren_child_of_alar_avoidable_damage"
+JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS = "v2_report_beloren_child_of_alar_deaths"
+JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES = "v2_report_beloren_child_of_alar_light_void_mistakes"
 JOB_V2_IMPERATOR_AVERZIAN_DAMAGE = "v2_report_imperator_averzian_damage"
 JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE = "v2_report_imperator_averzian_avoidable_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DEATHS = "v2_report_imperator_averzian_deaths"
@@ -573,6 +606,14 @@ def _build_vorasius_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
     )
 
 
+def _build_beloren_child_of_alar_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=BELOREN_CHILD_OF_ALAR_MANIFEST,
+        default_fight=REPORT_BELOREN_DEFAULT_FIGHT,
+    )
+
+
 def _build_death_report_payload(
     values: Dict[str, Any],
     *,
@@ -624,6 +665,13 @@ def _build_crown_of_the_cosmos_deaths_payload(values: Dict[str, Any]) -> Tuple[D
     return _build_death_report_payload(
         values,
         default_fight=REPORT_CROWN_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_beloren_child_of_alar_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_BELOREN_DEATHS_DEFAULT_FIGHT,
     )
 
 
@@ -689,6 +737,31 @@ def _build_crown_of_the_cosmos_avoidable_damage_payload(values: Dict[str, Any]) 
         manifest=CROWN_OF_THE_COSMOS_MANIFEST,
         default_fight=REPORT_CROWN_AVOIDABLE_DEFAULT_FIGHT,
     )
+
+
+def _build_beloren_child_of_alar_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=BELOREN_CHILD_OF_ALAR_MANIFEST,
+        default_fight=REPORT_BELOREN_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_beloren_child_of_alar_light_void_mistakes_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    payload: Dict[str, Any] = {
+        "report": report_code,
+        "fight": REPORT_BELOREN_LIGHT_VOID_MISTAKES_DEFAULT_FIGHT,
+        "extra_reports": extra_reports,
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
 
 
 def _build_crown_of_the_cosmos_silver_hits_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
@@ -972,6 +1045,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_VORASIUS_DEATHS,
         build_payload=_build_vorasius_deaths_payload,
     ),
+    REPORT_BELOREN_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_BELOREN_DEATHS_ID,
+            title=REPORT_BELOREN_DEATHS_TITLE,
+            description=REPORT_BELOREN_DEATHS_DESCRIPTION,
+            fightId=BELOREN_FIGHT_ID,
+            fightName=REPORT_BELOREN_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_BELOREN_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_BELOREN_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS,
+        build_payload=_build_beloren_child_of_alar_deaths_payload,
+    ),
     REPORT_IMPERATOR_AVOIDABLE_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_IMPERATOR_AVOIDABLE_ID,
@@ -1025,6 +1125,59 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
         build_payload=_build_vorasius_avoidable_damage_payload,
+    ),
+    REPORT_BELOREN_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_BELOREN_AVOIDABLE_ID,
+            title=REPORT_BELOREN_AVOIDABLE_TITLE,
+            description=REPORT_BELOREN_AVOIDABLE_DESCRIPTION,
+            fightId=BELOREN_FIGHT_ID,
+            fightName=REPORT_BELOREN_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_BELOREN_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_BELOREN_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(BELOREN_CHILD_OF_ALAR_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE,
+        build_payload=_build_beloren_child_of_alar_avoidable_damage_payload,
+    ),
+    REPORT_BELOREN_LIGHT_VOID_MISTAKES_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_BELOREN_LIGHT_VOID_MISTAKES_ID,
+            title=REPORT_BELOREN_LIGHT_VOID_MISTAKES_TITLE,
+            description=REPORT_BELOREN_LIGHT_VOID_MISTAKES_DESCRIPTION,
+            fightId=BELOREN_FIGHT_ID,
+            fightName=REPORT_BELOREN_LIGHT_VOID_MISTAKES_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_BELOREN_LIGHT_VOID_MISTAKES_DEFAULT_FIGHT,
+            footnotes=list(REPORT_BELOREN_LIGHT_VOID_MISTAKES_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES,
+        build_payload=_build_beloren_child_of_alar_light_void_mistakes_payload,
     ),
     REPORT_LIGHTBLINDED_DEATHS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -1406,6 +1559,27 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_VORASIUS_DAMAGE,
         build_payload=_build_vorasius_damage_payload,
     ),
+    REPORT_BELOREN_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_BELOREN_ID,
+            title=REPORT_BELOREN_TITLE,
+            description=REPORT_BELOREN_DESCRIPTION,
+            fightId=BELOREN_FIGHT_ID,
+            fightName=REPORT_BELOREN_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_BELOREN_DEFAULT_FIGHT,
+            footnotes=list(REPORT_BELOREN_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(BELOREN_CHILD_OF_ALAR_MANIFEST),
+                    *_build_target_damage_scope_fields("Belo'ren, Child of Al'ar"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE,
+        build_payload=_build_beloren_child_of_alar_damage_payload,
+    ),
 }
 
 
@@ -1499,6 +1673,10 @@ def build_report_job_request(report_id: str, values: Dict[str, Any]) -> Tuple[st
 
 
 __all__ = [
+    "JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE",
+    "JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE",
+    "JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS",
+    "JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES",
     "JOB_V2_COOLDOWN_USAGE",
     "JOB_V2_DIMENSIUS_ADD_DAMAGE",
     "JOB_V2_DIMENSIUS_DEATHS",

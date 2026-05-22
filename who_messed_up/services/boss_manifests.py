@@ -11,6 +11,7 @@ from .boss_manifest_types import (
     normalize_manifest_difficulty,
 )
 from .manifests.midnight_season_1 import (
+    BELOREN_CHILD_OF_ALAR_MANIFEST,
     CROWN_OF_THE_COSMOS_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
@@ -68,6 +69,7 @@ __all__ = [
     "BOSS_MANIFESTS_BY_BOSS",
     "BOSS_MANIFESTS_BY_KEY",
     "MANIFEST_TIERS",
+    "BELOREN_CHILD_OF_ALAR_MANIFEST",
     "BossAbilityMetadata",
     "BossManifest",
     "CROWN_OF_THE_COSMOS_MANIFEST",

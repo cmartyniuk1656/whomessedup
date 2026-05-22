@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Callable, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 
@@ -30,6 +30,11 @@ from .common import (
     compute_fight_duration_ms,
 )
 from .death_reports import resolve_damage_ability, resolve_damage_amount
+
+AvoidableEventFilter = Callable[[BossAbilityMetadata, Dict[str, object], str], bool]
+AvoidableEventFilterFactory = Callable[..., Optional[AvoidableEventFilter]]
+AvoidableEventAggregator = Callable[[List["AvoidableDamageEvent"]], List["AvoidableDamageEvent"]]
+AvoidableEventAggregatorFactory = Callable[..., Optional[AvoidableEventAggregator]]
 
 
 @dataclass
@@ -92,6 +97,8 @@ def fetch_avoidable_damage_summary(
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
+    event_filter_factory: Optional[AvoidableEventFilterFactory] = None,
+    event_aggregator_factory: Optional[AvoidableEventAggregatorFactory] = None,
 ) -> AvoidableDamageSummary:
     primary_code = _sanitize_report_code(report_code)
     selected_abilities = resolve_avoidable_manifest_abilities(boss_manifest, ability_keys=ability_keys)
@@ -106,6 +113,8 @@ def fetch_avoidable_damage_summary(
         token=token,
         client_id=client_id,
         client_secret=client_secret,
+        event_filter_factory=event_filter_factory,
+        event_aggregator_factory=event_aggregator_factory,
     )
 
     extra_codes: List[str] = []
@@ -138,6 +147,8 @@ def fetch_avoidable_damage_summary(
                 token=token,
                 client_id=client_id,
                 client_secret=client_secret,
+                event_filter_factory=event_filter_factory,
+                event_aggregator_factory=event_aggregator_factory,
             )
         )
 
@@ -174,6 +185,8 @@ def _fetch_single_avoidable_damage_summary(
     token: Optional[str] = None,
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
+    event_filter_factory: Optional[AvoidableEventFilterFactory] = None,
+    event_aggregator_factory: Optional[AvoidableEventAggregatorFactory] = None,
 ) -> AvoidableDamageSummary:
     load_env()
 
@@ -239,6 +252,31 @@ def _fetch_single_avoidable_damage_summary(
             abilities=selected_abilities,
             event_end=event_end,
         )
+        event_filter = None
+        if event_filter_factory is not None:
+            event_filter = event_filter_factory(
+                session=session,
+                bearer=bearer,
+                report_code=report_code,
+                fight=fight,
+                actor_names=actor_names,
+                event_end=event_end,
+                known_players=known_players,
+                participants=participants,
+            )
+        event_aggregator = None
+        if event_aggregator_factory is not None:
+            event_aggregator = event_aggregator_factory(
+                session=session,
+                bearer=bearer,
+                report_code=report_code,
+                fight=fight,
+                actor_names=actor_names,
+                event_end=event_end,
+                known_players=known_players,
+                participants=participants,
+            )
+        fight_events: List[AvoidableDamageEvent] = []
         for ability in selected_abilities:
             for event in fetch_events(
                 session,
@@ -266,6 +304,8 @@ def _fetch_single_avoidable_damage_summary(
                     continue
                 if participants and target_name not in participants:
                     continue
+                if event_filter is not None and not event_filter(ability, event, target_name):
+                    continue
                 if is_avoidable_event_excluded(ability, event, target_name, avoidable_exclusions):
                     continue
 
@@ -274,10 +314,12 @@ def _fetch_single_avoidable_damage_summary(
                     continue
 
                 ability_id, ability_label = resolve_damage_ability(event, ability_labels)
-                metadata = boss_manifest.ability_for(
-                    ability_id=ability_id,
-                    ability_name=ability_label or ability.name,
-                ) or ability
+                metadata = ability
+                if not _ability_matches_event(ability, ability_id):
+                    metadata = boss_manifest.ability_for(
+                        ability_id=ability_id,
+                        ability_name=ability_label or ability.name,
+                    ) or ability
                 target_role = fight_roles.get(target_name) or player_roles.get(target_name)
                 if not is_avoidable_for_role(metadata, target_role):
                     continue
@@ -297,8 +339,13 @@ def _fetch_single_avoidable_damage_summary(
                     ability_tags=tuple(metadata.tags),
                     pull_duration_ms=pull_duration,
                 )
-                events_by_player[target_name].append(event_model)
-                damage_totals[target_name] += damage_amount
+                fight_events.append(event_model)
+
+        if event_aggregator is not None:
+            fight_events = event_aggregator(fight_events)
+        for event_model in fight_events:
+            events_by_player[event_model.player].append(event_model)
+            damage_totals[event_model.player] += event_model.damage_amount
 
     player_classes: Dict[str, Optional[str]] = {}
     for actor_id, name in actor_names.items():
@@ -450,9 +497,22 @@ def _normalize_ability_name(value: str) -> str:
     return " ".join(str(value).strip().lower().split())
 
 
+def _ability_matches_event(ability: BossAbilityMetadata, ability_id: Optional[int]) -> bool:
+    if ability.game_id is None or ability_id is None:
+        return False
+    try:
+        return int(ability.game_id) == int(ability_id)
+    except (TypeError, ValueError):
+        return False
+
+
 __all__ = [
     "AvoidableDamageEntry",
     "AvoidableDamageEvent",
+    "AvoidableEventAggregator",
+    "AvoidableEventAggregatorFactory",
+    "AvoidableEventFilter",
+    "AvoidableEventFilterFactory",
     "AvoidableDamageSummary",
     "ability_manifest_key",
     "fetch_avoidable_damage_summary",

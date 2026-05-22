@@ -42,6 +42,7 @@ SPEC_ANALYSIS_METRICS: Tuple[Tuple[str, str, EncounterTargetBucket], ...] = (
     ("priority", "Priority Damage", EncounterTargetBucket.PRIORITY_ADD),
     ("pad", "Pad Damage", EncounterTargetBucket.PAD_ADD),
 )
+SpecAnalysisTargetMetric = Tuple[str, str, str]
 
 
 @dataclass(frozen=True)
@@ -65,6 +66,7 @@ class TargetDamageReportConfig:
     spec_analysis_subtitle: str = "Compare specialization output across boss, priority, and pad targets."
     spec_analysis_basis_label: str = "Average damage per player per counted pull"
     spec_analysis_default_sort: str = "overall"
+    spec_analysis_target_metrics: Tuple[SpecAnalysisTargetMetric, ...] = ()
     spec_analysis_sort_labels: Dict[str, str] = field(
         default_factory=lambda: {
             "overall": "Overall",
@@ -307,7 +309,14 @@ def build_target_damage_spec_analysis(
         for target in summary.targets
         if target.bucket in {EncounterTargetBucket.BOSS, EncounterTargetBucket.PRIORITY_ADD, EncounterTargetBucket.PAD_ADD}
     }
-    if not target_bucket_map:
+    selected_target_slugs = {target.target for target in summary.targets}
+    active_target_metrics = tuple(
+        metric for metric in config.spec_analysis_target_metrics if metric[2] in selected_target_slugs
+    )
+    active_bucket_metrics = tuple(
+        metric for metric in SPEC_ANALYSIS_METRICS if any(bucket == metric[2] for bucket in target_bucket_map.values())
+    )
+    if not target_bucket_map and not active_target_metrics:
         return None
 
     grouped_totals: Dict[Tuple[Optional[str], str], DefaultDict[str, float]] = {}
@@ -329,6 +338,9 @@ def build_target_damage_spec_analysis(
             if bucket is None:
                 continue
             grouped_totals[key][bucket.value] += float(breakdown.total_damage or 0.0)
+        for metric_id, _label, target_slug in active_target_metrics:
+            breakdown = entry.target_totals.get(target_slug)
+            grouped_totals[key][metric_id] += float(breakdown.total_damage if breakdown else 0.0)
 
     if not grouped_totals:
         return None
@@ -344,8 +356,11 @@ def build_target_damage_spec_analysis(
         key = (class_name, spec_name)
         pull_count = grouped_pulls.get(key, 0)
         values = {}
-        for metric_id, _label, bucket in SPEC_ANALYSIS_METRICS:
+        for metric_id, _label, bucket in active_bucket_metrics:
             total_value = grouped_totals[key].get(bucket.value, 0.0)
+            values[metric_id] = total_value / pull_count if pull_count else 0.0
+        for metric_id, _label, _target_slug in active_target_metrics:
+            total_value = grouped_totals[key].get(metric_id, 0.0)
             values[metric_id] = total_value / pull_count if pull_count else 0.0
         class_slug = (class_name or "unknown").replace(" ", "-").lower()
         spec_slug = spec_name.replace(" ", "-").lower()
@@ -361,9 +376,14 @@ def build_target_damage_spec_analysis(
         )
 
     default_sort = config.spec_analysis_default_sort
+    available_metric_ids = {metric_id for metric_id, _label, _bucket in active_bucket_metrics}
+    available_metric_ids.update(metric_id for metric_id, _label, _target_slug in active_target_metrics)
     sort_options = [
         SpecAnalysisSortOptionModel(id=option_id, label=label)
         for option_id, label in config.spec_analysis_sort_labels.items()
+        if option_id == "overall"
+        or option_id in available_metric_ids
+        or (option_id == "boss_priority" and {"boss", "priority"} <= available_metric_ids)
     ]
     if not any(option.id == default_sort for option in sort_options):
         sort_options.insert(0, SpecAnalysisSortOptionModel(id="overall", label="Overall"))
@@ -378,7 +398,11 @@ def build_target_damage_spec_analysis(
         sortOptions=sort_options,
         metrics=[
             SpecAnalysisMetricModel(id=metric_id, label=label)
-            for metric_id, label, _bucket in SPEC_ANALYSIS_METRICS
+            for metric_id, label, _bucket in active_bucket_metrics
+        ]
+        + [
+            SpecAnalysisMetricModel(id=metric_id, label=label)
+            for metric_id, label, _target_slug in active_target_metrics
         ],
         series=series,
     )

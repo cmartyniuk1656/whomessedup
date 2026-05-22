@@ -14,6 +14,14 @@ const METRIC_STYLES = {
     barClassName: "border-amber-300/70 bg-amber-300/85 shadow-[0_10px_24px_-14px_rgba(252,211,77,0.95)]",
     chipClassName: "border-amber-300/30 bg-amber-300/10 text-amber-100",
   },
+  boss_egg: {
+    barClassName: "border-violet-300/70 bg-violet-400/85 shadow-[0_10px_24px_-14px_rgba(167,139,250,0.95)]",
+    chipClassName: "border-violet-300/30 bg-violet-400/10 text-violet-200",
+  },
+  add_egg: {
+    barClassName: "border-rose-300/70 bg-rose-400/85 shadow-[0_10px_24px_-14px_rgba(251,113,133,0.95)]",
+    chipClassName: "border-rose-300/30 bg-rose-400/10 text-rose-200",
+  },
 };
 
 const AXIS_STEPS = [1, 0.75, 0.5, 0.25, 0];
@@ -32,6 +40,9 @@ function formatPercentRatio(value) {
 export function SpecAnalysisChart({ analysis, series }) {
   const metrics = analysis?.metrics ?? [];
   const chartSeries = series ?? [];
+  const metricCount = Math.max(metrics.length, 1);
+  const groupWidth = Math.max(104, metricCount * 28 + 16);
+  const barWidth = metricCount > 4 ? 20 : 24;
   const metricMaxById = Object.fromEntries(
     metrics.map((metric) => [
       metric.id,
@@ -103,7 +114,11 @@ export function SpecAnalysisChart({ analysis, series }) {
               <div className="relative flex h-full items-end gap-4 pr-3">
                 {chartSeries.map((entry) => {
                   return (
-                    <div key={entry.id} className="flex h-full w-[104px] shrink-0 items-end justify-center gap-2">
+                    <div
+                      key={entry.id}
+                      className="flex h-full shrink-0 items-end justify-center gap-2"
+                      style={{ width: `${groupWidth}px` }}
+                    >
                       {metrics.map((metric) => {
                         const styles = METRIC_STYLES[metric.id] || METRIC_STYLES.boss;
                         const value = Number(entry?.values?.[metric.id] ?? 0);
@@ -123,7 +138,8 @@ export function SpecAnalysisChart({ analysis, series }) {
                         return (
                           <div
                             key={`${entry.id}-${metric.id}`}
-                            className="flex h-full w-6 items-end"
+                            className="flex h-full items-end"
+                            style={{ width: `${barWidth}px` }}
                             title={`${entry.specName} - ${metric.label}: ${formatMetricValue(value)}`}
                           >
                             <div
@@ -146,7 +162,11 @@ export function SpecAnalysisChart({ analysis, series }) {
                 const color = CLASS_COLORS[String(entry?.colorToken || "").toLowerCase()] ?? DEFAULT_PLAYER_COLOR;
 
                 return (
-                  <div key={`${entry.id}-label`} className="w-[104px] shrink-0 space-y-1 text-center">
+                  <div
+                    key={`${entry.id}-label`}
+                    className="shrink-0 space-y-1 text-center"
+                    style={{ width: `${groupWidth}px` }}
+                  >
                     <p className="text-sm font-semibold tracking-tight" style={{ color }}>
                       {entry.specName}
                     </p>

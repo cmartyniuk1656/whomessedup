@@ -31,6 +31,7 @@ class EncounterTargetConfig:
     enemy_name: str
     bucket: Optional[EncounterTargetBucket] = None
     default_enabled: bool = True
+    damage_filter: Optional[str] = None
 
 
 @dataclass(frozen=True)

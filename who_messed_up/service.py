@@ -18,6 +18,7 @@ from .services.consumables import (
     HealingConsumableStatus,
 )
 from .services.boss_manifests import (
+    BELOREN_CHILD_OF_ALAR_MANIFEST,
     BOSS_MANIFESTS,
     CROWN_OF_THE_COSMOS_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
@@ -29,6 +30,17 @@ from .services.boss_manifests import (
     get_boss_manifest,
 )
 from .services.avoidable_damage import AvoidableDamageEntry, AvoidableDamageEvent, AvoidableDamageSummary
+from .services.beloren_child_of_alar_damage import fetch_beloren_child_of_alar_damage_summary
+from .services.beloren_child_of_alar_avoidable_damage import (
+    fetch_beloren_child_of_alar_avoidable_damage_summary,
+)
+from .services.beloren_child_of_alar_deaths import fetch_beloren_child_of_alar_death_summary
+from .services.beloren_child_of_alar_light_void_mistakes import (
+    BelorenLightVoidMistakeEntry,
+    BelorenLightVoidMistakeEvent,
+    BelorenLightVoidMistakeSummary,
+    fetch_beloren_child_of_alar_light_void_mistake_summary,
+)
 from .services.dimensius import (
     AddDamageEntry,
     AddDamageSummary,
@@ -118,6 +130,10 @@ __all__ = [
     "AvoidableDamageEntry",
     "AvoidableDamageEvent",
     "AvoidableDamageSummary",
+    "BELOREN_CHILD_OF_ALAR_MANIFEST",
+    "BelorenLightVoidMistakeEntry",
+    "BelorenLightVoidMistakeEvent",
+    "BelorenLightVoidMistakeSummary",
     "BOSS_MANIFESTS",
     "BossAbilityMetadata",
     "BossManifest",
@@ -170,6 +186,10 @@ __all__ = [
     "fetch_crown_of_the_cosmos_death_summary",
     "fetch_crown_of_the_cosmos_null_corona_dispel_summary",
     "fetch_crown_of_the_cosmos_silver_hit_summary",
+    "fetch_beloren_child_of_alar_avoidable_damage_summary",
+    "fetch_beloren_child_of_alar_damage_summary",
+    "fetch_beloren_child_of_alar_death_summary",
+    "fetch_beloren_child_of_alar_light_void_mistake_summary",
     "fetch_ghost_summary",
     "fetch_hit_summary",
     "fetch_phase_damage_summary",
