@@ -60,9 +60,21 @@ INTERRUPT_ABILITY_LABELS: Dict[int, str] = {
     96231: "Rebuke",
     97547: "Solar Beam",
     147362: "Counter Shot",
+    15487: "Silence",
     183752: "Disrupt",
+    187707: "Muzzle",
+    19647: "Spell Lock",
+    220543: "Silence",
+    31935: "Avenger's Shield",
+    347008: "Axe Toss",
     351338: "Quell",
+    116705: "Spear Hand Strike",
 }
+ERUPTION_TARGET_BY_ABILITY: Dict[int, str] = {
+    LIGHT_ERUPTION_ID: "Light Ember",
+    VOID_ERUPTION_ID: "Void Ember",
+}
+SUCCESSFUL_ERUPTION_INTERRUPT_MATCH_MS = 250.0
 
 @dataclass
 class BelorenLightVoidMistakeEvent:
@@ -515,6 +527,7 @@ def _collect_eruption_mistakes(
     pull_duration_ms: Optional[float],
 ) -> List[BelorenLightVoidMistakeEvent]:
     mistakes: List[BelorenLightVoidMistakeEvent] = []
+    successful_interrupts: List[Dict[str, object]] = []
     for event in fetch_events(
         session,
         bearer,
@@ -530,6 +543,10 @@ def _collect_eruption_mistakes(
         interrupted_ability_id = extra_ability_id_from_event(event)
         if interrupted_ability_id not in (LIGHT_ERUPTION_ID, VOID_ERUPTION_ID):
             continue
+        successful_interrupts.append(event)
+
+    for event in successful_interrupts:
+        interrupted_ability_id = extra_ability_id_from_event(event)
         timestamp = event_timestamp(event)
         player = source_name_from_event(event)
         if timestamp is None or not _is_player_in_scope(player, known_players, participants):
@@ -557,7 +574,155 @@ def _collect_eruption_mistakes(
                 pull_duration_ms=pull_duration_ms,
             )
         )
+
+    mistakes.extend(
+        _collect_wrong_color_eruption_kick_mistakes(
+            session=session,
+            bearer=bearer,
+            report_code=report_code,
+            fight=fight,
+            event_end=event_end,
+            actor_names=actor_names,
+            known_players=known_players,
+            participants=participants,
+            feather_timelines=feather_timelines,
+            successful_interrupts=successful_interrupts,
+            pull_index=pull_index,
+            pull_duration_ms=pull_duration_ms,
+        )
+    )
+    mistakes.sort(key=lambda item: (item.timestamp, item.player, item.ability_id))
     return mistakes
+
+
+def _collect_wrong_color_eruption_kick_mistakes(
+    *,
+    session: requests.Session,
+    bearer: str,
+    report_code: str,
+    fight: Fight,
+    event_end: float,
+    actor_names: Dict[int, str],
+    known_players: Set[str],
+    participants: Set[str],
+    feather_timelines: Dict[str, List[tuple]],
+    successful_interrupts: List[Dict[str, object]],
+    pull_index: int,
+    pull_duration_ms: Optional[float],
+) -> List[BelorenLightVoidMistakeEvent]:
+    kick_filter = "ability.id in (" + ",".join(str(ability_id) for ability_id in sorted(INTERRUPT_ABILITY_LABELS)) + ")"
+    mistakes: List[BelorenLightVoidMistakeEvent] = []
+    seen: Set[tuple] = set()
+    for event in fetch_events(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Casts",
+        start=fight.start,
+        end=event_end,
+        limit=5000,
+        extra_filter=kick_filter,
+        actor_names=actor_names,
+        use_actor_ids=True,
+    ):
+        if str(event.get("type") or "").lower() != "cast":
+            continue
+        timestamp = event_timestamp(event)
+        player = source_name_from_event(event)
+        target_name = target_name_from_event(event)
+        interrupt_ability_id = ability_id_from_event(event)
+        if timestamp is None or interrupt_ability_id is None or not _is_player_in_scope(player, known_players, participants):
+            continue
+        interrupted_ability_id = _eruption_ability_for_target(target_name)
+        if interrupted_ability_id is None:
+            continue
+        actual_feather_id = active_feather_at(feather_timelines.get(player, []), timestamp)
+        wrong_feather_id = ERUPTION_WRONG_FEATHER.get(interrupted_ability_id)
+        if actual_feather_id != wrong_feather_id:
+            continue
+        if _matches_successful_eruption_interrupt(
+            event,
+            interrupted_ability_id=interrupted_ability_id,
+            successful_interrupts=successful_interrupts,
+        ):
+            continue
+        key = (player, interrupted_ability_id, int(round(timestamp)))
+        if key in seen:
+            continue
+        seen.add(key)
+        mistakes.append(
+            _build_mistake_event(
+                source_report_code=report_code,
+                player=player,
+                fight=fight,
+                pull_index=pull_index,
+                timestamp=timestamp,
+                mechanic_type=MECHANIC_ERUPTION,
+                mechanic_label="Wrong Eruption Kick",
+                ability_id=interrupted_ability_id,
+                expected_feather_id=ERUPTION_REQUIRED_FEATHER[interrupted_ability_id],
+                actual_feather_id=actual_feather_id,
+                target=target_name,
+                interrupt_ability_id=interrupt_ability_id,
+                interrupt_ability_label=_interrupt_ability_label(interrupt_ability_id),
+                pull_duration_ms=pull_duration_ms,
+            )
+        )
+    return mistakes
+
+
+def _eruption_ability_for_target(target_name: Optional[str]) -> Optional[int]:
+    if not target_name:
+        return None
+    for ability_id, expected_target_name in ERUPTION_TARGET_BY_ABILITY.items():
+        if target_name == expected_target_name:
+            return ability_id
+    return None
+
+
+def _matches_successful_eruption_interrupt(
+    cast_event: Dict[str, object],
+    *,
+    interrupted_ability_id: int,
+    successful_interrupts: List[Dict[str, object]],
+) -> bool:
+    cast_timestamp = event_timestamp(cast_event)
+    if cast_timestamp is None:
+        return False
+    cast_source_id = _actor_id_from_event(cast_event, "source")
+    cast_target_id = _actor_id_from_event(cast_event, "target")
+    cast_source_name = source_name_from_event(cast_event)
+    cast_target_name = target_name_from_event(cast_event)
+    for interrupt in successful_interrupts:
+        if extra_ability_id_from_event(interrupt) != interrupted_ability_id:
+            continue
+        interrupt_timestamp = event_timestamp(interrupt)
+        if interrupt_timestamp is None or abs(interrupt_timestamp - cast_timestamp) > SUCCESSFUL_ERUPTION_INTERRUPT_MATCH_MS:
+            continue
+        interrupt_source_id = _actor_id_from_event(interrupt, "source")
+        interrupt_target_id = _actor_id_from_event(interrupt, "target")
+        if cast_source_id is not None and interrupt_source_id is not None and cast_source_id != interrupt_source_id:
+            continue
+        if cast_target_id is not None and interrupt_target_id is not None and cast_target_id != interrupt_target_id:
+            continue
+        if cast_source_id is None and interrupt_source_id is None and source_name_from_event(interrupt) != cast_source_name:
+            continue
+        if cast_target_id is None and interrupt_target_id is None and target_name_from_event(interrupt) != cast_target_name:
+            continue
+        return True
+    return False
+
+
+def _actor_id_from_event(event: Dict[str, object], side: str) -> Optional[int]:
+    raw_value = event.get(f"{side}ID")
+    if raw_value is None and isinstance(event.get(side), dict):
+        raw_value = event[side].get("id")
+    if raw_value in (None, ""):
+        return None
+    try:
+        return int(raw_value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _build_mistake_event(

@@ -42,13 +42,13 @@ from .helpers import build_pull_link, class_color_token, format_duration, format
 REPORT_ID = "beloren-child-of-alar-light-void-fuckups"
 REPORT_TITLE = "Light/Void Fuck Ups Report"
 REPORT_DESCRIPTION = (
-    "Count Belo'ren wrong-Feather mistakes: Flames pulses, Quill soaks, Voidlight Rupture wrong-orb soaks, and wrong-color Eruption interrupts."
+    "Count Belo'ren wrong-Feather mistakes: Flames pulses, Quill soaks, Voidlight Rupture wrong-orb soaks, and wrong-color Eruption kicks."
 )
 REPORT_FOOTNOTES = [
     "Flames mistakes count players who receive the Light/Void Flames penalty debuff or stack while carrying the opposite Feather; matching-color pulse damage is ignored.",
     "Quill mistakes only count non-target players hit while carrying the wrong Feather; correct-color Quill hits are ignored.",
     "Voidlight Rupture mistakes count each debuff application or stack once; damage shown is aggregated across the burst and following DoT ticks.",
-    "Eruption interrupt mistakes count the interrupting player when their Feather is opposite the interrupted Light or Void Eruption cast.",
+    "Eruption kick mistakes count successful wrong-Feather interrupts when logged, plus failed wrong-color kick casts that trigger Eruption raid damage.",
     "Events are counted only when the player's active Feather can be resolved from the combat log at the event timestamp.",
 ]
 
@@ -268,7 +268,7 @@ def _event_tooltip(event: BelorenLightVoidMistakeEvent) -> str:
     if event.mechanic_type == MECHANIC_RUPTURE:
         return "Voidlight Rupture is counted once per debuff application or stack when the player's active Feather can be resolved. The displayed damage is the burst plus following DoT ticks."
     if event.mechanic_type == MECHANIC_ERUPTION:
-        return "Eruption damage is not player-attributed here. This event counts only the interrupt source when their Feather is opposite the interrupted Light or Void Eruption cast."
+        return "Eruption damage is not player-attributed here. This event counts the kick source when their Feather is opposite the Light or Void Ember they attempted to stop."
     return "Wrong-Feather Light/Void event."
 
 
