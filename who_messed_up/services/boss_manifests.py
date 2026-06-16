@@ -16,6 +16,7 @@ from .manifests.midnight_season_1 import (
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     MIDNIGHT_SEASON_1_MANIFESTS,
+    MIDNIGHT_FALLS_MANIFEST,
     VORASIUS_MANIFEST,
 )
 
@@ -77,6 +78,7 @@ __all__ = [
     "EncounterTargetConfig",
     "IMPERATOR_AVERZIAN_MANIFEST",
     "LIGHTBLINDED_VANGUARD_MANIFEST",
+    "MIDNIGHT_FALLS_MANIFEST",
     "VORASIUS_MANIFEST",
     "get_boss_manifest",
 ]

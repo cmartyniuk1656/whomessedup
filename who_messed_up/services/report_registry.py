@@ -153,6 +153,13 @@ from .view_models.lightblinded_vanguard_deaths import (
     REPORT_ID as REPORT_LIGHTBLINDED_DEATHS_ID,
     REPORT_TITLE as REPORT_LIGHTBLINDED_DEATHS_TITLE,
 )
+from .view_models.midnight_falls_fuckups import (
+    REPORT_DEFAULT_FIGHT as REPORT_MIDNIGHT_FALLS_FUCKUPS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_MIDNIGHT_FALLS_FUCKUPS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_MIDNIGHT_FALLS_FUCKUPS_FOOTNOTES,
+    REPORT_ID as REPORT_MIDNIGHT_FALLS_FUCKUPS_ID,
+    REPORT_TITLE as REPORT_MIDNIGHT_FALLS_FUCKUPS_TITLE,
+)
 from .view_models.vorasius_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_VORASIUS_DESCRIPTION,
@@ -205,6 +212,7 @@ JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE = "v2_report_crown_of_the_cosmos_avo
 JOB_V2_CROWN_OF_THE_COSMOS_DEATHS = "v2_report_crown_of_the_cosmos_deaths"
 JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS = "v2_report_crown_of_the_cosmos_silver_hits"
 JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS = "v2_report_crown_of_the_cosmos_null_corona_dispels"
+JOB_V2_MIDNIGHT_FALLS_FUCKUPS = "v2_report_midnight_falls_fuckups"
 JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
 JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
 JOB_V2_VORASIUS_DEATHS = "v2_report_vorasius_deaths"
@@ -764,6 +772,23 @@ def _build_beloren_child_of_alar_light_void_mistakes_payload(values: Dict[str, A
     return payload, fresh_run
 
 
+def _build_midnight_falls_fuckups_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    report_code = report_codes[0]
+    extra_reports = report_codes[1:]
+
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+
+    payload: Dict[str, Any] = {
+        "report": report_code,
+        "fight": REPORT_MIDNIGHT_FALLS_FUCKUPS_DEFAULT_FIGHT,
+        "extra_reports": extra_reports,
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
+
+
 def _build_crown_of_the_cosmos_silver_hits_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     report_codes = _coerce_report_code_list(values)
     report_code = report_codes[0]
@@ -1178,6 +1203,32 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES,
         build_payload=_build_beloren_child_of_alar_light_void_mistakes_payload,
+    ),
+    REPORT_MIDNIGHT_FALLS_FUCKUPS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_MIDNIGHT_FALLS_FUCKUPS_ID,
+            title=REPORT_MIDNIGHT_FALLS_FUCKUPS_TITLE,
+            description=REPORT_MIDNIGHT_FALLS_FUCKUPS_DESCRIPTION,
+            fightId=MIDNIGHT_FALLS_FIGHT_ID,
+            fightName=REPORT_MIDNIGHT_FALLS_FUCKUPS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_MIDNIGHT_FALLS_FUCKUPS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_MIDNIGHT_FALLS_FUCKUPS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_MIDNIGHT_FALLS_FUCKUPS,
+        build_payload=_build_midnight_falls_fuckups_payload,
     ),
     REPORT_LIGHTBLINDED_DEATHS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -1691,6 +1742,7 @@ __all__ = [
     "JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS",
     "JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS",
     "JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS",
+    "JOB_V2_MIDNIGHT_FALLS_FUCKUPS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
     "JOB_V2_VORASIUS_DEATHS",

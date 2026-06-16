@@ -36,6 +36,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE,
     JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS,
     JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
+    JOB_V2_MIDNIGHT_FALLS_FUCKUPS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
     JOB_V2_VORASIUS_DEATHS,
@@ -93,6 +94,7 @@ from who_messed_up.services.view_models.lightblinded_vanguard_avoidable_damage i
 from who_messed_up.services.view_models.lightblinded_vanguard_deaths import (
     build_lightblinded_vanguard_deaths_report_page,
 )
+from who_messed_up.services.view_models.midnight_falls_fuckups import build_midnight_falls_fuckup_report_page
 from who_messed_up.services.view_models.vorasius_damage import build_vorasius_damage_report_page
 from who_messed_up.services.view_models.vorasius_avoidable_damage import (
     build_vorasius_avoidable_damage_report_page,
@@ -111,6 +113,7 @@ from who_messed_up.service import (
     GhostSummary,
     HitSummary,
     LightblindedVanguardDispelSummary,
+    MidnightFallsFuckupSummary,
     CooldownUsageSummary,
     CrownNullCoronaDispelSummary,
     CrownSilverHitSummary,
@@ -145,6 +148,7 @@ from who_messed_up.service import (
     fetch_lightblinded_vanguard_avoidable_damage_summary,
     fetch_lightblinded_vanguard_death_summary,
     fetch_lightblinded_vanguard_dispel_summary,
+    fetch_midnight_falls_fuckup_summary,
     fetch_vorasius_avoidable_damage_summary,
     fetch_vorasius_damage_summary,
     fetch_vorasius_death_summary,
@@ -1251,6 +1255,23 @@ def _fetch_beloren_child_of_alar_light_void_mistake_summary_from_payload(
     )
 
 
+def _fetch_midnight_falls_fuckup_summary_from_payload(payload: Dict[str, Any]) -> MidnightFallsFuckupSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_midnight_falls_fuckup_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        dedupe_window_ms=payload.get("dedupe_window_ms"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_imperator_averzian_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -1574,6 +1595,14 @@ def _execute_v2_beloren_child_of_alar_light_void_mistake_job(payload: Dict[str, 
     return page.dict(by_alias=True)
 
 
+def _execute_v2_midnight_falls_fuckup_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_midnight_falls_fuckup_summary_from_payload(payload)
+    page = build_midnight_falls_fuckup_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_imperator_averzian_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_imperator_averzian_deaths_summary_from_payload(payload)
     page = build_imperator_averzian_deaths_report_page(summary)
@@ -1759,6 +1788,10 @@ job_manager.register_handler(
 job_manager.register_handler(
     JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES,
     _execute_v2_beloren_child_of_alar_light_void_mistake_job,
+)
+job_manager.register_handler(
+    JOB_V2_MIDNIGHT_FALLS_FUCKUPS,
+    _execute_v2_midnight_falls_fuckup_job,
 )
 job_manager.register_handler(JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE, _execute_v2_beloren_child_of_alar_damage_job)
 job_manager.register_handler(JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS, _execute_v2_beloren_child_of_alar_deaths_job)

@@ -24,6 +24,7 @@ from .services.boss_manifests import (
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     MANIFEST_TIERS,
+    MIDNIGHT_FALLS_MANIFEST,
     VORASIUS_MANIFEST,
     BossAbilityMetadata,
     BossManifest,
@@ -99,6 +100,12 @@ from .services.crown_of_the_cosmos_null_corona_dispels import (
 )
 from .services.lightblinded_vanguard_cooldowns import fetch_lightblinded_vanguard_cooldown_summary
 from .services.lightblinded_vanguard_deaths import fetch_lightblinded_vanguard_death_summary
+from .services.midnight_falls_fuckups import (
+    MidnightFallsFuckupEntry,
+    MidnightFallsFuckupEvent,
+    MidnightFallsFuckupSummary,
+    fetch_midnight_falls_fuckup_summary,
+)
 from .services.vorasius_avoidable_damage import fetch_vorasius_avoidable_damage_summary
 from .services.vorasius_damage import fetch_vorasius_damage_summary
 from .services.vorasius_deaths import fetch_vorasius_death_summary
@@ -160,6 +167,7 @@ __all__ = [
     "LightblindedVanguardDispelEvent",
     "LightblindedVanguardDispelSummary",
     "LIGHTBLINDED_VANGUARD_MANIFEST",
+    "MIDNIGHT_FALLS_MANIFEST",
     "CooldownUsageEntry",
     "CooldownUsageEvent",
     "CooldownUsageSummary",
@@ -167,6 +175,9 @@ __all__ = [
     "HealingConsumableStatus",
     "IMPERATOR_AVERZIAN_MANIFEST",
     "MANIFEST_TIERS",
+    "MidnightFallsFuckupEntry",
+    "MidnightFallsFuckupEvent",
+    "MidnightFallsFuckupSummary",
     "PhaseDamageEntry",
     "PhaseDamageSummary",
     "PhaseMetric",
@@ -215,6 +226,7 @@ __all__ = [
     "fetch_lightblinded_vanguard_cooldown_summary",
     "fetch_lightblinded_vanguard_death_summary",
     "fetch_lightblinded_vanguard_dispel_summary",
+    "fetch_midnight_falls_fuckup_summary",
     "fetch_vorasius_avoidable_damage_summary",
     "fetch_vorasius_damage_summary",
     "fetch_vorasius_death_summary",
