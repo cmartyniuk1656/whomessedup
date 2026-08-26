@@ -11,7 +11,13 @@ import requests
 
 from ..api import REPORT_OVERVIEW_QUERY, fetch_events, fetch_fights, fetch_player_details, gql
 from ..env import load_env
-from .ability_event_filters import collect_avoidable_exclusion_events, is_avoidable_event_excluded
+from .ability_event_filters import (
+    collect_avoidable_active_exclusion_windows,
+    collect_avoidable_exclusion_events,
+    collect_avoidable_requirement_windows,
+    is_avoidable_event_excluded,
+    is_avoidable_event_requirement_met,
+)
 from .boss_manifest_types import BossAbilityMetadata, BossManifest, is_avoidable_for_role
 from .common import (
     ROLE_PRIORITY,
@@ -681,6 +687,22 @@ def collect_recent_damage_hits(
         actor_names=actor_names,
         abilities=boss_manifest.abilities if boss_manifest else (),
     )
+    avoidable_active_exclusions = collect_avoidable_active_exclusion_windows(
+        session,
+        bearer,
+        report_code=report_code,
+        fight=fight,
+        actor_names=actor_names,
+        abilities=boss_manifest.abilities if boss_manifest else (),
+    )
+    avoidable_requirements = collect_avoidable_requirement_windows(
+        session,
+        bearer,
+        report_code=report_code,
+        fight=fight,
+        actor_names=actor_names,
+        abilities=boss_manifest.abilities if boss_manifest else (),
+    )
     for event in fetch_events(
         session,
         bearer,
@@ -715,11 +737,25 @@ def collect_recent_damage_hits(
         )
         player_role = player_roles.get(target_name) if player_roles else None
         is_avoidable = is_avoidable_for_role(ability_metadata, player_role)
-        is_excluded_avoidable = is_avoidable_event_excluded(ability_metadata, event, target_name, avoidable_exclusions)
+        is_requirement_met = is_avoidable_event_requirement_met(
+            ability_metadata,
+            event,
+            target_name,
+            avoidable_requirements,
+        )
+        if not is_requirement_met:
+            is_avoidable = False
+        is_excluded_avoidable = is_avoidable_event_excluded(
+            ability_metadata,
+            event,
+            target_name,
+            avoidable_exclusions,
+            avoidable_active_exclusions,
+        )
         if is_excluded_avoidable:
             is_avoidable = False
         ability_tags = tuple(ability_metadata.tags) if ability_metadata else ()
-        if is_excluded_avoidable:
+        if is_excluded_avoidable or not is_requirement_met:
             ability_tags = tuple(tag for tag in ability_tags if tag.strip().lower() != "avoidable")
         max_hit_points = resolve_max_hit_points(event)
         hits_by_player[target_name].append(

@@ -197,10 +197,34 @@ def _sanitize_report_code(value: Any) -> str:
             remainder = parts[1]
             remainder = remainder.split("/", 1)[0]
             remainder = remainder.split("?", 1)[0]
+            remainder = remainder.split("#", 1)[0]
             cleaned = remainder.strip()
             if cleaned:
                 return cleaned
-    return text
+    cleaned = text.split("?", 1)[0].split("#", 1)[0].strip()
+    if not cleaned:
+        raise ValueError("Report code cannot be empty.")
+    return cleaned
+
+
+def _extract_report_fight_id(value: Any) -> Optional[int]:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    for separator in ("?", "#"):
+        if separator not in text:
+            continue
+        parameters = text.split(separator, 1)[1]
+        for part in parameters.replace("#", "&").split("&"):
+            key, _, raw_value = part.partition("=")
+            if key.strip().lower() != "fight":
+                continue
+            try:
+                fight_id = int(raw_value.strip())
+            except (TypeError, ValueError):
+                return None
+            return fight_id if fight_id > 0 else None
+    return None
 
 
 def _extract_spec(entry: Dict[str, Any]) -> Optional[str]:

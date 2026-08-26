@@ -1,18 +1,26 @@
 import { useMemo, useState } from "react";
 import {
   DEFAULT_REPORT_DIFFICULTY,
-  MIDNIGHT_SEASON_ONE_FIGHTS,
   REPORT_DIFFICULTY_OPTIONS,
 } from "../config/midnightSeasonOne";
+import { DEFAULT_MIDNIGHT_RAID_ID, MIDNIGHT_RAIDS } from "../config/midnightRaids";
 import { useReportFormState } from "./useReportFormState";
 
 export function useReportBrowserState(reports) {
+  const [selectedRaidId, setSelectedRaidId] = useState(DEFAULT_MIDNIGHT_RAID_ID);
   const [selectedDifficulty, setSelectedDifficulty] = useState(DEFAULT_REPORT_DIFFICULTY);
   const [selectedFightId, setSelectedFightId] = useState("");
 
+  const selectedRaid = useMemo(
+    () => MIDNIGHT_RAIDS.find((raid) => raid.id === selectedRaidId) ?? MIDNIGHT_RAIDS[0],
+    [selectedRaidId]
+  );
+
+  const fightOptions = selectedRaid.fights;
+
   const selectedFight = useMemo(
-    () => MIDNIGHT_SEASON_ONE_FIGHTS.find((fight) => fight.id === selectedFightId) ?? null,
-    [selectedFightId]
+    () => fightOptions.find((fight) => fight.id === selectedFightId) ?? null,
+    [fightOptions, selectedFightId]
   );
 
   const selectedDifficultyOption = useMemo(
@@ -22,7 +30,7 @@ export function useReportBrowserState(reports) {
 
   const reportCountsByFightId = useMemo(() => {
     const counts = {};
-    MIDNIGHT_SEASON_ONE_FIGHTS.forEach((fight) => {
+    fightOptions.forEach((fight) => {
       counts[fight.id] = 0;
     });
 
@@ -33,7 +41,7 @@ export function useReportBrowserState(reports) {
     });
 
     return counts;
-  }, [reports, selectedDifficulty]);
+  }, [fightOptions, reports, selectedDifficulty]);
 
   const availableReports = useMemo(() => {
     if (!selectedFightId) {
@@ -46,7 +54,10 @@ export function useReportBrowserState(reports) {
   const formState = useReportFormState(availableReports);
 
   return {
-    fightOptions: MIDNIGHT_SEASON_ONE_FIGHTS,
+    raidOptions: MIDNIGHT_RAIDS,
+    selectedRaidId,
+    setSelectedRaidId,
+    fightOptions,
     difficultyOptions: REPORT_DIFFICULTY_OPTIONS,
     selectedDifficulty,
     selectedDifficultyLabel: selectedDifficultyOption?.label ?? selectedDifficulty,

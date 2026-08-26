@@ -45,6 +45,9 @@ class BossAbilityMetadata:
     avoidable_exclusion_debuff_ability_id: Optional[int] = None
     avoidable_exclusion_debuff_event_types: Tuple[str, ...] = ()
     avoidable_exclusion_debuff_window_ms: float = 0.0
+    avoidable_excludes_active_debuff_ability_id: Optional[int] = None
+    avoidable_requires_active_debuff_ability_id: Optional[int] = None
+    avoidable_requires_active_debuff_min_age_ms: float = 0.0
 
 
 @dataclass(frozen=True)

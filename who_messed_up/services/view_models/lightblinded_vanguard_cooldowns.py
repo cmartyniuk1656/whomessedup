@@ -7,6 +7,9 @@ from typing import Dict, Iterable, List, Optional
 
 from ..common import ROLE_PRIORITY, ROLE_UNKNOWN
 from ..cooldown_usage import (
+    COOLDOWN_FIGHT_SELECTION_ALL,
+    COOLDOWN_FIGHT_SELECTION_LAST,
+    COOLDOWN_FIGHT_SELECTION_SPECIFIC,
     COOLDOWN_STATUS_CORRECT,
     COOLDOWN_STATUS_IGNORED_AFTER_DEATH_COUNT,
     COOLDOWN_STATUS_IGNORED_AFTER_HEALER_DEATH,
@@ -74,6 +77,7 @@ def build_cooldown_usage_report_page(
     title: str = REPORT_TITLE,
     fight_name: Optional[str] = None,
     difficulty: Optional[str] = None,
+    fight_selection: str = COOLDOWN_FIGHT_SELECTION_ALL,
 ) -> ReportPageModel:
     aggregate_rows = _build_rows(summary.entries, report_code=summary.report_code, source_reports=summary.source_reports)
     rows_by_view: Dict[str, List[TableRowModel]] = {"aggregate": aggregate_rows}
@@ -104,7 +108,12 @@ def build_cooldown_usage_report_page(
         reportCode=summary.report_code,
         header=ReportHeaderModel(
             subtitle=f"Report {summary.report_code}",
-            tags=_build_header_tags(summary, fight_name=fight_name, difficulty=difficulty),
+            tags=_build_header_tags(
+                summary,
+                fight_name=fight_name,
+                difficulty=difficulty,
+                fight_selection=fight_selection,
+            ),
         ),
         summary=_build_summary_metrics(summary),
         content=ReportContentModel(
@@ -339,6 +348,7 @@ def _build_header_tags(
     *,
     fight_name: Optional[str],
     difficulty: Optional[str],
+    fight_selection: str,
 ) -> List[HeaderTagModel]:
     fight_label = fight_name or summary.fight_filter or summary.plan.header.name or "Selected fight"
     difficulty_label = difficulty or summary.plan.header.difficulty
@@ -348,6 +358,14 @@ def _build_header_tags(
         HeaderTagModel(id="encounter", label="Encounter", value=str(summary.plan.header.encounter_id)),
         HeaderTagModel(id="tolerance", label="Tolerance", value=f"+/- {summary.tolerance_seconds:g}s"),
     ]
+    if fight_selection == COOLDOWN_FIGHT_SELECTION_LAST:
+        scope_label = "Last matching encounter"
+    elif fight_selection == COOLDOWN_FIGHT_SELECTION_SPECIFIC:
+        selected_id = summary.fight_ids[0] if summary.fight_ids else None
+        scope_label = f"Fight {selected_id}" if selected_id is not None else "Specific fight"
+    else:
+        scope_label = "All matching encounters"
+    tags.insert(1, HeaderTagModel(id="fight_selection", label="Scope", value=scope_label))
     if summary.ignore_stasis:
         tags.append(HeaderTagModel(id="ignore_stasis", label="Stasis", value="Ignored"))
     if summary.ignore_after_deaths:

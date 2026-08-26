@@ -4,7 +4,7 @@ Event-level filters for ability metadata that cannot be represented by spell ID 
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import DefaultDict, Dict, Iterable, List, Optional
+from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple
 
 import requests
 
@@ -12,6 +12,8 @@ from ..api import fetch_events
 from .boss_manifest_types import BossAbilityMetadata
 
 AvoidableExclusionEvents = Dict[str, Dict[str, List[float]]]
+AvoidableRequirementWindows = Dict[str, Dict[str, List[Tuple[float, float]]]]
+AvoidableActiveExclusionWindows = AvoidableRequirementWindows
 
 
 def collect_avoidable_exclusion_events(
@@ -84,6 +86,7 @@ def is_avoidable_event_excluded(
     event: Dict[str, object],
     target_name: Optional[str],
     exclusions: AvoidableExclusionEvents,
+    active_exclusions: Optional[AvoidableActiveExclusionWindows] = None,
 ) -> bool:
     if not ability or not target_name or ability.game_id is None:
         return False
@@ -93,8 +96,157 @@ def is_avoidable_event_excluded(
     timestamp = _event_timestamp(event)
     if timestamp is None:
         return False
-    target_exclusions = exclusions.get(_ability_key(ability), {}).get(target_name, ())
-    return any(abs(timestamp - excluded_timestamp) <= window_ms for excluded_timestamp in target_exclusions)
+    ability_key = _ability_key(ability)
+    target_exclusions = exclusions.get(ability_key, {}).get(target_name, ())
+    if any(abs(timestamp - excluded_timestamp) <= window_ms for excluded_timestamp in target_exclusions):
+        return True
+    if ability.avoidable_excludes_active_debuff_ability_id is None:
+        return False
+    windows = (active_exclusions or {}).get(ability_key, {}).get(target_name, ())
+    return any(start <= timestamp <= end for start, end in windows)
+
+
+def collect_avoidable_active_exclusion_windows(
+    session: requests.Session,
+    bearer: str,
+    *,
+    report_code: str,
+    fight,
+    actor_names: Dict[int, str],
+    abilities: Iterable[BossAbilityMetadata],
+    event_end: Optional[float] = None,
+) -> AvoidableActiveExclusionWindows:
+    return _collect_active_debuff_windows(
+        session,
+        bearer,
+        report_code=report_code,
+        fight=fight,
+        actor_names=actor_names,
+        abilities=abilities,
+        ability_id_attribute="avoidable_excludes_active_debuff_ability_id",
+        event_end=event_end,
+    )
+
+
+def collect_avoidable_requirement_windows(
+    session: requests.Session,
+    bearer: str,
+    *,
+    report_code: str,
+    fight,
+    actor_names: Dict[int, str],
+    abilities: Iterable[BossAbilityMetadata],
+    event_end: Optional[float] = None,
+) -> AvoidableRequirementWindows:
+    return _collect_active_debuff_windows(
+        session,
+        bearer,
+        report_code=report_code,
+        fight=fight,
+        actor_names=actor_names,
+        abilities=abilities,
+        ability_id_attribute="avoidable_requires_active_debuff_ability_id",
+        event_end=event_end,
+    )
+
+
+def _collect_active_debuff_windows(
+    session: requests.Session,
+    bearer: str,
+    *,
+    report_code: str,
+    fight,
+    actor_names: Dict[int, str],
+    abilities: Iterable[BossAbilityMetadata],
+    ability_id_attribute: str,
+    event_end: Optional[float] = None,
+) -> AvoidableRequirementWindows:
+    configured = [
+        ability
+        for ability in abilities
+        if ability.game_id is not None and getattr(ability, ability_id_attribute) is not None
+    ]
+    if not configured:
+        return {}
+
+    by_debuff_id: DefaultDict[int, List[BossAbilityMetadata]] = defaultdict(list)
+    for ability in configured:
+        debuff_id = getattr(ability, ability_id_attribute)
+        assert debuff_id is not None
+        by_debuff_id[int(debuff_id)].append(ability)
+
+    result: Dict[str, DefaultDict[str, List[Tuple[float, float]]]] = {
+        _ability_key(ability): defaultdict(list)
+        for ability in configured
+    }
+    end_time = float(event_end if event_end is not None else fight.end)
+    for debuff_id, abilities_for_debuff in by_debuff_id.items():
+        active_since: Dict[str, float] = {}
+        events = fetch_events(
+            session,
+            bearer,
+            code=report_code,
+            data_type="Debuffs",
+            start=fight.start,
+            end=end_time,
+            ability_id=debuff_id,
+            actor_names=actor_names,
+        )
+        for event in sorted(events, key=lambda item: float(item.get("timestamp") or 0)):
+            event_type = str(event.get("type") or "").strip().lower()
+            timestamp = _event_timestamp(event)
+            target_name = _target_name_from_event(event)
+            if timestamp is None or not target_name:
+                continue
+
+            if event_type in {"applydebuff", "applydebuffstack"}:
+                active_since.setdefault(target_name, timestamp)
+                continue
+
+            if event_type in {"refreshdebuff", "refreshdebuffstack"}:
+                start = active_since.get(target_name)
+                if start is not None:
+                    for ability in abilities_for_debuff:
+                        result[_ability_key(ability)][target_name].append((start, timestamp))
+                active_since[target_name] = timestamp
+                continue
+
+            if event_type in {"removedebuff", "removedebuffstack"}:
+                start = active_since.pop(target_name, None)
+                if start is None:
+                    continue
+                for ability in abilities_for_debuff:
+                    result[_ability_key(ability)][target_name].append((start, timestamp))
+
+        for target_name, start in active_since.items():
+            for ability in abilities_for_debuff:
+                result[_ability_key(ability)][target_name].append((start, end_time))
+
+    return {
+        ability_key: dict(targets)
+        for ability_key, targets in result.items()
+    }
+
+
+def is_avoidable_event_requirement_met(
+    ability: Optional[BossAbilityMetadata],
+    event: Dict[str, object],
+    target_name: Optional[str],
+    requirements: AvoidableRequirementWindows,
+) -> bool:
+    if not ability or ability.avoidable_requires_active_debuff_ability_id is None:
+        return True
+    if not target_name or ability.game_id is None:
+        return False
+    timestamp = _event_timestamp(event)
+    if timestamp is None:
+        return False
+    minimum_age_ms = max(float(ability.avoidable_requires_active_debuff_min_age_ms or 0), 0.0)
+    windows = requirements.get(_ability_key(ability), {}).get(target_name, ())
+    return any(
+        start + minimum_age_ms < timestamp <= end
+        for start, end in windows
+    )
 
 
 def _ability_key(ability: BossAbilityMetadata) -> str:
@@ -119,7 +271,12 @@ def _target_name_from_event(event: Dict[str, object]) -> Optional[str]:
 
 
 __all__ = [
+    "AvoidableActiveExclusionWindows",
     "AvoidableExclusionEvents",
+    "AvoidableRequirementWindows",
+    "collect_avoidable_active_exclusion_windows",
     "collect_avoidable_exclusion_events",
+    "collect_avoidable_requirement_windows",
     "is_avoidable_event_excluded",
+    "is_avoidable_event_requirement_met",
 ]

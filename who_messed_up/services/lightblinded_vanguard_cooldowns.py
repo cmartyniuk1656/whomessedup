@@ -5,7 +5,11 @@ from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from .cooldown_usage import CooldownUsageSummary, fetch_cooldown_usage_summary
+from .cooldown_usage import (
+    COOLDOWN_FIGHT_SELECTION_ALL,
+    CooldownUsageSummary,
+    fetch_cooldown_usage_summary,
+)
 
 
 REPORT_DEFAULT_FIGHT = "Lightblinded Vanguard"
@@ -19,6 +23,7 @@ def fetch_lightblinded_vanguard_cooldown_summary(
     reminder_text: str,
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
+    fight_selection: str = COOLDOWN_FIGHT_SELECTION_ALL,
     difficulty: Optional[str | int] = None,
     extra_report_codes: Optional[Iterable[str]] = None,
     tolerance_seconds: float = 7.5,
@@ -36,6 +41,7 @@ def fetch_lightblinded_vanguard_cooldown_summary(
         expected_difficulty=LIGHTBLINDED_VANGUARD_DIFFICULTY,
         fight_name=fight_name or REPORT_DEFAULT_FIGHT,
         fight_ids=fight_ids,
+        fight_selection=fight_selection,
         difficulty=difficulty or LIGHTBLINDED_VANGUARD_DIFFICULTY,
         extra_report_codes=extra_report_codes,
         tolerance_seconds=tolerance_seconds,

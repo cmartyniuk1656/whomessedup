@@ -11,7 +11,13 @@ import requests
 
 from ..api import fetch_events, fetch_fights, fetch_player_details
 from ..env import load_env
-from .ability_event_filters import collect_avoidable_exclusion_events, is_avoidable_event_excluded
+from .ability_event_filters import (
+    collect_avoidable_active_exclusion_windows,
+    collect_avoidable_exclusion_events,
+    collect_avoidable_requirement_windows,
+    is_avoidable_event_excluded,
+    is_avoidable_event_requirement_met,
+)
 from .boss_manifest_types import (
     BossAbilityMetadata,
     BossManifest,
@@ -252,6 +258,24 @@ def _fetch_single_avoidable_damage_summary(
             abilities=selected_abilities,
             event_end=event_end,
         )
+        avoidable_active_exclusions = collect_avoidable_active_exclusion_windows(
+            session,
+            bearer,
+            report_code=report_code,
+            fight=fight,
+            actor_names=actor_names,
+            abilities=selected_abilities,
+            event_end=event_end,
+        )
+        avoidable_requirements = collect_avoidable_requirement_windows(
+            session,
+            bearer,
+            report_code=report_code,
+            fight=fight,
+            actor_names=actor_names,
+            abilities=selected_abilities,
+            event_end=event_end,
+        )
         event_filter = None
         if event_filter_factory is not None:
             event_filter = event_filter_factory(
@@ -306,7 +330,20 @@ def _fetch_single_avoidable_damage_summary(
                     continue
                 if event_filter is not None and not event_filter(ability, event, target_name):
                     continue
-                if is_avoidable_event_excluded(ability, event, target_name, avoidable_exclusions):
+                if not is_avoidable_event_requirement_met(
+                    ability,
+                    event,
+                    target_name,
+                    avoidable_requirements,
+                ):
+                    continue
+                if is_avoidable_event_excluded(
+                    ability,
+                    event,
+                    target_name,
+                    avoidable_exclusions,
+                    avoidable_active_exclusions,
+                ):
                     continue
 
                 damage_amount = resolve_damage_amount(event)

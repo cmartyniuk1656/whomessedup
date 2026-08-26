@@ -21,10 +21,17 @@ from .services.boss_manifests import (
     BELOREN_CHILD_OF_ALAR_MANIFEST,
     BOSS_MANIFESTS,
     CROWN_OF_THE_COSMOS_MANIFEST,
+    ENTOMBED_SENTINELS_HEROIC_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     MANIFEST_TIERS,
     MIDNIGHT_FALLS_MANIFEST,
+    NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+    THE_LOST_EXPLORERS_HEROIC_MANIFEST,
+    VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+    SSZORAK_HEROIC_MANIFEST,
+    THE_TWIN_FANGS_HEROIC_MANIFEST,
+    THE_COILED_ALTAR_HEROIC_MANIFEST,
     VORASIUS_MANIFEST,
     BossAbilityMetadata,
     BossManifest,
@@ -106,6 +113,43 @@ from .services.midnight_falls_fuckups import (
     MidnightFallsFuckupSummary,
     fetch_midnight_falls_fuckup_summary,
 )
+from .services.the_twin_fangs_fuckups import (
+    TwinFangsFuckupEntry,
+    TwinFangsFuckupEvent,
+    TwinFangsFuckupSummary,
+    fetch_the_twin_fangs_fuckup_summary,
+)
+from .services.nek_zali_the_soulcoiler_avoidable_damage import (
+    fetch_nek_zali_the_soulcoiler_avoidable_damage_summary,
+)
+from .services.nek_zali_the_soulcoiler_damage import fetch_nek_zali_the_soulcoiler_damage_summary
+from .services.nek_zali_the_soulcoiler_deaths import fetch_nek_zali_the_soulcoiler_death_summary
+from .services.entombed_sentinels_avoidable_damage import (
+    fetch_entombed_sentinels_avoidable_damage_summary,
+)
+from .services.entombed_sentinels_damage import fetch_entombed_sentinels_damage_summary
+from .services.entombed_sentinels_deaths import fetch_entombed_sentinels_death_summary
+from .services.the_lost_explorers_avoidable_damage import fetch_the_lost_explorers_avoidable_damage_summary
+from .services.the_lost_explorers_damage import fetch_the_lost_explorers_damage_summary
+from .services.the_lost_explorers_deaths import fetch_the_lost_explorers_death_summary
+from .services.vashnik_the_malignant_avoidable_damage import fetch_vashnik_the_malignant_avoidable_damage_summary
+from .services.vashnik_the_malignant_damage import fetch_vashnik_the_malignant_damage_summary
+from .services.vashnik_the_malignant_deaths import fetch_vashnik_the_malignant_death_summary
+from .services.sszorak_avoidable_damage import fetch_sszorak_avoidable_damage_summary
+from .services.sszorak_damage import fetch_sszorak_damage_summary
+from .services.sszorak_deaths import fetch_sszorak_death_summary
+from .services.sszorak_tempest import (
+    SszorakTempestEntry,
+    SszorakTempestEvent,
+    SszorakTempestSummary,
+    fetch_sszorak_tempest_summary,
+)
+from .services.the_twin_fangs_avoidable_damage import fetch_the_twin_fangs_avoidable_damage_summary
+from .services.the_twin_fangs_damage import fetch_the_twin_fangs_damage_summary
+from .services.the_twin_fangs_deaths import fetch_the_twin_fangs_death_summary
+from .services.the_coiled_altar_avoidable_damage import fetch_the_coiled_altar_avoidable_damage_summary
+from .services.the_coiled_altar_damage import fetch_the_coiled_altar_damage_summary
+from .services.the_coiled_altar_deaths import fetch_the_coiled_altar_death_summary
 from .services.vorasius_avoidable_damage import fetch_vorasius_avoidable_damage_summary
 from .services.vorasius_damage import fetch_vorasius_damage_summary
 from .services.vorasius_deaths import fetch_vorasius_death_summary
@@ -145,6 +189,7 @@ __all__ = [
     "BossAbilityMetadata",
     "BossManifest",
     "CROWN_OF_THE_COSMOS_MANIFEST",
+    "ENTOMBED_SENTINELS_HEROIC_MANIFEST",
     "CrownNullCoronaDispelEntry",
     "CrownNullCoronaDispelEvent",
     "CrownNullCoronaDispelSummary",
@@ -168,6 +213,12 @@ __all__ = [
     "LightblindedVanguardDispelSummary",
     "LIGHTBLINDED_VANGUARD_MANIFEST",
     "MIDNIGHT_FALLS_MANIFEST",
+    "NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST",
+    "THE_LOST_EXPLORERS_HEROIC_MANIFEST",
+    "VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST",
+    "SSZORAK_HEROIC_MANIFEST",
+    "THE_TWIN_FANGS_HEROIC_MANIFEST",
+    "THE_COILED_ALTAR_HEROIC_MANIFEST",
     "CooldownUsageEntry",
     "CooldownUsageEvent",
     "CooldownUsageSummary",
@@ -178,6 +229,9 @@ __all__ = [
     "MidnightFallsFuckupEntry",
     "MidnightFallsFuckupEvent",
     "MidnightFallsFuckupSummary",
+    "TwinFangsFuckupEntry",
+    "TwinFangsFuckupEvent",
+    "TwinFangsFuckupSummary",
     "PhaseDamageEntry",
     "PhaseDamageSummary",
     "PhaseMetric",
@@ -227,6 +281,32 @@ __all__ = [
     "fetch_lightblinded_vanguard_death_summary",
     "fetch_lightblinded_vanguard_dispel_summary",
     "fetch_midnight_falls_fuckup_summary",
+    "fetch_the_twin_fangs_fuckup_summary",
+    "fetch_nek_zali_the_soulcoiler_avoidable_damage_summary",
+    "fetch_nek_zali_the_soulcoiler_damage_summary",
+    "fetch_nek_zali_the_soulcoiler_death_summary",
+    "fetch_entombed_sentinels_avoidable_damage_summary",
+    "fetch_entombed_sentinels_damage_summary",
+    "fetch_entombed_sentinels_death_summary",
+    "fetch_the_lost_explorers_avoidable_damage_summary",
+    "fetch_the_lost_explorers_damage_summary",
+    "fetch_the_lost_explorers_death_summary",
+    "fetch_vashnik_the_malignant_avoidable_damage_summary",
+    "fetch_vashnik_the_malignant_damage_summary",
+    "fetch_vashnik_the_malignant_death_summary",
+    "fetch_sszorak_avoidable_damage_summary",
+    "fetch_sszorak_damage_summary",
+    "fetch_sszorak_death_summary",
+    "SszorakTempestEntry",
+    "SszorakTempestEvent",
+    "SszorakTempestSummary",
+    "fetch_sszorak_tempest_summary",
+    "fetch_the_twin_fangs_avoidable_damage_summary",
+    "fetch_the_twin_fangs_damage_summary",
+    "fetch_the_twin_fangs_death_summary",
+    "fetch_the_coiled_altar_avoidable_damage_summary",
+    "fetch_the_coiled_altar_damage_summary",
+    "fetch_the_coiled_altar_death_summary",
     "fetch_vorasius_avoidable_damage_summary",
     "fetch_vorasius_damage_summary",
     "fetch_vorasius_death_summary",

@@ -10,11 +10,24 @@ from .avoidable_damage import ability_manifest_key, resolve_avoidable_manifest_a
 from .boss_manifests import (
     BELOREN_CHILD_OF_ALAR_MANIFEST,
     CROWN_OF_THE_COSMOS_MANIFEST,
+    ENTOMBED_SENTINELS_HEROIC_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
+    NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+    THE_LOST_EXPLORERS_HEROIC_MANIFEST,
+    VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+    SSZORAK_HEROIC_MANIFEST,
+    THE_TWIN_FANGS_HEROIC_MANIFEST,
+    THE_COILED_ALTAR_HEROIC_MANIFEST,
     VORASIUS_MANIFEST,
 )
-from .common import _sanitize_report_code
+from .common import _extract_report_fight_id, _sanitize_report_code
+from .cooldown_usage import (
+    COOLDOWN_FIGHT_SELECTION_ALL,
+    COOLDOWN_FIGHT_SELECTION_LAST,
+    COOLDOWN_FIGHT_SELECTION_SPECIFIC,
+    COOLDOWN_FIGHT_SELECTIONS,
+)
 from .dimensius_deaths import (
     OBLIVION_FILTER_DEFAULT,
     OBLIVION_FILTER_EXCLUDE_ALL,
@@ -160,6 +173,167 @@ from .view_models.midnight_falls_fuckups import (
     REPORT_ID as REPORT_MIDNIGHT_FALLS_FUCKUPS_ID,
     REPORT_TITLE as REPORT_MIDNIGHT_FALLS_FUCKUPS_TITLE,
 )
+from .view_models.nek_zali_the_soulcoiler_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_NEK_ZALI_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_NEK_ZALI_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_NEK_ZALI_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_NEK_ZALI_AVOIDABLE_TITLE,
+)
+from .view_models.nek_zali_the_soulcoiler_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_NEK_ZALI_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_NEK_ZALI_FOOTNOTES,
+    REPORT_ID as REPORT_NEK_ZALI_ID,
+    REPORT_TITLE as REPORT_NEK_ZALI_TITLE,
+)
+from .view_models.nek_zali_the_soulcoiler_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_NEK_ZALI_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_NEK_ZALI_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_NEK_ZALI_DEATHS_ID,
+    REPORT_TITLE as REPORT_NEK_ZALI_DEATHS_TITLE,
+)
+from .view_models.entombed_sentinels_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_TITLE,
+)
+from .view_models.entombed_sentinels_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_FOOTNOTES,
+    REPORT_ID as REPORT_ENTOMBED_SENTINELS_ID,
+    REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_TITLE,
+)
+from .view_models.entombed_sentinels_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_ENTOMBED_SENTINELS_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_ENTOMBED_SENTINELS_DEATHS_ID,
+    REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_DEATHS_TITLE,
+)
+from .view_models.the_lost_explorers_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_LOST_EXPLORERS_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_LOST_EXPLORERS_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_LOST_EXPLORERS_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_THE_LOST_EXPLORERS_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_THE_LOST_EXPLORERS_AVOIDABLE_TITLE,
+)
+from .view_models.the_lost_explorers_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_LOST_EXPLORERS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_LOST_EXPLORERS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_LOST_EXPLORERS_FOOTNOTES,
+    REPORT_ID as REPORT_THE_LOST_EXPLORERS_ID,
+    REPORT_TITLE as REPORT_THE_LOST_EXPLORERS_TITLE,
+)
+from .view_models.the_lost_explorers_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_LOST_EXPLORERS_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_LOST_EXPLORERS_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_LOST_EXPLORERS_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_THE_LOST_EXPLORERS_DEATHS_ID,
+    REPORT_TITLE as REPORT_THE_LOST_EXPLORERS_DEATHS_TITLE,
+)
+from .view_models.vashnik_the_malignant_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_VASHNIK_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_VASHNIK_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_VASHNIK_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_VASHNIK_AVOIDABLE_TITLE,
+)
+from .view_models.vashnik_the_malignant_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_VASHNIK_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_VASHNIK_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_VASHNIK_FOOTNOTES,
+    REPORT_ID as REPORT_VASHNIK_ID,
+    REPORT_TITLE as REPORT_VASHNIK_TITLE,
+)
+from .view_models.vashnik_the_malignant_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_VASHNIK_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_VASHNIK_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_VASHNIK_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_VASHNIK_DEATHS_ID,
+    REPORT_TITLE as REPORT_VASHNIK_DEATHS_TITLE,
+)
+from .view_models.sszorak_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_SSZORAK_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_SSZORAK_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_SSZORAK_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_SSZORAK_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_SSZORAK_AVOIDABLE_TITLE,
+)
+from .view_models.sszorak_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_SSZORAK_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_SSZORAK_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_SSZORAK_FOOTNOTES,
+    REPORT_ID as REPORT_SSZORAK_ID,
+    REPORT_TITLE as REPORT_SSZORAK_TITLE,
+)
+from .view_models.sszorak_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_SSZORAK_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_SSZORAK_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_SSZORAK_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_SSZORAK_DEATHS_ID,
+    REPORT_TITLE as REPORT_SSZORAK_DEATHS_TITLE,
+)
+from .view_models.sszorak_tempest import (
+    REPORT_DEFAULT_FIGHT as REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_SSZORAK_TEMPEST_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_SSZORAK_TEMPEST_FOOTNOTES,
+    REPORT_ID as REPORT_SSZORAK_TEMPEST_ID,
+    REPORT_TITLE as REPORT_SSZORAK_TEMPEST_TITLE,
+)
+from .view_models.the_twin_fangs_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_TWIN_FANGS_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_TWIN_FANGS_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_TWIN_FANGS_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_THE_TWIN_FANGS_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_THE_TWIN_FANGS_AVOIDABLE_TITLE,
+)
+from .view_models.the_twin_fangs_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_TWIN_FANGS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_TWIN_FANGS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_TWIN_FANGS_FOOTNOTES,
+    REPORT_ID as REPORT_THE_TWIN_FANGS_ID,
+    REPORT_TITLE as REPORT_THE_TWIN_FANGS_TITLE,
+)
+from .view_models.the_twin_fangs_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_TWIN_FANGS_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_TWIN_FANGS_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_TWIN_FANGS_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_THE_TWIN_FANGS_DEATHS_ID,
+    REPORT_TITLE as REPORT_THE_TWIN_FANGS_DEATHS_TITLE,
+)
+from .view_models.the_coiled_altar_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_COILED_ALTAR_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_COILED_ALTAR_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_COILED_ALTAR_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_THE_COILED_ALTAR_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_THE_COILED_ALTAR_AVOIDABLE_TITLE,
+)
+from .view_models.the_coiled_altar_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_COILED_ALTAR_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_COILED_ALTAR_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_COILED_ALTAR_FOOTNOTES,
+    REPORT_ID as REPORT_THE_COILED_ALTAR_ID,
+    REPORT_TITLE as REPORT_THE_COILED_ALTAR_TITLE,
+)
+from .view_models.the_coiled_altar_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_COILED_ALTAR_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_COILED_ALTAR_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_COILED_ALTAR_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_THE_COILED_ALTAR_DEATHS_ID,
+    REPORT_TITLE as REPORT_THE_COILED_ALTAR_DEATHS_TITLE,
+)
+from .view_models.the_twin_fangs_fuckups import (
+    REPORT_DEFAULT_FIGHT as REPORT_THE_TWIN_FANGS_FUCKUPS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_THE_TWIN_FANGS_FUCKUPS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_THE_TWIN_FANGS_FUCKUPS_FOOTNOTES,
+    REPORT_ID as REPORT_THE_TWIN_FANGS_FUCKUPS_ID,
+    REPORT_TITLE as REPORT_THE_TWIN_FANGS_FUCKUPS_TITLE,
+)
 from .view_models.vorasius_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_VORASIUS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_VORASIUS_DESCRIPTION,
@@ -213,6 +387,29 @@ JOB_V2_CROWN_OF_THE_COSMOS_DEATHS = "v2_report_crown_of_the_cosmos_deaths"
 JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS = "v2_report_crown_of_the_cosmos_silver_hits"
 JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS = "v2_report_crown_of_the_cosmos_null_corona_dispels"
 JOB_V2_MIDNIGHT_FALLS_FUCKUPS = "v2_report_midnight_falls_fuckups"
+JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE = "v2_report_nek_zali_the_soulcoiler_avoidable_damage"
+JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE = "v2_report_nek_zali_the_soulcoiler_damage"
+JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS = "v2_report_nek_zali_the_soulcoiler_deaths"
+JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE = "v2_report_entombed_sentinels_avoidable_damage"
+JOB_V2_ENTOMBED_SENTINELS_DAMAGE = "v2_report_entombed_sentinels_damage"
+JOB_V2_ENTOMBED_SENTINELS_DEATHS = "v2_report_entombed_sentinels_deaths"
+JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE = "v2_report_the_lost_explorers_avoidable_damage"
+JOB_V2_THE_LOST_EXPLORERS_DAMAGE = "v2_report_the_lost_explorers_damage"
+JOB_V2_THE_LOST_EXPLORERS_DEATHS = "v2_report_the_lost_explorers_deaths"
+JOB_V2_VASHNIK_THE_MALIGNANT_AVOIDABLE_DAMAGE = "v2_report_vashnik_the_malignant_avoidable_damage"
+JOB_V2_VASHNIK_THE_MALIGNANT_DAMAGE = "v2_report_vashnik_the_malignant_damage"
+JOB_V2_VASHNIK_THE_MALIGNANT_DEATHS = "v2_report_vashnik_the_malignant_deaths"
+JOB_V2_SSZORAK_AVOIDABLE_DAMAGE = "v2_report_sszorak_avoidable_damage"
+JOB_V2_SSZORAK_DAMAGE = "v2_report_sszorak_damage"
+JOB_V2_SSZORAK_DEATHS = "v2_report_sszorak_deaths"
+JOB_V2_SSZORAK_TEMPEST = "v2_report_sszorak_tempest"
+JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE = "v2_report_the_twin_fangs_avoidable_damage"
+JOB_V2_THE_TWIN_FANGS_DAMAGE = "v2_report_the_twin_fangs_damage"
+JOB_V2_THE_TWIN_FANGS_DEATHS = "v2_report_the_twin_fangs_deaths"
+JOB_V2_THE_TWIN_FANGS_FUCKUPS = "v2_report_the_twin_fangs_fuckups"
+JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE = "v2_report_the_coiled_altar_avoidable_damage"
+JOB_V2_THE_COILED_ALTAR_DAMAGE = "v2_report_the_coiled_altar_damage"
+JOB_V2_THE_COILED_ALTAR_DEATHS = "v2_report_the_coiled_altar_deaths"
 JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
 JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
 JOB_V2_VORASIUS_DEATHS = "v2_report_vorasius_deaths"
@@ -225,20 +422,41 @@ FALLEN_KING_SALHADAAR_FIGHT_ID = "fallen-king-salhadaar"
 IMPERATOR_AVERZIAN_FIGHT_ID = "imperator-averzian"
 LIGHTBLINDED_VANGUARD_FIGHT_ID = "lightblinded-vanguard"
 MIDNIGHT_FALLS_FIGHT_ID = "midnight-falls"
+NEK_ZALI_THE_SOULCOILER_FIGHT_ID = "nek-zali-the-soulcoiler"
+NYMRISSA_WAVECALLER_FIGHT_ID = "nymrissa-wavecaller"
+ENTOMBED_SENTINELS_FIGHT_ID = "entombed-sentinels"
+THE_LOST_EXPLORERS_FIGHT_ID = "the-lost-explorers"
+VASHNIK_THE_MALIGNANT_FIGHT_ID = "vashnik-the-malignant"
+SSZORAK_FIGHT_ID = "sszorak"
+THE_TWIN_FANGS_FIGHT_ID = "the-twin-fangs"
+THE_COILED_ALTAR_FIGHT_ID = "the-coiled-altar"
+ULA_TEK_FIGHT_ID = "ula-tek"
 VAELGOR_AND_EZZORAK_FIGHT_ID = "vaelgor-and-ezzorak"
 VORASIUS_FIGHT_ID = "vorasius"
 
-COOLDOWN_USAGE_FIGHTS: Tuple[Tuple[str, str], ...] = (
-    (IMPERATOR_AVERZIAN_FIGHT_ID, "Imperator Averzian"),
-    (VORASIUS_FIGHT_ID, "Vorasius"),
-    (FALLEN_KING_SALHADAAR_FIGHT_ID, "Fallen-King Salhadaar"),
-    (VAELGOR_AND_EZZORAK_FIGHT_ID, "Vaelgor & Ezzorak"),
-    (LIGHTBLINDED_VANGUARD_FIGHT_ID, "Lightblinded Vanguard"),
-    (CROWN_OF_THE_COSMOS_FIGHT_ID, "Crown of the Cosmos"),
-    (CHIMAERUS_FIGHT_ID, "Chimaerus, the Undreamt God"),
-    (BELOREN_FIGHT_ID, "Belo'ren, Child of Al'ar"),
-    (MIDNIGHT_FALLS_FIGHT_ID, "Midnight Falls"),
+COOLDOWN_USAGE_FIGHTS: Tuple[Tuple[str, str, ReportDifficulty], ...] = (
+    (IMPERATOR_AVERZIAN_FIGHT_ID, "Imperator Averzian", ReportDifficulty.MYTHIC),
+    (VORASIUS_FIGHT_ID, "Vorasius", ReportDifficulty.MYTHIC),
+    (FALLEN_KING_SALHADAAR_FIGHT_ID, "Fallen-King Salhadaar", ReportDifficulty.MYTHIC),
+    (VAELGOR_AND_EZZORAK_FIGHT_ID, "Vaelgor & Ezzorak", ReportDifficulty.MYTHIC),
+    (LIGHTBLINDED_VANGUARD_FIGHT_ID, "Lightblinded Vanguard", ReportDifficulty.MYTHIC),
+    (CROWN_OF_THE_COSMOS_FIGHT_ID, "Crown of the Cosmos", ReportDifficulty.MYTHIC),
+    (CHIMAERUS_FIGHT_ID, "Chimaerus, the Undreamt God", ReportDifficulty.MYTHIC),
+    (BELOREN_FIGHT_ID, "Belo'ren, Child of Al'ar", ReportDifficulty.MYTHIC),
+    (MIDNIGHT_FALLS_FIGHT_ID, "Midnight Falls", ReportDifficulty.MYTHIC),
+    (NYMRISSA_WAVECALLER_FIGHT_ID, "Nymrissa Wavecaller", ReportDifficulty.HEROIC),
+    (NEK_ZALI_THE_SOULCOILER_FIGHT_ID, "Nek'zali the Soulcoiler", ReportDifficulty.HEROIC),
+    (ENTOMBED_SENTINELS_FIGHT_ID, "Entombed Sentinels", ReportDifficulty.HEROIC),
+    (THE_LOST_EXPLORERS_FIGHT_ID, "The Lost Explorers", ReportDifficulty.HEROIC),
+    (VASHNIK_THE_MALIGNANT_FIGHT_ID, "Vashnik the Malignant", ReportDifficulty.HEROIC),
+    (SSZORAK_FIGHT_ID, "Sszorak", ReportDifficulty.HEROIC),
+    (THE_TWIN_FANGS_FIGHT_ID, "The Twin Fangs", ReportDifficulty.HEROIC),
+    (THE_COILED_ALTAR_FIGHT_ID, "The Coiled Altar", ReportDifficulty.HEROIC),
+    (ULA_TEK_FIGHT_ID, "Ula'tek", ReportDifficulty.HEROIC),
 )
+COOLDOWN_USAGE_ENCOUNTER_IDS = {
+    THE_COILED_ALTAR_FIGHT_ID: 3429,
+}
 
 
 @dataclass(frozen=True)
@@ -614,6 +832,62 @@ def _build_vorasius_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
     )
 
 
+def _build_nek_zali_the_soulcoiler_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        default_fight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
+    )
+
+
+def _build_entombed_sentinels_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=ENTOMBED_SENTINELS_HEROIC_MANIFEST,
+        default_fight=REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
+    )
+
+
+def _build_the_lost_explorers_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=THE_LOST_EXPLORERS_HEROIC_MANIFEST,
+        default_fight=REPORT_THE_LOST_EXPLORERS_DEFAULT_FIGHT,
+    )
+
+
+def _build_vashnik_the_malignant_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+        default_fight=REPORT_VASHNIK_DEFAULT_FIGHT,
+    )
+
+
+def _build_sszorak_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=SSZORAK_HEROIC_MANIFEST,
+        default_fight=REPORT_SSZORAK_DEFAULT_FIGHT,
+    )
+
+
+def _build_the_twin_fangs_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=THE_TWIN_FANGS_HEROIC_MANIFEST,
+        default_fight=REPORT_THE_TWIN_FANGS_DEFAULT_FIGHT,
+    )
+
+
+def _build_the_coiled_altar_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=THE_COILED_ALTAR_HEROIC_MANIFEST,
+        default_fight=REPORT_THE_COILED_ALTAR_DEFAULT_FIGHT,
+    )
+
+
 def _build_beloren_child_of_alar_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_target_damage_payload(
         values,
@@ -660,6 +934,46 @@ def _build_vorasius_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
         values,
         default_fight=REPORT_VORASIUS_DEATHS_DEFAULT_FIGHT,
     )
+
+
+def _build_nek_zali_the_soulcoiler_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_entombed_sentinels_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_ENTOMBED_SENTINELS_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_the_lost_explorers_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_THE_LOST_EXPLORERS_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_vashnik_the_malignant_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_VASHNIK_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_sszorak_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(values, default_fight=REPORT_SSZORAK_DEATHS_DEFAULT_FIGHT)
+
+
+def _build_the_twin_fangs_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(values, default_fight=REPORT_THE_TWIN_FANGS_DEATHS_DEFAULT_FIGHT)
+
+
+def _build_the_coiled_altar_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(values, default_fight=REPORT_THE_COILED_ALTAR_DEATHS_DEFAULT_FIGHT)
 
 
 def _build_lightblinded_vanguard_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
@@ -731,6 +1045,70 @@ def _build_vorasius_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Di
     )
 
 
+def _build_nek_zali_the_soulcoiler_avoidable_damage_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        default_fight=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_entombed_sentinels_avoidable_damage_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=ENTOMBED_SENTINELS_HEROIC_MANIFEST,
+        default_fight=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_the_lost_explorers_avoidable_damage_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=THE_LOST_EXPLORERS_HEROIC_MANIFEST,
+        default_fight=REPORT_THE_LOST_EXPLORERS_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_vashnik_the_malignant_avoidable_damage_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+        default_fight=REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_sszorak_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=SSZORAK_HEROIC_MANIFEST,
+        default_fight=REPORT_SSZORAK_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_the_twin_fangs_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=THE_TWIN_FANGS_HEROIC_MANIFEST,
+        default_fight=REPORT_THE_TWIN_FANGS_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_the_coiled_altar_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=THE_COILED_ALTAR_HEROIC_MANIFEST,
+        default_fight=REPORT_THE_COILED_ALTAR_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
 def _build_lightblinded_vanguard_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_avoidable_damage_payload(
         values,
@@ -784,6 +1162,34 @@ def _build_midnight_falls_fuckups_payload(values: Dict[str, Any]) -> Tuple[Dict[
         "report": report_code,
         "fight": REPORT_MIDNIGHT_FALLS_FUCKUPS_DEFAULT_FIGHT,
         "extra_reports": extra_reports,
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
+
+
+def _build_the_twin_fangs_fuckups_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+    payload: Dict[str, Any] = {
+        "report": report_codes[0],
+        "fight": REPORT_THE_TWIN_FANGS_FUCKUPS_DEFAULT_FIGHT,
+        "difficulty": ReportDifficulty.HEROIC.value,
+        "extra_reports": report_codes[1:],
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
+
+
+def _build_sszorak_tempest_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+    payload: Dict[str, Any] = {
+        "report": report_codes[0],
+        "fight": REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
+        "difficulty": ReportDifficulty.HEROIC.value,
+        "extra_reports": report_codes[1:],
         "ignore_after_deaths": ignore_after_deaths,
     }
     return payload, fresh_run
@@ -864,10 +1270,32 @@ def _build_cooldown_usage_payload(
     *,
     report_id: str,
     fight_name: str,
+    expected_encounter_id: int | None = None,
 ) -> Tuple[Dict[str, Any], bool]:
+    report_references = _coerce_multi_text(values, "report_codes")
     report_codes = _coerce_report_code_list(values)
     report_code = report_codes[0]
     extra_reports = report_codes[1:]
+
+    fight_selection = str(
+        _coerce_text(
+            values,
+            "fight_selection",
+            default=COOLDOWN_FIGHT_SELECTION_ALL,
+        )
+        or COOLDOWN_FIGHT_SELECTION_ALL
+    ).strip().lower()
+    if fight_selection not in COOLDOWN_FIGHT_SELECTIONS:
+        raise ValueError("Choose all encounters, the last encounter, or a specific fight.")
+
+    fight_id = _coerce_positive_int(values, "fight_id")
+    if fight_selection == COOLDOWN_FIGHT_SELECTION_SPECIFIC:
+        if fight_id is None and report_references:
+            fight_id = _extract_report_fight_id(report_references[0])
+        if fight_id is None:
+            raise ValueError("Enter a fight ID or use a Warcraft Logs URL containing '?fight=<id>'.")
+        if extra_reports:
+            raise ValueError("Specific-fight analysis supports one Warcraft Logs report at a time.")
 
     reminder_text = _coerce_text(values, "nsrt_reminders", required=True)
     tolerance_seconds = _coerce_float_range(
@@ -885,8 +1313,11 @@ def _build_cooldown_usage_payload(
     payload: Dict[str, Any] = {
         "report_id": report_id,
         "report_title": REPORT_LIGHTBLINDED_COOLDOWNS_TITLE,
+        "expected_encounter_id": expected_encounter_id,
         "report": report_code,
         "fight": fight_name,
+        "fight_selection": fight_selection,
+        "fight_ids": [fight_id] if fight_selection == COOLDOWN_FIGHT_SELECTION_SPECIFIC else None,
         "extra_reports": extra_reports,
         "reminder_text": reminder_text,
         "tolerance_seconds": tolerance_seconds,
@@ -905,9 +1336,19 @@ def _build_lightblinded_vanguard_cooldowns_payload(values: Dict[str, Any]) -> Tu
     )
 
 
-def _make_cooldown_usage_payload_builder(*, report_id: str, fight_name: str) -> ReportPayloadBuilder:
+def _make_cooldown_usage_payload_builder(
+    *,
+    report_id: str,
+    fight_name: str,
+    expected_encounter_id: int | None = None,
+) -> ReportPayloadBuilder:
     def build(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
-        return _build_cooldown_usage_payload(values, report_id=report_id, fight_name=fight_name)
+        return _build_cooldown_usage_payload(
+            values,
+            report_id=report_id,
+            fight_name=fight_name,
+            expected_encounter_id=expected_encounter_id,
+        )
 
     return build
 
@@ -1070,6 +1511,247 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_VORASIUS_DEATHS,
         build_payload=_build_vorasius_deaths_payload,
     ),
+    REPORT_NEK_ZALI_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_NEK_ZALI_DEATHS_ID,
+            title=REPORT_NEK_ZALI_DEATHS_TITLE,
+            description=REPORT_NEK_ZALI_DEATHS_DESCRIPTION,
+            fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
+            fightName=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_NEK_ZALI_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
+        build_payload=_build_nek_zali_the_soulcoiler_deaths_payload,
+    ),
+    REPORT_ENTOMBED_SENTINELS_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ENTOMBED_SENTINELS_DEATHS_ID,
+            title=REPORT_ENTOMBED_SENTINELS_DEATHS_TITLE,
+            description=REPORT_ENTOMBED_SENTINELS_DEATHS_DESCRIPTION,
+            fightId=ENTOMBED_SENTINELS_FIGHT_ID,
+            fightName=REPORT_ENTOMBED_SENTINELS_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_ENTOMBED_SENTINELS_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ENTOMBED_SENTINELS_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ENTOMBED_SENTINELS_DEATHS,
+        build_payload=_build_entombed_sentinels_deaths_payload,
+    ),
+    REPORT_THE_LOST_EXPLORERS_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_LOST_EXPLORERS_DEATHS_ID,
+            title=REPORT_THE_LOST_EXPLORERS_DEATHS_TITLE,
+            description=REPORT_THE_LOST_EXPLORERS_DEATHS_DESCRIPTION,
+            fightId=THE_LOST_EXPLORERS_FIGHT_ID,
+            fightName=REPORT_THE_LOST_EXPLORERS_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_LOST_EXPLORERS_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_LOST_EXPLORERS_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_LOST_EXPLORERS_DEATHS,
+        build_payload=_build_the_lost_explorers_deaths_payload,
+    ),
+    REPORT_VASHNIK_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VASHNIK_DEATHS_ID,
+            title=REPORT_VASHNIK_DEATHS_TITLE,
+            description=REPORT_VASHNIK_DEATHS_DESCRIPTION,
+            fightId=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+            fightName=REPORT_VASHNIK_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_VASHNIK_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VASHNIK_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VASHNIK_THE_MALIGNANT_DEATHS,
+        build_payload=_build_vashnik_the_malignant_deaths_payload,
+    ),
+    REPORT_SSZORAK_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_SSZORAK_DEATHS_ID,
+            title=REPORT_SSZORAK_DEATHS_TITLE,
+            description=REPORT_SSZORAK_DEATHS_DESCRIPTION,
+            fightId=SSZORAK_FIGHT_ID,
+            fightName=REPORT_SSZORAK_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_SSZORAK_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_SSZORAK_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_SSZORAK_DEATHS,
+        build_payload=_build_sszorak_deaths_payload,
+    ),
+    REPORT_SSZORAK_TEMPEST_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_SSZORAK_TEMPEST_ID,
+            title=REPORT_SSZORAK_TEMPEST_TITLE,
+            description=REPORT_SSZORAK_TEMPEST_DESCRIPTION,
+            fightId=SSZORAK_FIGHT_ID,
+            fightName=REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
+            footnotes=list(REPORT_SSZORAK_TEMPEST_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_SSZORAK_TEMPEST,
+        build_payload=_build_sszorak_tempest_payload,
+    ),
+    REPORT_THE_TWIN_FANGS_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_TWIN_FANGS_DEATHS_ID,
+            title=REPORT_THE_TWIN_FANGS_DEATHS_TITLE,
+            description=REPORT_THE_TWIN_FANGS_DEATHS_DESCRIPTION,
+            fightId=THE_TWIN_FANGS_FIGHT_ID,
+            fightName=REPORT_THE_TWIN_FANGS_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_TWIN_FANGS_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_TWIN_FANGS_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_TWIN_FANGS_DEATHS,
+        build_payload=_build_the_twin_fangs_deaths_payload,
+    ),
+    REPORT_THE_COILED_ALTAR_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_COILED_ALTAR_DEATHS_ID,
+            title=REPORT_THE_COILED_ALTAR_DEATHS_TITLE,
+            description=REPORT_THE_COILED_ALTAR_DEATHS_DESCRIPTION,
+            fightId=THE_COILED_ALTAR_FIGHT_ID,
+            fightName=REPORT_THE_COILED_ALTAR_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_COILED_ALTAR_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_COILED_ALTAR_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_COILED_ALTAR_DEATHS,
+        build_payload=_build_the_coiled_altar_deaths_payload,
+    ),
+    REPORT_THE_TWIN_FANGS_FUCKUPS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_TWIN_FANGS_FUCKUPS_ID,
+            title=REPORT_THE_TWIN_FANGS_FUCKUPS_TITLE,
+            description=REPORT_THE_TWIN_FANGS_FUCKUPS_DESCRIPTION,
+            fightId=THE_TWIN_FANGS_FIGHT_ID,
+            fightName=REPORT_THE_TWIN_FANGS_FUCKUPS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_TWIN_FANGS_FUCKUPS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_TWIN_FANGS_FUCKUPS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_TWIN_FANGS_FUCKUPS,
+        build_payload=_build_the_twin_fangs_fuckups_payload,
+    ),
     REPORT_BELOREN_DEATHS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_BELOREN_DEATHS_ID,
@@ -1150,6 +1832,195 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
         build_payload=_build_vorasius_avoidable_damage_payload,
+    ),
+    REPORT_NEK_ZALI_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_NEK_ZALI_AVOIDABLE_ID,
+            title=REPORT_NEK_ZALI_AVOIDABLE_TITLE,
+            description=REPORT_NEK_ZALI_AVOIDABLE_DESCRIPTION,
+            fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
+            fightName=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_NEK_ZALI_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE,
+        build_payload=_build_nek_zali_the_soulcoiler_avoidable_damage_payload,
+    ),
+    REPORT_ENTOMBED_SENTINELS_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_ID,
+            title=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_TITLE,
+            description=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DESCRIPTION,
+            fightId=ENTOMBED_SENTINELS_FIGHT_ID,
+            fightName=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ENTOMBED_SENTINELS_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(ENTOMBED_SENTINELS_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE,
+        build_payload=_build_entombed_sentinels_avoidable_damage_payload,
+    ),
+    REPORT_THE_LOST_EXPLORERS_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_LOST_EXPLORERS_AVOIDABLE_ID,
+            title=REPORT_THE_LOST_EXPLORERS_AVOIDABLE_TITLE,
+            description=REPORT_THE_LOST_EXPLORERS_AVOIDABLE_DESCRIPTION,
+            fightId=THE_LOST_EXPLORERS_FIGHT_ID,
+            fightName=REPORT_THE_LOST_EXPLORERS_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_LOST_EXPLORERS_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_LOST_EXPLORERS_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(THE_LOST_EXPLORERS_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE,
+        build_payload=_build_the_lost_explorers_avoidable_damage_payload,
+    ),
+    REPORT_VASHNIK_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VASHNIK_AVOIDABLE_ID,
+            title=REPORT_VASHNIK_AVOIDABLE_TITLE,
+            description=REPORT_VASHNIK_AVOIDABLE_DESCRIPTION,
+            fightId=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+            fightName=REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VASHNIK_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VASHNIK_THE_MALIGNANT_AVOIDABLE_DAMAGE,
+        build_payload=_build_vashnik_the_malignant_avoidable_damage_payload,
+    ),
+    REPORT_SSZORAK_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_SSZORAK_AVOIDABLE_ID,
+            title=REPORT_SSZORAK_AVOIDABLE_TITLE,
+            description=REPORT_SSZORAK_AVOIDABLE_DESCRIPTION,
+            fightId=SSZORAK_FIGHT_ID,
+            fightName=REPORT_SSZORAK_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_SSZORAK_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_SSZORAK_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(SSZORAK_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_SSZORAK_AVOIDABLE_DAMAGE,
+        build_payload=_build_sszorak_avoidable_damage_payload,
+    ),
+    REPORT_THE_TWIN_FANGS_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_TWIN_FANGS_AVOIDABLE_ID,
+            title=REPORT_THE_TWIN_FANGS_AVOIDABLE_TITLE,
+            description=REPORT_THE_TWIN_FANGS_AVOIDABLE_DESCRIPTION,
+            fightId=THE_TWIN_FANGS_FIGHT_ID,
+            fightName=REPORT_THE_TWIN_FANGS_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_TWIN_FANGS_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_TWIN_FANGS_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(THE_TWIN_FANGS_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE,
+        build_payload=_build_the_twin_fangs_avoidable_damage_payload,
+    ),
+    REPORT_THE_COILED_ALTAR_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_COILED_ALTAR_AVOIDABLE_ID,
+            title=REPORT_THE_COILED_ALTAR_AVOIDABLE_TITLE,
+            description=REPORT_THE_COILED_ALTAR_AVOIDABLE_DESCRIPTION,
+            fightId=THE_COILED_ALTAR_FIGHT_ID,
+            fightName=REPORT_THE_COILED_ALTAR_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_COILED_ALTAR_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_COILED_ALTAR_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(THE_COILED_ALTAR_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE,
+        build_payload=_build_the_coiled_altar_avoidable_damage_payload,
     ),
     REPORT_BELOREN_AVOIDABLE_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -1610,6 +2481,153 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_VORASIUS_DAMAGE,
         build_payload=_build_vorasius_damage_payload,
     ),
+    REPORT_NEK_ZALI_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_NEK_ZALI_ID,
+            title=REPORT_NEK_ZALI_TITLE,
+            description=REPORT_NEK_ZALI_DESCRIPTION,
+            fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
+            fightName=REPORT_NEK_ZALI_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
+            footnotes=list(REPORT_NEK_ZALI_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Nek'zali the Soulcoiler"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE,
+        build_payload=_build_nek_zali_the_soulcoiler_damage_payload,
+    ),
+    REPORT_ENTOMBED_SENTINELS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ENTOMBED_SENTINELS_ID,
+            title=REPORT_ENTOMBED_SENTINELS_TITLE,
+            description=REPORT_ENTOMBED_SENTINELS_DESCRIPTION,
+            fightId=ENTOMBED_SENTINELS_FIGHT_ID,
+            fightName=REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ENTOMBED_SENTINELS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(ENTOMBED_SENTINELS_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Entombed Sentinels"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ENTOMBED_SENTINELS_DAMAGE,
+        build_payload=_build_entombed_sentinels_damage_payload,
+    ),
+    REPORT_THE_LOST_EXPLORERS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_LOST_EXPLORERS_ID,
+            title=REPORT_THE_LOST_EXPLORERS_TITLE,
+            description=REPORT_THE_LOST_EXPLORERS_DESCRIPTION,
+            fightId=THE_LOST_EXPLORERS_FIGHT_ID,
+            fightName=REPORT_THE_LOST_EXPLORERS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_LOST_EXPLORERS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_LOST_EXPLORERS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(THE_LOST_EXPLORERS_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("The Lost Explorers"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_LOST_EXPLORERS_DAMAGE,
+        build_payload=_build_the_lost_explorers_damage_payload,
+    ),
+    REPORT_VASHNIK_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VASHNIK_ID,
+            title=REPORT_VASHNIK_TITLE,
+            description=REPORT_VASHNIK_DESCRIPTION,
+            fightId=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+            fightName=REPORT_VASHNIK_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_VASHNIK_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VASHNIK_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Vashnik the Malignant"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VASHNIK_THE_MALIGNANT_DAMAGE,
+        build_payload=_build_vashnik_the_malignant_damage_payload,
+    ),
+    REPORT_SSZORAK_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_SSZORAK_ID,
+            title=REPORT_SSZORAK_TITLE,
+            description=REPORT_SSZORAK_DESCRIPTION,
+            fightId=SSZORAK_FIGHT_ID,
+            fightName=REPORT_SSZORAK_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_SSZORAK_DEFAULT_FIGHT,
+            footnotes=list(REPORT_SSZORAK_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(SSZORAK_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Sszorak"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_SSZORAK_DAMAGE,
+        build_payload=_build_sszorak_damage_payload,
+    ),
+    REPORT_THE_TWIN_FANGS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_TWIN_FANGS_ID,
+            title=REPORT_THE_TWIN_FANGS_TITLE,
+            description=REPORT_THE_TWIN_FANGS_DESCRIPTION,
+            fightId=THE_TWIN_FANGS_FIGHT_ID,
+            fightName=REPORT_THE_TWIN_FANGS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_TWIN_FANGS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_TWIN_FANGS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(THE_TWIN_FANGS_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("The Twin Fangs"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_TWIN_FANGS_DAMAGE,
+        build_payload=_build_the_twin_fangs_damage_payload,
+    ),
+    REPORT_THE_COILED_ALTAR_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_THE_COILED_ALTAR_ID,
+            title=REPORT_THE_COILED_ALTAR_TITLE,
+            description=REPORT_THE_COILED_ALTAR_DESCRIPTION,
+            fightId=THE_COILED_ALTAR_FIGHT_ID,
+            fightName=REPORT_THE_COILED_ALTAR_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_THE_COILED_ALTAR_DEFAULT_FIGHT,
+            footnotes=list(REPORT_THE_COILED_ALTAR_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(THE_COILED_ALTAR_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("The Coiled Altar"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_THE_COILED_ALTAR_DAMAGE,
+        build_payload=_build_the_coiled_altar_damage_payload,
+    ),
     REPORT_BELOREN_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_BELOREN_ID,
@@ -1634,7 +2652,15 @@ _REPORTS: Dict[str, RegisteredReport] = {
 }
 
 
-def _build_cooldown_usage_definition(*, report_id: str, fight_id: str, fight_name: str) -> RegisteredReport:
+def _build_cooldown_usage_definition(
+    *,
+    report_id: str,
+    fight_id: str,
+    fight_name: str,
+    difficulty: ReportDifficulty,
+    expected_encounter_id: int | None = None,
+) -> RegisteredReport:
+    difficulty_label = difficulty.value.title()
     return RegisteredReport(
         definition=ReportDefinitionModel(
             id=report_id,
@@ -1642,18 +2668,53 @@ def _build_cooldown_usage_definition(*, report_id: str, fight_id: str, fight_nam
             description=REPORT_LIGHTBLINDED_COOLDOWNS_DESCRIPTION,
             fightId=fight_id,
             fightName=fight_name,
-            difficulty=ReportDifficulty.MYTHIC,
+            difficulty=difficulty,
             defaultFight=fight_name,
             footnotes=list(REPORT_LIGHTBLINDED_COOLDOWNS_FOOTNOTES),
             requestSchema=RequestSchemaModel(
                 fields=[
                     _build_report_codes_field(),
                     RequestFieldModel(
+                        id="fight_selection",
+                        kind=RequestFieldKind.SELECT,
+                        label="Encounters to analyze",
+                        description="Choose whether to aggregate every matching encounter or inspect one pull.",
+                        defaultValue=COOLDOWN_FIGHT_SELECTION_ALL,
+                        options=[
+                            RequestFieldOptionModel(
+                                value=COOLDOWN_FIGHT_SELECTION_ALL,
+                                label="All matching encounters",
+                            ),
+                            RequestFieldOptionModel(
+                                value=COOLDOWN_FIGHT_SELECTION_LAST,
+                                label="Last matching encounter",
+                            ),
+                            RequestFieldOptionModel(
+                                value=COOLDOWN_FIGHT_SELECTION_SPECIFIC,
+                                label="Specific fight",
+                            ),
+                        ],
+                    ),
+                    RequestFieldModel(
+                        id="fight_id",
+                        kind=RequestFieldKind.NUMBER,
+                        label="Specific fight ID",
+                        description=(
+                            "Used only for specific-fight analysis. You may leave this blank when the first "
+                            "Warcraft Logs URL contains '?fight=<id>'."
+                        ),
+                        placeholder="For example: 3",
+                        defaultValue="",
+                        minValue=1,
+                        step=1,
+                        visibleWhen={"fieldId": "fight_selection", "equals": COOLDOWN_FIGHT_SELECTION_SPECIFIC},
+                    ),
+                    RequestFieldModel(
                         id="nsrt_reminders",
                         kind=RequestFieldKind.TEXTAREA,
                         label="NSRT cooldown reminders",
-                        description=f"Paste the NSRT cooldown-reminders string for Mythic {fight_name}.",
-                        placeholder="EncounterID:3180;Name:Boss - Mythic;Difficulty:Mythic\n"
+                        description=f"Paste the NSRT cooldown-reminders string for {difficulty_label} {fight_name}.",
+                        placeholder=f"EncounterID:1234;Name:Boss - {difficulty_label};Difficulty:{difficulty_label}\n"
                         "time:11;ph:1;tag:Player;spellid:31884;",
                         defaultValue="",
                         required=True,
@@ -1687,11 +2748,15 @@ def _build_cooldown_usage_definition(*, report_id: str, fight_id: str, fight_nam
             ),
         ),
         job_type=JOB_V2_COOLDOWN_USAGE,
-        build_payload=_make_cooldown_usage_payload_builder(report_id=report_id, fight_name=fight_name),
+        build_payload=_make_cooldown_usage_payload_builder(
+            report_id=report_id,
+            fight_name=fight_name,
+            expected_encounter_id=expected_encounter_id,
+        ),
     )
 
 
-for _fight_id, _fight_name in COOLDOWN_USAGE_FIGHTS:
+for _fight_id, _fight_name, _difficulty in COOLDOWN_USAGE_FIGHTS:
     _report_id = f"{_fight_id}-cooldowns"
     if _report_id in _REPORTS:
         continue
@@ -1699,6 +2764,8 @@ for _fight_id, _fight_name in COOLDOWN_USAGE_FIGHTS:
         report_id=_report_id,
         fight_id=_fight_id,
         fight_name=_fight_name,
+        difficulty=_difficulty,
+        expected_encounter_id=COOLDOWN_USAGE_ENCOUNTER_IDS.get(_fight_id),
     )
 
 
@@ -1732,6 +2799,26 @@ __all__ = [
     "JOB_V2_DIMENSIUS_ADD_DAMAGE",
     "JOB_V2_DIMENSIUS_DEATHS",
     "JOB_V2_DIMENSIUS_PRIORITY_DAMAGE",
+    "JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE",
+    "JOB_V2_ENTOMBED_SENTINELS_DAMAGE",
+    "JOB_V2_ENTOMBED_SENTINELS_DEATHS",
+    "JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE",
+    "JOB_V2_THE_LOST_EXPLORERS_DAMAGE",
+    "JOB_V2_THE_LOST_EXPLORERS_DEATHS",
+    "JOB_V2_VASHNIK_THE_MALIGNANT_AVOIDABLE_DAMAGE",
+    "JOB_V2_VASHNIK_THE_MALIGNANT_DAMAGE",
+    "JOB_V2_VASHNIK_THE_MALIGNANT_DEATHS",
+    "JOB_V2_SSZORAK_AVOIDABLE_DAMAGE",
+    "JOB_V2_SSZORAK_DAMAGE",
+    "JOB_V2_SSZORAK_DEATHS",
+    "JOB_V2_SSZORAK_TEMPEST",
+    "JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE",
+    "JOB_V2_THE_TWIN_FANGS_DAMAGE",
+    "JOB_V2_THE_TWIN_FANGS_DEATHS",
+    "JOB_V2_THE_TWIN_FANGS_FUCKUPS",
+    "JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE",
+    "JOB_V2_THE_COILED_ALTAR_DAMAGE",
+    "JOB_V2_THE_COILED_ALTAR_DEATHS",
     "JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE",
     "JOB_V2_CROWN_OF_THE_COSMOS_DEATHS",
     "JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS",
@@ -1743,6 +2830,9 @@ __all__ = [
     "JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS",
     "JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS",
     "JOB_V2_MIDNIGHT_FALLS_FUCKUPS",
+    "JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE",
+    "JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE",
+    "JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
     "JOB_V2_VORASIUS_DEATHS",

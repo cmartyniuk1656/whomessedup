@@ -2,6 +2,8 @@ import unittest
 
 from who_messed_up.api import Fight
 from who_messed_up.services.cooldown_usage import (
+    COOLDOWN_FIGHT_SELECTION_ALL,
+    COOLDOWN_FIGHT_SELECTION_LAST,
     COOLDOWN_STATUS_CORRECT,
     COOLDOWN_STATUS_IGNORED_DEAD,
     COOLDOWN_STATUS_INCORRECT,
@@ -13,8 +15,28 @@ from who_messed_up.services.cooldown_usage import (
     CooldownUsagePull,
     STASIS_SPELL_IDS,
     _filter_cooldown_plan,
+    _apply_cooldown_fight_selection,
     _match_assignments_for_fight,
 )
+
+
+class CooldownFightSelectionTests(unittest.TestCase):
+    def setUp(self):
+        self.fights = [
+            Fight(id=9, name="Boss", start=300.0, end=400.0, kill=False),
+            Fight(id=3, name="Boss", start=100.0, end=200.0, kill=False),
+            Fight(id=6, name="Boss", start=200.0, end=300.0, kill=False),
+        ]
+
+    def test_all_selection_preserves_every_matching_fight(self):
+        selected = _apply_cooldown_fight_selection(self.fights, COOLDOWN_FIGHT_SELECTION_ALL)
+
+        self.assertEqual([fight.id for fight in selected], [9, 3, 6])
+
+    def test_last_selection_uses_latest_fight_timestamp(self):
+        selected = _apply_cooldown_fight_selection(self.fights, COOLDOWN_FIGHT_SELECTION_LAST)
+
+        self.assertEqual([fight.id for fight in selected], [9])
 
 
 class CooldownUsageDeathMatchingTests(unittest.TestCase):

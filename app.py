@@ -29,6 +29,26 @@ from who_messed_up.services.report_registry import (
     JOB_V2_DIMENSIUS_ADD_DAMAGE,
     JOB_V2_DIMENSIUS_DEATHS,
     JOB_V2_DIMENSIUS_PRIORITY_DAMAGE,
+    JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE,
+    JOB_V2_ENTOMBED_SENTINELS_DAMAGE,
+    JOB_V2_ENTOMBED_SENTINELS_DEATHS,
+    JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE,
+    JOB_V2_THE_LOST_EXPLORERS_DAMAGE,
+    JOB_V2_THE_LOST_EXPLORERS_DEATHS,
+    JOB_V2_VASHNIK_THE_MALIGNANT_AVOIDABLE_DAMAGE,
+    JOB_V2_VASHNIK_THE_MALIGNANT_DAMAGE,
+    JOB_V2_VASHNIK_THE_MALIGNANT_DEATHS,
+    JOB_V2_SSZORAK_AVOIDABLE_DAMAGE,
+    JOB_V2_SSZORAK_DAMAGE,
+    JOB_V2_SSZORAK_DEATHS,
+    JOB_V2_SSZORAK_TEMPEST,
+    JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE,
+    JOB_V2_THE_TWIN_FANGS_DAMAGE,
+    JOB_V2_THE_TWIN_FANGS_DEATHS,
+    JOB_V2_THE_TWIN_FANGS_FUCKUPS,
+    JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE,
+    JOB_V2_THE_COILED_ALTAR_DAMAGE,
+    JOB_V2_THE_COILED_ALTAR_DEATHS,
     JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
@@ -37,6 +57,9 @@ from who_messed_up.services.report_registry import (
     JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS,
     JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
     JOB_V2_MIDNIGHT_FALLS_FUCKUPS,
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE,
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE,
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
     JOB_V2_VORASIUS_DEATHS,
@@ -95,6 +118,59 @@ from who_messed_up.services.view_models.lightblinded_vanguard_deaths import (
     build_lightblinded_vanguard_deaths_report_page,
 )
 from who_messed_up.services.view_models.midnight_falls_fuckups import build_midnight_falls_fuckup_report_page
+from who_messed_up.services.view_models.nek_zali_the_soulcoiler_avoidable_damage import (
+    build_nek_zali_the_soulcoiler_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.nek_zali_the_soulcoiler_damage import (
+    build_nek_zali_the_soulcoiler_damage_report_page,
+)
+from who_messed_up.services.view_models.nek_zali_the_soulcoiler_deaths import (
+    build_nek_zali_the_soulcoiler_deaths_report_page,
+)
+from who_messed_up.services.view_models.entombed_sentinels_avoidable_damage import (
+    build_entombed_sentinels_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.entombed_sentinels_damage import (
+    build_entombed_sentinels_damage_report_page,
+)
+from who_messed_up.services.view_models.entombed_sentinels_deaths import (
+    build_entombed_sentinels_deaths_report_page,
+)
+from who_messed_up.services.view_models.the_lost_explorers_avoidable_damage import (
+    build_the_lost_explorers_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.the_lost_explorers_damage import (
+    build_the_lost_explorers_damage_report_page,
+)
+from who_messed_up.services.view_models.the_lost_explorers_deaths import (
+    build_the_lost_explorers_deaths_report_page,
+)
+from who_messed_up.services.view_models.vashnik_the_malignant_avoidable_damage import (
+    build_vashnik_the_malignant_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.vashnik_the_malignant_damage import (
+    build_vashnik_the_malignant_damage_report_page,
+)
+from who_messed_up.services.view_models.vashnik_the_malignant_deaths import (
+    build_vashnik_the_malignant_deaths_report_page,
+)
+from who_messed_up.services.view_models.sszorak_avoidable_damage import (
+    build_sszorak_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.sszorak_damage import build_sszorak_damage_report_page
+from who_messed_up.services.view_models.sszorak_deaths import build_sszorak_deaths_report_page
+from who_messed_up.services.view_models.sszorak_tempest import build_sszorak_tempest_report_page
+from who_messed_up.services.view_models.the_twin_fangs_avoidable_damage import (
+    build_the_twin_fangs_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.the_twin_fangs_damage import build_the_twin_fangs_damage_report_page
+from who_messed_up.services.view_models.the_twin_fangs_deaths import build_the_twin_fangs_deaths_report_page
+from who_messed_up.services.view_models.the_twin_fangs_fuckups import build_the_twin_fangs_fuckup_report_page
+from who_messed_up.services.view_models.the_coiled_altar_avoidable_damage import (
+    build_the_coiled_altar_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.the_coiled_altar_damage import build_the_coiled_altar_damage_report_page
+from who_messed_up.services.view_models.the_coiled_altar_deaths import build_the_coiled_altar_deaths_report_page
 from who_messed_up.services.view_models.vorasius_damage import build_vorasius_damage_report_page
 from who_messed_up.services.view_models.vorasius_avoidable_damage import (
     build_vorasius_avoidable_damage_report_page,
@@ -114,6 +190,8 @@ from who_messed_up.service import (
     HitSummary,
     LightblindedVanguardDispelSummary,
     MidnightFallsFuckupSummary,
+    TwinFangsFuckupSummary,
+    SszorakTempestSummary,
     CooldownUsageSummary,
     CrownNullCoronaDispelSummary,
     CrownSilverHitSummary,
@@ -149,6 +227,29 @@ from who_messed_up.service import (
     fetch_lightblinded_vanguard_death_summary,
     fetch_lightblinded_vanguard_dispel_summary,
     fetch_midnight_falls_fuckup_summary,
+    fetch_nek_zali_the_soulcoiler_avoidable_damage_summary,
+    fetch_nek_zali_the_soulcoiler_damage_summary,
+    fetch_nek_zali_the_soulcoiler_death_summary,
+    fetch_entombed_sentinels_avoidable_damage_summary,
+    fetch_entombed_sentinels_damage_summary,
+    fetch_entombed_sentinels_death_summary,
+    fetch_the_lost_explorers_avoidable_damage_summary,
+    fetch_the_lost_explorers_damage_summary,
+    fetch_the_lost_explorers_death_summary,
+    fetch_vashnik_the_malignant_avoidable_damage_summary,
+    fetch_vashnik_the_malignant_damage_summary,
+    fetch_vashnik_the_malignant_death_summary,
+    fetch_sszorak_avoidable_damage_summary,
+    fetch_sszorak_damage_summary,
+    fetch_sszorak_death_summary,
+    fetch_sszorak_tempest_summary,
+    fetch_the_twin_fangs_avoidable_damage_summary,
+    fetch_the_twin_fangs_damage_summary,
+    fetch_the_twin_fangs_death_summary,
+    fetch_the_twin_fangs_fuckup_summary,
+    fetch_the_coiled_altar_avoidable_damage_summary,
+    fetch_the_coiled_altar_damage_summary,
+    fetch_the_coiled_altar_death_summary,
     fetch_vorasius_avoidable_damage_summary,
     fetch_vorasius_damage_summary,
     fetch_vorasius_death_summary,
@@ -1147,6 +1248,140 @@ def _fetch_vorasius_damage_summary_from_payload(payload: Dict[str, Any]) -> Enco
     )
 
 
+def _fetch_nek_zali_the_soulcoiler_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_nek_zali_the_soulcoiler_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_entombed_sentinels_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_entombed_sentinels_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_lost_explorers_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_lost_explorers_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_vashnik_the_malignant_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_vashnik_the_malignant_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_sszorak_damage_summary_from_payload(payload: Dict[str, Any]) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_sszorak_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_twin_fangs_damage_summary_from_payload(payload: Dict[str, Any]) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_twin_fangs_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_coiled_altar_damage_summary_from_payload(payload: Dict[str, Any]) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_coiled_altar_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_beloren_child_of_alar_damage_summary_from_payload(
     payload: Dict[str, Any],
 ) -> EncounterTargetDamageSummary:
@@ -1171,6 +1406,133 @@ def _fetch_vorasius_deaths_summary_from_payload(payload: Dict[str, Any]) -> Deat
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
     return fetch_vorasius_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_nek_zali_the_soulcoiler_deaths_summary_from_payload(
+    payload: Dict[str, Any],
+) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_nek_zali_the_soulcoiler_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_entombed_sentinels_deaths_summary_from_payload(
+    payload: Dict[str, Any],
+) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_entombed_sentinels_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_lost_explorers_deaths_summary_from_payload(
+    payload: Dict[str, Any],
+) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_lost_explorers_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_vashnik_the_malignant_deaths_summary_from_payload(
+    payload: Dict[str, Any],
+) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_vashnik_the_malignant_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_sszorak_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_sszorak_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_twin_fangs_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_twin_fangs_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_coiled_altar_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_coiled_altar_death_summary(
         report_code=payload["report"],
         fight_name=payload.get("fight"),
         fight_ids=fight_ids,
@@ -1210,6 +1572,169 @@ def _fetch_vorasius_avoidable_damage_summary_from_payload(payload: Dict[str, Any
         fight_ids=fight_ids,
         difficulty=payload.get("difficulty"),
         ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_nek_zali_the_soulcoiler_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_nek_zali_the_soulcoiler_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_entombed_sentinels_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_entombed_sentinels_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_lost_explorers_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_lost_explorers_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_vashnik_the_malignant_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_vashnik_the_malignant_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_sszorak_avoidable_damage_summary_from_payload(payload: Dict[str, Any]) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_sszorak_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_sszorak_tempest_summary_from_payload(payload: Dict[str, Any]) -> SszorakTempestSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_sszorak_tempest_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_twin_fangs_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_twin_fangs_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_coiled_altar_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_coiled_altar_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_the_twin_fangs_fuckup_summary_from_payload(payload: Dict[str, Any]) -> TwinFangsFuckupSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_the_twin_fangs_fuckup_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
         ignore_after_deaths=payload.get("ignore_after_deaths"),
         extra_report_codes=payload.get("extra_reports"),
         token=payload.get("token"),
@@ -1447,6 +1972,7 @@ def _fetch_lightblinded_vanguard_cooldown_summary_from_payload(
         expected_difficulty=payload.get("difficulty") or "mythic",
         fight_name=payload.get("fight"),
         fight_ids=fight_ids,
+        fight_selection=payload.get("fight_selection") or "all",
         difficulty=payload.get("difficulty"),
         extra_report_codes=payload.get("extra_reports"),
         tolerance_seconds=payload.get("tolerance_seconds", 7.5),
@@ -1547,6 +2073,62 @@ def _execute_v2_vorasius_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     return page.dict(by_alias=True)
 
 
+def _execute_v2_nek_zali_the_soulcoiler_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_nek_zali_the_soulcoiler_damage_summary_from_payload(payload)
+    page = build_nek_zali_the_soulcoiler_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_entombed_sentinels_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_entombed_sentinels_damage_summary_from_payload(payload)
+    page = build_entombed_sentinels_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_lost_explorers_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_lost_explorers_damage_summary_from_payload(payload)
+    page = build_the_lost_explorers_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_vashnik_the_malignant_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_vashnik_the_malignant_damage_summary_from_payload(payload)
+    page = build_vashnik_the_malignant_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_sszorak_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_sszorak_damage_summary_from_payload(payload)
+    page = build_sszorak_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_twin_fangs_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_twin_fangs_damage_summary_from_payload(payload)
+    page = build_the_twin_fangs_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_coiled_altar_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_coiled_altar_damage_summary_from_payload(payload)
+    page = build_the_coiled_altar_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_beloren_child_of_alar_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_beloren_child_of_alar_damage_summary_from_payload(payload)
     page = build_beloren_child_of_alar_damage_report_page(summary)
@@ -1563,6 +2145,62 @@ def _execute_v2_vorasius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     return page.dict(by_alias=True)
 
 
+def _execute_v2_nek_zali_the_soulcoiler_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_nek_zali_the_soulcoiler_deaths_summary_from_payload(payload)
+    page = build_nek_zali_the_soulcoiler_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_entombed_sentinels_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_entombed_sentinels_deaths_summary_from_payload(payload)
+    page = build_entombed_sentinels_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_lost_explorers_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_lost_explorers_deaths_summary_from_payload(payload)
+    page = build_the_lost_explorers_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_vashnik_the_malignant_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_vashnik_the_malignant_deaths_summary_from_payload(payload)
+    page = build_vashnik_the_malignant_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_sszorak_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_sszorak_deaths_summary_from_payload(payload)
+    page = build_sszorak_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_twin_fangs_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_twin_fangs_deaths_summary_from_payload(payload)
+    page = build_the_twin_fangs_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_coiled_altar_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_coiled_altar_deaths_summary_from_payload(payload)
+    page = build_the_coiled_altar_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_beloren_child_of_alar_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_beloren_child_of_alar_deaths_summary_from_payload(payload)
     page = build_beloren_child_of_alar_deaths_report_page(summary)
@@ -1574,6 +2212,78 @@ def _execute_v2_beloren_child_of_alar_deaths_job(payload: Dict[str, Any]) -> Dic
 def _execute_v2_vorasius_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_vorasius_avoidable_damage_summary_from_payload(payload)
     page = build_vorasius_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_nek_zali_the_soulcoiler_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_nek_zali_the_soulcoiler_avoidable_damage_summary_from_payload(payload)
+    page = build_nek_zali_the_soulcoiler_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_entombed_sentinels_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_entombed_sentinels_avoidable_damage_summary_from_payload(payload)
+    page = build_entombed_sentinels_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_lost_explorers_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_lost_explorers_avoidable_damage_summary_from_payload(payload)
+    page = build_the_lost_explorers_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_vashnik_the_malignant_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_vashnik_the_malignant_avoidable_damage_summary_from_payload(payload)
+    page = build_vashnik_the_malignant_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_sszorak_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_sszorak_avoidable_damage_summary_from_payload(payload)
+    page = build_sszorak_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_sszorak_tempest_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_sszorak_tempest_summary_from_payload(payload)
+    page = build_sszorak_tempest_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_twin_fangs_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_twin_fangs_avoidable_damage_summary_from_payload(payload)
+    page = build_the_twin_fangs_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_coiled_altar_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_coiled_altar_avoidable_damage_summary_from_payload(payload)
+    page = build_the_coiled_altar_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_the_twin_fangs_fuckup_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_the_twin_fangs_fuckup_summary_from_payload(payload)
+    page = build_the_twin_fangs_fuckup_report_page(summary)
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -1683,6 +2393,7 @@ def _execute_v2_lightblinded_vanguard_cooldown_job(payload: Dict[str, Any]) -> D
         title=payload.get("report_title") or "Cooldown Usage Report",
         fight_name=payload.get("fight"),
         difficulty=payload.get("difficulty"),
+        fight_selection=payload.get("fight_selection") or "all",
     )
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
@@ -1798,6 +2509,71 @@ job_manager.register_handler(JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS, _execute_v2_be
 job_manager.register_handler(JOB_V2_VORASIUS_AVOIDABLE_DAMAGE, _execute_v2_vorasius_avoidable_damage_job)
 job_manager.register_handler(JOB_V2_VORASIUS_DAMAGE, _execute_v2_vorasius_damage_job)
 job_manager.register_handler(JOB_V2_VORASIUS_DEATHS, _execute_v2_vorasius_deaths_job)
+job_manager.register_handler(
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE,
+    _execute_v2_nek_zali_the_soulcoiler_avoidable_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE,
+    _execute_v2_nek_zali_the_soulcoiler_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
+    _execute_v2_nek_zali_the_soulcoiler_deaths_job,
+)
+job_manager.register_handler(
+    JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE,
+    _execute_v2_entombed_sentinels_avoidable_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_ENTOMBED_SENTINELS_DAMAGE,
+    _execute_v2_entombed_sentinels_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_ENTOMBED_SENTINELS_DEATHS,
+    _execute_v2_entombed_sentinels_deaths_job,
+)
+job_manager.register_handler(
+    JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE,
+    _execute_v2_the_lost_explorers_avoidable_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_THE_LOST_EXPLORERS_DAMAGE,
+    _execute_v2_the_lost_explorers_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_THE_LOST_EXPLORERS_DEATHS,
+    _execute_v2_the_lost_explorers_deaths_job,
+)
+job_manager.register_handler(
+    JOB_V2_VASHNIK_THE_MALIGNANT_AVOIDABLE_DAMAGE,
+    _execute_v2_vashnik_the_malignant_avoidable_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_VASHNIK_THE_MALIGNANT_DAMAGE,
+    _execute_v2_vashnik_the_malignant_damage_job,
+)
+job_manager.register_handler(
+    JOB_V2_VASHNIK_THE_MALIGNANT_DEATHS,
+    _execute_v2_vashnik_the_malignant_deaths_job,
+)
+job_manager.register_handler(JOB_V2_SSZORAK_AVOIDABLE_DAMAGE, _execute_v2_sszorak_avoidable_damage_job)
+job_manager.register_handler(JOB_V2_SSZORAK_DAMAGE, _execute_v2_sszorak_damage_job)
+job_manager.register_handler(JOB_V2_SSZORAK_DEATHS, _execute_v2_sszorak_deaths_job)
+job_manager.register_handler(JOB_V2_SSZORAK_TEMPEST, _execute_v2_sszorak_tempest_job)
+job_manager.register_handler(
+    JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE,
+    _execute_v2_the_twin_fangs_avoidable_damage_job,
+)
+job_manager.register_handler(JOB_V2_THE_TWIN_FANGS_DAMAGE, _execute_v2_the_twin_fangs_damage_job)
+job_manager.register_handler(JOB_V2_THE_TWIN_FANGS_DEATHS, _execute_v2_the_twin_fangs_deaths_job)
+job_manager.register_handler(JOB_V2_THE_TWIN_FANGS_FUCKUPS, _execute_v2_the_twin_fangs_fuckup_job)
+job_manager.register_handler(
+    JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE,
+    _execute_v2_the_coiled_altar_avoidable_damage_job,
+)
+job_manager.register_handler(JOB_V2_THE_COILED_ALTAR_DAMAGE, _execute_v2_the_coiled_altar_damage_job)
+job_manager.register_handler(JOB_V2_THE_COILED_ALTAR_DEATHS, _execute_v2_the_coiled_altar_deaths_job)
 
 
 @app.get("/health")

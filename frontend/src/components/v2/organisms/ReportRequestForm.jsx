@@ -25,6 +25,14 @@ function splitFields(fields) {
   );
 }
 
+function isFieldVisible(field, values) {
+  const condition = field?.visibleWhen;
+  if (!condition?.fieldId) {
+    return true;
+  }
+  return values?.[condition.fieldId] === condition.equals;
+}
+
 function GlobalConfigurationSection({ children, compact = false }) {
   return (
     <section className={compact ? "rounded-lg border border-white/10 bg-slate-950/30 p-3.5" : "rounded-xl border border-white/10 bg-slate-950/25 p-4"}>
@@ -50,7 +58,7 @@ export function ReportRequestForm({
   onRemoveMultiTextRow,
   layout = "sidebar",
 }) {
-  const fields = report?.requestSchema?.fields ?? [];
+  const fields = (report?.requestSchema?.fields ?? []).filter((field) => isFieldVisible(field, values));
   const notes = report?.footnotes ?? [];
   const statusLabel = pendingJob ? (pendingJob.status === "running" ? "Running" : "Queued") : "Ready";
   const statusTone = pendingJob ? (pendingJob.status === "running" ? "accent" : "warning") : "neutral";

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PanelMessage } from "../components/v2/atoms/PanelMessage";
 import { DifficultyToggle } from "../components/v2/molecules/DifficultyToggle";
+import { ThemedSelectMenu } from "../components/v2/molecules/ThemedSelectMenu";
 import { WizardBreadcrumbs } from "../components/v2/molecules/WizardBreadcrumbs";
 import { FightSelectionGrid } from "../components/v2/organisms/FightSelectionGrid";
 import { ReportCatalog } from "../components/v2/organisms/ReportCatalog";
@@ -11,6 +12,7 @@ import { ReportWizardStepFrame } from "../components/v2/organisms/ReportWizardSt
 import { useReportBrowserState } from "../hooks/useReportBrowserState";
 import { useReportDefinitions } from "../hooks/useReportDefinitions";
 import { useReportJob } from "../hooks/useReportJob";
+import { getMidnightRaidIdForFight } from "../config/midnightRaids";
 import { buildCachedReportUrl, parseCachedReportParams } from "../utils/reportShareLink";
 
 const WIZARD_STEPS = {
@@ -39,6 +41,9 @@ export function ReportsPage() {
     setError: setJobError,
   } = useReportJob();
   const {
+    raidOptions,
+    selectedRaidId,
+    setSelectedRaidId,
     fightOptions,
     difficultyOptions,
     selectedDifficulty,
@@ -149,6 +154,10 @@ export function ReportsPage() {
     }
 
     setSelectedDifficulty(report.difficulty || selectedDifficulty);
+    const reportRaidId = getMidnightRaidIdForFight(report.fightId);
+    if (reportRaidId) {
+      setSelectedRaidId(reportRaidId);
+    }
     setSelectedFightId(report.fightId || "");
     setReportFormValues(report.id, cachedParams.values);
     setHasRunAttempt(true);
@@ -179,6 +188,7 @@ export function ReportsPage() {
     setReportFormValues,
     setSelectedDifficulty,
     setSelectedFightId,
+    setSelectedRaidId,
   ]);
 
   const resetRunState = () => {
@@ -188,6 +198,15 @@ export function ReportsPage() {
 
   const handleSelectDifficulty = (difficultyId) => {
     setSelectedDifficulty(difficultyId);
+    setSelectedFightId("");
+    setSelectedReportId("");
+    setIsConfigurationOpen(false);
+    resetRunState();
+    goToWizardStep(WIZARD_STEPS.BOSS);
+  };
+
+  const handleSelectRaid = (raidId) => {
+    setSelectedRaidId(raidId);
     setSelectedFightId("");
     setSelectedReportId("");
     setIsConfigurationOpen(false);
@@ -241,23 +260,35 @@ export function ReportsPage() {
       stepKey={WIZARD_STEPS.BOSS}
       phase={wizardTransitionPhase}
     >
-      <div className="space-y-8">
-        <div className="flex justify-center">
-          <DifficultyToggle
-            options={difficultyOptions}
-            selectedId={selectedDifficulty}
-            onSelect={handleSelectDifficulty}
+      <div className="relative">
+        <div className="absolute right-0 top-0 z-40 w-64">
+          <ThemedSelectMenu
+            id="raid-selection"
+            label="Raid"
+            options={raidOptions}
+            value={selectedRaidId}
+            onChange={handleSelectRaid}
+            className="[&>button]:mt-0 [&>label]:sr-only"
           />
         </div>
-        {definitionsLoading ? <PanelMessage>Loading report definitions...</PanelMessage> : null}
-        {definitionsError ? <PanelMessage tone="danger">{definitionsError}</PanelMessage> : null}
-        <div className="mx-auto w-full max-w-5xl">
-          <FightSelectionGrid
-            fights={fightOptions}
-            selectedFightId={selectedFightId}
-            onSelectFight={handleSelectFight}
-            reportCountsByFightId={reportCountsByFightId}
-          />
+        <div className="space-y-8">
+          <div className="flex justify-center">
+            <DifficultyToggle
+              options={difficultyOptions}
+              selectedId={selectedDifficulty}
+              onSelect={handleSelectDifficulty}
+            />
+          </div>
+          {definitionsLoading ? <PanelMessage>Loading report definitions...</PanelMessage> : null}
+          {definitionsError ? <PanelMessage tone="danger">{definitionsError}</PanelMessage> : null}
+          <div className="mx-auto w-full max-w-5xl">
+            <FightSelectionGrid
+              fights={fightOptions}
+              selectedFightId={selectedFightId}
+              onSelectFight={handleSelectFight}
+              reportCountsByFightId={reportCountsByFightId}
+            />
+          </div>
         </div>
       </div>
     </ReportWizardStepFrame>

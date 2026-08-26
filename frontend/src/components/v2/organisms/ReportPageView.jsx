@@ -4,6 +4,7 @@ import { useTableSorting } from "../../../hooks/useTableSorting";
 import { SelectInput } from "../atoms/SelectInput";
 import { DamageTableFilters } from "./DamageTableFilters";
 import { ReportPageHeader } from "../molecules/ReportPageHeader";
+import { SpecAnalysisCallout } from "../molecules/SpecAnalysisCallout";
 import { ReportSummaryGrid } from "./ReportSummaryGrid";
 import { ReportTable } from "./ReportTable";
 import { SpecAnalysisModal } from "./SpecAnalysisModal";
@@ -91,8 +92,8 @@ export function ReportPageView({ page, shareUrl }) {
         page={displayPage}
         rows={sortedRows}
         shareUrl={shareUrl}
-        onOpenSpecAnalysis={() => setIsSpecAnalysisOpen(true)}
       />
+      <SpecAnalysisCallout analysis={page.specAnalysis} onOpen={() => setIsSpecAnalysisOpen(true)} />
       <ReportSummaryGrid metrics={page.summary} />
       <ReportTableViewSelector control={viewControl} value={selectedTableView} onChange={setSelectedTableView} />
       <DamageTableFilters

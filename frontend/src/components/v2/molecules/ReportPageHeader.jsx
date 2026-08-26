@@ -3,9 +3,8 @@ import { Button } from "../atoms/Button";
 import { downloadReportTableCsv } from "../../../utils/reportTablePresentation";
 import { ReportTags } from "./ReportTags";
 
-export function ReportPageHeader({ page, rows, shareUrl, onOpenSpecAnalysis }) {
+export function ReportPageHeader({ page, rows, shareUrl }) {
   const [copyStatus, setCopyStatus] = useState("");
-  const hasSpecAnalysis = Boolean(page?.specAnalysis?.series?.length);
   const hasShareUrl = Boolean(shareUrl);
 
   const handleCopyLink = async () => {
@@ -36,14 +35,9 @@ export function ReportPageHeader({ page, rows, shareUrl, onOpenSpecAnalysis }) {
             {copyStatus || "Share Report"}
           </Button>
         ) : null}
-        {hasSpecAnalysis ? (
-          <Button type="button" variant="accent" size="sm" onClick={onOpenSpecAnalysis}>
-            {page.specAnalysis.buttonLabel || "Spec Analysis"}
-          </Button>
-        ) : null}
         <Button
           type="button"
-          variant={hasSpecAnalysis ? "secondary" : "accent"}
+          variant="secondary"
           size="sm"
           onClick={() => downloadReportTableCsv(page, rows, page?.content?.table)}
         >

@@ -4,14 +4,22 @@
 
 Add a reusable cooldown-usage report family that checks player cooldown casts against an NSRT cooldown-reminders plan.
 
-Initial implementation targets:
+Current implementation targets:
 
 - Report name: `Cooldown Usage Report`
-- Bosses: all Midnight Season 1 bosses listed in the app
-- Difficulty: `Mythic`
+- Bosses: all Midnight Season 1 and Season 2 bosses listed in the app
+- Difficulty: `Mythic` for Season 1 and `Heroic` for Season 2
 - Report ids: one per boss, using the pattern `<fight-id>-cooldowns`
 
 This should become a standard report type for future bosses, with boss-specific metadata limited to encounter identity, supported difficulties, and any phase-timing rules needed to align reminder timestamps to Warcraft Logs pulls.
+
+Fight scope is selectable per run:
+
+- `all`: aggregate every matching encounter in each supplied report.
+- `last`: analyze only the chronologically last matching encounter in each supplied report.
+- `specific`: analyze one report-local fight id, entered directly or parsed from a Warcraft Logs URL such as `?fight=3`.
+
+Warcraft Logs encounter ids do not need to be stored in each boss definition. The selected fight's encounter metadata is validated against the `EncounterID` supplied in the NSRT reminder.
 
 ## Problem Statement
 

@@ -50,6 +50,7 @@ class RequestFieldModel(ViewModelBase):
     suffix: Optional[str] = None
     options: List[RequestFieldOptionModel] = Field(default_factory=list)
     tooltip: Optional[RequestFieldTooltipModel] = None
+    visible_when: Optional[Dict[str, Any]] = Field(None, alias="visibleWhen")
 
 
 class RequestSchemaModel(ViewModelBase):

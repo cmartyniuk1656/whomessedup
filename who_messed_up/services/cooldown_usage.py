@@ -34,6 +34,15 @@ COOLDOWN_STATUS_IGNORED_MISSING_PHASE = "ignored_missing_phase"
 COOLDOWN_STATUS_IGNORED_NOT_IN_PULL = "ignored_not_in_pull"
 COOLDOWN_STATUS_IGNORED_AFTER_PULL_END = "ignored_after_pull_end"
 
+COOLDOWN_FIGHT_SELECTION_ALL = "all"
+COOLDOWN_FIGHT_SELECTION_LAST = "last"
+COOLDOWN_FIGHT_SELECTION_SPECIFIC = "specific"
+COOLDOWN_FIGHT_SELECTIONS = {
+    COOLDOWN_FIGHT_SELECTION_ALL,
+    COOLDOWN_FIGHT_SELECTION_LAST,
+    COOLDOWN_FIGHT_SELECTION_SPECIFIC,
+}
+
 ELIGIBLE_STATUSES = {
     COOLDOWN_STATUS_CORRECT,
     COOLDOWN_STATUS_INCORRECT,
@@ -294,6 +303,7 @@ def fetch_cooldown_usage_summary(
     expected_difficulty: str,
     fight_name: Optional[str] = None,
     fight_ids: Optional[Iterable[int]] = None,
+    fight_selection: str = COOLDOWN_FIGHT_SELECTION_ALL,
     difficulty: Optional[str | int] = None,
     extra_report_codes: Optional[Iterable[str]] = None,
     tolerance_seconds: float = 7.5,
@@ -304,6 +314,14 @@ def fetch_cooldown_usage_summary(
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
 ) -> CooldownUsageSummary:
+    normalized_fight_selection = _normalize_cooldown_fight_selection(fight_selection)
+    normalized_fight_ids = [int(fight_id) for fight_id in fight_ids] if fight_ids else None
+    if normalized_fight_selection == COOLDOWN_FIGHT_SELECTION_SPECIFIC:
+        if not normalized_fight_ids or len(normalized_fight_ids) != 1:
+            raise ValueError("Specific-fight analysis requires exactly one fight ID.")
+        if extra_report_codes:
+            raise ValueError("Specific-fight analysis supports one Warcraft Logs report at a time.")
+
     plan = parse_nsrt_cooldown_reminders(reminder_text)
     validate_cooldown_plan(
         plan,
@@ -319,7 +337,8 @@ def fetch_cooldown_usage_summary(
         report_code=primary_code,
         plan=plan,
         fight_name=fight_name,
-        fight_ids=fight_ids,
+        fight_ids=normalized_fight_ids,
+        fight_selection=normalized_fight_selection,
         difficulty=difficulty,
         tolerance_seconds=normalized_tolerance,
         ignore_after_deaths=ignore_after_deaths,
@@ -353,7 +372,8 @@ def fetch_cooldown_usage_summary(
                 report_code=code,
                 plan=plan,
                 fight_name=fight_name,
-                fight_ids=fight_ids,
+                fight_ids=normalized_fight_ids,
+                fight_selection=normalized_fight_selection,
                 difficulty=difficulty,
                 tolerance_seconds=normalized_tolerance,
                 ignore_after_deaths=ignore_after_deaths,
@@ -374,6 +394,7 @@ def _fetch_single_cooldown_usage_summary(
     plan: CooldownReminderPlan,
     fight_name: Optional[str],
     fight_ids: Optional[Iterable[int]],
+    fight_selection: str,
     difficulty: Optional[str | int],
     tolerance_seconds: float,
     ignore_after_deaths: Optional[int],
@@ -389,6 +410,7 @@ def _fetch_single_cooldown_usage_summary(
     bearer = _resolve_token(token, client_id, client_secret)
     fights, actor_names, actor_classes, actor_owners = fetch_fights(session, bearer, report_code)
     chosen = _select_fights(fights, name_filter=fight_name, fight_ids=fight_ids, difficulty=difficulty)
+    chosen = _apply_cooldown_fight_selection(chosen, fight_selection)
     _validate_selected_fight_encounter(plan, chosen)
     fight_id_list = [fight.id for fight in chosen]
 
@@ -1122,6 +1144,21 @@ def _normalize_tolerance_seconds(value: Any) -> float:
     return tolerance
 
 
+def _normalize_cooldown_fight_selection(value: Any) -> str:
+    normalized = str(value or COOLDOWN_FIGHT_SELECTION_ALL).strip().lower()
+    if normalized not in COOLDOWN_FIGHT_SELECTIONS:
+        raise ValueError(f"Unknown cooldown fight selection '{value}'.")
+    return normalized
+
+
+def _apply_cooldown_fight_selection(fights: Iterable[Any], fight_selection: str) -> List[Any]:
+    chosen = list(fights)
+    normalized = _normalize_cooldown_fight_selection(fight_selection)
+    if normalized == COOLDOWN_FIGHT_SELECTION_LAST and chosen:
+        return [max(chosen, key=lambda fight: (float(getattr(fight, "start", 0.0) or 0.0), int(fight.id)))]
+    return chosen
+
+
 def _validate_selected_fight_encounter(plan: CooldownReminderPlan, fights: Iterable[Any]) -> None:
     mismatches: List[Tuple[int, Optional[str], int]] = []
     saw_encounter_metadata = False
@@ -1420,6 +1457,9 @@ __all__ = [
     "COOLDOWN_STATUS_IGNORED_DEAD",
     "COOLDOWN_STATUS_IGNORED_MISSING_PHASE",
     "COOLDOWN_STATUS_IGNORED_NOT_IN_PULL",
+    "COOLDOWN_FIGHT_SELECTION_ALL",
+    "COOLDOWN_FIGHT_SELECTION_LAST",
+    "COOLDOWN_FIGHT_SELECTION_SPECIFIC",
     "CooldownReminderAssignment",
     "CooldownReminderHeader",
     "CooldownReminderPlan",
