@@ -53,6 +53,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
     JOB_V2_COOLDOWN_USAGE,
+    JOB_V2_MECHANIC_SCORECARD,
     JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE,
     JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS,
     JOB_V2_LIGHTBLINDED_VANGUARD_DISPELS,
@@ -160,6 +161,9 @@ from who_messed_up.services.view_models.sszorak_avoidable_damage import (
 from who_messed_up.services.view_models.sszorak_damage import build_sszorak_damage_report_page
 from who_messed_up.services.view_models.sszorak_deaths import build_sszorak_deaths_report_page
 from who_messed_up.services.view_models.sszorak_tempest import build_sszorak_tempest_report_page
+from who_messed_up.services.view_models.mechanic_scorecards import (
+    build_mechanic_scorecard_report_page,
+)
 from who_messed_up.services.view_models.the_twin_fangs_avoidable_damage import (
     build_the_twin_fangs_avoidable_damage_report_page,
 )
@@ -192,6 +196,7 @@ from who_messed_up.service import (
     MidnightFallsFuckupSummary,
     TwinFangsFuckupSummary,
     SszorakTempestSummary,
+    MechanicScorecardSummary,
     CooldownUsageSummary,
     CrownNullCoronaDispelSummary,
     CrownSilverHitSummary,
@@ -243,6 +248,7 @@ from who_messed_up.service import (
     fetch_sszorak_damage_summary,
     fetch_sszorak_death_summary,
     fetch_sszorak_tempest_summary,
+    fetch_mechanic_scorecard_summary,
     fetch_the_twin_fangs_avoidable_damage_summary,
     fetch_the_twin_fangs_damage_summary,
     fetch_the_twin_fangs_death_summary,
@@ -1689,6 +1695,25 @@ def _fetch_sszorak_tempest_summary_from_payload(payload: Dict[str, Any]) -> Sszo
     )
 
 
+def _fetch_mechanic_scorecard_summary_from_payload(
+    payload: Dict[str, Any],
+) -> MechanicScorecardSummary:
+    credentials = _client_credentials()
+    return fetch_mechanic_scorecard_summary(
+        report_code=payload["report"],
+        boss_id=payload["boss_id"],
+        fight_name=payload.get("fight"),
+        fight_ids=payload.get("fight_ids") or None,
+        fight_selection=payload.get("fight_selection") or "all",
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_the_twin_fangs_avoidable_damage_summary_from_payload(
     payload: Dict[str, Any],
 ) -> AvoidableDamageSummary:
@@ -2265,6 +2290,14 @@ def _execute_v2_sszorak_tempest_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     return page.dict(by_alias=True)
 
 
+def _execute_v2_mechanic_scorecard_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_mechanic_scorecard_summary_from_payload(payload)
+    page = build_mechanic_scorecard_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_the_twin_fangs_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_the_twin_fangs_avoidable_damage_summary_from_payload(payload)
     page = build_the_twin_fangs_avoidable_damage_report_page(summary)
@@ -2561,6 +2594,10 @@ job_manager.register_handler(JOB_V2_SSZORAK_AVOIDABLE_DAMAGE, _execute_v2_sszora
 job_manager.register_handler(JOB_V2_SSZORAK_DAMAGE, _execute_v2_sszorak_damage_job)
 job_manager.register_handler(JOB_V2_SSZORAK_DEATHS, _execute_v2_sszorak_deaths_job)
 job_manager.register_handler(JOB_V2_SSZORAK_TEMPEST, _execute_v2_sszorak_tempest_job)
+job_manager.register_handler(
+    JOB_V2_MECHANIC_SCORECARD,
+    _execute_v2_mechanic_scorecard_job,
+)
 job_manager.register_handler(
     JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE,
     _execute_v2_the_twin_fangs_avoidable_damage_job,

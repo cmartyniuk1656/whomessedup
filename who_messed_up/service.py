@@ -144,6 +144,14 @@ from .services.sszorak_tempest import (
     SszorakTempestSummary,
     fetch_sszorak_tempest_summary,
 )
+from .services.mechanic_scorecard_types import (
+    MechanicDefinition,
+    MechanicObservation,
+    MechanicScoreEntry,
+    MechanicScoreView,
+    MechanicScorecardSummary,
+)
+from .services.mechanic_scorecards import fetch_mechanic_scorecard_summary
 from .services.the_twin_fangs_avoidable_damage import fetch_the_twin_fangs_avoidable_damage_summary
 from .services.the_twin_fangs_damage import fetch_the_twin_fangs_damage_summary
 from .services.the_twin_fangs_deaths import fetch_the_twin_fangs_death_summary
@@ -301,6 +309,12 @@ __all__ = [
     "SszorakTempestEvent",
     "SszorakTempestSummary",
     "fetch_sszorak_tempest_summary",
+    "MechanicDefinition",
+    "MechanicObservation",
+    "MechanicScoreEntry",
+    "MechanicScoreView",
+    "MechanicScorecardSummary",
+    "fetch_mechanic_scorecard_summary",
     "fetch_the_twin_fangs_avoidable_damage_summary",
     "fetch_the_twin_fangs_damage_summary",
     "fetch_the_twin_fangs_death_summary",

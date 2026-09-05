@@ -28,6 +28,13 @@ from .cooldown_usage import (
     COOLDOWN_FIGHT_SELECTION_SPECIFIC,
     COOLDOWN_FIGHT_SELECTIONS,
 )
+from .mechanic_scorecards import (
+    FIGHT_SELECTION_ALL as SCORECARD_FIGHT_SELECTION_ALL,
+    FIGHT_SELECTION_LAST as SCORECARD_FIGHT_SELECTION_LAST,
+    FIGHT_SELECTION_SPECIFIC as SCORECARD_FIGHT_SELECTION_SPECIFIC,
+    FIGHT_SELECTIONS as SCORECARD_FIGHT_SELECTIONS,
+    SCORECARD_ENCOUNTERS,
+)
 from .dimensius_deaths import (
     OBLIVION_FILTER_DEFAULT,
     OBLIVION_FILTER_EXCLUDE_ALL,
@@ -378,6 +385,7 @@ JOB_V2_IMPERATOR_AVERZIAN_DAMAGE = "v2_report_imperator_averzian_damage"
 JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE = "v2_report_imperator_averzian_avoidable_damage"
 JOB_V2_IMPERATOR_AVERZIAN_DEATHS = "v2_report_imperator_averzian_deaths"
 JOB_V2_COOLDOWN_USAGE = "v2_report_cooldown_usage"
+JOB_V2_MECHANIC_SCORECARD = "v2_report_mechanic_scorecard"
 JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE = "v2_report_lightblinded_vanguard_avoidable_damage"
 JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS = JOB_V2_COOLDOWN_USAGE
 JOB_V2_LIGHTBLINDED_VANGUARD_DEATHS = "v2_report_lightblinded_vanguard_deaths"
@@ -1349,6 +1357,60 @@ def _make_cooldown_usage_payload_builder(
             fight_name=fight_name,
             expected_encounter_id=expected_encounter_id,
         )
+
+    return build
+
+
+def _make_mechanic_scorecard_payload_builder(
+    *,
+    boss_id: str,
+    fight_name: str,
+) -> ReportPayloadBuilder:
+    def build(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+        report_references = _coerce_multi_text(values, "report_codes")
+        report_codes = _coerce_report_code_list(values)
+        fight_selection = str(
+            _coerce_text(
+                values,
+                "fight_selection",
+                default=SCORECARD_FIGHT_SELECTION_ALL,
+            )
+            or SCORECARD_FIGHT_SELECTION_ALL
+        ).strip().lower()
+        if fight_selection not in SCORECARD_FIGHT_SELECTIONS:
+            raise ValueError(
+                "Choose all encounters, the last encounter, or a specific fight."
+            )
+        fight_id = _coerce_positive_int(values, "fight_id")
+        extra_reports = report_codes[1:]
+        if fight_selection == SCORECARD_FIGHT_SELECTION_SPECIFIC:
+            if fight_id is None and report_references:
+                fight_id = _extract_report_fight_id(report_references[0])
+            if fight_id is None:
+                raise ValueError(
+                    "Enter a fight ID or use a Warcraft Logs URL containing '?fight=<id>'."
+                )
+            if extra_reports:
+                raise ValueError(
+                    "Specific-fight analysis supports one Warcraft Logs report at a time."
+                )
+        payload: Dict[str, Any] = {
+            "report": report_codes[0],
+            "boss_id": boss_id,
+            "fight": fight_name,
+            "difficulty": ReportDifficulty.HEROIC.value,
+            "fight_selection": fight_selection,
+            "fight_ids": (
+                [fight_id]
+                if fight_selection == SCORECARD_FIGHT_SELECTION_SPECIFIC
+                else None
+            ),
+            "extra_reports": extra_reports,
+            "ignore_after_deaths": _coerce_positive_int(
+                values, "ignore_after_deaths"
+            ),
+        }
+        return payload, _coerce_bool(values, "fresh_run", default=False)
 
     return build
 
@@ -2756,6 +2818,89 @@ def _build_cooldown_usage_definition(
     )
 
 
+def _build_mechanic_scorecard_definition(
+    *,
+    boss_id: str,
+    fight_name: str,
+) -> RegisteredReport:
+    report_id = f"{boss_id}-mechanics-scorecard"
+    return RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=report_id,
+            title="Mechanics Scorecard",
+            description=(
+                "Score clean mechanic executions, mistakes, and positive "
+                "contributions using encounter-specific combat-log evidence."
+            ),
+            fightId=boss_id,
+            fightName=fight_name,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=fight_name,
+            footnotes=[
+                "Only directly observed or defensibly correlated outcomes are scored.",
+                "Position- and assignment-dependent actions are contribution-only when the combat log cannot prove success.",
+            ],
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    RequestFieldModel(
+                        id="fight_selection",
+                        kind=RequestFieldKind.SELECT,
+                        label="Encounters to analyze",
+                        description=(
+                            "Aggregate every matching encounter or inspect one pull."
+                        ),
+                        defaultValue=SCORECARD_FIGHT_SELECTION_ALL,
+                        options=[
+                            RequestFieldOptionModel(
+                                value=SCORECARD_FIGHT_SELECTION_ALL,
+                                label="All matching encounters",
+                            ),
+                            RequestFieldOptionModel(
+                                value=SCORECARD_FIGHT_SELECTION_LAST,
+                                label="Last matching encounter",
+                            ),
+                            RequestFieldOptionModel(
+                                value=SCORECARD_FIGHT_SELECTION_SPECIFIC,
+                                label="Specific fight",
+                            ),
+                        ],
+                    ),
+                    RequestFieldModel(
+                        id="fight_id",
+                        kind=RequestFieldKind.NUMBER,
+                        label="Specific fight ID",
+                        description=(
+                            "Used only for specific-fight analysis. Leave blank when the first "
+                            "Warcraft Logs URL contains '?fight=<id>'."
+                        ),
+                        placeholder="For example: 30",
+                        defaultValue="",
+                        minValue=1,
+                        step=1,
+                        visibleWhen={
+                            "fieldId": "fight_selection",
+                            "equals": SCORECARD_FIGHT_SELECTION_SPECIFIC,
+                        },
+                    ),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_MECHANIC_SCORECARD,
+        build_payload=_make_mechanic_scorecard_payload_builder(
+            boss_id=boss_id,
+            fight_name=fight_name,
+        ),
+    )
+
+
 for _fight_id, _fight_name, _difficulty in COOLDOWN_USAGE_FIGHTS:
     _report_id = f"{_fight_id}-cooldowns"
     if _report_id in _REPORTS:
@@ -2766,6 +2911,14 @@ for _fight_id, _fight_name, _difficulty in COOLDOWN_USAGE_FIGHTS:
         fight_name=_fight_name,
         difficulty=_difficulty,
         expected_encounter_id=COOLDOWN_USAGE_ENCOUNTER_IDS.get(_fight_id),
+    )
+
+
+for _boss_id, _scorecard_encounter in SCORECARD_ENCOUNTERS.items():
+    _scorecard_report_id = f"{_boss_id}-mechanics-scorecard"
+    _REPORTS[_scorecard_report_id] = _build_mechanic_scorecard_definition(
+        boss_id=_boss_id,
+        fight_name=_scorecard_encounter["fight_name"],
     )
 
 
@@ -2796,6 +2949,7 @@ __all__ = [
     "JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS",
     "JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES",
     "JOB_V2_COOLDOWN_USAGE",
+    "JOB_V2_MECHANIC_SCORECARD",
     "JOB_V2_DIMENSIUS_ADD_DAMAGE",
     "JOB_V2_DIMENSIUS_DEATHS",
     "JOB_V2_DIMENSIUS_PRIORITY_DAMAGE",

@@ -18,6 +18,7 @@ class TheLostExplorersReportRegistryTests(unittest.TestCase):
             "the-lost-explorers-avoidable-damage",
             "the-lost-explorers-damage",
             "the-lost-explorers-cooldowns",
+            "the-lost-explorers-mechanics-scorecard",
         }
         definitions = {
             definition.id: definition
