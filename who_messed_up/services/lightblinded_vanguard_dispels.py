@@ -13,11 +13,12 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 
-from ..api import fetch_events, fetch_fights, fetch_player_details
+from ..api import fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -205,13 +206,18 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     eligible_players: Set[str] = set()
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = {
+                name for name in set(_players_from_details(details)) if name and name in known_players
+            }
+        else:
+            participants, fight_roles, _ = roster
+            participants = {name for name in participants if name and name in known_players}
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        participants = {
-            name for name in set(_players_from_details(details)) if name and name in known_players
-        }
         participants_by_fight[fight.id] = participants
         for player in participants:
             eligible_players.add(player)
@@ -242,6 +248,36 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
         actor_names=actor_names,
         known_players=known_players,
     )
+    applications_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Debuffs",
+        fights=chosen,
+        ability_id=AVENGERS_SHIELD_DEBUFF_ID,
+        actor_names=actor_names,
+    )
+    dispels_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Dispels",
+        fights=chosen,
+        actor_names=actor_names,
+    )
+    cast_ability_ids = {ability.game_id for ability in DISPEL_CAST_ABILITIES}
+    casts_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Casts",
+        fights=chosen,
+        extra_filter=" or ".join(
+            f"(ability.id = {ability_id} or abilityGameID = {ability_id})"
+            for ability_id in sorted(cast_ability_ids)
+        ),
+        actor_names=actor_names,
+    )
 
     set_counts_by_player: DefaultDict[str, int] = defaultdict(int)
     total_sets = 0
@@ -254,12 +290,8 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
 
     for fight in chosen:
         apply_events = _collect_avengers_shield_applications(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
-            actor_names=actor_names,
             known_players=known_players,
+            events=applications_by_fight.get(fight.id, ()),
         )
         target_applications: DefaultDict[str, List[Tuple[float, bool]]] = defaultdict(list)
         for group in _group_events_by_timestamp(apply_events, window_ms=APPLICATION_SET_WINDOW_MS):
@@ -293,30 +325,23 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
     dispel_cast_counts: DefaultDict[str, int] = defaultdict(int)
     cast_breakdowns: Dict[str, DefaultDict[str, int]] = defaultdict(lambda: defaultdict(int))
     for fight in chosen:
-        for ability in DISPEL_CAST_ABILITIES:
-            seen_casts: Set[Tuple[object, ...]] = set()
-            for event in fetch_events(
-                session,
-                bearer,
-                code=report_code,
-                data_type="Casts",
-                start=fight.start,
-                end=fight.end,
-                limit=5000,
-                ability_id=ability.game_id,
-                actor_names=actor_names,
-            ):
-                if (event.get("type") or "").lower() != "cast":
-                    continue
-                source_name = _source_name_from_event(event)
-                if not source_name or source_name not in known_players:
-                    continue
-                key = _event_identity(event)
-                if key in seen_casts:
-                    continue
-                seen_casts.add(key)
-                dispel_cast_counts[source_name] += 1
-                cast_breakdowns[source_name][ability.name] += 1
+        seen_casts: Set[Tuple[object, ...]] = set()
+        abilities_by_id = {ability.game_id: ability for ability in DISPEL_CAST_ABILITIES}
+        for event in casts_by_fight.get(fight.id, ()):
+            ability = abilities_by_id.get(_ability_id_from_event(event))
+            if ability is None:
+                continue
+            if (event.get("type") or "").lower() != "cast":
+                continue
+            source_name = _source_name_from_event(event)
+            if not source_name or source_name not in known_players:
+                continue
+            key = _event_identity(event)
+            if key in seen_casts:
+                continue
+            seen_casts.add(key)
+            dispel_cast_counts[source_name] += 1
+            cast_breakdowns[source_name][ability.name] += 1
 
     successful_dispels: DefaultDict[str, int] = defaultdict(int)
     set_successful_dispels: DefaultDict[str, int] = defaultdict(int)
@@ -328,12 +353,8 @@ def _fetch_single_lightblinded_vanguard_dispel_summary(
 
     for fight in chosen:
         raw_dispels = _collect_avengers_shield_dispels(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
-            actor_names=actor_names,
             known_players=known_players,
+            events=dispels_by_fight.get(fight.id, ()),
         )
         multi_dispel_keys = _multi_dispel_keys(raw_dispels)
         for event in raw_dispels:
@@ -603,55 +624,28 @@ def _merge_lightblinded_vanguard_dispel_summaries(
 
 
 def _collect_avengers_shield_applications(
-    session: requests.Session,
-    bearer: str,
     *,
-    report_code: str,
-    fight,
-    actor_names: Dict[int, str],
     known_players: Set[str],
+    events: Iterable[Dict[str, object]],
 ) -> List[Dict[str, object]]:
-    events: List[Dict[str, object]] = []
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Debuffs",
-        start=fight.start,
-        end=fight.end,
-        limit=5000,
-        ability_id=AVENGERS_SHIELD_DEBUFF_ID,
-        actor_names=actor_names,
-    ):
+    filtered: List[Dict[str, object]] = []
+    for event in events:
         if (event.get("type") or "").lower() != "applydebuff":
             continue
         target_name = _target_name_from_event(event)
         if not target_name or target_name not in known_players:
             continue
-        events.append(event)
-    return sorted(events, key=_event_timestamp)
+        filtered.append(event)
+    return sorted(filtered, key=_event_timestamp)
 
 
 def _collect_avengers_shield_dispels(
-    session: requests.Session,
-    bearer: str,
     *,
-    report_code: str,
-    fight,
-    actor_names: Dict[int, str],
     known_players: Set[str],
+    events: Iterable[Dict[str, object]],
 ) -> List[Dict[str, object]]:
-    events: List[Dict[str, object]] = []
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Dispels",
-        start=fight.start,
-        end=fight.end,
-        limit=5000,
-        actor_names=actor_names,
-    ):
+    filtered: List[Dict[str, object]] = []
+    for event in events:
         if (event.get("type") or "").lower() != "dispel":
             continue
         if _extra_ability_id_from_event(event) != AVENGERS_SHIELD_DEBUFF_ID:
@@ -659,8 +653,8 @@ def _collect_avengers_shield_dispels(
         source_name = _source_name_from_event(event)
         if not source_name or source_name not in known_players:
             continue
-        events.append(event)
-    return sorted(events, key=_event_timestamp)
+        filtered.append(event)
+    return sorted(filtered, key=_event_timestamp)
 
 
 def _collect_death_timestamps_by_fight(
@@ -672,19 +666,20 @@ def _collect_death_timestamps_by_fight(
     actor_names: Dict[int, str],
     known_players: Set[str],
 ) -> Dict[int, Dict[str, List[float]]]:
+    selected_fights = list(fights)
+    raw_deaths_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Deaths",
+        fights=selected_fights,
+        limit=1000,
+        actor_names=actor_names,
+    )
     deaths_by_fight: Dict[int, Dict[str, List[float]]] = {}
-    for fight in fights:
+    for fight in selected_fights:
         player_deaths: DefaultDict[str, List[float]] = defaultdict(list)
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="Deaths",
-            start=fight.start,
-            end=fight.end,
-            limit=1000,
-            actor_names=actor_names,
-        ):
+        for event in raw_deaths_by_fight.get(fight.id, ()):
             if (event.get("type") or "").lower() not in {"death", "instakill"}:
                 continue
             target_name = _target_name_from_event(event)

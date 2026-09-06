@@ -1,12 +1,12 @@
 """
-Heroic Nek'zali the Soulcoiler avoidable-damage summary wrapper.
+Mythic Nek'zali the Soulcoiler avoidable-damage summary wrapper.
 """
 from __future__ import annotations
 
 from typing import Iterable, Optional
 
 from .avoidable_damage import AvoidableDamageSummary, fetch_avoidable_damage_summary
-from .boss_manifests import NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST
+from .boss_manifests import NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST
 
 REPORT_DEFAULT_FIGHT = "Nek'zali the Soulcoiler"
 
@@ -26,7 +26,7 @@ def fetch_nek_zali_the_soulcoiler_avoidable_damage_summary(
 ) -> AvoidableDamageSummary:
     return fetch_avoidable_damage_summary(
         report_code=report_code,
-        boss_manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        boss_manifest=NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
         fight_name=fight_name or REPORT_DEFAULT_FIGHT,
         fight_ids=fight_ids,
         difficulty=difficulty,

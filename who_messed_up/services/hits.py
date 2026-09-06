@@ -14,6 +14,7 @@ from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _resolve_token,
     _select_fights,
@@ -114,8 +115,12 @@ def fetch_hit_summary(
     player_roles, player_specs = _infer_player_roles(player_details)
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
-        fight_details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(fight_details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            fight_details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(fight_details)
+        else:
+            _, fight_roles, _ = roster
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
     death_cutoffs_by_fight: Dict[int, float] = {}

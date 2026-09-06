@@ -7,11 +7,12 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Set
 
 import requests
 
-from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
+from ..api import Fight, fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -245,12 +246,17 @@ def _fetch_single_summary(
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     participants_by_fight: Dict[int, Set[str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = {name for name in _players_from_details(details) if name in known_players}
+        else:
+            participants, fight_roles, _ = roster
+            participants = {name for name in participants if name in known_players}
         for player, role in fight_roles.items():
             if player_roles.get(player) in (None, ROLE_UNKNOWN):
                 player_roles[player] = role or ROLE_UNKNOWN
-        participants = {name for name in _players_from_details(details) if name in known_players}
         participants_by_fight[fight.id] = participants
         for player in participants:
             pulls_by_player[player] += 1
@@ -271,21 +277,51 @@ def _fetch_single_summary(
     }
     pull_index_by_fight = {fight.id: index + 1 for index, fight in enumerate(chosen)}
     events_by_player: DefaultDict[str, List[TwinFangsFuckupEvent]] = defaultdict(list)
+    damage_events_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="DamageTaken",
+        fights=chosen,
+        extra_filter=" or ".join(
+            f"(ability.id = {ability_id} or abilityGameID = {ability_id})"
+            for ability_id in sorted(RELEVANT_CAUSE_IDS)
+        ),
+        actor_names=actor_names,
+    )
+    applications_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Debuffs",
+        fights=chosen,
+        ability_id=ETERNAL_VENOM_AURA_ID,
+        actor_names=actor_names,
+    )
+    spit_casts_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="All",
+        fights=chosen,
+        ability_id=CORROSIVE_SPIT_CAST_ID,
+        actor_names=actor_names,
+    )
 
     for fight in chosen:
         cutoff = death_cutoffs.get(fight.id)
         event_end = min(float(fight.end), cutoff) if cutoff is not None else float(fight.end)
         participants = participants_by_fight.get(fight.id, set())
         events = _collect_fight_events(
-            session=session,
-            bearer=bearer,
             report_code=report_code,
             fight=fight,
             event_end=event_end,
-            actor_names=actor_names,
             known_players=known_players,
             participants=participants,
             pull_index=pull_index_by_fight[fight.id],
+            raw_damage_events=damage_events_by_fight.get(fight.id, ()),
+            raw_applications=applications_by_fight.get(fight.id, ()),
+            raw_spit_casts=spit_casts_by_fight.get(fight.id, ()),
         )
         for event in events:
             events_by_player[event.player].append(event)
@@ -324,59 +360,33 @@ def _fetch_single_summary(
 
 def _collect_fight_events(
     *,
-    session: requests.Session,
-    bearer: str,
     report_code: str,
     fight: Fight,
     event_end: float,
-    actor_names: Dict[int, str],
     known_players: Set[str],
     participants: Set[str],
     pull_index: int,
+    raw_damage_events: Iterable[dict],
+    raw_applications: Iterable[dict],
+    raw_spit_casts: Iterable[dict],
 ) -> List[TwinFangsFuckupEvent]:
     damage_events = [
         event
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="DamageTaken",
-            start=fight.start,
-            end=event_end,
-            limit=5000,
-            actor_names=actor_names,
-        )
-        if _ability_id(event) in RELEVANT_CAUSE_IDS and _event_timestamp(event) is not None
+        for event in raw_damage_events
+        if _ability_id(event) in RELEVANT_CAUSE_IDS
+        and (_event_timestamp(event) is not None and _event_timestamp(event) <= event_end)
     ]
     applications = [
         event
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="Debuffs",
-            start=fight.start,
-            end=event_end,
-            limit=5000,
-            ability_id=ETERNAL_VENOM_AURA_ID,
-            actor_names=actor_names,
-        )
+        for event in raw_applications
         if str(event.get("type") or "").lower() in {"applydebuff", "applydebuffstack"}
+        and (_event_timestamp(event) is not None and _event_timestamp(event) <= event_end)
     ]
     spit_casts = [
         event
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="All",
-            start=fight.start,
-            end=event_end,
-            limit=5000,
-            ability_id=CORROSIVE_SPIT_CAST_ID,
-            actor_names=actor_names,
-        )
-        if str(event.get("type") or "").lower() == "cast" and _event_timestamp(event) is not None
+        for event in raw_spit_casts
+        if str(event.get("type") or "").lower() == "cast"
+        and (_event_timestamp(event) is not None and _event_timestamp(event) <= event_end)
     ]
     damage_by_player: DefaultDict[str, List[dict]] = defaultdict(list)
     for event in damage_events:

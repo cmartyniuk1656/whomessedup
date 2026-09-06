@@ -1171,7 +1171,11 @@ const formatSeconds = (value) => {
   if (!Number.isFinite(value)) {
     return "?";
   }
-  return `${(value / 1000).toFixed(2)}s`;
+  const roundedSeconds = Math.round((Math.abs(value) / 1000) * 100) / 100;
+  const minutes = Math.floor(roundedSeconds / 60);
+  const seconds = (roundedSeconds - minutes * 60).toFixed(2).padStart(5, "0");
+  const sign = value < 0 && roundedSeconds > 0 ? "-" : "";
+  return `${sign}${minutes}:${seconds}`;
 };
 
 const formatDuration = (value) => {

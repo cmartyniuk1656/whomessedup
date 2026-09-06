@@ -9,12 +9,15 @@ from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple,
 
 import requests
 
-from ..api import REPORT_OVERVIEW_QUERY, fetch_events, fetch_fights, fetch_player_details, gql
+from ..api import REPORT_OVERVIEW_QUERY, fetch_events, fetch_fights, fetch_player_details, fetch_table, gql
 from ..env import load_env
 from .ability_event_filters import (
     collect_avoidable_active_exclusion_windows,
-    collect_avoidable_exclusion_events,
     collect_avoidable_requirement_windows,
+    collect_avoidable_active_exclusion_windows_by_fight,
+    collect_avoidable_exclusion_events,
+    collect_avoidable_exclusion_events_by_fight,
+    collect_avoidable_requirement_windows_by_fight,
     is_avoidable_event_excluded,
     is_avoidable_event_requirement_met,
 )
@@ -22,6 +25,7 @@ from .boss_manifest_types import BossAbilityMetadata, BossManifest, is_avoidable
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -30,10 +34,10 @@ from .common import (
     compute_fight_duration_ms,
 )
 from .consumables import (
-    DEATH_REPORT_HEALING_CONSUMABLES,
     HealingConsumableStatus,
     build_healing_consumable_statuses,
     collect_healing_consumable_uses,
+    healing_consumable_ability_names,
 )
 
 BATTLE_RESURRECTION_SPELL_IDS = {
@@ -211,11 +215,16 @@ def _fetch_single_death_report_summary(
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     participants_by_fight: Dict[int, List[str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = _players_from_details(details)
+        else:
+            roster_participants, fight_roles, _ = roster
+            participants = sorted(roster_participants)
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        participants = _players_from_details(details)
         participants_by_fight[fight.id] = participants
         for name in set(participants):
             pulls_by_player[name] += 1
@@ -227,7 +236,6 @@ def _fetch_single_death_report_summary(
         else None
     )
     pull_index_by_fight: Dict[int, int] = {fight.id: idx + 1 for idx, fight in enumerate(chosen)}
-    ability_labels = _fetch_ability_labels(session, bearer, report_code)
     events_by_player: DefaultDict[str, List[DeathReportEvent]] = defaultdict(list)
     death_counts: DefaultDict[str, int] = defaultdict(int)
     consumable_usage_by_fight = collect_healing_consumable_uses(
@@ -235,37 +243,73 @@ def _fetch_single_death_report_summary(
         bearer,
         fights=chosen,
         report_code=report_code,
-        ability_names=[consumable.ability_name for consumable in DEATH_REPORT_HEALING_CONSUMABLES],
+        ability_names=healing_consumable_ability_names(),
         actor_names=actor_names,
+    )
+    death_table = fetch_table(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Deaths",
+        fight_ids=fight_id_list,
+        start=min(float(fight.start) for fight in chosen),
+        end=max(float(fight.end) for fight in chosen),
+    )
+    death_entries_by_fight: DefaultDict[int, List[Dict[str, Any]]] = defaultdict(list)
+    ability_labels: Dict[int, str] = {}
+    for entry in death_table.get("entries") or []:
+        try:
+            entry_fight_id = int(entry.get("fight"))
+        except (TypeError, ValueError):
+            continue
+        death_entries_by_fight[entry_fight_id].append(entry)
+        _update_ability_labels_from_death_entry(ability_labels, entry)
+    resurrection_casts_by_fight = _fetch_resurrection_casts_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+    )
+    manifest_abilities = boss_manifest.abilities if boss_manifest else ()
+    avoidable_exclusions_by_fight = collect_avoidable_exclusion_events_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+        abilities=manifest_abilities,
+    )
+    avoidable_active_exclusions_by_fight = collect_avoidable_active_exclusion_windows_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+        abilities=manifest_abilities,
+    )
+    avoidable_requirements_by_fight = collect_avoidable_requirement_windows_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+        abilities=manifest_abilities,
     )
 
     for fight in chosen:
         pull_duration = compute_fight_duration_ms(fight)
         fight_consumables = consumable_usage_by_fight.get(fight.id, {})
         fight_roles = roles_by_fight.get(fight.id, player_roles)
-        recent_damage_hits = collect_recent_damage_hits(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
-            actor_names=actor_names,
-            ability_labels=ability_labels,
-            boss_manifest=boss_manifest,
-            player_roles=fight_roles,
-        )
+        avoidable_exclusions = avoidable_exclusions_by_fight.get(fight.id, {})
+        avoidable_active_exclusions = avoidable_active_exclusions_by_fight.get(fight.id, {})
+        avoidable_requirements = avoidable_requirements_by_fight.get(fight.id, {})
         counted_deaths = 0
-        death_events = sorted(
-            fetch_events(
-                session,
-                bearer,
-                code=report_code,
-                data_type="Deaths",
-                start=fight.start,
-                end=fight.end,
-                actor_names=actor_names,
-            ),
-            key=_event_timestamp,
+        fight_death_entries = sorted(
+            death_entries_by_fight.get(fight.id, []),
+            key=lambda entry: _coerce_float(entry.get("timestamp")) or 0.0,
         )
+        death_events = [_death_event_from_table_entry(entry) for entry in fight_death_entries]
         healer_life_events = collect_healer_life_events(
             session,
             bearer,
@@ -275,10 +319,11 @@ def _fetch_single_death_report_summary(
             actor_names=actor_names,
             fight_roles=fight_roles,
             player_roles=player_roles,
+            resurrection_cast_events=resurrection_casts_by_fight.get(fight.id, []),
         )
         dead_healers: Set[str] = set()
         healer_life_index = 0
-        for event in death_events:
+        for entry, event in zip(fight_death_entries, death_events):
             event_type = str(event.get("type") or "").lower()
             if event_type not in {"death", "instakill"}:
                 continue
@@ -308,16 +353,16 @@ def _fetch_single_death_report_summary(
             ability_id, ability_label = resolve_killing_ability(event, ability_labels)
             killing_damage = resolve_killing_damage(event)
             offset_ms = ts_val - float(fight.start)
-            recent_hits = recent_hits_for_death(
-                recent_damage_hits.get(target_name, []),
-                death_timestamp=ts_val,
-                death_offset_ms=offset_ms,
-                ability_id=ability_id,
-                ability_label=ability_label,
-                damage_amount=killing_damage,
-                source_report_code=report_code,
+            recent_hits = _recent_hits_from_death_table_entry(
+                entry,
+                report_code=report_code,
+                fight=fight,
+                ability_labels=ability_labels,
                 boss_manifest=boss_manifest,
                 player_role=target_role,
+                avoidable_exclusions=avoidable_exclusions,
+                avoidable_active_exclusions=avoidable_active_exclusions,
+                avoidable_requirements=avoidable_requirements,
             )
             death_event = DeathReportEvent(
                 source_report_code=report_code,
@@ -535,6 +580,7 @@ def collect_healer_life_events(
     actor_names: Dict[int, str],
     fight_roles: Dict[str, str],
     player_roles: Dict[str, str],
+    resurrection_cast_events: Optional[Iterable[Dict[str, Any]]] = None,
 ) -> List[HealerLifeEvent]:
     life_events: List[HealerLifeEvent] = []
     for event in death_events:
@@ -562,6 +608,7 @@ def collect_healer_life_events(
             actor_names=actor_names,
             fight_roles=fight_roles,
             player_roles=player_roles,
+            events=resurrection_cast_events,
         )
     )
     return sorted(life_events, key=lambda item: (item.timestamp, 0 if item.event_type == "death" else 1))
@@ -576,20 +623,23 @@ def collect_healer_resurrection_cast_events(
     actor_names: Dict[int, str],
     fight_roles: Dict[str, str],
     player_roles: Dict[str, str],
+    events: Optional[Iterable[Dict[str, Any]]] = None,
 ) -> List[HealerLifeEvent]:
     life_events: List[HealerLifeEvent] = []
-    filter_expr = _build_spell_filter(BATTLE_RESURRECTION_SPELL_IDS)
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Casts",
-        start=fight.start,
-        end=fight.end,
-        limit=1000,
-        extra_filter=filter_expr,
-        actor_names=actor_names,
-    ):
+    if events is None:
+        events = fetch_events(
+            session,
+            bearer,
+            code=report_code,
+            data_type="Casts",
+            start=fight.start,
+            end=fight.end,
+            limit=1000,
+            extra_filter=_build_spell_filter(BATTLE_RESURRECTION_SPELL_IDS),
+            use_actor_ids=True,
+            actor_names=actor_names,
+        )
+    for event in events:
         target_name = _target_name_from_event(event)
         if not target_name or _role_for_player(target_name, fight_roles, player_roles) != "Healer":
             continue
@@ -601,6 +651,39 @@ def collect_healer_resurrection_cast_events(
             )
         )
     return life_events
+
+
+def _fetch_resurrection_casts_by_fight(
+    session: requests.Session,
+    bearer: str,
+    *,
+    report_code: str,
+    fights: Iterable,
+    actor_names: Dict[int, str],
+) -> Dict[int, List[Dict[str, Any]]]:
+    selected_fights = list(fights)
+    events_by_fight: DefaultDict[int, List[Dict[str, Any]]] = defaultdict(list)
+    if not selected_fights:
+        return events_by_fight
+    for event in fetch_events(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Casts",
+        start=min(float(fight.start) for fight in selected_fights),
+        end=max(float(fight.end) for fight in selected_fights),
+        fight_ids=[fight.id for fight in selected_fights],
+        limit=1000,
+        extra_filter=_build_spell_filter(BATTLE_RESURRECTION_SPELL_IDS),
+        use_actor_ids=True,
+        actor_names=actor_names,
+    ):
+        try:
+            fight_id = int(event.get("fight"))
+        except (TypeError, ValueError):
+            continue
+        events_by_fight[fight_id].append(event)
+    return events_by_fight
 
 
 def apply_healer_life_events_before(
@@ -780,6 +863,145 @@ def collect_recent_damage_hits(
     return hits_by_player
 
 
+def _update_ability_labels_from_death_entry(
+    ability_labels: Dict[int, str], entry: Dict[str, Any]
+) -> None:
+    candidates = [entry.get("killingBlow")]
+    candidates.extend(entry.get("events") or [])
+    for candidate in candidates:
+        ability = candidate.get("ability") if isinstance(candidate, dict) else None
+        if not isinstance(ability, dict) and isinstance(candidate, dict):
+            ability = candidate
+        if not isinstance(ability, dict):
+            continue
+        ability_id = _normalize_ability_id(
+            ability.get("guid") or ability.get("gameID") or ability.get("id")
+        )
+        name = ability.get("name")
+        if ability_id is not None and name:
+            ability_labels.setdefault(ability_id, str(name))
+
+
+def _death_event_from_table_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+    killing_blow = entry.get("killingBlow")
+    killing_ability_id = None
+    killing_ability_name = None
+    if isinstance(killing_blow, dict):
+        killing_ability_id = _normalize_ability_id(
+            killing_blow.get("guid") or killing_blow.get("gameID") or killing_blow.get("id")
+        )
+        killing_ability_name = killing_blow.get("name")
+    return {
+        "type": "death",
+        "timestamp": entry.get("timestamp"),
+        "fight": entry.get("fight"),
+        "targetID": entry.get("id"),
+        "targetName": entry.get("name"),
+        "killingAbilityGameID": killing_ability_id,
+        "killingAbility": {
+            "id": killing_ability_id,
+            "name": killing_ability_name,
+        },
+    }
+
+
+def _recent_hits_from_death_table_entry(
+    entry: Dict[str, Any],
+    *,
+    report_code: str,
+    fight,
+    ability_labels: Dict[int, str],
+    boss_manifest: Optional[BossManifest],
+    player_role: Optional[str],
+    avoidable_exclusions,
+    avoidable_active_exclusions,
+    avoidable_requirements,
+) -> List[DeathReportDamageHit]:
+    target_name = str(entry.get("name") or "")
+    hits: List[DeathReportDamageHit] = []
+    for event in sorted(entry.get("events") or [], key=_event_timestamp):
+        if str(event.get("type") or "").lower() != "damage":
+            continue
+        timestamp = _event_timestamp(event)
+        ability = event.get("ability")
+        ability_id = _normalize_ability_id(event.get("abilityGameID"))
+        ability_name = None
+        if isinstance(ability, dict):
+            if ability_id is None:
+                ability_id = _normalize_ability_id(
+                    ability.get("guid") or ability.get("gameID") or ability.get("id")
+                )
+            ability_name = ability.get("name")
+        if ability_name is None and ability_id is not None:
+            ability_name = ability_labels.get(ability_id)
+        if ability_id is not None and ability_name:
+            ability_labels.setdefault(ability_id, str(ability_name))
+        metadata = _ability_metadata(
+            ability_id=ability_id,
+            ability_label=str(ability_name) if ability_name else None,
+            boss_manifest=boss_manifest,
+        )
+        is_requirement_met = is_avoidable_event_requirement_met(
+            metadata,
+            event,
+            target_name,
+            avoidable_requirements,
+        )
+        is_excluded = is_avoidable_event_excluded(
+            metadata,
+            event,
+            target_name,
+            avoidable_exclusions,
+            avoidable_active_exclusions,
+        )
+        is_avoidable = (
+            is_requirement_met
+            and not is_excluded
+            and is_avoidable_for_role(metadata, player_role)
+        )
+        ability_tags = tuple(metadata.tags) if metadata else ()
+        if is_excluded or not is_requirement_met:
+            ability_tags = tuple(
+                tag for tag in ability_tags if tag.strip().lower() != "avoidable"
+            )
+        damage_amount = resolve_damage_amount(event)
+        max_hit_points = resolve_max_hit_points(event)
+        hits.append(
+            DeathReportDamageHit(
+                source_report_code=report_code,
+                timestamp=timestamp,
+                offset_ms=timestamp - float(fight.start),
+                ability_id=ability_id,
+                ability_label=str(ability_name) if ability_name else None,
+                damage_amount=damage_amount,
+                max_hit_points=max_hit_points,
+                hit_points_percent=(
+                    damage_amount / max_hit_points * 100.0
+                    if damage_amount is not None and max_hit_points
+                    else None
+                ),
+                ability_description=metadata.description if metadata else None,
+                ability_url=metadata.url if metadata else None,
+                ability_tags=ability_tags,
+                is_avoidable=is_avoidable,
+            )
+        )
+    death_event = _death_event_from_table_entry(entry)
+    ability_id, ability_label = resolve_killing_ability(death_event, ability_labels)
+    death_timestamp = _event_timestamp(death_event)
+    return recent_hits_for_death(
+        hits,
+        death_timestamp=death_timestamp,
+        death_offset_ms=death_timestamp - float(fight.start),
+        ability_id=ability_id,
+        ability_label=ability_label,
+        damage_amount=None,
+        source_report_code=report_code,
+        boss_manifest=boss_manifest,
+        player_role=player_role,
+    )
+
+
 def recent_hits_for_death(
     player_hits: List[DeathReportDamageHit],
     *,
@@ -880,6 +1102,10 @@ def _is_avoidable_metadata(ability_metadata: Optional[BossAbilityMetadata]) -> b
 
 
 def resolve_max_hit_points(event: Dict[str, object]) -> Optional[float]:
+    for field in ("maxHitPoints", "maxHitpoints", "maxHP", "maxHp"):
+        value = _coerce_float(event.get(field))
+        if value and value > 0:
+            return value
     for resources in (
         event.get("targetResources"),
         event.get("resources"),
@@ -899,18 +1125,24 @@ def _find_killing_hit_index(
     *,
     ability_id: Optional[int],
     damage_amount: Optional[float],
-) -> int:
-    fallback_index = len(hits) - 1
+) -> Optional[int]:
+    # A death recap is context, not proof that its final damage row caused the
+    # death. Environmental deaths and other unattributed events often have no
+    # killing-blow metadata at all.
+    if ability_id is None and damage_amount is None:
+        return None
     for index in range(len(hits) - 1, -1, -1):
         hit = hits[index]
         if ability_id is not None and hit.ability_id != ability_id:
             continue
-        if damage_amount is not None and hit.damage_amount is not None:
+        if damage_amount is not None:
+            if hit.damage_amount is None:
+                continue
             tolerance = max(abs(damage_amount) * 0.01, 1.0)
             if abs(hit.damage_amount - damage_amount) > tolerance:
                 continue
         return index
-    return fallback_index
+    return None
 
 
 def _coerce_float(value: object) -> Optional[float]:

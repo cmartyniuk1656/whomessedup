@@ -80,7 +80,7 @@ def _detail_description(event: DeathReportEvent) -> Optional[str]:
     damage = _format_damage_amount(event.damage_amount)
     if damage:
         parts.append(f"for {damage}")
-    return " ".join(parts) if parts else None
+    return " ".join(parts) if parts else "No killing blow was reported by Warcraft Logs."
 
 
 def _hit_description(hit) -> Optional[str]:

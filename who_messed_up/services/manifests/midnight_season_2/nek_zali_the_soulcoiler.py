@@ -1,8 +1,9 @@
-"""
-Heroic Nek'zali the Soulcoiler ability and target metadata for Midnight Season 2.
+"""Nek'zali the Soulcoiler manifests for Midnight Season 2.
 
-Observed from Warcraft Logs report ZARtb8Dxjhg9H4BF, fight 3 (encounter 3470),
-then cross-checked against the Wowhead encounter journal and Method's Heroic guide.
+The Heroic manifest was observed from Warcraft Logs report ZARtb8Dxjhg9H4BF,
+fight 3. The Mythic additions were observed from report WwYyRTrNPH9f6FMK,
+fights 11-13. Both use encounter 3470 and were cross-checked against the
+encounter journal and Mythic Trap guides.
 """
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ from ...boss_manifest_types import (
 
 CORPSE_BLIGHT_DESCRIPTION = (
     "A defeated Restless Amani erupts, damaging the raid immediately and applying stacking periodic Plague "
-    "damage. On Heroic, defeated Amani leave a Vessel of Awakening behind."
+    "damage. On Heroic and Mythic, defeated Amani leave a Vessel of Awakening behind."
 )
 
 LATENT_CULTIST_DESCRIPTION = (
@@ -73,7 +74,7 @@ NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST = BossManifest(
             game_id=1288772,
             description=(
                 "The Soulcoil Well grants Nek'zali energy and inflicts an immediate raid-wide hit followed by "
-                "stacking periodic damage. On Heroic, each rite also applies Ritual Burn."
+                "stacking periodic damage. On Heroic and Mythic, each rite also applies Ritual Burn."
             ),
             url="https://www.wowhead.com/spell=1288772/soulcoil-rite",
             tags=("Raid Damage", "DoT", "Stacking"),
@@ -132,7 +133,7 @@ NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST = BossManifest(
             name="Vessel of Awakening",
             game_id=1297630,
             description=(
-                "A Restless Amani that repossesses a Heroic corpse becomes empowered and inflicts repeated "
+                "A Restless Amani that repossesses a Heroic or Mythic corpse becomes empowered and inflicts repeated "
                 "raid-wide Shadow damage."
             ),
             url="https://www.wowhead.com/spell=1297630/vessel-of-awakening",
@@ -159,7 +160,7 @@ NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST = BossManifest(
             name="Slithering Flame",
             game_id=1294933,
             description=(
-                "Players not struck by Hungering Pyre receive a targeted fire DoT. On Heroic it expires into "
+                "Players not struck by Hungering Pyre receive a targeted fire DoT. On Heroic and Mythic it expires into "
                 "Cremation, allowing assigned players to burn remaining corpses."
             ),
             url="https://www.wowhead.com/spell=1294933/slithering-flame",
@@ -211,6 +212,59 @@ NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST = BossManifest(
 )
 
 
+NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST = BossManifest(
+    boss_id="nek-zali-the-soulcoiler",
+    boss_name="Nek'zali the Soulcoiler",
+    difficulty="mythic",
+    targets=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST.targets
+    + (
+        EncounterTargetConfig(
+            slug="drowned_echo",
+            label="Drowned Echo",
+            enemy_name="Drowned Echo",
+            bucket=EncounterTargetBucket.PRIORITY_ADD,
+        ),
+    ),
+    abilities=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST.abilities
+    + (
+        # Invoke (cast 1299673, interrupt 1299722) has no direct DamageTaken
+        # event; its damage is already represented by Soulcoil Rite.
+        BossAbilityMetadata(
+            name="Grasping Depths",
+            game_id=1293214,
+            description=(
+                "While a Drowned Echo lives within the Soulcoil Well, the raid is pulled toward the well and "
+                "takes continuous Shadow damage. Assigned groups must enter the well and defeat the echo."
+            ),
+            url="https://www.wowhead.com/spell=1293214/grasping-depths",
+            tags=("Raid Damage", "DoT", "Mythic"),
+        ),
+        BossAbilityMetadata(
+            name="Immortal Coil",
+            game_id=1308227,
+            description=(
+                "Players assigned to enter the Soulcoil Well take continuous Shadow damage in the Immortal Coil "
+                "realm while fighting the Drowned Echo."
+            ),
+            url="https://www.wowhead.com/spell=1308227/immortal-coil",
+            tags=("Assigned Mechanic", "DoT", "Mythic"),
+        ),
+        BossAbilityMetadata(
+            name="Swirling Spirit",
+            game_id=1300239,
+            description=(
+                "The Drowned Echo sends swirling spirit lines through the Immortal Coil, dealing stacking periodic "
+                "Shadow damage to players who touch them."
+            ),
+            url="https://www.wowhead.com/spell=1300239/swirling-spirit",
+            tags=("Avoidable", "Line", "DoT", "Mythic"),
+            avoidable=True,
+        ),
+    ),
+)
+
+
 __all__ = [
     "NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST",
+    "NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST",
 ]

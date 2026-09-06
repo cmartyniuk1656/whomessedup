@@ -79,7 +79,6 @@ MECHANICS_BY_BOSS: Dict[str, Sequence[MechanicDefinition]] = {
     "the-coiled-altar": (
         MechanicDefinition("orb-relocation", "Coalesced Venom Orb Relocation", "Volatile Venom pickups and carry duration; placement correctness is not inferred.", "Direct contribution", optional=True),
         MechanicDefinition("gravebound", "Gravebound Soul Recovery", "Fragment collection, completion time, and lethal expiration failures.", "Direct event"),
-        MechanicDefinition("venomfang-dispels", "Venomfang Dispels", "Target resolution, successful dispellers, and time-to-dispel.", "Direct event"),
         MechanicDefinition("guillotine-soaks", "Guillotine Coverage", "Soak participation and impacts with fewer than five players.", "Direct damage grouping", optional=True),
         MechanicDefinition("wail-interrupts", "Wail of Terror Interrupts", "Successful interrupters and completed casts.", "Direct event", optional=True),
         MechanicDefinition("gloombomb-spread", "Gloombomb Spread", "Clean marked sets versus unmarked players caught by the explosions.", "Correlated event"),
@@ -96,7 +95,7 @@ REQUIRED_DATA_TYPES: Dict[str, Set[str]] = {
     "vashnik-the-malignant": {"Debuffs", "Dispels", "DamageTaken"},
     "sszorak": {"Debuffs", "DamageTaken"},
     "the-twin-fangs": {"Debuffs", "DamageTaken"},
-    "the-coiled-altar": {"Debuffs", "Dispels", "Interrupts", "DamageTaken", "Casts"},
+    "the-coiled-altar": {"Debuffs", "Interrupts", "DamageTaken", "Casts"},
 }
 
 
@@ -456,7 +455,6 @@ def _analyze_coiled_altar(context: FightMechanicContext) -> List[MechanicObserva
     observations: List[MechanicObservation] = []
     debuffs = context.events("Debuffs")
     damage = context.events("DamageTaken")
-    dispels = context.events("Dispels")
     interrupts = context.events("Interrupts")
     casts = context.events("Casts")
 
@@ -487,25 +485,6 @@ def _analyze_coiled_altar(context: FightMechanicContext) -> List[MechanicObserva
         observations.append(_observation(context, mechanic_id="gravebound", player=player, outcome=OUTCOME_MISTAKE if failed else OUTCOME_SUCCESS, label="Gravebound expired" if failed else "Soul recovered", description=f"Recovered {len(fragments)} logged fragment stack(s) in {duration:.1f}s." if not failed else "Failed to recover every Soul Fragment before Gravebound expired.", event=failed or removal or app, ability_label="Gravebound", value=duration, value_label="Recovery time"))
         for fragment in fragments:
             observations.append(_observation(context, mechanic_id="gravebound", player=player, outcome=OUTCOME_CONTRIBUTION, label="Soul Fragment recovered", description="Recovered one Gravebound fragment stack.", event=fragment, ability_label="Gravebound"))
-
-    venom_removals = _events_by_target(_filter(debuffs, ability_ids={1306906}, event_types={"removedebuff"}))
-    venom_dispels = _events_by_target([event for event in dispels if _extra_ability_id(event) == 1306906])
-    for app in _filter(debuffs, ability_ids={1306906}, event_types={"applydebuff"}):
-        player = _target(app)
-        if not _player_in_scope(context, player):
-            continue
-        start = _timestamp(app) or 0.0
-        removal = _first_after(venom_removals.get(player, []), start, 30_000.0)
-        end = _timestamp(removal) if removal else start + 30_000.0
-        dispel = _first_between(venom_dispels.get(player, []), start, end + 250.0)
-        if dispel:
-            duration = ((_timestamp(dispel) or start) - start) / 1000.0
-            observations.append(_observation(context, mechanic_id="venomfang-dispels", player=player, outcome=OUTCOME_SUCCESS, label="Venomfang dispelled", description=f"Removed after {duration:.1f}s.", event=dispel, ability_id=1306906, ability_label="Venomfang", value=duration, value_label="Dispel time"))
-            dispeller = _source(dispel)
-            if _player_in_scope(context, dispeller):
-                observations.append(_observation(context, mechanic_id="venomfang-dispels", player=dispeller, outcome=OUTCOME_CONTRIBUTION, label="Venomfang dispel", description=f"Dispelled Venomfang from {player}.", event=dispel, ability_label=_ability_name(dispel) or "Dispel", target=player))
-        else:
-            observations.append(_observation(context, mechanic_id="venomfang-dispels", player=player, outcome=OUTCOME_MISTAKE, label="Venomfang not dispelled", description="The poison ended without a matching successful dispel.", event=removal or app, ability_label="Venomfang"))
 
     for ability_id, label in ((1283594, "Guillotine"), (1299296, "Grim Guillotine")):
         for group in _group_timestamps(_filter(damage, ability_ids={ability_id}, event_types={"damage"}), 250.0):

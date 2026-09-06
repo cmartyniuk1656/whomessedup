@@ -16,6 +16,7 @@ from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -176,21 +177,26 @@ def _fetch_single_summary(
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     participants_by_fight: Dict[int, Set[str]] = {}
     for fight in chosen:
-        details = fetch_player_details(
-            session, bearer, code=report_code, fight_ids=[fight.id]
-        )
-        fight_roles, fight_specs = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(
+                session, bearer, code=report_code, fight_ids=[fight.id]
+            )
+            fight_roles, fight_specs = _infer_player_roles(details)
+            participants = {
+                player
+                for player in _players_from_details(details)
+                if player in known_players
+            }
+        else:
+            participants, fight_roles, fight_specs = roster
+            participants = {player for player in participants if player in known_players}
         for player, role in fight_roles.items():
             if player_roles.get(player) in (None, ROLE_UNKNOWN):
                 player_roles[player] = role or ROLE_UNKNOWN
         for player, spec in fight_specs.items():
             if not player_specs.get(player):
                 player_specs[player] = spec
-        participants = {
-            player
-            for player in _players_from_details(details)
-            if player in known_players
-        }
         participants_by_fight[fight.id] = participants
         for player in participants:
             pulls_by_player[player] += 1
@@ -205,24 +211,39 @@ def _fetch_single_summary(
         max_deaths=death_limit,
     )
 
+    fetched_events: Dict[str, DefaultDict[int, List[dict]]] = {}
+    for data_type in sorted(REQUIRED_DATA_TYPES[boss_id]):
+        events_by_fight: DefaultDict[int, List[dict]] = defaultdict(list)
+        for event in fetch_events(
+            session,
+            bearer,
+            code=report_code,
+            data_type=data_type,
+            start=min(float(fight.start) for fight in chosen),
+            end=max(float(fight.end) for fight in chosen),
+            fight_ids=chosen_ids,
+            limit=10_000,
+            use_actor_ids=True,
+            actor_names=actor_names,
+        ):
+            try:
+                event_fight_id = int(event.get("fight"))
+            except (TypeError, ValueError):
+                continue
+            events_by_fight[event_fight_id].append(event)
+        fetched_events[data_type] = events_by_fight
+
     observations: List[MechanicObservation] = []
     for pull_index, fight in enumerate(chosen, start=1):
         cutoff = death_cutoffs.get(fight.id)
         event_end = min(float(fight.end), cutoff) if cutoff is not None else float(fight.end)
         events_by_type: Dict[str, List[dict]] = {}
         for data_type in sorted(REQUIRED_DATA_TYPES[boss_id]):
-            events_by_type[data_type] = list(
-                fetch_events(
-                    session,
-                    bearer,
-                    code=report_code,
-                    data_type=data_type,
-                    start=fight.start,
-                    end=event_end,
-                    limit=10_000,
-                    actor_names=actor_names,
-                )
-            )
+            events_by_type[data_type] = [
+                event
+                for event in fetched_events[data_type].get(fight.id, [])
+                if float(event.get("timestamp") or 0.0) <= event_end
+            ]
         context = FightMechanicContext(
             report_code=report_code,
             fight=fight,

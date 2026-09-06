@@ -39,17 +39,18 @@ class TheCoiledAltarReportTests(unittest.TestCase):
             }.issubset(ability_ids)
         )
 
-    def test_avoidable_rules_handle_carriers_marks_and_tank_frontals(self):
+    def test_avoidable_rules_exclude_orb_carriers_and_handle_marks_and_tank_frontals(self):
         manifest = get_boss_manifest("the-coiled-altar", "heroic")
         avoidable = [ability for ability in manifest.abilities if ability.avoidable]
 
         self.assertEqual(
             [ability.game_id for ability in avoidable],
-            [1283290, 1300137, 1282288, 1299684, 1285017, 1310883, 1297906, 1286620, 1312630, 1307292, 1312424],
+            [1283290, 1300137, 1299684, 1285017, 1310883, 1297906, 1286620, 1312630, 1307292, 1312424],
         )
         volatile = manifest.ability_for(ability_id=1282288)
         gloombomb = manifest.ability_for(ability_id=1310883)
-        self.assertEqual(volatile.avoidable_excludes_active_debuff_ability_id, 1282419)
+        self.assertFalse(volatile.avoidable)
+        self.assertIsNone(volatile.avoidable_excludes_active_debuff_ability_id)
         self.assertEqual(gloombomb.avoidable_exclusion_debuff_ability_id, 1310881)
         for ability_id in (1299684, 1286620, 1312630, 1307292):
             self.assertIn("Tank Soak", manifest.ability_for(ability_id=ability_id).tags)
@@ -108,7 +109,7 @@ class TheCoiledAltarReportTests(unittest.TestCase):
         self.assertEqual(avoidable_job, JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE)
         self.assertEqual(
             avoidable_payload["ability_keys"],
-            ["1283290", "1300137", "1282288", "1299684", "1285017", "1310883", "1297906", "1286620", "1312630", "1307292", "1312424"],
+            ["1283290", "1300137", "1299684", "1285017", "1310883", "1297906", "1286620", "1312630", "1307292", "1312424"],
         )
         self.assertEqual(death_job, JOB_V2_THE_COILED_ALTAR_DEATHS)
         self.assertEqual(death_payload["fight"], "The Coiled Altar")

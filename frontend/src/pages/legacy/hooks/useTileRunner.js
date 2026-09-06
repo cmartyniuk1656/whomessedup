@@ -124,7 +124,7 @@ export function useTileRunner() {
         }
 
         setPendingJob(data);
-        jobPollRef.current.timer = setTimeout(() => requestJobStatus(jobId, tile), 1500);
+        jobPollRef.current.timer = setTimeout(() => requestJobStatus(jobId, tile), 500);
       } catch (err) {
         if (jobPollRef.current.id !== jobId) {
           return;

@@ -1,11 +1,11 @@
 """
-Heroic Nek'zali the Soulcoiler death summary wrapper.
+Mythic Nek'zali the Soulcoiler death summary wrapper.
 """
 from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from .boss_manifests import NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST
+from .boss_manifests import NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST
 from .death_reports import DeathReportSummary, fetch_death_report_summary
 
 REPORT_DEFAULT_FIGHT = "Nek'zali the Soulcoiler"
@@ -32,7 +32,7 @@ def fetch_nek_zali_the_soulcoiler_death_summary(
         ignore_after_deaths=ignore_after_deaths,
         ignore_unavoidable_after_healer_deaths=ignore_unavoidable_after_healer_deaths,
         extra_report_codes=extra_report_codes,
-        boss_manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        boss_manifest=NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
         token=token,
         client_id=client_id,
         client_secret=client_secret,

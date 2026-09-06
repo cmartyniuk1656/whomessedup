@@ -1,5 +1,5 @@
 """
-View-model builder for the Heroic Nek'zali avoidable damage report page.
+View-model builder for the Mythic Nek'zali avoidable damage report page.
 """
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from ..nek_zali_the_soulcoiler_avoidable_damage import REPORT_DEFAULT_FIGHT
 from .avoidable_damage import AvoidableDamagePageConfig, build_avoidable_damage_report_page
 
 REPORT_ID = "nek-zali-the-soulcoiler-avoidable-damage"
-REPORT_TITLE = "Heroic Nek'zali the Soulcoiler - Avoidable Damage Report"
-REPORT_DESCRIPTION = "Track avoidable damage taken during Heroic Nek'zali the Soulcoiler pulls."
+REPORT_TITLE = "Mythic Nek'zali the Soulcoiler - Avoidable Damage Report"
+REPORT_DESCRIPTION = "Track avoidable damage taken during Mythic Nek'zali the Soulcoiler pulls."
 REPORT_FOOTNOTES = [
     "Additional Warcraft Logs reports can be combined when the same encounter spans multiple log reports.",
 ]

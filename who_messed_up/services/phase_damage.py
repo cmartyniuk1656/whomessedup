@@ -10,12 +10,13 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 import requests
 
 from ..env import load_env
-from ..api import fetch_fights, fetch_player_details, fetch_table
+from ..api import fetch_fights, fetch_player_details, fetch_tables
 from .common import (
     FightSelectionError,
     NEXUS_PHASE_LABELS,
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _normalize_phase_ids,
     _resolve_phase_labels,
@@ -89,8 +90,14 @@ def _fetch_phase_damage_summary_single(
 
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+        else:
+            _, fight_roles, fight_specs = roster
+            for player, spec in fight_specs.items():
+                player_specs_global.setdefault(player, spec)
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
 
@@ -142,15 +149,40 @@ def _fetch_phase_damage_summary_single(
 
     phase_totals: Dict[Tuple[str, str], Dict[str, float]] = defaultdict(lambda: defaultdict(float))
 
+    table_keys: List[Tuple[str, int, str]] = []
+    table_requests: List[Dict[str, Any]] = []
     for phase_id in selected_phases:
         filter_expr = None
         if phase_id != "full":
             try:
-                numeric_phase = int(phase_id)
-                filter_expr = f"encounterPhase = {numeric_phase}"
+                filter_expr = f"encounterPhase = {int(phase_id)}"
             except ValueError:
-                filter_expr = None
+                pass
+        for fight in chosen:
+            for data_type in ("DamageDone", "Healing"):
+                table_keys.append((phase_id, fight.id, data_type))
+                table_requests.append(
+                    {
+                        "data_type": data_type,
+                        "fight_ids": [fight.id],
+                        "start": fight.start,
+                        "end": fight.end,
+                        "filter_expr": filter_expr,
+                    }
+                )
+    phase_tables = dict(
+        zip(
+            table_keys,
+            fetch_tables(
+                session,
+                bearer,
+                code=report_code,
+                table_requests=table_requests,
+            ),
+        )
+    )
 
+    for phase_id in selected_phases:
         for fight in chosen:
             def consume_entries(entries: Iterable[Dict[str, Any]], *, allowed_roles: Set[str]) -> None:
                 for entry in entries:
@@ -179,28 +211,10 @@ def _fetch_phase_damage_summary_single(
                     player_roles.setdefault(owner_name, role)
                     valid_players.add(owner_name)
 
-            damage_table = fetch_table(
-                session,
-                bearer,
-                code=report_code,
-                data_type="DamageDone",
-                fight_id=fight.id,
-                start=fight.start,
-                end=fight.end,
-                filter_expr=filter_expr,
-            )
+            damage_table = phase_tables.get((phase_id, fight.id, "DamageDone"), {})
             consume_entries(damage_table.get("entries") or [], allowed_roles=damage_roles)
 
-            healing_table = fetch_table(
-                session,
-                bearer,
-                code=report_code,
-                data_type="Healing",
-                fight_id=fight.id,
-                start=fight.start,
-                end=fight.end,
-                filter_expr=filter_expr,
-            )
+            healing_table = phase_tables.get((phase_id, fight.id, "Healing"), {})
             consume_entries(healing_table.get("entries") or [], allowed_roles=healing_roles)
 
     for player, role in list(fight_ids_by_player_role.keys()):

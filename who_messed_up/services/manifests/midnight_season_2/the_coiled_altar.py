@@ -79,13 +79,11 @@ THE_COILED_ALTAR_HEROIC_MANIFEST = BossManifest(
             name="Volatile Venom",
             game_id=1282288,
             description=(
-                "An assigned orb carrier necessarily takes the pulse while moving venom. Other players struck by "
-                "that carrier's five-yard pulse are scored as avoidable proximity hits."
+                "An assigned orb carrier pulses nearby players while moving venom. The log cannot reliably assign "
+                "fault between the carrier and nearby players, so this damage is not scored as avoidable."
             ),
             url="https://www.wowhead.com/spell=1282288",
-            tags=("Avoidable", "Conditional", "Proximity", "Orb Carrier"),
-            avoidable=True,
-            avoidable_excludes_active_debuff_ability_id=1282419,
+            tags=("Proximity", "Orb Carrier", "Unscored"),
         ),
         BossAbilityMetadata(
             name="Venom Rupture",

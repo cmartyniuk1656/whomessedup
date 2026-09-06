@@ -14,6 +14,7 @@ from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_event_source_player,
@@ -426,14 +427,20 @@ def _fetch_single_cooldown_usage_summary(
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
 
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, fight_specs = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, fight_specs = _infer_player_roles(details)
+            participant_names = _players_from_details(details)
+        else:
+            roster_participants, fight_roles, fight_specs = roster
+            participant_names = roster_participants
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
         for player, spec in fight_specs.items():
             if player not in player_specs_global or player_specs_global[player] is None:
                 player_specs_global[player] = spec
-        participants = {_normalize_player_name(name) for name in _players_from_details(details) if name}
+        participants = {_normalize_player_name(name) for name in participant_names if name}
         participants_by_fight[fight.id] = participants
         for player_key in participants:
             player = player_lookup.get(player_key)

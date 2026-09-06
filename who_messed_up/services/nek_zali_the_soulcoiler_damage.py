@@ -1,17 +1,17 @@
 """
-Heroic Nek'zali the Soulcoiler target-damage summary wrapper.
+Mythic Nek'zali the Soulcoiler target-damage summary wrapper.
 """
 from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from .boss_manifests import NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST
+from .boss_manifests import NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST
 from .target_damage import EncounterTargetDamageSummary, fetch_encounter_target_damage_summary
 
 REPORT_DEFAULT_FIGHT = "Nek'zali the Soulcoiler"
 
-NEK_ZALI_THE_SOULCOILER_TARGETS = NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST.target_configs
-DEFAULT_TARGET_SLUGS = NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST.default_target_slugs
+NEK_ZALI_THE_SOULCOILER_TARGETS = NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST.target_configs
+DEFAULT_TARGET_SLUGS = NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST.default_target_slugs
 
 
 def fetch_nek_zali_the_soulcoiler_damage_summary(

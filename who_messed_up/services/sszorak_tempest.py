@@ -7,11 +7,12 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Set
 
 import requests
 
-from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
+from ..api import Fight, fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -161,17 +162,22 @@ def _fetch_single_summary(
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     participants_by_fight: Dict[int, Set[str]] = {}
     for fight in chosen:
-        fight_details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, fight_specs = _infer_player_roles(fight_details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            fight_details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, fight_specs = _infer_player_roles(fight_details)
+            participants = {
+                player for player in _players_from_details(fight_details) if player in known_players
+            }
+        else:
+            participants, fight_roles, fight_specs = roster
+            participants = {player for player in participants if player in known_players}
         for player, role in fight_roles.items():
             if player_roles.get(player) in (None, ROLE_UNKNOWN):
                 player_roles[player] = role or ROLE_UNKNOWN
         for player, spec in fight_specs.items():
             if not player_specs.get(player):
                 player_specs[player] = spec
-        participants = {
-            player for player in _players_from_details(fight_details) if player in known_players
-        }
         participants_by_fight[fight.id] = participants
         for player in participants:
             pulls_by_player[player] += 1
@@ -192,12 +198,27 @@ def _fetch_single_summary(
     }
     pull_index_by_fight = {fight.id: index + 1 for index, fight in enumerate(chosen)}
     events_by_player: DefaultDict[str, List[SszorakTempestEvent]] = defaultdict(list)
+    debuffs_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Debuffs",
+        fights=chosen,
+        ability_id=TEMPEST_ABILITY_ID,
+        actor_names=actor_names,
+    )
+    dispels_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Dispels",
+        fights=chosen,
+        actor_names=actor_names,
+    )
     for fight in chosen:
         cutoff = death_cutoffs.get(fight.id)
         event_end = min(float(fight.end), cutoff) if cutoff is not None else float(fight.end)
         for event in _collect_fight_events(
-            session=session,
-            bearer=bearer,
             report_code=report_code,
             fight=fight,
             event_end=event_end,
@@ -206,6 +227,8 @@ def _fetch_single_summary(
             known_players=known_players,
             participants=participants_by_fight.get(fight.id, set()),
             pull_index=pull_index_by_fight[fight.id],
+            raw_debuffs=debuffs_by_fight.get(fight.id, ()),
+            raw_dispels=dispels_by_fight.get(fight.id, ()),
         ):
             events_by_player[event.player].append(event)
 
@@ -233,8 +256,6 @@ def _fetch_single_summary(
 
 def _collect_fight_events(
     *,
-    session: requests.Session,
-    bearer: str,
     report_code: str,
     fight: Fight,
     event_end: float,
@@ -243,19 +264,16 @@ def _collect_fight_events(
     known_players: Set[str],
     participants: Set[str],
     pull_index: int,
+    raw_debuffs: Iterable[dict],
+    raw_dispels: Iterable[dict],
 ) -> List[SszorakTempestEvent]:
     pull_duration_ms = compute_fight_duration_ms(fight)
-    raw_debuffs = fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Debuffs",
-        start=fight.start,
-        end=event_end,
-        limit=5000,
-        actor_names=actor_names,
+    filtered_debuffs = (
+        event
+        for event in raw_debuffs
+        if (_event_timestamp(event) is not None and _event_timestamp(event) <= event_end)
     )
-    contacts = _collapse_tempest_contacts(raw_debuffs)
+    contacts = _collapse_tempest_contacts(filtered_debuffs)
     results: List[SszorakTempestEvent] = []
     for event in contacts:
         player = _target_name(event)
@@ -278,22 +296,14 @@ def _collect_fight_events(
             )
         )
 
-    raw_dispels = fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Dispels",
-        start=fight.start,
-        end=event_end,
-        limit=5000,
-        actor_names=actor_names,
-    )
     for event in raw_dispels:
         if str(event.get("type") or "").lower() != "dispel":
             continue
         if _extra_ability_id(event) != TEMPEST_ABILITY_ID:
             continue
         timestamp = _event_timestamp(event)
+        if timestamp is not None and timestamp > event_end:
+            continue
         target = _target_name(event)
         credited_player, pet_name = _credited_dispeller(event, actor_names, actor_owners)
         if timestamp is None or not _player_in_scope(credited_player, known_players, participants):

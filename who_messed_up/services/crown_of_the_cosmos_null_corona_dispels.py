@@ -15,11 +15,12 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Sequence, Set, T
 
 import requests
 
-from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
+from ..api import Fight, fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -246,11 +247,16 @@ def _fetch_single_crown_null_corona_dispel_summary(
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = {name for name in _players_from_details(details) if name in known_players}
+        else:
+            participants, fight_roles, _ = roster
+            participants = {name for name in participants if name in known_players}
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        participants = {name for name in _players_from_details(details) if name in known_players}
         for name in participants:
             pulls_by_player[name] += 1
     for fight_roles in roles_by_fight.values():
@@ -267,15 +273,58 @@ def _fetch_single_crown_null_corona_dispel_summary(
     events_by_player: DefaultDict[str, List[CrownNullCoronaDispelEvent]] = defaultdict(list)
     pull_index_by_fight = {fight.id: index + 1 for index, fight in enumerate(chosen)}
     pull_duration_by_fight = {fight.id: compute_fight_duration_ms(fight) for fight in chosen}
+    raw_dispels_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Dispels",
+        fights=chosen,
+        actor_names=actor_names,
+    )
+    all_target_names = {
+        target
+        for fight_events in raw_dispels_by_fight.values()
+        for event in fight_events
+        for target in [_target_name(event, actor_names)]
+        if target and _extra_ability_id(event) in NULL_CORONA_DEBUFF_IDS
+    }
+    target_filter = _target_filter(all_target_names) if all_target_names else None
+    resources_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Resources",
+        fights=chosen,
+        extra_filter=target_filter,
+        include_resources=True,
+        actor_names=actor_names,
+    ) if target_filter else {}
+    damage_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="DamageTaken",
+        fights=chosen,
+        extra_filter=target_filter,
+        include_resources=True,
+        actor_names=actor_names,
+    ) if target_filter else {}
+    jump_applications_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Debuffs",
+        fights=chosen,
+        ability_id=NULL_CORONA_JUMP_ID,
+        extra_filter=target_filter,
+        actor_names=actor_names,
+    ) if target_filter else {}
 
     for fight in chosen:
         all_dispels = _collect_dispel_events(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
             actor_names=actor_names,
             known_players=known_players,
+            events=raw_dispels_by_fight.get(fight.id, ()),
         )
         null_dispels = [event for event in all_dispels if _extra_ability_id(event) in NULL_CORONA_DEBUFF_IDS]
         if not null_dispels:
@@ -287,20 +336,15 @@ def _fetch_single_crown_null_corona_dispel_summary(
             if _target_name(event, actor_names)
         }
         health_context = _collect_health_context(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
             actor_names=actor_names,
             target_names=target_names,
+            resource_events=resources_by_fight.get(fight.id, ()),
+            damage_events=damage_by_fight.get(fight.id, ()),
         )
         jump_applications_by_target = _collect_null_corona_jump_applications(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
             actor_names=actor_names,
             target_names=target_names,
+            events=jump_applications_by_fight.get(fight.id, ()),
         )
         dispels_by_group = _group_dispels(all_dispels)
 
@@ -400,25 +444,13 @@ def _fetch_single_crown_null_corona_dispel_summary(
 
 
 def _collect_dispel_events(
-    session: requests.Session,
-    bearer: str,
     *,
-    report_code: str,
-    fight: Fight,
     actor_names: Dict[int, str],
     known_players: Set[str],
+    events: Iterable[Dict[str, object]],
 ) -> List[Dict[str, object]]:
     rows: List[Dict[str, object]] = []
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Dispels",
-        start=fight.start,
-        end=fight.end,
-        limit=5000,
-        actor_names=actor_names,
-    ):
+    for event in events:
         if (event.get("type") or "").lower() != "dispel":
             continue
         source = _source_name(event, actor_names)
@@ -432,34 +464,20 @@ def _collect_dispel_events(
 
 
 def _collect_health_context(
-    session: requests.Session,
-    bearer: str,
     *,
-    report_code: str,
-    fight: Fight,
     actor_names: Dict[int, str],
     target_names: Set[str],
+    resource_events: Iterable[Dict[str, object]],
+    damage_events: Iterable[Dict[str, object]],
 ) -> _HealthContext:
     if not target_names:
         return _HealthContext({}, {}, {})
 
-    target_filter = _target_filter(target_names)
     snapshots_by_target: DefaultDict[str, List[_HealthSnapshot]] = defaultdict(list)
     dangerous_damage_by_target: DefaultDict[str, List[Tuple[float, int]]] = defaultdict(list)
 
-    for data_type in ("Resources", "DamageTaken"):
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type=data_type,
-            start=fight.start,
-            end=fight.end,
-            limit=5000,
-            extra_filter=target_filter,
-            include_resources=True,
-            actor_names=actor_names,
-        ):
+    for data_type, events in (("Resources", resource_events), ("DamageTaken", damage_events)):
+        for event in events:
             target = _target_name(event, actor_names)
             timestamp = _event_timestamp(event)
             if not target or timestamp is None or target not in target_names:
@@ -486,30 +504,16 @@ def _collect_health_context(
 
 
 def _collect_null_corona_jump_applications(
-    session: requests.Session,
-    bearer: str,
     *,
-    report_code: str,
-    fight: Fight,
     actor_names: Dict[int, str],
     target_names: Set[str],
+    events: Iterable[Dict[str, object]],
 ) -> Dict[str, List[float]]:
     if not target_names:
         return {}
 
     applications_by_target: DefaultDict[str, List[float]] = defaultdict(list)
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Debuffs",
-        start=fight.start,
-        end=fight.end,
-        limit=5000,
-        ability_id=NULL_CORONA_JUMP_ID,
-        extra_filter=_target_filter(target_names),
-        actor_names=actor_names,
-    ):
+    for event in events:
         if (event.get("type") or "").lower() != "applydebuff":
             continue
         target = _target_name(event, actor_names)

@@ -13,7 +13,7 @@ from .boss_manifests import (
     ENTOMBED_SENTINELS_HEROIC_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
-    NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+    NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
     THE_LOST_EXPLORERS_HEROIC_MANIFEST,
     VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
     SSZORAK_HEROIC_MANIFEST,
@@ -453,7 +453,7 @@ COOLDOWN_USAGE_FIGHTS: Tuple[Tuple[str, str, ReportDifficulty], ...] = (
     (BELOREN_FIGHT_ID, "Belo'ren, Child of Al'ar", ReportDifficulty.MYTHIC),
     (MIDNIGHT_FALLS_FIGHT_ID, "Midnight Falls", ReportDifficulty.MYTHIC),
     (NYMRISSA_WAVECALLER_FIGHT_ID, "Nymrissa Wavecaller", ReportDifficulty.HEROIC),
-    (NEK_ZALI_THE_SOULCOILER_FIGHT_ID, "Nek'zali the Soulcoiler", ReportDifficulty.HEROIC),
+    (NEK_ZALI_THE_SOULCOILER_FIGHT_ID, "Nek'zali the Soulcoiler", ReportDifficulty.MYTHIC),
     (ENTOMBED_SENTINELS_FIGHT_ID, "Entombed Sentinels", ReportDifficulty.HEROIC),
     (THE_LOST_EXPLORERS_FIGHT_ID, "The Lost Explorers", ReportDifficulty.HEROIC),
     (VASHNIK_THE_MALIGNANT_FIGHT_ID, "Vashnik the Malignant", ReportDifficulty.HEROIC),
@@ -843,7 +843,7 @@ def _build_vorasius_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
 def _build_nek_zali_the_soulcoiler_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_target_damage_payload(
         values,
-        manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        manifest=NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
         default_fight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
     )
 
@@ -1058,7 +1058,7 @@ def _build_nek_zali_the_soulcoiler_avoidable_damage_payload(
 ) -> Tuple[Dict[str, Any], bool]:
     return _build_avoidable_damage_payload(
         values,
-        manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        manifest=NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
         default_fight=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
     )
 
@@ -1580,7 +1580,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
             description=REPORT_NEK_ZALI_DEATHS_DESCRIPTION,
             fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
             fightName=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
-            difficulty=ReportDifficulty.HEROIC,
+            difficulty=ReportDifficulty.MYTHIC,
             defaultFight=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
             footnotes=list(REPORT_NEK_ZALI_DEATHS_FOOTNOTES),
             requestSchema=RequestSchemaModel(
@@ -1902,13 +1902,13 @@ _REPORTS: Dict[str, RegisteredReport] = {
             description=REPORT_NEK_ZALI_AVOIDABLE_DESCRIPTION,
             fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
             fightName=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
-            difficulty=ReportDifficulty.HEROIC,
+            difficulty=ReportDifficulty.MYTHIC,
             defaultFight=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
             footnotes=list(REPORT_NEK_ZALI_AVOIDABLE_FOOTNOTES),
             requestSchema=RequestSchemaModel(
                 fields=[
                     _build_report_codes_field(),
-                    *_build_avoidable_ability_fields(NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST),
+                    *_build_avoidable_ability_fields(NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST),
                     _build_ignore_after_deaths_field(),
                     RequestFieldModel(
                         id="fresh_run",
@@ -2550,13 +2550,13 @@ _REPORTS: Dict[str, RegisteredReport] = {
             description=REPORT_NEK_ZALI_DESCRIPTION,
             fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
             fightName=REPORT_NEK_ZALI_DEFAULT_FIGHT,
-            difficulty=ReportDifficulty.HEROIC,
+            difficulty=ReportDifficulty.MYTHIC,
             defaultFight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
             footnotes=list(REPORT_NEK_ZALI_FOOTNOTES),
             requestSchema=RequestSchemaModel(
                 fields=[
                     _build_report_codes_field(),
-                    *_build_target_fields(NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST),
+                    *_build_target_fields(NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST),
                     *_build_target_damage_scope_fields("Nek'zali the Soulcoiler"),
                 ]
             ),

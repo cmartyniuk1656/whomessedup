@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Literal
 
-from ..api import Fight, filter_fights, get_token_from_client, fetch_events
+from ..api import Fight, filter_fights, get_token_from_client, fetch_events, fetch_events_grouped
 
 # Role/Spec metadata ---------------------------------------------------------
 
@@ -14,6 +14,7 @@ SPEC_ROLE_BY_CLASS: Dict[Tuple[str, str], str] = {
     ("DeathKnight", "Frost"): "Melee",
     ("DeathKnight", "Unholy"): "Melee",
     ("DemonHunter", "Havoc"): "Melee",
+    ("DemonHunter", "Devourer"): "Melee",
     ("DemonHunter", "Vengeance"): "Tank",
     ("Druid", "Balance"): "Ranged",
     ("Druid", "Feral"): "Melee",
@@ -239,6 +240,30 @@ def _extract_spec(entry: Dict[str, Any]) -> Optional[str]:
     return None
 
 
+def _normalized_spec_key(value: Optional[str]) -> str:
+    return "".join(character for character in str(value or "").casefold() if character.isalnum())
+
+
+_NORMALIZED_SPEC_ROLES: Dict[Tuple[str, str], str] = {
+    (_normalized_spec_key(class_name), _normalized_spec_key(spec_name)): role
+    for (class_name, spec_name), role in SPEC_ROLE_BY_CLASS.items()
+}
+
+
+def _infer_role_from_class_and_spec(
+    class_name: Optional[str], spec_name: Optional[str]
+) -> str:
+    normalized_class = _normalized_spec_key(class_name)
+    normalized_spec = _normalized_spec_key(spec_name)
+    if normalized_class and normalized_spec:
+        role = _NORMALIZED_SPEC_ROLES.get((normalized_class, normalized_spec))
+        if role:
+            return role
+    if class_name:
+        return CLASS_DEFAULT_ROLE.get(class_name, ROLE_UNKNOWN)
+    return ROLE_UNKNOWN
+
+
 def _infer_player_roles(details: Dict[str, Any]) -> Tuple[Dict[str, str], Dict[str, Optional[str]]]:
     roles: Dict[str, str] = {}
     specs: Dict[str, Optional[str]] = {}
@@ -261,16 +286,40 @@ def _infer_player_roles(details: Dict[str, Any]) -> Tuple[Dict[str, str], Dict[s
             continue
         spec = _extract_spec(entry)
         class_name = entry.get("type")
-        inferred_role = None
-        if spec and class_name:
-            inferred_role = SPEC_ROLE_BY_CLASS.get((class_name, spec))
-        if inferred_role is None and class_name:
-            inferred_role = CLASS_DEFAULT_ROLE.get(class_name)
-        if inferred_role is None:
-            inferred_role = ROLE_UNKNOWN
+        inferred_role = _infer_role_from_class_and_spec(class_name, spec)
         register(entry, inferred_role)
 
     return roles, specs
+
+
+def _fight_roster_from_metadata(
+    fight: Fight,
+    actor_names: Dict[int, str],
+    actor_classes: Dict[int, Optional[str]],
+) -> Optional[Tuple[Set[str], Dict[str, str], Dict[str, Optional[str]]]]:
+    """
+    Build per-fight attendance and role metadata from the fight overview.
+
+    Older fixtures and API responses may not include ``friendlyPlayers``. ``None``
+    tells callers to retain the legacy per-fight ``playerDetails`` fallback.
+    """
+    player_ids = tuple(getattr(fight, "friendly_player_ids", ()) or ())
+    if not player_ids:
+        return None
+    friendly_specs = tuple(getattr(fight, "friendly_specs", ()) or ())
+    participants: Set[str] = set()
+    roles: Dict[str, str] = {}
+    specs: Dict[str, Optional[str]] = {}
+    for index, actor_id in enumerate(player_ids):
+        name = actor_names.get(actor_id)
+        class_name = actor_classes.get(actor_id)
+        if not name or not class_name:
+            continue
+        spec = friendly_specs[index] if index < len(friendly_specs) else None
+        participants.add(name)
+        specs[name] = spec
+        roles[name] = _infer_role_from_class_and_spec(class_name, spec)
+    return participants, roles, specs
 
 
 def _players_from_details(details: Dict[str, Any]) -> List[str]:
@@ -450,19 +499,23 @@ def compute_death_cutoffs(
     """
     if not max_deaths or max_deaths <= 0:
         return {}
+    selected_fights = list(fights)
     cutoffs: Dict[int, float] = {}
-    for fight in fights:
+    deaths_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Deaths",
+        fights=selected_fights,
+        limit=1000,
+        actor_names=actor_names,
+    )
+    for fight in selected_fights:
         total_deaths = 0
         cutoff_ts: Optional[float] = None
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="Deaths",
-            start=fight.start,
-            end=fight.end,
-            limit=1000,
-            actor_names=actor_names,
+        for event in sorted(
+            deaths_by_fight.get(fight.id, ()),
+            key=lambda item: float(item.get("timestamp") or 0),
         ):
             event_type = (event.get("type") or "").lower()
             if event_type not in {"death", "instakill"}:

@@ -5,16 +5,21 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import DefaultDict, Dict, Iterable, List, Optional, Set
+from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Set
 
 import requests
 
-from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
+from ..api import Fight, fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .beloren_child_of_alar_mechanics import (
     ERUPTION_REQUIRED_FEATHER,
     ERUPTION_WRONG_FEATHER,
+    FEATHER_IDS,
+    FLAMES_REQUIRED_FEATHER,
     LIGHT_ERUPTION_ID,
+    QUILL_MARKERS,
+    QUILL_REQUIRED_FEATHER,
+    VOIDLIGHT_RUPTURE_ID,
     VOID_ERUPTION_ID,
     ability_id_from_event,
     ability_label,
@@ -34,6 +39,7 @@ from .beloren_child_of_alar_mechanics import (
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -229,11 +235,16 @@ def _fetch_single_beloren_light_void_mistake_summary(
     participants_by_fight: Dict[int, Set[str]] = {}
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = {name for name in _players_from_details(details) if name in known_players}
+        else:
+            participants, fight_roles, _ = roster
+            participants = {name for name in participants if name in known_players}
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        participants = {name for name in _players_from_details(details) if name in known_players}
         participants_by_fight[fight.id] = participants
         for name in participants:
             pulls_by_player[name] += 1
@@ -259,12 +270,36 @@ def _fetch_single_beloren_light_void_mistake_summary(
     }
     pull_index_by_fight = {fight.id: index + 1 for index, fight in enumerate(chosen)}
     events_by_player: DefaultDict[str, List[BelorenLightVoidMistakeEvent]] = defaultdict(list)
+    debuff_ids = set(FEATHER_IDS) | set(QUILL_MARKERS.values()) | set(FLAMES_REQUIRED_FEATHER) | {VOIDLIGHT_RUPTURE_ID}
+    damage_ids = set(QUILL_REQUIRED_FEATHER) | set(FLAMES_REQUIRED_FEATHER) | {VOIDLIGHT_RUPTURE_ID}
+    debuffs_by_fight = fetch_events_grouped(
+        session, bearer, code=report_code, data_type="Debuffs", fights=chosen,
+        extra_filter=_ability_filter(debuff_ids), actor_names=actor_names,
+    )
+    damage_by_fight = fetch_events_grouped(
+        session, bearer, code=report_code, data_type="DamageTaken", fights=chosen,
+        extra_filter=_ability_filter(damage_ids), actor_names=actor_names,
+    )
+    interrupts_by_fight = fetch_events_grouped(
+        session, bearer, code=report_code, data_type="Interrupts", fights=chosen,
+        actor_names=actor_names,
+    )
+    casts_by_fight = fetch_events_grouped(
+        session, bearer, code=report_code, data_type="Casts", fights=chosen,
+        extra_filter=_ability_filter(INTERRUPT_ABILITY_LABELS), actor_names=actor_names,
+    )
 
     for fight in chosen:
         cutoff = death_cutoffs.get(fight.id)
         event_end = min(float(fight.end), cutoff) if cutoff is not None else fight.end
         pull_duration_ms = compute_fight_duration_ms(fight)
         participants = participants_by_fight.get(fight.id, set())
+        prefetched_events = {
+            "Debuffs": debuffs_by_fight.get(fight.id, ()),
+            "DamageTaken": damage_by_fight.get(fight.id, ()),
+            "Interrupts": interrupts_by_fight.get(fight.id, ()),
+            "Casts": casts_by_fight.get(fight.id, ()),
+        }
         feather_timelines = collect_feather_timelines(
             session=session,
             bearer=bearer,
@@ -272,6 +307,7 @@ def _fetch_single_beloren_light_void_mistake_summary(
             fight=fight,
             actor_names=actor_names,
             event_end=event_end,
+            prefetched_events=prefetched_events,
         )
         quill_assignments = collect_quill_assignments(
             session=session,
@@ -280,6 +316,7 @@ def _fetch_single_beloren_light_void_mistake_summary(
             fight=fight,
             actor_names=actor_names,
             event_end=event_end,
+            prefetched_events=prefetched_events,
         )
         for event_model in _collect_flame_mistakes(
             session=session,
@@ -293,6 +330,7 @@ def _fetch_single_beloren_light_void_mistake_summary(
             feather_timelines=feather_timelines,
             pull_index=pull_index_by_fight.get(fight.id, 0),
             pull_duration_ms=pull_duration_ms,
+            prefetched_events=prefetched_events,
         ):
             events_by_player[event_model.player].append(event_model)
         for event_model in _collect_quill_mistakes(
@@ -308,6 +346,7 @@ def _fetch_single_beloren_light_void_mistake_summary(
             quill_assignments=quill_assignments,
             pull_index=pull_index_by_fight.get(fight.id, 0),
             pull_duration_ms=pull_duration_ms,
+            prefetched_events=prefetched_events,
         ):
             events_by_player[event_model.player].append(event_model)
         for event_model in _collect_rupture_mistakes(
@@ -322,6 +361,7 @@ def _fetch_single_beloren_light_void_mistake_summary(
             feather_timelines=feather_timelines,
             pull_index=pull_index_by_fight.get(fight.id, 0),
             pull_duration_ms=pull_duration_ms,
+            prefetched_events=prefetched_events,
         ):
             events_by_player[event_model.player].append(event_model)
         for event_model in _collect_eruption_mistakes(
@@ -336,6 +376,7 @@ def _fetch_single_beloren_light_void_mistake_summary(
             feather_timelines=feather_timelines,
             pull_index=pull_index_by_fight.get(fight.id, 0),
             pull_duration_ms=pull_duration_ms,
+            prefetched_events=prefetched_events,
         ):
             events_by_player[event_model.player].append(event_model)
 
@@ -382,6 +423,7 @@ def _collect_flame_mistakes(
     feather_timelines: Dict[str, List[tuple]],
     pull_index: int,
     pull_duration_ms: Optional[float],
+    prefetched_events: Mapping[str, Iterable[Dict[str, object]]],
 ) -> List[BelorenLightVoidMistakeEvent]:
     mistakes: List[BelorenLightVoidMistakeEvent] = []
     applications = collect_flame_penalty_applications(
@@ -394,6 +436,7 @@ def _collect_flame_mistakes(
         known_players=known_players,
         participants=participants,
         feather_timelines=feather_timelines,
+        prefetched_events=prefetched_events,
     )
     for application in applications:
         mistakes.append(
@@ -429,6 +472,7 @@ def _collect_quill_mistakes(
     quill_assignments: Dict[int, List[tuple]],
     pull_index: int,
     pull_duration_ms: Optional[float],
+    prefetched_events: Mapping[str, Iterable[Dict[str, object]]],
 ) -> List[BelorenLightVoidMistakeEvent]:
     mistakes: List[BelorenLightVoidMistakeEvent] = []
     classifications = collect_quill_damage_classifications(
@@ -442,6 +486,7 @@ def _collect_quill_mistakes(
         participants=participants,
         feather_timelines=feather_timelines,
         quill_assignments=quill_assignments,
+        prefetched_events=prefetched_events,
     )
     for classification in sorted(classifications.values(), key=lambda item: (item.timestamp, item.ability_id, item.player)):
         mistakes.append(
@@ -478,6 +523,7 @@ def _collect_rupture_mistakes(
     feather_timelines: Dict[str, List[tuple]],
     pull_index: int,
     pull_duration_ms: Optional[float],
+    prefetched_events: Mapping[str, Iterable[Dict[str, object]]],
 ) -> List[BelorenLightVoidMistakeEvent]:
     mistakes: List[BelorenLightVoidMistakeEvent] = []
     classifications = collect_rupture_mistake_classifications(
@@ -490,6 +536,7 @@ def _collect_rupture_mistakes(
         known_players=known_players,
         participants=participants,
         feather_timelines=feather_timelines,
+        prefetched_events=prefetched_events,
     )
     for classification in classifications:
         mistakes.append(
@@ -525,19 +572,13 @@ def _collect_eruption_mistakes(
     feather_timelines: Dict[str, List[tuple]],
     pull_index: int,
     pull_duration_ms: Optional[float],
+    prefetched_events: Mapping[str, Iterable[Dict[str, object]]],
 ) -> List[BelorenLightVoidMistakeEvent]:
     mistakes: List[BelorenLightVoidMistakeEvent] = []
     successful_interrupts: List[Dict[str, object]] = []
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Interrupts",
-        start=fight.start,
-        end=event_end,
-        limit=5000,
-        actor_names=actor_names,
-    ):
+    for event in prefetched_events.get("Interrupts", ()):
+        if (event_timestamp(event) or float("inf")) > event_end:
+            continue
         if str(event.get("type") or "").lower() != "interrupt":
             continue
         interrupted_ability_id = extra_ability_id_from_event(event)
@@ -589,6 +630,7 @@ def _collect_eruption_mistakes(
             successful_interrupts=successful_interrupts,
             pull_index=pull_index,
             pull_duration_ms=pull_duration_ms,
+            prefetched_events=prefetched_events,
         )
     )
     mistakes.sort(key=lambda item: (item.timestamp, item.player, item.ability_id))
@@ -609,22 +651,11 @@ def _collect_wrong_color_eruption_kick_mistakes(
     successful_interrupts: List[Dict[str, object]],
     pull_index: int,
     pull_duration_ms: Optional[float],
+    prefetched_events: Mapping[str, Iterable[Dict[str, object]]],
 ) -> List[BelorenLightVoidMistakeEvent]:
-    kick_filter = "ability.id in (" + ",".join(str(ability_id) for ability_id in sorted(INTERRUPT_ABILITY_LABELS)) + ")"
     mistakes: List[BelorenLightVoidMistakeEvent] = []
     seen: Set[tuple] = set()
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Casts",
-        start=fight.start,
-        end=event_end,
-        limit=5000,
-        extra_filter=kick_filter,
-        actor_names=actor_names,
-        use_actor_ids=True,
-    ):
+    for event in prefetched_events.get("Casts", ()):
         if str(event.get("type") or "").lower() != "cast":
             continue
         timestamp = event_timestamp(event)
@@ -632,6 +663,8 @@ def _collect_wrong_color_eruption_kick_mistakes(
         target_name = target_name_from_event(event)
         interrupt_ability_id = ability_id_from_event(event)
         if timestamp is None or interrupt_ability_id is None or not _is_player_in_scope(player, known_players, participants):
+            continue
+        if timestamp > event_end:
             continue
         interrupted_ability_id = _eruption_ability_for_target(target_name)
         if interrupted_ability_id is None:
@@ -773,6 +806,13 @@ def _is_player_in_scope(player: Optional[str], known_players: Set[str], particip
     if not player or player not in known_players:
         return False
     return not participants or player in participants
+
+
+def _ability_filter(ability_ids: Iterable[int]) -> str:
+    return " or ".join(
+        f"(ability.id = {ability_id} or abilityGameID = {ability_id})"
+        for ability_id in sorted(set(ability_ids))
+    )
 
 
 def _build_entries(

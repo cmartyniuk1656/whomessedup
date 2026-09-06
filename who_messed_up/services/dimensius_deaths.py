@@ -23,10 +23,10 @@ from .common import (
     compute_fight_duration_ms,
 )
 from .consumables import (
-    DEATH_REPORT_HEALING_CONSUMABLES,
     HealingConsumableStatus,
     build_healing_consumable_statuses,
     collect_healing_consumable_uses,
+    healing_consumable_ability_names,
 )
 from .death_reports import (
     DeathReportDamageHit,
@@ -196,7 +196,7 @@ def fetch_dimensius_death_summary(
         bearer,
         fights=chosen,
         report_code=report_code,
-        ability_names=[consumable.ability_name for consumable in DEATH_REPORT_HEALING_CONSUMABLES],
+        ability_names=healing_consumable_ability_names(),
         actor_names=actor_names,
     )
 

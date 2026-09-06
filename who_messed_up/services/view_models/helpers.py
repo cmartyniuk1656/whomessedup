@@ -20,13 +20,18 @@ def role_tone(role: Optional[str]) -> str:
 
 
 def format_offset_seconds(value_ms: Optional[float]) -> str:
+    """Format a pull-relative timestamp as minutes and decimal seconds."""
     if value_ms is None:
         return "?"
     try:
         numeric = float(value_ms)
     except (TypeError, ValueError):
         return "?"
-    return f"{numeric / 1000.0:.2f}s"
+    rounded_seconds = round(abs(numeric) / 1000.0, 2)
+    minutes = int(rounded_seconds // 60)
+    seconds = rounded_seconds - (minutes * 60)
+    sign = "-" if numeric < 0 and rounded_seconds > 0 else ""
+    return f"{sign}{minutes}:{seconds:05.2f}"
 
 
 def format_duration(value_ms: Optional[float]) -> Optional[str]:

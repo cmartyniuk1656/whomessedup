@@ -16,6 +16,7 @@ from .services.consumables import (
     DEATH_REPORT_HEALING_CONSUMABLES,
     HealingConsumable,
     HealingConsumableStatus,
+    healing_consumable_ability_names,
 )
 from .services.boss_manifests import (
     BELOREN_CHILD_OF_ALAR_MANIFEST,
@@ -27,6 +28,7 @@ from .services.boss_manifests import (
     MANIFEST_TIERS,
     MIDNIGHT_FALLS_MANIFEST,
     NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+    NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
     THE_LOST_EXPLORERS_HEROIC_MANIFEST,
     VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
     SSZORAK_HEROIC_MANIFEST,
@@ -222,6 +224,7 @@ __all__ = [
     "LIGHTBLINDED_VANGUARD_MANIFEST",
     "MIDNIGHT_FALLS_MANIFEST",
     "NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST",
+    "NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST",
     "THE_LOST_EXPLORERS_HEROIC_MANIFEST",
     "VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST",
     "SSZORAK_HEROIC_MANIFEST",
@@ -232,6 +235,7 @@ __all__ = [
     "CooldownUsageSummary",
     "HealingConsumable",
     "HealingConsumableStatus",
+    "healing_consumable_ability_names",
     "IMPERATOR_AVERZIAN_MANIFEST",
     "MANIFEST_TIERS",
     "MidnightFallsFuckupEntry",

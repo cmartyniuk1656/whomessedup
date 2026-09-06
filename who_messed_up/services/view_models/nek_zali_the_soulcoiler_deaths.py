@@ -1,5 +1,5 @@
 """
-View-model builder for the Heroic Nek'zali death report page.
+View-model builder for the Mythic Nek'zali death report page.
 """
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from ..nek_zali_the_soulcoiler_deaths import REPORT_DEFAULT_FIGHT
 from .death_reports import DeathReportPageConfig, build_death_report_page
 
 REPORT_ID = "nek-zali-the-soulcoiler-deaths"
-REPORT_TITLE = "Heroic Nek'zali the Soulcoiler - Death Report"
-REPORT_DESCRIPTION = "Death report for Heroic Nek'zali the Soulcoiler."
+REPORT_TITLE = "Mythic Nek'zali the Soulcoiler - Death Report"
+REPORT_DESCRIPTION = "Death report for Mythic Nek'zali the Soulcoiler."
 REPORT_FOOTNOTES: list[str] = []
 
 REPORT_CONFIG = DeathReportPageConfig(

@@ -9,11 +9,12 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Set
 
 import requests
 
-from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
+from ..api import Fight, fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -187,11 +188,16 @@ def _fetch_single_midnight_falls_fuckup_summary(
     participants_by_fight: Dict[int, Set[str]] = {}
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = {name for name in _players_from_details(details) if name in known_players}
+        else:
+            participants, fight_roles, _ = roster
+            participants = {name for name in participants if name in known_players}
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        participants = {name for name in _players_from_details(details) if name in known_players}
         participants_by_fight[fight.id] = participants
         for name in participants:
             pulls_by_player[name] += 1
@@ -217,6 +223,27 @@ def _fetch_single_midnight_falls_fuckup_summary(
     }
     pull_index_by_fight = {fight.id: index + 1 for index, fight in enumerate(chosen)}
     events_by_player: DefaultDict[str, List[MidnightFallsFuckupEvent]] = defaultdict(list)
+    damage_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="DamageTaken",
+        fights=chosen,
+        extra_filter=" or ".join(
+            f"(ability.id = {ability_id} or abilityGameID = {ability_id})"
+            for ability_id in (HEAVENS_GLAIVES_ID, TEARS_OF_LURA_ID, DARK_PULSAR_DAMAGE_ID)
+        ),
+        actor_names=actor_names,
+    )
+    pulsar_casts_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="All",
+        fights=chosen,
+        ability_id=DARK_PULSAR_CAST_ID,
+        actor_names=actor_names,
+    )
 
     for fight in chosen:
         cutoff = death_cutoffs.get(fight.id)
@@ -224,22 +251,15 @@ def _fetch_single_midnight_falls_fuckup_summary(
         participants = participants_by_fight.get(fight.id, set())
         pull_duration_ms = compute_fight_duration_ms(fight)
         positive_hits_by_player: DefaultDict[str, List[dict]] = defaultdict(list)
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="DamageTaken",
-            start=fight.start,
-            end=event_end,
-            limit=5000,
-            ability_id=HEAVENS_GLAIVES_ID,
-            actor_names=actor_names,
-        ):
+        fight_damage_events = damage_by_fight.get(fight.id, ())
+        for event in fight_damage_events:
+            if _ability_id(event) != HEAVENS_GLAIVES_ID:
+                continue
             player = _target_player_name(event)
             if not _is_player_in_scope(player, known_players, participants):
                 continue
             timestamp = _event_timestamp(event)
-            if timestamp is None:
+            if timestamp is None or timestamp > event_end:
                 continue
             if _actual_damage_amount(event) <= 0:
                 continue
@@ -258,16 +278,15 @@ def _fetch_single_midnight_falls_fuckup_summary(
             events_by_player[player].extend(clustered_events)
 
         for event_model in _collect_dark_pulsar_hits(
-            session=session,
-            bearer=bearer,
             report_code=report_code,
             fight=fight,
             event_end=event_end,
-            actor_names=actor_names,
             known_players=known_players,
             participants=participants,
             pull_index=pull_index_by_fight.get(fight.id, 0),
             pull_duration_ms=pull_duration_ms,
+            raw_casts=pulsar_casts_by_fight.get(fight.id, ()),
+            raw_damage_events=fight_damage_events,
         ):
             events_by_player[event_model.player].append(event_model)
 
@@ -356,59 +375,37 @@ def _cluster_heavens_glaives_hits(
 
 def _collect_dark_pulsar_hits(
     *,
-    session: requests.Session,
-    bearer: str,
     report_code: str,
     fight: Fight,
     event_end: float,
-    actor_names: Dict[int, str],
     known_players: Set[str],
     participants: Set[str],
     pull_index: int,
     pull_duration_ms: Optional[float],
+    raw_casts: Iterable[dict],
+    raw_damage_events: Iterable[dict],
 ) -> List[MidnightFallsFuckupEvent]:
     casts = [
         event
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="All",
-            start=fight.start,
-            end=event_end,
-            limit=5000,
-            ability_id=DARK_PULSAR_CAST_ID,
-            actor_names=actor_names,
-        )
-        if str(event.get("type") or "").lower() == "cast" and _event_timestamp(event) is not None
+        for event in raw_casts
+        if str(event.get("type") or "").lower() == "cast"
+        and (_event_timestamp(event) is not None and _event_timestamp(event) <= event_end)
     ]
     damage_events = [
         event
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="DamageTaken",
-            start=fight.start,
-            end=event_end,
-            limit=5000,
-            ability_id=DARK_PULSAR_DAMAGE_ID,
-            actor_names=actor_names,
-        )
-        if _event_timestamp(event) is not None and _actual_damage_amount(event) > 0
+        for event in raw_damage_events
+        if _ability_id(event) == DARK_PULSAR_DAMAGE_ID
+        and (_event_timestamp(event) is not None and _event_timestamp(event) <= event_end)
+        and _actual_damage_amount(event) > 0
     ]
     if not casts and not damage_events:
         return []
 
     tears_by_player = _collect_tears_timestamps_by_player(
-        session=session,
-        bearer=bearer,
-        report_code=report_code,
-        fight=fight,
         event_end=event_end,
-        actor_names=actor_names,
         known_players=known_players,
         participants=participants,
+        raw_damage_events=raw_damage_events,
     )
     set_starts = _dark_pulsar_set_starts(casts or damage_events)
     if not set_starts:
@@ -460,32 +457,20 @@ def _collect_dark_pulsar_hits(
 
 def _collect_tears_timestamps_by_player(
     *,
-    session: requests.Session,
-    bearer: str,
-    report_code: str,
-    fight: Fight,
     event_end: float,
-    actor_names: Dict[int, str],
     known_players: Set[str],
     participants: Set[str],
+    raw_damage_events: Iterable[dict],
 ) -> Dict[str, List[float]]:
     timestamps_by_player: DefaultDict[str, List[float]] = defaultdict(list)
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="DamageTaken",
-        start=fight.start,
-        end=event_end,
-        limit=5000,
-        ability_id=TEARS_OF_LURA_ID,
-        actor_names=actor_names,
-    ):
+    for event in raw_damage_events:
+        if _ability_id(event) != TEARS_OF_LURA_ID:
+            continue
         player = _target_player_name(event)
         if not _is_player_in_scope(player, known_players, participants):
             continue
         timestamp = _event_timestamp(event)
-        if timestamp is not None:
+        if timestamp is not None and timestamp <= event_end:
             timestamps_by_player[player].append(timestamp)
     return timestamps_by_player
 

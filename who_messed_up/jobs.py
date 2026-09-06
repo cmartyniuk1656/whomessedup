@@ -4,13 +4,15 @@ In-process job queue for long-running Warcraft Logs reports.
 from __future__ import annotations
 
 import queue
+import os
 import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Optional, Tuple
 
+from .api import clear_report_context_cache
 from .cache import ResultCache, result_cache
 
 JobHandler = Callable[[Dict[str, Any]], Any]
@@ -34,23 +36,39 @@ class JobRecord:
 def _format_ts(value: Optional[float]) -> Optional[str]:
     if value is None:
         return None
-    return datetime.utcfromtimestamp(value).isoformat() + "Z"
+    return datetime.fromtimestamp(value, timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 class JobManager:
     """
-    Minimal single-worker queue. Ensures we only run one heavy report at a time.
+    Bounded worker queue with coalescing for identical in-flight reports.
     """
 
-    def __init__(self, cache: ResultCache):
+    def __init__(self, cache: ResultCache, *, worker_count: Optional[int] = None):
         self._cache = cache
         self._handlers: Dict[str, JobHandler] = {}
         self._jobs: Dict[str, JobRecord] = {}
         self._pending_order: list[str] = []
+        self._active_by_cache_key: Dict[str, str] = {}
         self._queue: "queue.Queue[str]" = queue.Queue()
         self._lock = threading.Lock()
-        self._worker = threading.Thread(target=self._worker_loop, daemon=True)
-        self._worker.start()
+        configured_workers = worker_count
+        if configured_workers is None:
+            try:
+                configured_workers = int(os.getenv("WHO_MESSED_UP_JOB_WORKERS", "2"))
+            except ValueError:
+                configured_workers = 2
+        self._worker_count = min(max(int(configured_workers), 1), 8)
+        self._workers = [
+            threading.Thread(
+                target=self._worker_loop,
+                name=f"report-worker-{index + 1}",
+                daemon=True,
+            )
+            for index in range(self._worker_count)
+        ]
+        for worker in self._workers:
+            worker.start()
 
     def register_handler(self, job_type: str, handler: JobHandler) -> None:
         self._handlers[job_type] = handler
@@ -87,16 +105,23 @@ class JobManager:
                     self._jobs[job.id] = job
                 return job, True
 
-        job = JobRecord(
-            id=str(uuid.uuid4()),
-            job_type=job_type,
-            payload=payload,
-            cache_key=cache_key,
-            bust_cache=bust_cache,
-        )
         with self._lock:
+            if not bust_cache:
+                active_job_id = self._active_by_cache_key.get(cache_key)
+                active_job = self._jobs.get(active_job_id) if active_job_id else None
+                if active_job is not None and active_job.status in {"pending", "running"}:
+                    return active_job, False
+            job = JobRecord(
+                id=str(uuid.uuid4()),
+                job_type=job_type,
+                payload=payload,
+                cache_key=cache_key,
+                bust_cache=bust_cache,
+            )
             self._jobs[job.id] = job
             self._pending_order.append(job.id)
+            if not bust_cache:
+                self._active_by_cache_key[cache_key] = job.id
         # Store handler association separately to avoid looking up later under lock
         self._queue.put(job.id)
         return job, False
@@ -162,16 +187,27 @@ class JobManager:
                 except ValueError:
                     pass
             try:
+                if job.bust_cache:
+                    # A fresh run must also bypass the short-lived metadata cache.
+                    clear_report_context_cache()
                 result = handler(job.payload)
-                job.result = result
-                job.status = "completed"
                 if job.cache_key:
                     self._cache.set(job.cache_key, result)
+                with self._lock:
+                    job.result = result
+                    job.status = "completed"
             except Exception as exc:  # pragma: no cover - defensive
-                job.error = str(exc)
-                job.status = "failed"
+                with self._lock:
+                    job.error = str(exc)
+                    job.status = "failed"
             finally:
-                job.finished_at = time.time()
+                with self._lock:
+                    job.finished_at = time.time()
+                    if (
+                        job.cache_key
+                        and self._active_by_cache_key.get(job.cache_key) == job.id
+                    ):
+                        self._active_by_cache_key.pop(job.cache_key, None)
                 self._queue.task_done()
 
 

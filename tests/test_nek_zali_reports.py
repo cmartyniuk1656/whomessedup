@@ -11,7 +11,7 @@ from who_messed_up.services.report_registry import (
 
 
 class NekZaliReportRegistryTests(unittest.TestCase):
-    def test_every_season_two_boss_has_a_heroic_cooldown_report(self):
+    def test_every_season_two_boss_has_a_cooldown_report_at_current_progression_difficulty(self):
         expected_ids = {
             "nymrissa-wavecaller-cooldowns",
             "nek-zali-the-soulcoiler-cooldowns",
@@ -26,11 +26,19 @@ class NekZaliReportRegistryTests(unittest.TestCase):
         definitions = {definition.id: definition for definition in list_report_definitions()}
 
         self.assertTrue(expected_ids.issubset(definitions))
-        self.assertEqual({definitions[report_id].difficulty for report_id in expected_ids}, {"heroic"})
+        self.assertEqual(definitions["nek-zali-the-soulcoiler-cooldowns"].difficulty, "mythic")
+        self.assertEqual(
+            {
+                definitions[report_id].difficulty
+                for report_id in expected_ids
+                if report_id != "nek-zali-the-soulcoiler-cooldowns"
+            },
+            {"heroic"},
+        )
 
     def test_cooldown_report_supports_all_last_and_specific_fight_scopes(self):
         report_id = "nek-zali-the-soulcoiler-cooldowns"
-        reminder = "EncounterID:3470;Name:Nek'zali - Heroic;Difficulty:Heroic\ntime:11;ph:1;tag:Player;spellid:31884;"
+        reminder = "EncounterID:3470;Name:Nek'zali - Mythic;Difficulty:Mythic\ntime:11;ph:1;tag:Player;spellid:31884;"
         registered = get_registered_report(report_id)
         fight_id_field = next(field for field in registered.definition.request_schema.fields if field.id == "fight_id")
 
@@ -64,7 +72,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
         self.assertEqual(specific_payload["report"], "ZARtb8Dxjhg9H4BF")
         self.assertEqual(specific_payload["fight_selection"], "specific")
         self.assertEqual(specific_payload["fight_ids"], [3])
-        self.assertEqual(specific_payload["difficulty"], "heroic")
+        self.assertEqual(specific_payload["difficulty"], "mythic")
 
         _, fragment_payload, _ = build_report_job_request(
             report_id,
@@ -79,7 +87,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
 
     def test_specific_cooldown_scope_requires_one_report_and_fight_id(self):
         report_id = "nek-zali-the-soulcoiler-cooldowns"
-        reminder = "EncounterID:3470;Difficulty:Heroic\ntime:11;ph:1;tag:Player;spellid:31884;"
+        reminder = "EncounterID:3470;Difficulty:Mythic\ntime:11;ph:1;tag:Player;spellid:31884;"
 
         with self.assertRaisesRegex(ValueError, "Enter a fight ID"):
             build_report_job_request(
@@ -106,7 +114,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
         registered = get_registered_report(report_id)
 
         self.assertEqual(registered.definition.fight_id, "nek-zali-the-soulcoiler")
-        self.assertEqual(registered.definition.difficulty, "heroic")
+        self.assertEqual(registered.definition.difficulty, "mythic")
         self.assertEqual(
             [field.id for field in registered.definition.request_schema.fields],
             [
@@ -114,6 +122,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
                 "include_nek_zali_the_soulcoiler",
                 "include_restless_amani",
                 "include_echo_of_jawae",
+                "include_drowned_echo",
                 "kill_only",
                 "omit_dead_players",
                 "fresh_run",
@@ -127,21 +136,21 @@ class NekZaliReportRegistryTests(unittest.TestCase):
 
         self.assertEqual(job_type, JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE)
         self.assertEqual(payload["fight"], "Nek'zali the Soulcoiler")
-        self.assertEqual(payload["difficulty"], "heroic")
+        self.assertEqual(payload["difficulty"], "mythic")
         self.assertEqual(
             payload["targets"],
-            ["nek_zali_the_soulcoiler", "restless_amani", "echo_of_jawae"],
+            ["nek_zali_the_soulcoiler", "restless_amani", "echo_of_jawae", "drowned_echo"],
         )
         self.assertFalse(payload["kill_only"])
         self.assertFalse(payload["omit_dead_players"])
         self.assertFalse(fresh_run)
 
-    def test_avoidable_damage_report_uses_heroic_manifest_defaults(self):
+    def test_avoidable_damage_report_uses_mythic_manifest_defaults(self):
         report_id = "nek-zali-the-soulcoiler-avoidable-damage"
         registered = get_registered_report(report_id)
 
         self.assertEqual(registered.definition.fight_id, "nek-zali-the-soulcoiler")
-        self.assertEqual(registered.definition.difficulty, "heroic")
+        self.assertEqual(registered.definition.difficulty, "mythic")
         self.assertEqual(
             [field.id for field in registered.definition.request_schema.fields],
             [
@@ -151,6 +160,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
                 "include_avoidable_1288554",
                 "include_avoidable_1294846",
                 "include_avoidable_1295085",
+                "include_avoidable_1300239",
                 "ignore_after_deaths",
                 "fresh_run",
             ],
@@ -163,19 +173,19 @@ class NekZaliReportRegistryTests(unittest.TestCase):
 
         self.assertEqual(job_type, JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE)
         self.assertEqual(payload["fight"], "Nek'zali the Soulcoiler")
-        self.assertEqual(payload["difficulty"], "heroic")
+        self.assertEqual(payload["difficulty"], "mythic")
         self.assertEqual(
             payload["ability_keys"],
-            ["1290390", "1292899", "1288554", "1294846", "1295085"],
+            ["1290390", "1292899", "1288554", "1294846", "1295085", "1300239"],
         )
         self.assertFalse(fresh_run)
 
-    def test_death_report_uses_heroic_defaults(self):
+    def test_death_report_uses_mythic_defaults(self):
         report_id = "nek-zali-the-soulcoiler-deaths"
         registered = get_registered_report(report_id)
 
         self.assertEqual(registered.definition.fight_id, "nek-zali-the-soulcoiler")
-        self.assertEqual(registered.definition.difficulty, "heroic")
+        self.assertEqual(registered.definition.difficulty, "mythic")
 
         job_type, payload, fresh_run = build_report_job_request(
             report_id,
@@ -184,7 +194,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
 
         self.assertEqual(job_type, JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS)
         self.assertEqual(payload["fight"], "Nek'zali the Soulcoiler")
-        self.assertEqual(payload["difficulty"], "heroic")
+        self.assertEqual(payload["difficulty"], "mythic")
         self.assertFalse(fresh_run)
 
 

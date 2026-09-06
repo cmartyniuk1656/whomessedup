@@ -3,6 +3,7 @@ import unittest
 from who_messed_up.api import Fight
 from who_messed_up.services.mechanic_scorecard_analyzers import (
     FightMechanicContext,
+    MECHANICS_BY_BOSS,
     analyze_fight,
 )
 from who_messed_up.services.mechanic_scorecard_types import (
@@ -114,6 +115,29 @@ class MechanicScorecardRegistryTests(unittest.TestCase):
 
 
 class MechanicScorecardAnalyzerTests(unittest.TestCase):
+    def test_coiled_altar_does_not_score_venomfang_dispels(self):
+        observations = analyze_fight(
+            "the-coiled-altar",
+            _context(
+                {
+                    "Debuffs": [
+                        _event("applydebuff", 1_000, 1306906),
+                        _event("removedebuff", 8_000, 1306906),
+                    ],
+                    "Dispels": [],
+                    "DamageTaken": [],
+                    "Interrupts": [],
+                    "Casts": [],
+                }
+            ),
+        )
+
+        self.assertNotIn(
+            "venomfang-dispels",
+            {definition.id for definition in MECHANICS_BY_BOSS["the-coiled-altar"]},
+        )
+        self.assertFalse(any(event.ability_id == 1306906 for event in observations))
+
     def test_coiled_orb_pickup_is_positive_without_claiming_placement(self):
         observations = analyze_fight(
             "the-coiled-altar",

@@ -12,9 +12,9 @@ import requests
 from ..api import fetch_events, fetch_fights, fetch_player_details
 from ..env import load_env
 from .ability_event_filters import (
-    collect_avoidable_active_exclusion_windows,
-    collect_avoidable_exclusion_events,
-    collect_avoidable_requirement_windows,
+    collect_avoidable_active_exclusion_windows_by_fight,
+    collect_avoidable_exclusion_events_by_fight,
+    collect_avoidable_requirement_windows_by_fight,
     is_avoidable_event_excluded,
     is_avoidable_event_requirement_met,
 )
@@ -27,6 +27,7 @@ from .boss_manifest_types import (
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -215,11 +216,16 @@ def _fetch_single_avoidable_damage_summary(
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     participants_by_fight: Dict[int, Set[str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = {name for name in _players_from_details(details) if name in known_players}
+        else:
+            participants, fight_roles, _ = roster
+            participants = {name for name in participants if name in known_players}
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        participants = {name for name in _players_from_details(details) if name in known_players}
         participants_by_fight[fight.id] = participants
         for name in participants:
             pulls_by_player[name] += 1
@@ -242,6 +248,55 @@ def _fetch_single_avoidable_damage_summary(
     pull_index_by_fight: Dict[int, int] = {fight.id: index + 1 for index, fight in enumerate(chosen)}
     events_by_player: DefaultDict[str, List[AvoidableDamageEvent]] = defaultdict(list)
     damage_totals: DefaultDict[str, float] = defaultdict(float)
+    raw_events_by_fight: DefaultDict[int, List[Dict[str, object]]] = defaultdict(list)
+    if selected_abilities:
+        for event in fetch_events(
+            session,
+            bearer,
+            code=report_code,
+            data_type="DamageTaken",
+            start=min(float(fight.start) for fight in chosen),
+            end=max(float(fight.end) for fight in chosen),
+            extra_filter=_build_ability_filter(selected_abilities),
+            fight_ids=fight_id_list,
+            use_actor_ids=all(ability.game_id is not None for ability in selected_abilities),
+            actor_names=actor_names,
+        ):
+            event_fight_id = _event_fight_id(event, chosen)
+            if event_fight_id is not None:
+                raw_events_by_fight[event_fight_id].append(event)
+
+    event_ends = {
+        fight.id: min(float(fight.end), death_cutoffs.get(fight.id, float(fight.end)))
+        for fight in chosen
+    }
+    avoidable_exclusions_by_fight = collect_avoidable_exclusion_events_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+        abilities=selected_abilities,
+        event_ends=event_ends,
+    )
+    avoidable_active_exclusions_by_fight = collect_avoidable_active_exclusion_windows_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+        abilities=selected_abilities,
+        event_ends=event_ends,
+    )
+    avoidable_requirements_by_fight = collect_avoidable_requirement_windows_by_fight(
+        session,
+        bearer,
+        report_code=report_code,
+        fights=chosen,
+        actor_names=actor_names,
+        abilities=selected_abilities,
+        event_ends=event_ends,
+    )
 
     for fight in chosen:
         cutoff = death_cutoffs.get(fight.id)
@@ -249,33 +304,9 @@ def _fetch_single_avoidable_damage_summary(
         pull_duration = compute_fight_duration_ms(fight)
         participants = participants_by_fight.get(fight.id, set())
         fight_roles = roles_by_fight.get(fight.id, player_roles)
-        avoidable_exclusions = collect_avoidable_exclusion_events(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
-            actor_names=actor_names,
-            abilities=selected_abilities,
-            event_end=event_end,
-        )
-        avoidable_active_exclusions = collect_avoidable_active_exclusion_windows(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
-            actor_names=actor_names,
-            abilities=selected_abilities,
-            event_end=event_end,
-        )
-        avoidable_requirements = collect_avoidable_requirement_windows(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
-            actor_names=actor_names,
-            abilities=selected_abilities,
-            event_end=event_end,
-        )
+        avoidable_exclusions = avoidable_exclusions_by_fight.get(fight.id, {})
+        avoidable_active_exclusions = avoidable_active_exclusions_by_fight.get(fight.id, {})
+        avoidable_requirements = avoidable_requirements_by_fight.get(fight.id, {})
         event_filter = None
         if event_filter_factory is not None:
             event_filter = event_filter_factory(
@@ -301,82 +332,71 @@ def _fetch_single_avoidable_damage_summary(
                 participants=participants,
             )
         fight_events: List[AvoidableDamageEvent] = []
-        for ability in selected_abilities:
-            for event in fetch_events(
-                session,
-                bearer,
-                code=report_code,
-                data_type="DamageTaken",
-                start=fight.start,
-                end=event_end,
-                ability_id=ability.game_id,
-                ability_name=None if ability.game_id is not None else ability.name,
-                actor_names=actor_names,
+        for event in raw_events_by_fight.get(fight.id, []):
+            timestamp = event.get("timestamp")
+            if timestamp is None:
+                continue
+            try:
+                ts_val = float(timestamp)
+            except (TypeError, ValueError):
+                continue
+            if ts_val > float(event_end):
+                continue
+
+            ability_id, ability_label = resolve_damage_ability(event, ability_labels)
+            metadata = boss_manifest.ability_for(
+                ability_id=ability_id,
+                ability_name=ability_label or _event_ability_name(event),
+            )
+            if metadata is None or metadata not in selected_abilities:
+                continue
+            target_name = _target_name_from_event(event)
+            if not target_name or target_name not in known_players:
+                continue
+            if participants and target_name not in participants:
+                continue
+            if event_filter is not None and not event_filter(metadata, event, target_name):
+                continue
+            if not is_avoidable_event_requirement_met(
+                metadata,
+                event,
+                target_name,
+                avoidable_requirements,
             ):
-                timestamp = event.get("timestamp")
-                if timestamp is None:
-                    continue
-                try:
-                    ts_val = float(timestamp)
-                except (TypeError, ValueError):
-                    continue
-                if cutoff is not None and ts_val > cutoff:
-                    continue
+                continue
+            if is_avoidable_event_excluded(
+                metadata,
+                event,
+                target_name,
+                avoidable_exclusions,
+                avoidable_active_exclusions,
+            ):
+                continue
 
-                target_name = _target_name_from_event(event)
-                if not target_name or target_name not in known_players:
-                    continue
-                if participants and target_name not in participants:
-                    continue
-                if event_filter is not None and not event_filter(ability, event, target_name):
-                    continue
-                if not is_avoidable_event_requirement_met(
-                    ability,
-                    event,
-                    target_name,
-                    avoidable_requirements,
-                ):
-                    continue
-                if is_avoidable_event_excluded(
-                    ability,
-                    event,
-                    target_name,
-                    avoidable_exclusions,
-                    avoidable_active_exclusions,
-                ):
-                    continue
+            damage_amount = resolve_damage_amount(event)
+            if damage_amount is None or damage_amount <= 0:
+                continue
 
-                damage_amount = resolve_damage_amount(event)
-                if damage_amount is None or damage_amount <= 0:
-                    continue
-
-                ability_id, ability_label = resolve_damage_ability(event, ability_labels)
-                metadata = ability
-                if not _ability_matches_event(ability, ability_id):
-                    metadata = boss_manifest.ability_for(
-                        ability_id=ability_id,
-                        ability_name=ability_label or ability.name,
-                    ) or ability
-                target_role = fight_roles.get(target_name) or player_roles.get(target_name)
-                if not is_avoidable_for_role(metadata, target_role):
-                    continue
-                event_model = AvoidableDamageEvent(
-                    source_report_code=report_code,
-                    player=target_name,
-                    fight_id=fight.id,
-                    fight_name=fight.name or "",
-                    pull_index=pull_index_by_fight.get(fight.id, 0),
-                    timestamp=ts_val,
-                    offset_ms=ts_val - float(fight.start),
-                    ability_id=ability_id,
-                    ability_label=ability_label or metadata.name,
-                    damage_amount=damage_amount,
-                    ability_description=metadata.description,
-                    ability_url=metadata.url,
-                    ability_tags=tuple(metadata.tags),
-                    pull_duration_ms=pull_duration,
-                )
-                fight_events.append(event_model)
+            target_role = fight_roles.get(target_name) or player_roles.get(target_name)
+            if not is_avoidable_for_role(metadata, target_role):
+                continue
+            event_model = AvoidableDamageEvent(
+                source_report_code=report_code,
+                player=target_name,
+                fight_id=fight.id,
+                fight_name=fight.name or "",
+                pull_index=pull_index_by_fight.get(fight.id, 0),
+                timestamp=ts_val,
+                offset_ms=ts_val - float(fight.start),
+                ability_id=ability_id,
+                ability_label=ability_label or metadata.name,
+                damage_amount=damage_amount,
+                ability_description=metadata.description,
+                ability_url=metadata.url,
+                ability_tags=tuple(metadata.tags),
+                pull_duration_ms=pull_duration,
+            )
+            fight_events.append(event_model)
 
         if event_aggregator is not None:
             fight_events = event_aggregator(fight_events)
@@ -532,6 +552,45 @@ def _target_name_from_event(event: Dict[str, object]) -> Optional[str]:
 
 def _normalize_ability_name(value: str) -> str:
     return " ".join(str(value).strip().lower().split())
+
+
+def _build_ability_filter(abilities: Iterable[BossAbilityMetadata]) -> str:
+    parts: List[str] = []
+    for ability in abilities:
+        if ability.game_id is not None:
+            ability_id = int(ability.game_id)
+            parts.append(f"(ability.id = {ability_id} or abilityGameID = {ability_id})")
+        else:
+            safe_name = ability.name.replace('"', '\\"')
+            parts.append(f'ability.name = "{safe_name}"')
+    return " or ".join(f"({part})" for part in parts)
+
+
+def _event_fight_id(
+    event: Dict[str, object], fights: Iterable[object] = ()
+) -> Optional[int]:
+    try:
+        return int(event.get("fight"))
+    except (TypeError, ValueError):
+        pass
+    try:
+        timestamp = float(event.get("timestamp"))
+    except (TypeError, ValueError):
+        return None
+    for fight in fights:
+        if float(fight.start) <= timestamp <= float(fight.end):
+            return int(fight.id)
+    return None
+
+
+def _event_ability_name(event: Dict[str, object]) -> Optional[str]:
+    ability = event.get("ability")
+    if isinstance(ability, dict):
+        name = ability.get("name")
+        if name:
+            return str(name)
+    name = event.get("abilityName")
+    return str(name) if name else None
 
 
 def _ability_matches_event(ability: BossAbilityMetadata, ability_id: Optional[int]) -> bool:

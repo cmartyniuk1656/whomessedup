@@ -14,11 +14,12 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Set
 
 import requests
 
-from ..api import Fight, fetch_events, fetch_fights, fetch_player_details
+from ..api import Fight, fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
     ROLE_PRIORITY,
     ROLE_UNKNOWN,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -226,11 +227,16 @@ def _fetch_single_crown_silver_hit_summary(
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     participants_by_fight: Dict[int, Set[str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = {name for name in _players_from_details(details) if name in known_players}
+        else:
+            participants, fight_roles, _ = roster
+            participants = {name for name in participants if name in known_players}
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        participants = {name for name in _players_from_details(details) if name in known_players}
         participants_by_fight[fight.id] = participants
         for name in participants:
             pulls_by_player[name] += 1
@@ -247,38 +253,53 @@ def _fetch_single_crown_silver_hit_summary(
 
     pull_index_by_fight = {fight.id: index + 1 for index, fight in enumerate(chosen)}
     events_by_player: DefaultDict[str, List[CrownSilverHitEvent]] = defaultdict(list)
+    grasp_events_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="Debuffs",
+        fights=chosen,
+        ability_id=GRASP_OF_EMPTINESS_ID,
+        actor_names=actor_names,
+    )
+    silver_events_by_fight = fetch_events_grouped(
+        session,
+        bearer,
+        code=report_code,
+        data_type="All",
+        fights=chosen,
+        extra_filter=" or ".join(
+            f"(ability.id = {ability_id} or abilityGameID = {ability_id})"
+            for ability_id in (
+                BURSTING_EMPTINESS_ID,
+                RANGER_CAPTAINS_MARK_ID,
+                SIMULACRUM_BACKLASH_ID,
+            )
+        ),
+        include_resources=True,
+        actor_names=actor_names,
+    )
 
     for fight in chosen:
         cutoff = death_cutoffs.get(fight.id)
         event_end = min(float(fight.end), cutoff) if cutoff is not None else float(fight.end)
         pull_duration = compute_fight_duration_ms(fight)
         releases = _collect_grasp_releases(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
             event_end=event_end,
             actor_names=actor_names,
             known_players=known_players,
+            events=grasp_events_by_fight.get(fight.id, ()),
         )
         if not releases:
             continue
 
-        bursting_clips = list(
-            fetch_events(
-                session,
-                bearer,
-                code=report_code,
-                data_type="All",
-                start=fight.start,
-                end=event_end,
-                limit=10000,
-                ability_id=BURSTING_EMPTINESS_ID,
-                include_resources=True,
-                use_actor_ids=True,
-                actor_names=actor_names,
-            )
-        )
+        fight_silver_events = silver_events_by_fight.get(fight.id, ())
+        bursting_clips = [
+            event
+            for event in fight_silver_events
+            if _event_ability_id(event) == BURSTING_EMPTINESS_ID
+            and (_coerce_float(event.get("timestamp")) or 0.0) <= event_end
+        ]
         for release in releases:
             release.clip_count = sum(
                 1
@@ -289,12 +310,9 @@ def _fetch_single_crown_silver_hit_summary(
             )
 
         silver_instances = _collect_silver_instances(
-            session,
-            bearer,
-            report_code=report_code,
-            fight=fight,
             event_end=event_end,
             actor_names=actor_names,
+            events=fight_silver_events,
         )
         fight_events: List[CrownSilverHitEvent] = []
         for pair_index, (instance, release) in enumerate(_pair_silver_instances_to_releases(silver_instances, releases)):
@@ -365,35 +383,22 @@ def _fetch_single_crown_silver_hit_summary(
 
 
 def _collect_grasp_releases(
-    session: requests.Session,
-    bearer: str,
     *,
-    report_code: str,
-    fight: Fight,
     event_end: float,
     actor_names: Dict[int, str],
     known_players: Set[str],
+    events: Iterable[dict],
 ) -> List[_GraspRelease]:
     active: Dict[str, float] = {}
     releases: List[_GraspRelease] = []
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Debuffs",
-        start=fight.start,
-        end=event_end,
-        limit=5000,
-        ability_id=GRASP_OF_EMPTINESS_ID,
-        actor_names=actor_names,
-    ):
+    for event in events:
         target_id = _coerce_int(event.get("targetID"))
         player = _target_player_name(event, actor_names)
         if not player:
             continue
         target_key = str(target_id) if target_id is not None else player
         timestamp = _coerce_float(event.get("timestamp"))
-        if timestamp is None:
+        if timestamp is None or timestamp > event_end:
             continue
         event_type = (event.get("type") or "").lower()
         if event_type in {"applydebuff", "applydebuffstack", "refreshdebuff"}:
@@ -418,29 +423,16 @@ def _collect_grasp_releases(
 
 
 def _collect_silver_instances(
-    session: requests.Session,
-    bearer: str,
     *,
-    report_code: str,
-    fight: Fight,
     event_end: float,
     actor_names: Dict[int, str],
+    events: Iterable[dict],
 ) -> List[_SilverInstance]:
-    rows = list(
-        fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="All",
-            start=fight.start,
-            end=event_end,
-            limit=10000,
-            extra_filter=f'source.name = "{SILVER_SIMULACRUM_NAME}" or target.name = "{SILVER_SIMULACRUM_NAME}"',
-            include_resources=True,
-            use_actor_ids=True,
-            actor_names=actor_names,
-        )
-    )
+    rows = [
+        event
+        for event in events
+        if (_coerce_float(event.get("timestamp")) or 0.0) <= event_end
+    ]
     source_rows_by_instance: DefaultDict[int, List[dict]] = defaultdict(list)
     for event in rows:
         source_id = _coerce_int(event.get("sourceID"))

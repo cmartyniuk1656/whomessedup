@@ -45,7 +45,8 @@ Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into act
 - Build the frontend (`npm run build`) and run `uvicorn app:app --host 0.0.0.0 --port 8088` under a process manager (systemd, Supervisor, Docker, etc.).
 - Put Nginx/Traefik/Nginx Proxy Manager in front to terminate TLS and proxy `/` and `/api/*` to the app.
 - Store `WCL_CLIENT_ID` / `WCL_CLIENT_SECRET` securely as environment variables.
-- The job queue runs in-process; scale by adding more Uvicorn workers if you saturate a single worker (bear in mind rate limits from Warcraft Logs).
+- The job queue and Warcraft Logs request limiter run in-process. Prefer one Uvicorn worker and tune the bounded report pool with `WHO_MESSED_UP_JOB_WORKERS` (default `2`) so separate processes do not independently exceed the upstream rate limit.
+- `WCL_MAX_CONCURRENT_REQUESTS` caps concurrent Warcraft Logs requests (default `4`), while `WCL_REQUEST_ATTEMPTS` controls transient 429/5xx retries (default `3`).
 
 ## Development Tips
 

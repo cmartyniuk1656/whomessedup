@@ -18,6 +18,7 @@ from .common import (
     GhostMissMode,
     GHOST_SET_WINDOW_MS,
     normalize_ghost_miss_mode,
+    _fight_roster_from_metadata,
     _infer_player_roles,
     _players_from_details,
     _resolve_token,
@@ -111,11 +112,16 @@ def fetch_ghost_summary(
     pulls_per_player: Dict[str, int] = defaultdict(int)
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
-        details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
-        fight_roles, _ = _infer_player_roles(details)
+        roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
+        if roster is None:
+            details = fetch_player_details(session, bearer, code=report_code, fight_ids=[fight.id])
+            fight_roles, _ = _infer_player_roles(details)
+            participants = set(_players_from_details(details))
+        else:
+            participants, fight_roles, _ = roster
         if fight_roles:
             roles_by_fight[fight.id] = fight_roles
-        for name in set(_players_from_details(details)):
+        for name in participants:
             pulls_per_player[name] += 1
 
     name_to_class: Dict[str, Optional[str]] = {}

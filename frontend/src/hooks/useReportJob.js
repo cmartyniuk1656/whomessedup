@@ -59,7 +59,7 @@ export function useReportJob() {
         }
 
         setPendingJob(data);
-        pollRef.current.timer = setTimeout(() => requestJobStatus(jobId), 1500);
+        pollRef.current.timer = setTimeout(() => requestJobStatus(jobId), 500);
       } catch (err) {
         if (pollRef.current.jobId !== jobId) {
           return;

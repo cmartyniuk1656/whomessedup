@@ -5,12 +5,11 @@ from who_messed_up.services.boss_manifest_types import is_avoidable_ability
 
 
 class NekZaliHeroicManifestTests(unittest.TestCase):
-    def test_manifest_resolves_only_for_heroic(self):
+    def test_manifest_resolves_for_heroic(self):
         manifest = get_boss_manifest("nek-zali-the-soulcoiler", "heroic")
 
         self.assertIsNotNone(manifest)
         self.assertEqual(manifest.boss_name, "Nek'zali the Soulcoiler")
-        self.assertIsNone(get_boss_manifest("nek-zali-the-soulcoiler", "mythic"))
 
     def test_manifest_contains_observed_targets_and_documented_damage_abilities(self):
         manifest = get_boss_manifest("nek-zali-the-soulcoiler", "heroic")
@@ -48,6 +47,39 @@ class NekZaliHeroicManifestTests(unittest.TestCase):
             {ability.game_id for ability in manifest.abilities if is_avoidable_ability(ability)},
             {1288554, 1290390, 1292899, 1294846, 1295085},
         )
+
+
+class NekZaliMythicManifestTests(unittest.TestCase):
+    def test_manifest_resolves_for_mythic(self):
+        manifest = get_boss_manifest("nek-zali-the-soulcoiler", "mythic")
+
+        self.assertIsNotNone(manifest)
+        self.assertEqual(manifest.boss_name, "Nek'zali the Soulcoiler")
+
+    def test_manifest_extends_heroic_with_drowned_echo_mechanics(self):
+        heroic = get_boss_manifest("nek-zali-the-soulcoiler", "heroic")
+        mythic = get_boss_manifest("nek-zali-the-soulcoiler", "mythic")
+
+        self.assertEqual(
+            {target.enemy_name for target in mythic.targets},
+            {"Nek'zali the Soulcoiler", "Restless Amani", "Echo of Jawae", "Drowned Echo"},
+        )
+        self.assertEqual(
+            {ability.game_id for ability in mythic.abilities} - {ability.game_id for ability in heroic.abilities},
+            {1293214, 1300239, 1308227},
+        )
+
+    def test_swirling_spirit_is_the_only_new_avoidable_ability(self):
+        heroic = get_boss_manifest("nek-zali-the-soulcoiler", "heroic")
+        mythic = get_boss_manifest("nek-zali-the-soulcoiler", "mythic")
+
+        heroic_avoidable = {
+            ability.game_id for ability in heroic.abilities if is_avoidable_ability(ability)
+        }
+        mythic_avoidable = {
+            ability.game_id for ability in mythic.abilities if is_avoidable_ability(ability)
+        }
+        self.assertEqual(mythic_avoidable - heroic_avoidable, {1300239})
 
 
 class EntombedSentinelsHeroicManifestTests(unittest.TestCase):

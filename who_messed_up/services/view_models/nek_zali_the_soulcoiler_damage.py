@@ -1,5 +1,5 @@
 """
-View-model builder for the Heroic Nek'zali damage report page.
+View-model builder for the Mythic Nek'zali damage report page.
 """
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ from ..target_damage import EncounterTargetDamageSummary
 from .target_damage import TargetDamageReportConfig, build_target_damage_report_page
 
 REPORT_ID = "nek-zali-the-soulcoiler-damage"
-REPORT_TITLE = "Heroic Nek'zali the Soulcoiler - Damage Report"
-REPORT_DESCRIPTION = "Damage report for Heroic Nek'zali the Soulcoiler."
+REPORT_TITLE = "Mythic Nek'zali the Soulcoiler - Damage Report"
+REPORT_DESCRIPTION = "Damage report for Mythic Nek'zali the Soulcoiler."
 REPORT_DEFAULT_FIGHT = "Nek'zali the Soulcoiler"
 REPORT_FOOTNOTES = [
-    "Use the target toggles to include or exclude Nek'zali, Restless Amani, and Echo of Jawae damage.",
+    "Use the target toggles to include or exclude Nek'zali, Restless Amani, Echo of Jawae, and Drowned Echo damage.",
     (
         "Kill-only scope restricts the report to successful pulls, and the dead-player filter removes a player's "
         "data from pulls where they died."

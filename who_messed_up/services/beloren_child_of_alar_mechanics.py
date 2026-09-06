@@ -6,7 +6,7 @@ from __future__ import annotations
 from bisect import bisect_right
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import DefaultDict, Dict, List, Optional, Tuple
+from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from ..api import fetch_events
 
@@ -171,19 +171,15 @@ def collect_feather_timelines(
     fight,
     actor_names: Dict[int, str],
     event_end: Optional[float],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> Dict[str, FeatherTimeline]:
     end_time = event_end if event_end is not None else fight.end
     changes: List[Tuple[float, str, str, int]] = []
     for feather_id in FEATHER_IDS:
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="Debuffs",
-            start=fight.start,
-            end=end_time,
-            ability_id=feather_id,
-            actor_names=actor_names,
+        for event in _events_for_ability(
+            prefetched_events, "Debuffs", feather_id, end_time,
+            session=session, bearer=bearer, report_code=report_code,
+            fight=fight, actor_names=actor_names,
         ):
             timestamp = event_timestamp(event)
             target_name = target_name_from_event(event)
@@ -216,19 +212,15 @@ def collect_quill_assignments(
     fight,
     actor_names: Dict[int, str],
     event_end: Optional[float],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> Dict[int, List[QuillAssignment]]:
     end_time = event_end if event_end is not None else fight.end
     assignments: DefaultDict[int, List[QuillAssignment]] = defaultdict(list)
     for damage_ability_id, marker_ability_id in QUILL_MARKERS.items():
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="Debuffs",
-            start=fight.start,
-            end=end_time,
-            ability_id=marker_ability_id,
-            actor_names=actor_names,
+        for event in _events_for_ability(
+            prefetched_events, "Debuffs", marker_ability_id, end_time,
+            session=session, bearer=bearer, report_code=report_code,
+            fight=fight, actor_names=actor_names,
         ):
             if str(event.get("type") or "").lower() != "applydebuff":
                 continue
@@ -254,19 +246,15 @@ def collect_quill_damage_classifications(
     participants: set[str],
     feather_timelines: Dict[str, FeatherTimeline],
     quill_assignments: Dict[int, List[QuillAssignment]],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> Dict[Tuple[int, int, str], QuillDamageClassification]:
     end_time = event_end if event_end is not None else fight.end
     classifications: Dict[Tuple[int, int, str], QuillDamageClassification] = {}
     for ability_id, expected_feather_id in QUILL_REQUIRED_FEATHER.items():
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="DamageTaken",
-            start=fight.start,
-            end=end_time,
-            ability_id=ability_id,
-            actor_names=actor_names,
+        for event in _events_for_ability(
+            prefetched_events, "DamageTaken", ability_id, end_time,
+            session=session, bearer=bearer, report_code=report_code,
+            fight=fight, actor_names=actor_names,
         ):
             timestamp = event_timestamp(event)
             player = target_name_from_event(event)
@@ -315,6 +303,7 @@ def collect_flame_penalty_applications(
     known_players: set[str],
     participants: set[str],
     feather_timelines: Dict[str, FeatherTimeline],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> List[FlamePenaltyApplication]:
     _, applications = _collect_flame_penalty_windows_and_applications(
         session=session,
@@ -326,6 +315,7 @@ def collect_flame_penalty_applications(
         known_players=known_players,
         participants=participants,
         feather_timelines=feather_timelines,
+        prefetched_events=prefetched_events,
     )
     return applications
 
@@ -341,6 +331,7 @@ def collect_flame_damage_classifications(
     known_players: set[str],
     participants: set[str],
     feather_timelines: Dict[str, FeatherTimeline],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> Dict[Tuple[int, int, str], FlameDamageClassification]:
     end_time = event_end if event_end is not None else fight.end
     windows_by_player, _ = _collect_flame_penalty_windows_and_applications(
@@ -353,18 +344,14 @@ def collect_flame_damage_classifications(
         known_players=known_players,
         participants=participants,
         feather_timelines=feather_timelines,
+        prefetched_events=prefetched_events,
     )
     classifications: Dict[Tuple[int, int, str], FlameDamageClassification] = {}
     for ability_id in FLAMES_REQUIRED_FEATHER:
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="DamageTaken",
-            start=fight.start,
-            end=end_time,
-            ability_id=ability_id,
-            actor_names=actor_names,
+        for event in _events_for_ability(
+            prefetched_events, "DamageTaken", ability_id, end_time,
+            session=session, bearer=bearer, report_code=report_code,
+            fight=fight, actor_names=actor_names,
         ):
             timestamp = event_timestamp(event)
             player = target_name_from_event(event)
@@ -402,6 +389,7 @@ def collect_flame_penalty_windows(
     known_players: set[str],
     participants: set[str],
     feather_timelines: Dict[str, FeatherTimeline],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> List[FlamePenaltyWindow]:
     windows_by_player, _ = _collect_flame_penalty_windows_and_applications(
         session=session,
@@ -413,6 +401,7 @@ def collect_flame_penalty_windows(
         known_players=known_players,
         participants=participants,
         feather_timelines=feather_timelines,
+        prefetched_events=prefetched_events,
     )
     windows: List[FlamePenaltyWindow] = []
     for player_windows in windows_by_player.values():
@@ -450,18 +439,14 @@ def collect_rupture_mistake_windows(
     known_players: set[str],
     participants: set[str],
     feather_timelines: Dict[str, FeatherTimeline],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> List[RuptureMistakeWindow]:
     end_time = event_end if event_end is not None else fight.end
     raw_events: List[Tuple[float, str, str, Optional[int]]] = []
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="Debuffs",
-        start=fight.start,
-        end=end_time,
-        ability_id=VOIDLIGHT_RUPTURE_ID,
-        actor_names=actor_names,
+    for event in _events_for_ability(
+        prefetched_events, "Debuffs", VOIDLIGHT_RUPTURE_ID, end_time,
+        session=session, bearer=bearer, report_code=report_code,
+        fight=fight, actor_names=actor_names,
     ):
         timestamp = event_timestamp(event)
         player = target_name_from_event(event)
@@ -515,6 +500,7 @@ def collect_rupture_mistake_classifications(
     known_players: set[str],
     participants: set[str],
     feather_timelines: Dict[str, FeatherTimeline],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> List[RuptureMistakeClassification]:
     end_time = event_end if event_end is not None else fight.end
     windows = collect_rupture_mistake_windows(
@@ -527,6 +513,7 @@ def collect_rupture_mistake_classifications(
         known_players=known_players,
         participants=participants,
         feather_timelines=feather_timelines,
+        prefetched_events=prefetched_events,
     )
     windows_by_player: DefaultDict[str, List[RuptureMistakeWindow]] = defaultdict(list)
     for window in windows:
@@ -534,15 +521,10 @@ def collect_rupture_mistake_classifications(
 
     damage_by_window: DefaultDict[Tuple[str, int], float] = defaultdict(float)
     ticks_by_window: DefaultDict[Tuple[str, int], int] = defaultdict(int)
-    for event in fetch_events(
-        session,
-        bearer,
-        code=report_code,
-        data_type="DamageTaken",
-        start=fight.start,
-        end=end_time,
-        ability_id=VOIDLIGHT_RUPTURE_ID,
-        actor_names=actor_names,
+    for event in _events_for_ability(
+        prefetched_events, "DamageTaken", VOIDLIGHT_RUPTURE_ID, end_time,
+        session=session, bearer=bearer, report_code=report_code,
+        fight=fight, actor_names=actor_names,
     ):
         timestamp = event_timestamp(event)
         player = target_name_from_event(event)
@@ -692,19 +674,15 @@ def _collect_flame_penalty_windows_and_applications(
     known_players: set[str],
     participants: set[str],
     feather_timelines: Dict[str, FeatherTimeline],
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]] = None,
 ) -> Tuple[Dict[Tuple[int, str], List[FlamePenaltyWindow]], List[FlamePenaltyApplication]]:
     end_time = event_end if event_end is not None else fight.end
     events: List[Tuple[float, int, str, str, Optional[int]]] = []
     for ability_id in FLAMES_REQUIRED_FEATHER:
-        for event in fetch_events(
-            session,
-            bearer,
-            code=report_code,
-            data_type="Debuffs",
-            start=fight.start,
-            end=end_time,
-            ability_id=ability_id,
-            actor_names=actor_names,
+        for event in _events_for_ability(
+            prefetched_events, "Debuffs", ability_id, end_time,
+            session=session, bearer=bearer, report_code=report_code,
+            fight=fight, actor_names=actor_names,
         ):
             timestamp = event_timestamp(event)
             player = target_name_from_event(event)
@@ -772,6 +750,38 @@ def _collect_flame_penalty_windows_and_applications(
         player_windows.sort(key=lambda item: item.start)
     applications.sort(key=lambda item: (item.timestamp, item.ability_id, item.player))
     return dict(windows), applications
+
+
+def _events_for_ability(
+    prefetched_events: Optional[Mapping[str, Iterable[Dict[str, object]]]],
+    data_type: str,
+    ability_id: int,
+    end_time: float,
+    *,
+    session,
+    bearer: str,
+    report_code: str,
+    fight,
+    actor_names: Dict[int, str],
+) -> Iterable[Dict[str, object]]:
+    if prefetched_events is None:
+        return fetch_events(
+            session,
+            bearer,
+            code=report_code,
+            data_type=data_type,
+            start=fight.start,
+            end=end_time,
+            ability_id=ability_id,
+            actor_names=actor_names,
+            use_actor_ids=True,
+        )
+    return (
+        event
+        for event in prefetched_events.get(data_type, ())
+        if ability_id_from_event(event) == ability_id
+        and (event_timestamp(event) is not None and event_timestamp(event) <= end_time)
+    )
 
 
 def _stack_count_from_event(event: Dict[str, object]) -> Optional[int]:
