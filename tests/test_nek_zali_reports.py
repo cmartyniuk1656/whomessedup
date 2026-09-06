@@ -11,6 +11,26 @@ from who_messed_up.services.report_registry import (
 
 
 class NekZaliReportRegistryTests(unittest.TestCase):
+    def test_heroic_and_mythic_reports_are_both_registered(self):
+        definitions = {definition.id: definition for definition in list_report_definitions()}
+        heroic_ids = {
+            "nek-zali-the-soulcoiler-damage",
+            "nek-zali-the-soulcoiler-avoidable-damage",
+            "nek-zali-the-soulcoiler-deaths",
+            "nek-zali-the-soulcoiler-mechanics-scorecard",
+        }
+        mythic_ids = {
+            "nek-zali-the-soulcoiler-damage-mythic",
+            "nek-zali-the-soulcoiler-avoidable-damage-mythic",
+            "nek-zali-the-soulcoiler-deaths-mythic",
+            "nek-zali-the-soulcoiler-cooldowns",
+        }
+
+        self.assertTrue(heroic_ids.issubset(definitions))
+        self.assertTrue(mythic_ids.issubset(definitions))
+        self.assertEqual({definitions[report_id].difficulty for report_id in heroic_ids}, {"heroic"})
+        self.assertEqual({definitions[report_id].difficulty for report_id in mythic_ids}, {"mythic"})
+
     def test_every_season_two_boss_has_a_cooldown_report_at_current_progression_difficulty(self):
         expected_ids = {
             "nymrissa-wavecaller-cooldowns",
@@ -110,7 +130,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
             )
 
     def test_damage_report_uses_all_verified_targets_by_default(self):
-        report_id = "nek-zali-the-soulcoiler-damage"
+        report_id = "nek-zali-the-soulcoiler-damage-mythic"
         registered = get_registered_report(report_id)
 
         self.assertEqual(registered.definition.fight_id, "nek-zali-the-soulcoiler")
@@ -145,8 +165,24 @@ class NekZaliReportRegistryTests(unittest.TestCase):
         self.assertFalse(payload["omit_dead_players"])
         self.assertFalse(fresh_run)
 
+    def test_original_damage_report_id_keeps_heroic_defaults(self):
+        report_id = "nek-zali-the-soulcoiler-damage"
+
+        job_type, payload, fresh_run = build_report_job_request(
+            report_id,
+            {"report_codes": "ZARtb8Dxjhg9H4BF"},
+        )
+
+        self.assertEqual(job_type, JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE)
+        self.assertEqual(payload["difficulty"], "heroic")
+        self.assertEqual(
+            payload["targets"],
+            ["nek_zali_the_soulcoiler", "restless_amani", "echo_of_jawae"],
+        )
+        self.assertFalse(fresh_run)
+
     def test_avoidable_damage_report_uses_mythic_manifest_defaults(self):
-        report_id = "nek-zali-the-soulcoiler-avoidable-damage"
+        report_id = "nek-zali-the-soulcoiler-avoidable-damage-mythic"
         registered = get_registered_report(report_id)
 
         self.assertEqual(registered.definition.fight_id, "nek-zali-the-soulcoiler")
@@ -181,7 +217,7 @@ class NekZaliReportRegistryTests(unittest.TestCase):
         self.assertFalse(fresh_run)
 
     def test_death_report_uses_mythic_defaults(self):
-        report_id = "nek-zali-the-soulcoiler-deaths"
+        report_id = "nek-zali-the-soulcoiler-deaths-mythic"
         registered = get_registered_report(report_id)
 
         self.assertEqual(registered.definition.fight_id, "nek-zali-the-soulcoiler")

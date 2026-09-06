@@ -6,7 +6,10 @@ from __future__ import annotations
 from typing import Iterable, Optional
 
 from .avoidable_damage import AvoidableDamageSummary, fetch_avoidable_damage_summary
-from .boss_manifests import NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST
+from .boss_manifests import (
+    NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+    NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
+)
 
 REPORT_DEFAULT_FIGHT = "Nek'zali the Soulcoiler"
 
@@ -24,9 +27,14 @@ def fetch_nek_zali_the_soulcoiler_avoidable_damage_summary(
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
 ) -> AvoidableDamageSummary:
+    manifest = (
+        NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST
+        if str(difficulty or "").strip().lower() in {"mythic", "5"}
+        else NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST
+    )
     return fetch_avoidable_damage_summary(
         report_code=report_code,
-        boss_manifest=NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
+        boss_manifest=manifest,
         fight_name=fight_name or REPORT_DEFAULT_FIGHT,
         fight_ids=fight_ids,
         difficulty=difficulty,

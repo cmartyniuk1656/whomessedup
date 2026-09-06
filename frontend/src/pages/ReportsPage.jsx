@@ -9,6 +9,8 @@ import { ReportConfigurationModal } from "../components/v2/organisms/ReportConfi
 import { ReportResultsPanel } from "../components/v2/organisms/ReportResultsPanel";
 import { ReportRunningPanel } from "../components/v2/organisms/ReportRunningPanel";
 import { ReportWizardStepFrame } from "../components/v2/organisms/ReportWizardStepFrame";
+import { SettingsModal } from "../components/v2/organisms/SettingsModal";
+import { useGuildReportDiscovery } from "../hooks/useGuildReportDiscovery";
 import { useReportBrowserState } from "../hooks/useReportBrowserState";
 import { useReportDefinitions } from "../hooks/useReportDefinitions";
 import { useReportJob } from "../hooks/useReportJob";
@@ -27,9 +29,11 @@ export function ReportsPage() {
   const [wizardTransitionPhase, setWizardTransitionPhase] = useState("enter");
   const [isConfigurationOpen, setIsConfigurationOpen] = useState(false);
   const [hasRunAttempt, setHasRunAttempt] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const transitionTimerRef = useRef(null);
   const cachedLinkAttemptedRef = useRef(false);
   const { reports, error: definitionsError, loading: definitionsLoading } = useReportDefinitions();
+  const guildDiscovery = useGuildReportDiscovery();
   const {
     page,
     error: jobError,
@@ -250,6 +254,19 @@ export function ReportsPage() {
     return runReport({ reportId: selectedReport.id, values: formValues });
   };
 
+  const handleSelectRecentReport = (reportCode) => {
+    const fields = selectedReport?.requestSchema?.fields ?? [];
+    const reportField = fields.find((field) => field.id === "report_code" || field.id === "report_codes");
+    if (!reportField || !reportCode) {
+      return;
+    }
+    if (reportField.kind === "multi_text") {
+      handleMultiTextChange(reportField.id, 0, reportCode);
+    } else {
+      handleValueChange(reportField.id, reportCode);
+    }
+  };
+
   const handleOpenConfigurationFromRunning = () => {
     goToWizardStep(WIZARD_STEPS.REPORT);
     setIsConfigurationOpen(true);
@@ -381,6 +398,20 @@ export function ReportsPage() {
 
       <main className="relative z-10 mx-auto max-w-6xl px-6 pb-16 pt-8">
         <header className="relative isolate overflow-hidden border-b border-white/10 pb-10 pt-3 sm:pb-12">
+          <button
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+            className="absolute right-0 top-3 z-10 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950/35 px-3 py-2 text-sm text-slate-300 backdrop-blur-sm transition hover:border-emerald-300/30 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/40"
+            aria-label="Open settings"
+            title="Settings"
+          >
+            <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.6 3.3h4.8l.6 2.2c.5.2 1 .5 1.4.8l2.2-.6 2.4 4.1-1.6 1.6v1.2l1.6 1.6-2.4 4.1-2.2-.6c-.4.3-.9.6-1.4.8l-.6 2.2H9.6L9 18.5c-.5-.2-1-.5-1.4-.8l-2.2.6L3 14.2l1.6-1.6v-1.2L3 9.8l2.4-4.1 2.2.6c.4-.3.9-.6 1.4-.8l.6-2.2Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span className="hidden sm:inline">Settings</span>
+            {guildDiscovery.settings ? <span aria-label="Guild configured" className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> : null}
+          </button>
           <div className="mx-auto mt-8 flex max-w-6xl flex-col items-center text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs uppercase tracking-[0.35em] text-slate-300 shadow-[0_0_40px_rgba(255,255,255,0.05)]">
               <span>Log Analysis</span>
@@ -417,8 +448,11 @@ export function ReportsPage() {
             onMultiTextChange={handleMultiTextChange}
             onAddMultiTextRow={handleAddMultiTextRow}
             onRemoveMultiTextRow={handleRemoveMultiTextRow}
+            guildDiscovery={guildDiscovery}
+            onSelectRecentReport={handleSelectRecentReport}
           />
         ) : null}
+        {isSettingsOpen ? <SettingsModal discovery={guildDiscovery} onClose={() => setIsSettingsOpen(false)} /> : null}
       </main>
     </div>
   );

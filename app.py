@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+import requests
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -207,6 +208,9 @@ from who_messed_up.service import (
     OBLIVION_FILTER_DEFAULT,
     GhostMissMode,
     normalize_ghost_miss_mode,
+    discover_guild_reports,
+    GuildNotFoundError,
+    WarcraftLogsCredentialsError,
     fetch_ghost_summary,
     fetch_hit_summary,
     fetch_beloren_child_of_alar_avoidable_damage_summary,
@@ -263,6 +267,27 @@ from who_messed_up.service import (
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
 load_env()
+
+
+class DiscoveredGuildModel(BaseModel):
+    id: int
+    name: str
+    server_name: str
+    server_slug: str
+    server_region: str
+
+
+class DiscoveredReportModel(BaseModel):
+    code: str
+    title: str
+    start_time: float
+    end_time: float
+    zone_name: Optional[str] = None
+
+
+class GuildReportDiscoveryModel(BaseModel):
+    guild: DiscoveredGuildModel
+    reports: List[DiscoveredReportModel]
 
 
 class FightModel(BaseModel):
@@ -2100,7 +2125,10 @@ def _execute_v2_vorasius_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def _execute_v2_nek_zali_the_soulcoiler_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_nek_zali_the_soulcoiler_damage_summary_from_payload(payload)
-    page = build_nek_zali_the_soulcoiler_damage_report_page(summary)
+    page = build_nek_zali_the_soulcoiler_damage_report_page(
+        summary,
+        difficulty=payload.get("difficulty"),
+    )
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2172,7 +2200,10 @@ def _execute_v2_vorasius_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def _execute_v2_nek_zali_the_soulcoiler_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_nek_zali_the_soulcoiler_deaths_summary_from_payload(payload)
-    page = build_nek_zali_the_soulcoiler_deaths_report_page(summary)
+    page = build_nek_zali_the_soulcoiler_deaths_report_page(
+        summary,
+        difficulty=payload.get("difficulty"),
+    )
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2244,7 +2275,10 @@ def _execute_v2_vorasius_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[s
 
 def _execute_v2_nek_zali_the_soulcoiler_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_nek_zali_the_soulcoiler_avoidable_damage_summary_from_payload(payload)
-    page = build_nek_zali_the_soulcoiler_avoidable_damage_report_page(summary)
+    page = build_nek_zali_the_soulcoiler_avoidable_damage_report_page(
+        summary,
+        difficulty=payload.get("difficulty"),
+    )
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2616,6 +2650,37 @@ job_manager.register_handler(JOB_V2_THE_COILED_ALTAR_DEATHS, _execute_v2_the_coi
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/v2/wcl/guild-reports", response_model=GuildReportDiscoveryModel)
+def get_guild_reports(
+    guild_name: str = Query(..., min_length=1, max_length=100),
+    server_slug: str = Query(..., min_length=1, max_length=100),
+    server_region: str = Query(..., min_length=2, max_length=3),
+    limit: int = Query(20, ge=1, le=50),
+) -> GuildReportDiscoveryModel:
+    """Resolve a Warcraft Logs guild and return its newest public reports."""
+    credentials = _client_credentials()
+    try:
+        discovery = discover_guild_reports(
+            guild_name=guild_name,
+            server_slug=server_slug,
+            server_region=server_region,
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+            limit=limit,
+        )
+    except GuildNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except WarcraftLogsCredentialsError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return GuildReportDiscoveryModel(
+        guild=DiscoveredGuildModel(**discovery.guild.__dict__),
+        reports=[DiscoveredReportModel(**report.__dict__) for report in discovery.reports],
+    )
 
 
 @app.get("/api/jobs/{job_id}", response_model=JobStatusModel)

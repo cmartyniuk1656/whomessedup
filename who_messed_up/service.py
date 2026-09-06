@@ -18,6 +18,14 @@ from .services.consumables import (
     HealingConsumableStatus,
     healing_consumable_ability_names,
 )
+from .services.wcl_report_discovery import (
+    DiscoveredGuild,
+    DiscoveredReport,
+    GuildNotFoundError,
+    GuildReportDiscovery,
+    WarcraftLogsCredentialsError,
+    discover_guild_reports,
+)
 from .services.boss_manifests import (
     BELOREN_CHILD_OF_ALAR_MANIFEST,
     BOSS_MANIFESTS,
@@ -212,7 +220,11 @@ __all__ = [
     "DeathReportEvent",
     "DeathReportDamageHit",
     "DeathReportSummary",
+    "DiscoveredGuild",
+    "DiscoveredReport",
     "FightSelectionError",
+    "GuildNotFoundError",
+    "GuildReportDiscovery",
     "GhostEntry",
     "GhostEvent",
     "GhostMissMode",
@@ -253,8 +265,10 @@ __all__ = [
     "ROLE_UNKNOWN",
     "TokenError",
     "VORASIUS_MANIFEST",
+    "WarcraftLogsCredentialsError",
     "OBLIVION_FILTER_DEFAULT",
     "fetch_dimensius_add_damage_summary",
+    "discover_guild_reports",
     "fetch_dimensius_phase_one_summary",
     "fetch_dimensius_priority_damage_summary",
     "fetch_dimensius_death_summary",

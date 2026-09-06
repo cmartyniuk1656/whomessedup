@@ -13,6 +13,8 @@ export function ReportConfigurationModal({
   onMultiTextChange,
   onAddMultiTextRow,
   onRemoveMultiTextRow,
+  guildDiscovery,
+  onSelectRecentReport,
 }) {
   if (!report) {
     return null;
@@ -46,6 +48,8 @@ export function ReportConfigurationModal({
           onMultiTextChange={onMultiTextChange}
           onAddMultiTextRow={onAddMultiTextRow}
           onRemoveMultiTextRow={onRemoveMultiTextRow}
+          guildDiscovery={guildDiscovery}
+          onSelectRecentReport={onSelectRecentReport}
           layout="modal"
         />
       </SurfacePanel>

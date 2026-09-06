@@ -2,6 +2,7 @@ import { Button } from "../atoms/Button";
 import { StatusPill } from "../atoms/StatusPill";
 import { ReportFieldControl } from "../molecules/ReportFieldControl";
 import { ReportRunCard } from "../molecules/ReportRunCard";
+import { RecentGuildReports } from "../molecules/RecentGuildReports";
 
 const GLOBAL_CONFIGURATION_FIELD_IDS = new Set([
   "ignore_after_deaths",
@@ -56,6 +57,8 @@ export function ReportRequestForm({
   onMultiTextChange,
   onAddMultiTextRow,
   onRemoveMultiTextRow,
+  guildDiscovery,
+  onSelectRecentReport,
   layout = "sidebar",
 }) {
   const fields = (report?.requestSchema?.fields ?? []).filter((field) => isFieldVisible(field, values));
@@ -87,6 +90,15 @@ export function ReportRequestForm({
         }}
       >
         <div className="max-h-[min(58vh,30rem)] space-y-3.5 overflow-y-auto pr-1">
+          {guildDiscovery?.settings ? (
+            <RecentGuildReports
+              guild={guildDiscovery.guild}
+              reports={guildDiscovery.reports}
+              isLoading={guildDiscovery.isLoading}
+              error={guildDiscovery.error}
+              onSelectReport={onSelectRecentReport}
+            />
+          ) : null}
           {primaryFields.map((field) => renderField(field, "compact"))}
 
           {globalFields.length ? (

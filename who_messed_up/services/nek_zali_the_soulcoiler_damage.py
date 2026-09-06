@@ -5,13 +5,22 @@ from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from .boss_manifests import NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST
+from .boss_manifests import (
+    NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+    NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
+)
 from .target_damage import EncounterTargetDamageSummary, fetch_encounter_target_damage_summary
 
 REPORT_DEFAULT_FIGHT = "Nek'zali the Soulcoiler"
 
-NEK_ZALI_THE_SOULCOILER_TARGETS = NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST.target_configs
-DEFAULT_TARGET_SLUGS = NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST.default_target_slugs
+NEK_ZALI_THE_SOULCOILER_TARGETS = NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST.target_configs
+DEFAULT_TARGET_SLUGS = NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST.default_target_slugs
+
+
+def _manifest_for_difficulty(difficulty: Optional[str | int]):
+    if str(difficulty or "").strip().lower() in {"mythic", "5"}:
+        return NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST
+    return NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST
 
 
 def fetch_nek_zali_the_soulcoiler_damage_summary(
@@ -28,6 +37,7 @@ def fetch_nek_zali_the_soulcoiler_damage_summary(
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
 ) -> EncounterTargetDamageSummary:
+    manifest = _manifest_for_difficulty(difficulty)
     return fetch_encounter_target_damage_summary(
         report_code=report_code,
         fight_name=fight_name or REPORT_DEFAULT_FIGHT,
@@ -37,8 +47,8 @@ def fetch_nek_zali_the_soulcoiler_damage_summary(
         extra_report_codes=extra_report_codes,
         kill_only=kill_only,
         omit_dead_players=omit_dead_players,
-        target_configs=NEK_ZALI_THE_SOULCOILER_TARGETS,
-        default_target_slugs=DEFAULT_TARGET_SLUGS,
+        target_configs=manifest.target_configs,
+        default_target_slugs=manifest.default_target_slugs,
         token=token,
         client_id=client_id,
         client_secret=client_secret,

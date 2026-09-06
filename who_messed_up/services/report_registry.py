@@ -13,6 +13,7 @@ from .boss_manifests import (
     ENTOMBED_SENTINELS_HEROIC_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
+    NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
     NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
     THE_LOST_EXPLORERS_HEROIC_MANIFEST,
     VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
@@ -181,6 +182,9 @@ from .view_models.midnight_falls_fuckups import (
     REPORT_TITLE as REPORT_MIDNIGHT_FALLS_FUCKUPS_TITLE,
 )
 from .view_models.nek_zali_the_soulcoiler_avoidable_damage import (
+    MYTHIC_REPORT_DESCRIPTION as REPORT_NEK_ZALI_AVOIDABLE_MYTHIC_DESCRIPTION,
+    MYTHIC_REPORT_ID as REPORT_NEK_ZALI_AVOIDABLE_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_NEK_ZALI_AVOIDABLE_MYTHIC_TITLE,
     REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_NEK_ZALI_AVOIDABLE_DESCRIPTION,
     REPORT_FOOTNOTES as REPORT_NEK_ZALI_AVOIDABLE_FOOTNOTES,
@@ -188,6 +192,10 @@ from .view_models.nek_zali_the_soulcoiler_avoidable_damage import (
     REPORT_TITLE as REPORT_NEK_ZALI_AVOIDABLE_TITLE,
 )
 from .view_models.nek_zali_the_soulcoiler_damage import (
+    MYTHIC_REPORT_DESCRIPTION as REPORT_NEK_ZALI_MYTHIC_DESCRIPTION,
+    MYTHIC_REPORT_FOOTNOTES as REPORT_NEK_ZALI_MYTHIC_FOOTNOTES,
+    MYTHIC_REPORT_ID as REPORT_NEK_ZALI_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_NEK_ZALI_MYTHIC_TITLE,
     REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_NEK_ZALI_DESCRIPTION,
     REPORT_FOOTNOTES as REPORT_NEK_ZALI_FOOTNOTES,
@@ -195,6 +203,9 @@ from .view_models.nek_zali_the_soulcoiler_damage import (
     REPORT_TITLE as REPORT_NEK_ZALI_TITLE,
 )
 from .view_models.nek_zali_the_soulcoiler_deaths import (
+    MYTHIC_REPORT_DESCRIPTION as REPORT_NEK_ZALI_DEATHS_MYTHIC_DESCRIPTION,
+    MYTHIC_REPORT_ID as REPORT_NEK_ZALI_DEATHS_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_NEK_ZALI_DEATHS_MYTHIC_TITLE,
     REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_NEK_ZALI_DEATHS_DESCRIPTION,
     REPORT_FOOTNOTES as REPORT_NEK_ZALI_DEATHS_FOOTNOTES,
@@ -618,7 +629,7 @@ def _build_ignore_after_deaths_field() -> RequestFieldModel:
         label="Ignore after deaths",
         description="Stop counting report events after this many total player deaths in a pull.",
         placeholder="No limit",
-        defaultValue="",
+        defaultValue="4",
     )
 
 
@@ -843,6 +854,14 @@ def _build_vorasius_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
 def _build_nek_zali_the_soulcoiler_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_target_damage_payload(
         values,
+        manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        default_fight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
+    )
+
+
+def _build_nek_zali_the_soulcoiler_mythic_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
         manifest=NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
         default_fight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
     )
@@ -945,6 +964,13 @@ def _build_vorasius_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
 
 
 def _build_nek_zali_the_soulcoiler_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(
+        values,
+        default_fight=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
+    )
+
+
+def _build_nek_zali_the_soulcoiler_mythic_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_death_report_payload(
         values,
         default_fight=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
@@ -1054,6 +1080,16 @@ def _build_vorasius_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Di
 
 
 def _build_nek_zali_the_soulcoiler_avoidable_damage_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
+        default_fight=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_nek_zali_the_soulcoiler_mythic_avoidable_damage_payload(
     values: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], bool]:
     return _build_avoidable_damage_payload(
@@ -1580,7 +1616,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
             description=REPORT_NEK_ZALI_DEATHS_DESCRIPTION,
             fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
             fightName=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
-            difficulty=ReportDifficulty.MYTHIC,
+            difficulty=ReportDifficulty.HEROIC,
             defaultFight=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
             footnotes=list(REPORT_NEK_ZALI_DEATHS_FOOTNOTES),
             requestSchema=RequestSchemaModel(
@@ -1599,6 +1635,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
         build_payload=_build_nek_zali_the_soulcoiler_deaths_payload,
+    ),
+    REPORT_NEK_ZALI_DEATHS_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_NEK_ZALI_DEATHS_MYTHIC_ID,
+            title=REPORT_NEK_ZALI_DEATHS_MYTHIC_TITLE,
+            description=REPORT_NEK_ZALI_DEATHS_MYTHIC_DESCRIPTION,
+            fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
+            fightName=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_NEK_ZALI_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_NEK_ZALI_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
+        build_payload=_build_nek_zali_the_soulcoiler_mythic_deaths_payload,
     ),
     REPORT_ENTOMBED_SENTINELS_DEATHS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -1902,6 +1965,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
             description=REPORT_NEK_ZALI_AVOIDABLE_DESCRIPTION,
             fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
             fightName=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_NEK_ZALI_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE,
+        build_payload=_build_nek_zali_the_soulcoiler_avoidable_damage_payload,
+    ),
+    REPORT_NEK_ZALI_AVOIDABLE_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_NEK_ZALI_AVOIDABLE_MYTHIC_ID,
+            title=REPORT_NEK_ZALI_AVOIDABLE_MYTHIC_TITLE,
+            description=REPORT_NEK_ZALI_AVOIDABLE_MYTHIC_DESCRIPTION,
+            fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
+            fightName=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
             difficulty=ReportDifficulty.MYTHIC,
             defaultFight=REPORT_NEK_ZALI_AVOIDABLE_DEFAULT_FIGHT,
             footnotes=list(REPORT_NEK_ZALI_AVOIDABLE_FOOTNOTES),
@@ -1920,7 +2010,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
             ),
         ),
         job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE,
-        build_payload=_build_nek_zali_the_soulcoiler_avoidable_damage_payload,
+        build_payload=_build_nek_zali_the_soulcoiler_mythic_avoidable_damage_payload,
     ),
     REPORT_ENTOMBED_SENTINELS_AVOIDABLE_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -2550,9 +2640,30 @@ _REPORTS: Dict[str, RegisteredReport] = {
             description=REPORT_NEK_ZALI_DESCRIPTION,
             fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
             fightName=REPORT_NEK_ZALI_DEFAULT_FIGHT,
-            difficulty=ReportDifficulty.MYTHIC,
+            difficulty=ReportDifficulty.HEROIC,
             defaultFight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
             footnotes=list(REPORT_NEK_ZALI_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Nek'zali the Soulcoiler"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE,
+        build_payload=_build_nek_zali_the_soulcoiler_damage_payload,
+    ),
+    REPORT_NEK_ZALI_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_NEK_ZALI_MYTHIC_ID,
+            title=REPORT_NEK_ZALI_MYTHIC_TITLE,
+            description=REPORT_NEK_ZALI_MYTHIC_DESCRIPTION,
+            fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
+            fightName=REPORT_NEK_ZALI_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
+            footnotes=list(REPORT_NEK_ZALI_MYTHIC_FOOTNOTES),
             requestSchema=RequestSchemaModel(
                 fields=[
                     _build_report_codes_field(),
@@ -2562,7 +2673,7 @@ _REPORTS: Dict[str, RegisteredReport] = {
             ),
         ),
         job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE,
-        build_payload=_build_nek_zali_the_soulcoiler_damage_payload,
+        build_payload=_build_nek_zali_the_soulcoiler_mythic_damage_payload,
     ),
     REPORT_ENTOMBED_SENTINELS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
