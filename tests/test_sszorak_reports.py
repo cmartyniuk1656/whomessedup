@@ -90,7 +90,7 @@ class SszorakReportRegistryTests(unittest.TestCase):
         }
         definitions = {
             definition.id: definition
-            for definition in list_report_definitions()
+            for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "sszorak"
         }
 

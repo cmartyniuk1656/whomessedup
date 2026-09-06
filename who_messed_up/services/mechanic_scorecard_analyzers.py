@@ -85,6 +85,15 @@ MECHANICS_BY_BOSS: Dict[str, Sequence[MechanicDefinition]] = {
         MechanicDefinition("dreadmarch-rescue", "Dreadmarch Rescue", "Successful mind-control removals and their resolution time; rescuers are not inferred from friendly damage.", "Direct aura timing"),
         MechanicDefinition("fragment-intercepts", "Fragment Containment", "Observed Spirit Erasure containment without assigning an interceptor the log does not identify.", "Contribution only", optional=True),
     ),
+    "ula-tek": (
+        MechanicDefinition("egg-control", "Egg and Viper Control", "Avoided egg impacts and uncontrolled Blightscale Viper hatches.", "Direct event"),
+        MechanicDefinition("hazard-dodging", "Venom Hazard Dodging", "Distinct Caustic Waves, Falling Debris, and Virulent Spit contacts.", "Direct failure event"),
+        MechanicDefinition("tank-uptime", "Boss and Tail Tank Uptime", "Raid-wide Mother's Wrath, Rattler Slam, and Unchecked Rage failures.", "Direct team failure", optional=True),
+        MechanicDefinition("fang-pacing", "Grasping Fangs Pacing", "Fangs broken in groups of at most two as required on Heroic.", "Direct aura timing"),
+        MechanicDefinition("interrupt-control", "Priority Interrupts", "Malice, Anguished Cry, and Vicious Echoes interrupts and completed-cast damage.", "Direct event"),
+        MechanicDefinition("bite-rescue", "Serpent's Bite Rescue", "Bitten players freed before becoming a Calcified Corpse.", "Direct aura timing"),
+        MechanicDefinition("purge-spread", "Volatile Purge Spread", "Clean purge windows versus directly logged overlapping purge stacks.", "Direct aura stack"),
+    ),
 }
 
 
@@ -96,6 +105,7 @@ REQUIRED_DATA_TYPES: Dict[str, Set[str]] = {
     "sszorak": {"Debuffs", "DamageTaken"},
     "the-twin-fangs": {"Debuffs", "DamageTaken"},
     "the-coiled-altar": {"Debuffs", "Interrupts", "DamageTaken", "Casts"},
+    "ula-tek": {"Debuffs", "Interrupts", "DamageTaken"},
 }
 
 
@@ -581,6 +591,232 @@ def _analyze_coiled_altar(context: FightMechanicContext) -> List[MechanicObserva
     return observations
 
 
+def _analyze_ula_tek(context: FightMechanicContext) -> List[MechanicObservation]:
+    observations: List[MechanicObservation] = []
+    debuffs = context.events("Debuffs")
+    damage = context.events("DamageTaken")
+    interrupts = context.events("Interrupts")
+
+    # An uncontrolled Viper hatch applies Putrid Membrane to the entire raid at
+    # once. Collapse the raid-wide applications into one directly observed team
+    # failure rather than blaming every victim.
+    membrane_apps = _filter(debuffs, ability_ids={1301268}, event_types={"applydebuff"})
+    for group in _group_timestamps(membrane_apps, 250.0):
+        observations.append(_observation(
+            context,
+            mechanic_id="egg-control",
+            player=TEAM_PLAYER,
+            outcome=OUTCOME_MISTAKE,
+            label="Blightscale Viper hatched",
+            description="An egg contacted venom or completed gestation and applied Putrid Membrane to the raid.",
+            event=group[0],
+            ability_id=1308275,
+            ability_label="Putrid Membrane",
+        ))
+    for event in _filter(damage, ability_ids={1290409}, event_types={"damage"}):
+        player = _target(event)
+        if _player_in_scope(context, player):
+            observations.append(_observation(
+                context,
+                mechanic_id="egg-control",
+                player=player,
+                outcome=OUTCOME_MISTAKE,
+                label="Egg impact",
+                description="Was within four yards when a Blightscale Clutch landed.",
+                event=event,
+                ability_label="Blightscale Clutch",
+            ))
+
+    hazard_labels = {
+        1292403: "Caustic Waves",
+        1286885: "Falling Debris",
+        1302982: "Virulent Spit",
+    }
+    for ability_id, ability_label in hazard_labels.items():
+        by_player = _events_by_target(_filter(damage, ability_ids={ability_id}, event_types={"damage"}))
+        for player, events in by_player.items():
+            if not _player_in_scope(context, player):
+                continue
+            # Periodic effects become one contact until their tick stream has
+            # been quiet for long enough to prove a separate mistake.
+            for sequence in _group_sequences(events, 2_500.0):
+                observations.append(_observation(
+                    context,
+                    mechanic_id="hazard-dodging",
+                    player=player,
+                    outcome=OUTCOME_MISTAKE,
+                    label=f"{ability_label} contact",
+                    description=f"Took {len(sequence)} logged {ability_label} hit(s) in one contact window.",
+                    event=sequence[0],
+                    ability_label=ability_label,
+                    value=float(len(sequence)),
+                    value_label="Hits",
+                ))
+
+    uptime_labels = {
+        1301122: "Mother's Wrath",
+        1299206: "Rattler Slam",
+        1301007: "Unchecked Rage",
+    }
+    for ability_id, ability_label in uptime_labels.items():
+        for group in _group_timestamps(
+            _filter(damage, ability_ids={ability_id}, event_types={"damage"}),
+            250.0,
+        ):
+            observations.append(_observation(
+                context,
+                mechanic_id="tank-uptime",
+                player=TEAM_PLAYER,
+                outcome=OUTCOME_MISTAKE,
+                label=f"{ability_label} triggered",
+                description="The boss or tail had no valid melee target and punished the raid.",
+                event=group[0],
+                ability_label=ability_label,
+            ))
+
+    fang_removals = _filter(debuffs, ability_ids={1311611}, event_types={"removedebuff"})
+    for group in _group_timestamps(fang_removals, 750.0):
+        players = sorted({
+            player for player in (_target(event) for event in group)
+            if _player_in_scope(context, player)
+        })
+        if not players:
+            continue
+        safe = len(players) <= 2
+        for player in players:
+            observations.append(_observation(
+                context,
+                mechanic_id="fang-pacing",
+                player=player,
+                outcome=OUTCOME_SUCCESS if safe else OUTCOME_MISTAKE,
+                label="Controlled Fangs break" if safe else "Too many Fangs broken",
+                description=f"{len(players)} Grasping Fangs tether(s) broke together; Heroic strategy allows at most two.",
+                event=group[0],
+                ability_label="Grasping Fangs",
+                value=float(len(players)),
+                value_label="Simultaneous breaks",
+            ))
+
+    interrupt_labels = {
+        1290779: "Malice",
+        1305650: "Anguished Cry",
+        1310764: "Vicious Echoes",
+    }
+    successful_interrupts = [
+        event for event in interrupts if _extra_ability_id(event) in interrupt_labels
+    ]
+    for event in successful_interrupts:
+        ability_id = _extra_ability_id(event)
+        ability_label = interrupt_labels[ability_id]
+        player = _source(event)
+        if _player_in_scope(context, player):
+            observations.append(_observation(
+                context,
+                mechanic_id="interrupt-control",
+                player=player,
+                outcome=OUTCOME_CONTRIBUTION,
+                label=f"{ability_label} interrupted",
+                description=f"Successfully stopped {ability_label}.",
+                event=event,
+                ability_id=ability_id,
+                ability_label=ability_label,
+                target=_target(event),
+            ))
+        observations.append(_observation(
+            context,
+            mechanic_id="interrupt-control",
+            player=TEAM_PLAYER,
+            outcome=OUTCOME_SUCCESS,
+            label=f"{ability_label} stopped",
+            description=f"Interrupted by {player or 'an unknown player'}.",
+            event=event,
+            ability_id=ability_id,
+            ability_label=ability_label,
+        ))
+    for ability_id, ability_label in interrupt_labels.items():
+        for group in _group_timestamps(
+            _filter(damage, ability_ids={ability_id}, event_types={"damage"}),
+            250.0,
+        ):
+            observations.append(_observation(
+                context,
+                mechanic_id="interrupt-control",
+                player=TEAM_PLAYER,
+                outcome=OUTCOME_MISTAKE,
+                label=f"{ability_label} completed",
+                description=f"{ability_label} dealt raid damage after not being interrupted.",
+                event=group[0],
+                ability_label=ability_label,
+            ))
+
+    calcified_by_target = _events_by_target(
+        _filter(debuffs, ability_ids={1306119}, event_types={"applydebuff"})
+    )
+    bite_removals = _events_by_target(
+        _filter(debuffs, ability_ids={1288879}, event_types={"removedebuff"})
+    )
+    for app in _filter(debuffs, ability_ids={1288879}, event_types={"applydebuff"}):
+        player = _target(app)
+        if not _player_in_scope(context, player):
+            continue
+        start = _timestamp(app) or 0.0
+        failure = _first_after(calcified_by_target.get(player, []), start, 16_000.0)
+        removal = _first_after(bite_removals.get(player, []), start, 16_000.0)
+        # A wipe can end the log before the Bite resolves, which is not enough
+        # evidence to label the assigned player a failure.
+        if failure is None and removal is None:
+            continue
+        success = failure is None
+        end = _timestamp(failure or removal) or start
+        duration = (end - start) / 1000.0
+        observations.append(_observation(
+            context,
+            mechanic_id="bite-rescue",
+            player=player,
+            outcome=OUTCOME_SUCCESS if success else OUTCOME_MISTAKE,
+            label="Bite fully leeched" if success else "Became Calcified Corpse",
+            description=(
+                f"Serpent's Bite was removed after {duration:.1f}s."
+                if success else f"Serpent's Bite was not fully leeched within {duration:.1f}s."
+            ),
+            event=failure or removal or app,
+            ability_label="Serpent's Bite",
+            value=duration,
+            value_label="Resolution time",
+        ))
+
+    purge_stacks = _events_by_target(
+        _filter(debuffs, ability_ids={1316356}, event_types={"applydebuffstack"})
+    )
+    for app in _filter(debuffs, ability_ids={1316356}, event_types={"applydebuff"}):
+        player = _target(app)
+        if not _player_in_scope(context, player):
+            continue
+        start = _timestamp(app) or 0.0
+        overlaps = [
+            event for event in purge_stacks.get(player, [])
+            if start <= (_timestamp(event) or 0.0) <= start + 18_500.0
+        ]
+        clean = not overlaps
+        maximum_stack = max((_stack(event) or 1 for event in overlaps), default=1)
+        observations.append(_observation(
+            context,
+            mechanic_id="purge-spread",
+            player=player,
+            outcome=OUTCOME_SUCCESS if clean else OUTCOME_MISTAKE,
+            label="Clean Purge spread" if clean else "Overlapping Volatile Purge",
+            description=(
+                "No overlapping purge stack was logged during the debuff window."
+                if clean else f"Volatile Purge reached {maximum_stack} stacks from nearby players."
+            ),
+            event=overlaps[0] if overlaps else app,
+            ability_label="Volatile Purge",
+            value=float(maximum_stack),
+            value_label="Maximum stacks",
+        ))
+    return observations
+
+
 ANALYZERS: Dict[str, Callable[[FightMechanicContext], List[MechanicObservation]]] = {
     "nek-zali-the-soulcoiler": _analyze_nek_zali,
     "entombed-sentinels": _analyze_entombed,
@@ -589,6 +825,7 @@ ANALYZERS: Dict[str, Callable[[FightMechanicContext], List[MechanicObservation]]
     "sszorak": _analyze_sszorak,
     "the-twin-fangs": _analyze_twin_fangs,
     "the-coiled-altar": _analyze_coiled_altar,
+    "ula-tek": _analyze_ula_tek,
 }
 
 

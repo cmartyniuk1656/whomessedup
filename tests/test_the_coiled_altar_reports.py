@@ -58,7 +58,7 @@ class TheCoiledAltarReportTests(unittest.TestCase):
     def test_all_baseline_reports_are_registered_for_heroic(self):
         definitions = {
             definition.id: definition
-            for definition in list_report_definitions()
+            for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "the-coiled-altar"
         }
         self.assertEqual(

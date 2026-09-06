@@ -80,6 +80,10 @@ SCORECARD_ENCOUNTERS: Dict[str, Dict[str, str]] = {
         "boss_name": "The Coiled Altar",
         "fight_name": "The Coiled Altar",
     },
+    "ula-tek": {
+        "boss_name": "Ula'tek",
+        "fight_name": "Ula'tek",
+    },
 }
 
 

@@ -12,7 +12,10 @@ from who_messed_up.services.report_registry import (
 
 class NekZaliReportRegistryTests(unittest.TestCase):
     def test_heroic_and_mythic_reports_are_both_registered(self):
-        definitions = {definition.id: definition for definition in list_report_definitions()}
+        definitions = {
+            definition.id: definition
+            for definition in list_report_definitions(include_hidden=True)
+        }
         heroic_ids = {
             "nek-zali-the-soulcoiler-damage",
             "nek-zali-the-soulcoiler-avoidable-damage",

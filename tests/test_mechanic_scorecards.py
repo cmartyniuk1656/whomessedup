@@ -27,6 +27,7 @@ SCORECARD_BOSSES = {
     "sszorak",
     "the-twin-fangs",
     "the-coiled-altar",
+    "ula-tek",
 }
 
 
@@ -56,7 +57,7 @@ class MechanicScorecardRegistryTests(unittest.TestCase):
     def test_all_extrapolated_heroic_bosses_have_scorecards(self):
         definitions = {
             definition.fight_id: definition
-            for definition in list_report_definitions()
+            for definition in list_report_definitions(include_hidden=True)
             if definition.id.endswith("-mechanics-scorecard")
         }
 
@@ -82,6 +83,14 @@ class MechanicScorecardRegistryTests(unittest.TestCase):
                     "fresh_run",
                 ],
             )
+
+    def test_scorecards_are_hidden_from_the_public_report_catalog(self):
+        self.assertFalse(
+            any(
+                definition.id.endswith("-mechanics-scorecard")
+                for definition in list_report_definitions()
+            )
+        )
 
     def test_specific_fight_can_be_read_from_warcraft_logs_url(self):
         report_id = "the-coiled-altar-mechanics-scorecard"

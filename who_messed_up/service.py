@@ -42,6 +42,7 @@ from .services.boss_manifests import (
     SSZORAK_HEROIC_MANIFEST,
     THE_TWIN_FANGS_HEROIC_MANIFEST,
     THE_COILED_ALTAR_HEROIC_MANIFEST,
+    ULA_TEK_HEROIC_MANIFEST,
     VORASIUS_MANIFEST,
     BossAbilityMetadata,
     BossManifest,
@@ -168,6 +169,15 @@ from .services.the_twin_fangs_deaths import fetch_the_twin_fangs_death_summary
 from .services.the_coiled_altar_avoidable_damage import fetch_the_coiled_altar_avoidable_damage_summary
 from .services.the_coiled_altar_damage import fetch_the_coiled_altar_damage_summary
 from .services.the_coiled_altar_deaths import fetch_the_coiled_altar_death_summary
+from .services.ula_tek_avoidable_damage import fetch_ula_tek_avoidable_damage_summary
+from .services.ula_tek_damage import fetch_ula_tek_damage_summary
+from .services.ula_tek_deaths import fetch_ula_tek_death_summary
+from .services.ula_tek_fuckups import (
+    UlaTekFuckupEntry,
+    UlaTekFuckupEvent,
+    UlaTekFuckupSummary,
+    fetch_ula_tek_fuckup_summary,
+)
 from .services.vorasius_avoidable_damage import fetch_vorasius_avoidable_damage_summary
 from .services.vorasius_damage import fetch_vorasius_damage_summary
 from .services.vorasius_deaths import fetch_vorasius_death_summary
@@ -242,6 +252,7 @@ __all__ = [
     "SSZORAK_HEROIC_MANIFEST",
     "THE_TWIN_FANGS_HEROIC_MANIFEST",
     "THE_COILED_ALTAR_HEROIC_MANIFEST",
+    "ULA_TEK_HEROIC_MANIFEST",
     "CooldownUsageEntry",
     "CooldownUsageEvent",
     "CooldownUsageSummary",
@@ -256,6 +267,9 @@ __all__ = [
     "TwinFangsFuckupEntry",
     "TwinFangsFuckupEvent",
     "TwinFangsFuckupSummary",
+    "UlaTekFuckupEntry",
+    "UlaTekFuckupEvent",
+    "UlaTekFuckupSummary",
     "PhaseDamageEntry",
     "PhaseDamageSummary",
     "PhaseMetric",
@@ -339,6 +353,10 @@ __all__ = [
     "fetch_the_coiled_altar_avoidable_damage_summary",
     "fetch_the_coiled_altar_damage_summary",
     "fetch_the_coiled_altar_death_summary",
+    "fetch_ula_tek_avoidable_damage_summary",
+    "fetch_ula_tek_damage_summary",
+    "fetch_ula_tek_death_summary",
+    "fetch_ula_tek_fuckup_summary",
     "fetch_vorasius_avoidable_damage_summary",
     "fetch_vorasius_damage_summary",
     "fetch_vorasius_death_summary",

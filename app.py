@@ -50,6 +50,10 @@ from who_messed_up.services.report_registry import (
     JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE,
     JOB_V2_THE_COILED_ALTAR_DAMAGE,
     JOB_V2_THE_COILED_ALTAR_DEATHS,
+    JOB_V2_ULA_TEK_AVOIDABLE_DAMAGE,
+    JOB_V2_ULA_TEK_DAMAGE,
+    JOB_V2_ULA_TEK_DEATHS,
+    JOB_V2_ULA_TEK_FUCKUPS,
     JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DAMAGE,
     JOB_V2_IMPERATOR_AVERZIAN_DEATHS,
@@ -176,6 +180,12 @@ from who_messed_up.services.view_models.the_coiled_altar_avoidable_damage import
 )
 from who_messed_up.services.view_models.the_coiled_altar_damage import build_the_coiled_altar_damage_report_page
 from who_messed_up.services.view_models.the_coiled_altar_deaths import build_the_coiled_altar_deaths_report_page
+from who_messed_up.services.view_models.ula_tek_avoidable_damage import (
+    build_ula_tek_avoidable_damage_report_page,
+)
+from who_messed_up.services.view_models.ula_tek_damage import build_ula_tek_damage_report_page
+from who_messed_up.services.view_models.ula_tek_deaths import build_ula_tek_deaths_report_page
+from who_messed_up.services.view_models.ula_tek_fuckups import build_ula_tek_fuckup_report_page
 from who_messed_up.services.view_models.vorasius_damage import build_vorasius_damage_report_page
 from who_messed_up.services.view_models.vorasius_avoidable_damage import (
     build_vorasius_avoidable_damage_report_page,
@@ -196,6 +206,7 @@ from who_messed_up.service import (
     LightblindedVanguardDispelSummary,
     MidnightFallsFuckupSummary,
     TwinFangsFuckupSummary,
+    UlaTekFuckupSummary,
     SszorakTempestSummary,
     MechanicScorecardSummary,
     CooldownUsageSummary,
@@ -260,6 +271,10 @@ from who_messed_up.service import (
     fetch_the_coiled_altar_avoidable_damage_summary,
     fetch_the_coiled_altar_damage_summary,
     fetch_the_coiled_altar_death_summary,
+    fetch_ula_tek_avoidable_damage_summary,
+    fetch_ula_tek_damage_summary,
+    fetch_ula_tek_death_summary,
+    fetch_ula_tek_fuckup_summary,
     fetch_vorasius_avoidable_damage_summary,
     fetch_vorasius_damage_summary,
     fetch_vorasius_death_summary,
@@ -1413,6 +1428,24 @@ def _fetch_the_coiled_altar_damage_summary_from_payload(payload: Dict[str, Any])
     )
 
 
+def _fetch_ula_tek_damage_summary_from_payload(payload: Dict[str, Any]) -> EncounterTargetDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_ula_tek_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        targets=payload.get("targets"),
+        extra_report_codes=payload.get("extra_reports"),
+        kill_only=bool(payload.get("kill_only")),
+        omit_dead_players=bool(payload.get("omit_dead_players")),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_beloren_child_of_alar_damage_summary_from_payload(
     payload: Dict[str, Any],
 ) -> EncounterTargetDamageSummary:
@@ -1564,6 +1597,23 @@ def _fetch_the_coiled_altar_deaths_summary_from_payload(payload: Dict[str, Any])
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
     return fetch_the_coiled_altar_death_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        ignore_unavoidable_after_healer_deaths=payload.get("ignore_unavoidable_after_healer_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_ula_tek_deaths_summary_from_payload(payload: Dict[str, Any]) -> DeathReportSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_ula_tek_death_summary(
         report_code=payload["report"],
         fight_name=payload.get("fight"),
         fight_ids=fight_ids,
@@ -1777,10 +1827,45 @@ def _fetch_the_coiled_altar_avoidable_damage_summary_from_payload(
     )
 
 
+def _fetch_ula_tek_avoidable_damage_summary_from_payload(
+    payload: Dict[str, Any],
+) -> AvoidableDamageSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_ula_tek_avoidable_damage_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ability_keys=payload.get("ability_keys"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_the_twin_fangs_fuckup_summary_from_payload(payload: Dict[str, Any]) -> TwinFangsFuckupSummary:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
     return fetch_the_twin_fangs_fuckup_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=fight_ids,
+        difficulty=payload.get("difficulty"),
+        ignore_after_deaths=payload.get("ignore_after_deaths"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
+def _fetch_ula_tek_fuckup_summary_from_payload(payload: Dict[str, Any]) -> UlaTekFuckupSummary:
+    credentials = _client_credentials()
+    fight_ids = payload.get("fight_ids") or None
+    return fetch_ula_tek_fuckup_summary(
         report_code=payload["report"],
         fight_name=payload.get("fight"),
         fight_ids=fight_ids,
@@ -2182,6 +2267,14 @@ def _execute_v2_the_coiled_altar_damage_job(payload: Dict[str, Any]) -> Dict[str
     return page.dict(by_alias=True)
 
 
+def _execute_v2_ula_tek_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_ula_tek_damage_summary_from_payload(payload)
+    page = build_ula_tek_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_beloren_child_of_alar_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_beloren_child_of_alar_damage_summary_from_payload(payload)
     page = build_beloren_child_of_alar_damage_report_page(summary)
@@ -2252,6 +2345,14 @@ def _execute_v2_the_twin_fangs_deaths_job(payload: Dict[str, Any]) -> Dict[str, 
 def _execute_v2_the_coiled_altar_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_the_coiled_altar_deaths_summary_from_payload(payload)
     page = build_the_coiled_altar_deaths_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_ula_tek_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_ula_tek_deaths_summary_from_payload(payload)
+    page = build_ula_tek_deaths_report_page(summary)
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2348,9 +2449,25 @@ def _execute_v2_the_coiled_altar_avoidable_damage_job(payload: Dict[str, Any]) -
     return page.dict(by_alias=True)
 
 
+def _execute_v2_ula_tek_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_ula_tek_avoidable_damage_summary_from_payload(payload)
+    page = build_ula_tek_avoidable_damage_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_the_twin_fangs_fuckup_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_the_twin_fangs_fuckup_summary_from_payload(payload)
     page = build_the_twin_fangs_fuckup_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
+def _execute_v2_ula_tek_fuckup_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_ula_tek_fuckup_summary_from_payload(payload)
+    page = build_ula_tek_fuckup_report_page(summary)
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2645,6 +2762,13 @@ job_manager.register_handler(
 )
 job_manager.register_handler(JOB_V2_THE_COILED_ALTAR_DAMAGE, _execute_v2_the_coiled_altar_damage_job)
 job_manager.register_handler(JOB_V2_THE_COILED_ALTAR_DEATHS, _execute_v2_the_coiled_altar_deaths_job)
+job_manager.register_handler(
+    JOB_V2_ULA_TEK_AVOIDABLE_DAMAGE,
+    _execute_v2_ula_tek_avoidable_damage_job,
+)
+job_manager.register_handler(JOB_V2_ULA_TEK_DAMAGE, _execute_v2_ula_tek_damage_job)
+job_manager.register_handler(JOB_V2_ULA_TEK_DEATHS, _execute_v2_ula_tek_deaths_job)
+job_manager.register_handler(JOB_V2_ULA_TEK_FUCKUPS, _execute_v2_ula_tek_fuckup_job)
 
 
 @app.get("/health")

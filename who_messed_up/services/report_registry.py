@@ -20,6 +20,7 @@ from .boss_manifests import (
     SSZORAK_HEROIC_MANIFEST,
     THE_TWIN_FANGS_HEROIC_MANIFEST,
     THE_COILED_ALTAR_HEROIC_MANIFEST,
+    ULA_TEK_HEROIC_MANIFEST,
     VORASIUS_MANIFEST,
 )
 from .common import _extract_report_fight_id, _sanitize_report_code
@@ -345,6 +346,34 @@ from .view_models.the_coiled_altar_deaths import (
     REPORT_ID as REPORT_THE_COILED_ALTAR_DEATHS_ID,
     REPORT_TITLE as REPORT_THE_COILED_ALTAR_DEATHS_TITLE,
 )
+from .view_models.ula_tek_avoidable_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_ULA_TEK_AVOIDABLE_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_ULA_TEK_AVOIDABLE_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_ULA_TEK_AVOIDABLE_FOOTNOTES,
+    REPORT_ID as REPORT_ULA_TEK_AVOIDABLE_ID,
+    REPORT_TITLE as REPORT_ULA_TEK_AVOIDABLE_TITLE,
+)
+from .view_models.ula_tek_damage import (
+    REPORT_DEFAULT_FIGHT as REPORT_ULA_TEK_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_ULA_TEK_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_ULA_TEK_FOOTNOTES,
+    REPORT_ID as REPORT_ULA_TEK_ID,
+    REPORT_TITLE as REPORT_ULA_TEK_TITLE,
+)
+from .view_models.ula_tek_deaths import (
+    REPORT_DEFAULT_FIGHT as REPORT_ULA_TEK_DEATHS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_ULA_TEK_DEATHS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_ULA_TEK_DEATHS_FOOTNOTES,
+    REPORT_ID as REPORT_ULA_TEK_DEATHS_ID,
+    REPORT_TITLE as REPORT_ULA_TEK_DEATHS_TITLE,
+)
+from .view_models.ula_tek_fuckups import (
+    REPORT_DEFAULT_FIGHT as REPORT_ULA_TEK_FUCKUPS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_ULA_TEK_FUCKUPS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_ULA_TEK_FUCKUPS_FOOTNOTES,
+    REPORT_ID as REPORT_ULA_TEK_FUCKUPS_ID,
+    REPORT_TITLE as REPORT_ULA_TEK_FUCKUPS_TITLE,
+)
 from .view_models.the_twin_fangs_fuckups import (
     REPORT_DEFAULT_FIGHT as REPORT_THE_TWIN_FANGS_FUCKUPS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_THE_TWIN_FANGS_FUCKUPS_DESCRIPTION,
@@ -429,6 +458,10 @@ JOB_V2_THE_TWIN_FANGS_FUCKUPS = "v2_report_the_twin_fangs_fuckups"
 JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE = "v2_report_the_coiled_altar_avoidable_damage"
 JOB_V2_THE_COILED_ALTAR_DAMAGE = "v2_report_the_coiled_altar_damage"
 JOB_V2_THE_COILED_ALTAR_DEATHS = "v2_report_the_coiled_altar_deaths"
+JOB_V2_ULA_TEK_AVOIDABLE_DAMAGE = "v2_report_ula_tek_avoidable_damage"
+JOB_V2_ULA_TEK_DAMAGE = "v2_report_ula_tek_damage"
+JOB_V2_ULA_TEK_DEATHS = "v2_report_ula_tek_deaths"
+JOB_V2_ULA_TEK_FUCKUPS = "v2_report_ula_tek_fuckups"
 JOB_V2_VORASIUS_DAMAGE = "v2_report_vorasius_damage"
 JOB_V2_VORASIUS_AVOIDABLE_DAMAGE = "v2_report_vorasius_avoidable_damage"
 JOB_V2_VORASIUS_DEATHS = "v2_report_vorasius_deaths"
@@ -475,6 +508,7 @@ COOLDOWN_USAGE_FIGHTS: Tuple[Tuple[str, str, ReportDifficulty], ...] = (
 )
 COOLDOWN_USAGE_ENCOUNTER_IDS = {
     THE_COILED_ALTAR_FIGHT_ID: 3429,
+    ULA_TEK_FIGHT_ID: 3492,
 }
 
 
@@ -483,6 +517,7 @@ class RegisteredReport:
     definition: ReportDefinitionModel
     job_type: str
     build_payload: ReportPayloadBuilder
+    visible: bool = True
 
 
 def _coerce_text(
@@ -915,6 +950,14 @@ def _build_the_coiled_altar_damage_payload(values: Dict[str, Any]) -> Tuple[Dict
     )
 
 
+def _build_ula_tek_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=ULA_TEK_HEROIC_MANIFEST,
+        default_fight=REPORT_ULA_TEK_DEFAULT_FIGHT,
+    )
+
+
 def _build_beloren_child_of_alar_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_target_damage_payload(
         values,
@@ -1008,6 +1051,10 @@ def _build_the_twin_fangs_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[s
 
 def _build_the_coiled_altar_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_death_report_payload(values, default_fight=REPORT_THE_COILED_ALTAR_DEATHS_DEFAULT_FIGHT)
+
+
+def _build_ula_tek_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_death_report_payload(values, default_fight=REPORT_ULA_TEK_DEATHS_DEFAULT_FIGHT)
 
 
 def _build_lightblinded_vanguard_deaths_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
@@ -1153,6 +1200,14 @@ def _build_the_coiled_altar_avoidable_damage_payload(values: Dict[str, Any]) -> 
     )
 
 
+def _build_ula_tek_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=ULA_TEK_HEROIC_MANIFEST,
+        default_fight=REPORT_ULA_TEK_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
 def _build_lightblinded_vanguard_avoidable_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_avoidable_damage_payload(
         values,
@@ -1218,6 +1273,20 @@ def _build_the_twin_fangs_fuckups_payload(values: Dict[str, Any]) -> Tuple[Dict[
     payload: Dict[str, Any] = {
         "report": report_codes[0],
         "fight": REPORT_THE_TWIN_FANGS_FUCKUPS_DEFAULT_FIGHT,
+        "difficulty": ReportDifficulty.HEROIC.value,
+        "extra_reports": report_codes[1:],
+        "ignore_after_deaths": ignore_after_deaths,
+    }
+    return payload, fresh_run
+
+
+def _build_ula_tek_fuckups_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+    payload: Dict[str, Any] = {
+        "report": report_codes[0],
+        "fight": REPORT_ULA_TEK_FUCKUPS_DEFAULT_FIGHT,
         "difficulty": ReportDifficulty.HEROIC.value,
         "extra_reports": report_codes[1:],
         "ignore_after_deaths": ignore_after_deaths,
@@ -1851,6 +1920,59 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_THE_COILED_ALTAR_DEATHS,
         build_payload=_build_the_coiled_altar_deaths_payload,
     ),
+    REPORT_ULA_TEK_DEATHS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ULA_TEK_DEATHS_ID,
+            title=REPORT_ULA_TEK_DEATHS_TITLE,
+            description=REPORT_ULA_TEK_DEATHS_DESCRIPTION,
+            fightId=ULA_TEK_FIGHT_ID,
+            fightName=REPORT_ULA_TEK_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_ULA_TEK_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ULA_TEK_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ULA_TEK_DEATHS,
+        build_payload=_build_ula_tek_deaths_payload,
+    ),
+    REPORT_ULA_TEK_FUCKUPS_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ULA_TEK_FUCKUPS_ID,
+            title=REPORT_ULA_TEK_FUCKUPS_TITLE,
+            description=REPORT_ULA_TEK_FUCKUPS_DESCRIPTION,
+            fightId=ULA_TEK_FIGHT_ID,
+            fightName=REPORT_ULA_TEK_FUCKUPS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_ULA_TEK_FUCKUPS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ULA_TEK_FUCKUPS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ULA_TEK_FUCKUPS,
+        build_payload=_build_ula_tek_fuckups_payload,
+    ),
     REPORT_THE_TWIN_FANGS_FUCKUPS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_THE_TWIN_FANGS_FUCKUPS_ID,
@@ -2173,6 +2295,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE,
         build_payload=_build_the_coiled_altar_avoidable_damage_payload,
+    ),
+    REPORT_ULA_TEK_AVOIDABLE_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ULA_TEK_AVOIDABLE_ID,
+            title=REPORT_ULA_TEK_AVOIDABLE_TITLE,
+            description=REPORT_ULA_TEK_AVOIDABLE_DESCRIPTION,
+            fightId=ULA_TEK_FIGHT_ID,
+            fightName=REPORT_ULA_TEK_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_ULA_TEK_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ULA_TEK_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(ULA_TEK_HEROIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ULA_TEK_AVOIDABLE_DAMAGE,
+        build_payload=_build_ula_tek_avoidable_damage_payload,
     ),
     REPORT_BELOREN_AVOIDABLE_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -2801,6 +2950,27 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_THE_COILED_ALTAR_DAMAGE,
         build_payload=_build_the_coiled_altar_damage_payload,
     ),
+    REPORT_ULA_TEK_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ULA_TEK_ID,
+            title=REPORT_ULA_TEK_TITLE,
+            description=REPORT_ULA_TEK_DESCRIPTION,
+            fightId=ULA_TEK_FIGHT_ID,
+            fightName=REPORT_ULA_TEK_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.HEROIC,
+            defaultFight=REPORT_ULA_TEK_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ULA_TEK_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(ULA_TEK_HEROIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Ula'tek"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ULA_TEK_DAMAGE,
+        build_payload=_build_ula_tek_damage_payload,
+    ),
     REPORT_BELOREN_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_BELOREN_ID,
@@ -3009,6 +3179,7 @@ def _build_mechanic_scorecard_definition(
             boss_id=boss_id,
             fight_name=fight_name,
         ),
+        visible=False,
     )
 
 
@@ -3033,8 +3204,13 @@ for _boss_id, _scorecard_encounter in SCORECARD_ENCOUNTERS.items():
     )
 
 
-def list_report_definitions() -> List[ReportDefinitionModel]:
-    return [registered.definition for registered in _REPORTS.values()]
+def list_report_definitions(*, include_hidden: bool = False) -> List[ReportDefinitionModel]:
+    """Return reports exposed in the catalog, optionally including hidden entries."""
+    return [
+        registered.definition
+        for registered in _REPORTS.values()
+        if include_hidden or registered.visible
+    ]
 
 
 def get_registered_report(report_id: str) -> RegisteredReport:
@@ -3084,6 +3260,10 @@ __all__ = [
     "JOB_V2_THE_COILED_ALTAR_AVOIDABLE_DAMAGE",
     "JOB_V2_THE_COILED_ALTAR_DAMAGE",
     "JOB_V2_THE_COILED_ALTAR_DEATHS",
+    "JOB_V2_ULA_TEK_AVOIDABLE_DAMAGE",
+    "JOB_V2_ULA_TEK_DAMAGE",
+    "JOB_V2_ULA_TEK_DEATHS",
+    "JOB_V2_ULA_TEK_FUCKUPS",
     "JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE",
     "JOB_V2_CROWN_OF_THE_COSMOS_DEATHS",
     "JOB_V2_CROWN_OF_THE_COSMOS_SILVER_HITS",
