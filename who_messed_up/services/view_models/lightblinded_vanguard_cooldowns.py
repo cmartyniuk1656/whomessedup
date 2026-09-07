@@ -42,8 +42,6 @@ from .common import (
     TableColumnModel,
     TableModel,
     TableRowModel,
-    TableViewControlModel,
-    TableViewOptionModel,
     TextAlign,
     ValueFormat,
 )
@@ -55,6 +53,7 @@ from .helpers import (
     merged_reports_label,
     role_tone,
 )
+from .report_pulls import AGGREGATE_VIEW_ID, build_pull_view_control
 
 
 REPORT_ID = "lightblinded-vanguard-cooldowns"
@@ -80,25 +79,22 @@ def build_cooldown_usage_report_page(
     fight_selection: str = COOLDOWN_FIGHT_SELECTION_ALL,
 ) -> ReportPageModel:
     aggregate_rows = _build_rows(summary.entries, report_code=summary.report_code, source_reports=summary.source_reports)
-    rows_by_view: Dict[str, List[TableRowModel]] = {"aggregate": aggregate_rows}
-    view_options = [TableViewOptionModel(value="aggregate", label="Aggregate")]
+    rows_by_view: Dict[str, List[TableRowModel]] = {AGGREGATE_VIEW_ID: aggregate_rows}
+    summary_by_view = {
+        AGGREGATE_VIEW_ID: _build_summary_metrics(summary.entries, pull_count=summary.pull_count)
+    }
 
     for pull in summary.pulls:
         scoped_entries = _entries_for_pull(summary.entries, pull.view_id)
         rows_by_view[pull.view_id] = _build_rows(scoped_entries, report_code=summary.report_code, source_reports=summary.source_reports)
-        view_options.append(TableViewOptionModel(value=pull.view_id, label=pull.label))
+        summary_by_view[pull.view_id] = _build_summary_metrics(scoped_entries, pull_count=1)
 
     table = TableModel(
         defaultSort=SortModel(columnId="on_time_rate", direction=SortDirection.ASC),
         columns=_build_columns(),
         rows=aggregate_rows,
         rowsByView=rows_by_view,
-        viewControl=TableViewControlModel(
-            id="cooldown_pull_view",
-            label="View",
-            defaultValue="aggregate",
-            options=view_options,
-        ),
+        viewControl=build_pull_view_control(summary.pulls, control_id="cooldown_pull_view"),
         emptyState="No cooldown assignments matched the selected view.",
     )
 
@@ -115,7 +111,8 @@ def build_cooldown_usage_report_page(
                 fight_selection=fight_selection,
             ),
         ),
-        summary=_build_summary_metrics(summary),
+        summary=summary_by_view[AGGREGATE_VIEW_ID],
+        summaryByView=summary_by_view,
         content=ReportContentModel(
             variant=ContentVariant.TABLE,
             table=table,
@@ -298,43 +295,55 @@ def _entries_for_pull(entries: Iterable[CooldownUsageEntry], pull_view_id: str) 
     return scoped_entries
 
 
-def _build_summary_metrics(summary: CooldownUsageSummary) -> List[SummaryMetricModel]:
+def _build_summary_metrics(
+    entries: Iterable[CooldownUsageEntry],
+    *,
+    pull_count: int,
+) -> List[SummaryMetricModel]:
+    selected_entries = list(entries)
+    checked_assignments = sum(
+        entry.correct + entry.incorrect + entry.missed for entry in selected_entries
+    )
+    total_correct = sum(entry.correct for entry in selected_entries)
+    total_missed = sum(entry.missed for entry in selected_entries)
+    total_ignored = sum(entry.ignored for entry in selected_entries)
+    on_time_rate = total_correct / checked_assignments if checked_assignments else 0.0
     return [
         SummaryMetricModel(
             id="pull_count",
             label="Pulls counted",
-            value=summary.pull_count,
+            value=pull_count,
             format=ValueFormat.INTEGER,
         ),
         SummaryMetricModel(
             id="assignments_checked",
             label="Assignments checked",
-            value=summary.checked_assignments,
+            value=checked_assignments,
             format=ValueFormat.INTEGER,
         ),
         SummaryMetricModel(
             id="on_time_casts",
             label="On-time casts",
-            value=summary.total_correct,
+            value=total_correct,
             format=ValueFormat.INTEGER,
         ),
         SummaryMetricModel(
             id="missed_cooldowns",
             label="Missed cooldowns",
-            value=summary.total_missed,
+            value=total_missed,
             format=ValueFormat.INTEGER,
         ),
         SummaryMetricModel(
             id="ignored_assignments",
             label="Ignored assignments",
-            value=summary.total_ignored,
+            value=total_ignored,
             format=ValueFormat.INTEGER,
         ),
         SummaryMetricModel(
             id="raid_on_time_rate",
             label="Raid on-time",
-            value=summary.on_time_rate * 100.0,
-            display=f"{summary.on_time_rate * 100.0:.1f}%",
+            value=on_time_rate * 100.0,
+            display=f"{on_time_rate * 100.0:.1f}%",
         ),
     ]
 

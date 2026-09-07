@@ -4,8 +4,8 @@ Reusable encounter target-damage summaries for v2 reports.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import DefaultDict, Dict, Iterable, List, Optional, Set
+from dataclasses import dataclass, field
+from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 
@@ -22,6 +22,7 @@ from .common import (
     _sanitize_report_code,
     _select_fights,
 )
+from .report_pulls import ReportPull, build_report_pulls, merge_report_pulls
 
 
 @dataclass
@@ -67,6 +68,9 @@ class EncounterTargetDamageSummary:
     targets: List[EncounterTargetSummary]
     kill_only: bool = False
     omit_dead_players: bool = False
+    pulls: List[ReportPull] = field(default_factory=list)
+    entries_by_pull: Dict[str, List[EncounterTargetDamageEntry]] = field(default_factory=dict)
+    source_reports: List[str] = field(default_factory=list)
 
 
 def fetch_encounter_target_damage_summary(
@@ -175,7 +179,6 @@ def _fetch_single_encounter_target_damage_summary(
 
     roles_by_fight: Dict[int, Dict[str, str]] = {}
     participants_by_fight: Dict[int, Set[str]] = {}
-    dead_players_by_fight: Dict[int, Set[str]] = {}
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     eligible_players: Set[str] = set()
     for fight in chosen:
@@ -198,7 +201,6 @@ def _fetch_single_encounter_target_damage_summary(
             if omit_dead_players
             else set()
         )
-        dead_players_by_fight[fight.id] = dead_players
         fight_participants = {
             name
             for name in roster_participants
@@ -242,9 +244,19 @@ def _fetch_single_encounter_target_damage_summary(
         slug: defaultdict(float) for slug in selected_slugs
     }
     target_summary_totals: DefaultDict[str, float] = defaultdict(float)
-
-    if not omit_dead_players:
-        table_requests = []
+    report_pulls = build_report_pulls(
+        report_code,
+        chosen,
+        participants_by_fight,
+        roles_by_fight,
+    )
+    pull_by_fight_id = {pull.fight_id: pull for pull in report_pulls}
+    damage_maps_by_pull: Dict[str, Dict[str, Dict[str, float]]] = {
+        pull.view_id: {} for pull in report_pulls
+    }
+    table_requests: List[Dict[str, Any]] = []
+    table_contexts: List[Tuple[object, EncounterTargetConfig]] = []
+    for fight in chosen:
         for cfg in active_targets:
             filter_expr = cfg.damage_filter
             if not filter_expr:
@@ -253,83 +265,51 @@ def _fetch_single_encounter_target_damage_summary(
             table_requests.append(
                 {
                     "data_type": "DamageDone",
-                    "fight_ids": fight_id_list,
-                    "start": min(float(fight.start) for fight in chosen),
-                    "end": max(float(fight.end) for fight in chosen),
+                    "fight_ids": [fight.id],
+                    "start": float(fight.start),
+                    "end": float(fight.end),
                     "filter_expr": filter_expr,
                 }
             )
-        target_tables = fetch_tables(
+            table_contexts.append((fight, cfg))
+
+    target_tables = fetch_tables(
+        session,
+        bearer,
+        code=report_code,
+        table_requests=table_requests,
+    )
+    for (fight, cfg), table in zip(table_contexts, target_tables):
+        fight_participants = participants_by_fight.get(fight.id, set())
+        eligible_for_table = fight_participants if omit_dead_players else eligible_players
+        damage_map = _collect_target_damage_table(
             session,
             bearer,
-            code=report_code,
-            table_requests=table_requests,
+            report_code=report_code,
+            fight_id=fight.id,
+            fight_start=fight.start,
+            fight_end=fight.end,
+            actor_names=actor_names,
+            actor_classes=actor_classes,
+            actor_owners=actor_owners,
+            player_roles=player_roles,
+            player_specs=player_specs,
+            player_classes=player_classes,
+            eligible_players=eligible_for_table,
+            role_defaults=roles_by_fight.get(fight.id, {}),
+            global_specs=player_specs_global,
+            target_name=cfg.enemy_name,
+            target_filter=cfg.damage_filter,
+            table_data=table,
         )
-        for cfg, table in zip(active_targets, target_tables):
-            damage_map = _collect_target_damage_table(
-                session,
-                bearer,
-                report_code=report_code,
-                fight_ids=fight_id_list,
-                fight_start=min(float(fight.start) for fight in chosen),
-                fight_end=max(float(fight.end) for fight in chosen),
-                actor_names=actor_names,
-                actor_classes=actor_classes,
-                actor_owners=actor_owners,
-                player_roles=player_roles,
-                player_specs=player_specs,
-                player_classes=player_classes,
-                eligible_players=eligible_players,
-                role_defaults=player_roles,
-                global_specs=player_specs_global,
-                target_name=cfg.enemy_name,
-                target_filter=cfg.damage_filter,
-                table_data=table,
-            )
-            for player, total in damage_map.items():
-                if total <= 0:
-                    continue
-                damage_totals[player] += total
-                per_target_totals[cfg.slug][player] += total
-                target_summary_totals[cfg.slug] += total
-    else:
-        for fight in chosen:
-            fight_participants = participants_by_fight.get(fight.id, set())
-            fight_damage_maps: Dict[str, Dict[str, float]] = {}
-            for cfg in active_targets:
-                damage_map = _collect_target_damage_table(
-                    session,
-                    bearer,
-                    report_code=report_code,
-                    fight_id=fight.id,
-                    fight_start=fight.start,
-                    fight_end=fight.end,
-                    actor_names=actor_names,
-                    actor_classes=actor_classes,
-                    actor_owners=actor_owners,
-                    player_roles=player_roles,
-                    player_specs=player_specs,
-                    player_classes=player_classes,
-                    eligible_players=fight_participants,
-                    role_defaults=roles_by_fight.get(fight.id, {}),
-                    global_specs=player_specs_global,
-                    target_name=cfg.enemy_name,
-                    target_filter=cfg.damage_filter,
-                )
-                fight_damage_maps[cfg.slug] = damage_map
-
-            for player in fight_participants:
-                damage_totals[player] += sum(
-                    fight_damage_maps.get(slug, {}).get(player, 0.0)
-                    for slug in selected_slugs
-                )
-
-            for cfg in active_targets:
-                for player, total in fight_damage_maps.get(cfg.slug, {}).items():
-                    if total <= 0:
-                        continue
-                    per_target_totals[cfg.slug][player] += total
-                    target_summary_totals[cfg.slug] += total
+        pull = pull_by_fight_id[fight.id]
+        damage_maps_by_pull[pull.view_id][cfg.slug] = damage_map
+        for player, total in damage_map.items():
+            if total <= 0:
+                continue
+            damage_totals[player] += total
+            per_target_totals[cfg.slug][player] += total
+            target_summary_totals[cfg.slug] += total
 
     players = sorted(
         (eligible_players | set(damage_totals.keys())) & known_players,
@@ -383,6 +363,16 @@ def _fetch_single_encounter_target_damage_summary(
         )
         for cfg in active_targets
     ]
+    entries_by_pull = {
+        pull.view_id: _build_pull_entries(
+            pull=pull,
+            target_configs=active_targets,
+            damage_maps=damage_maps_by_pull.get(pull.view_id, {}),
+            player_classes=player_classes,
+            player_roles=player_roles,
+        )
+        for pull in report_pulls
+    }
 
     return EncounterTargetDamageSummary(
         report_code=report_code,
@@ -398,7 +388,64 @@ def _fetch_single_encounter_target_damage_summary(
         targets=target_summaries,
         kill_only=kill_only,
         omit_dead_players=omit_dead_players,
+        pulls=report_pulls,
+        entries_by_pull=entries_by_pull,
+        source_reports=[report_code],
     )
+
+
+def _build_pull_entries(
+    *,
+    pull: ReportPull,
+    target_configs: Iterable[EncounterTargetConfig],
+    damage_maps: Dict[str, Dict[str, float]],
+    player_classes: Dict[str, Optional[str]],
+    player_roles: Dict[str, str],
+) -> List[EncounterTargetDamageEntry]:
+    active_targets = list(target_configs)
+    players = sorted(
+        set(pull.participants)
+        | {
+            player
+            for damage_map in damage_maps.values()
+            for player in damage_map
+        },
+        key=lambda name: (
+            ROLE_PRIORITY.get(
+                pull.player_roles.get(name) or player_roles.get(name, ROLE_UNKNOWN),
+                ROLE_PRIORITY[ROLE_UNKNOWN],
+            ),
+            name.lower(),
+        ),
+    )
+    entries: List[EncounterTargetDamageEntry] = []
+    for player in players:
+        target_breakdowns: Dict[str, EncounterTargetDamageBreakdown] = {}
+        total_damage = 0.0
+        for cfg in active_targets:
+            target_total = float(damage_maps.get(cfg.slug, {}).get(player, 0.0))
+            total_damage += target_total
+            target_breakdowns[cfg.slug] = EncounterTargetDamageBreakdown(
+                target=cfg.slug,
+                label=cfg.label,
+                total_damage=target_total,
+                average_damage=target_total,
+            )
+        entries.append(
+            EncounterTargetDamageEntry(
+                player=player,
+                role=(
+                    pull.player_roles.get(player) or player_roles.get(player)
+                    or ROLE_UNKNOWN
+                ),
+                class_name=player_classes.get(player),
+                pulls=1,
+                total_damage=total_damage,
+                average_damage=total_damage,
+                target_totals=target_breakdowns,
+            )
+        )
+    return entries
 
 
 def _merge_encounter_target_damage_summaries(
@@ -419,9 +466,17 @@ def _merge_encounter_target_damage_summaries(
     }
     combined_target_summaries: DefaultDict[str, float] = defaultdict(float)
     combined_pull_count = 0
+    pull_groups: List[List[ReportPull]] = []
+    entries_by_pull: Dict[str, List[EncounterTargetDamageEntry]] = {}
+    source_reports: List[str] = []
 
     for summary in summaries:
         combined_pull_count += summary.pull_count
+        pull_groups.append(summary.pulls)
+        entries_by_pull.update(summary.entries_by_pull)
+        for code in summary.source_reports or [summary.report_code]:
+            if code not in source_reports:
+                source_reports.append(code)
 
         for player, class_name in summary.player_classes.items():
             if player not in combined_player_classes or combined_player_classes[player] is None:
@@ -516,6 +571,9 @@ def _merge_encounter_target_damage_summaries(
         targets=targets,
         kill_only=primary.kill_only,
         omit_dead_players=primary.omit_dead_players,
+        pulls=merge_report_pulls(pull_groups),
+        entries_by_pull=entries_by_pull,
+        source_reports=source_reports,
     )
 
 

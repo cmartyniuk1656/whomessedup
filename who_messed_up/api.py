@@ -8,6 +8,7 @@ import logging
 import time
 import threading
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Dict, Iterable, Iterator, List, Optional, Any, Tuple
@@ -213,6 +214,9 @@ _request_slots = threading.BoundedSemaphore(
     _bounded_env_int("WCL_MAX_CONCURRENT_REQUESTS", 4, minimum=1, maximum=16)
 )
 _request_attempts = _bounded_env_int("WCL_REQUEST_ATTEMPTS", 3, minimum=1, maximum=6)
+_table_batch_workers = _bounded_env_int(
+    "WCL_TABLE_BATCH_WORKERS", 4, minimum=1, maximum=8
+)
 
 
 def get_token_from_client(
@@ -712,44 +716,83 @@ def fetch_tables(
     if not requested:
         return []
     safe_batch_size = max(1, int(batch_size))
-    tables: List[Dict[str, Any]] = []
-    for chunk_start in range(0, len(requested), safe_batch_size):
-        chunk = requested[chunk_start : chunk_start + safe_batch_size]
-        definitions = ["$code: String!"]
-        fields: List[str] = []
-        variables: Dict[str, Any] = {"code": code}
-        for index, request in enumerate(chunk):
-            definitions.extend(
-                [
-                    f"$dataType{index}: TableDataType!",
-                    f"$fightIDs{index}: [Int!]",
-                    f"$startTime{index}: Float!",
-                    f"$endTime{index}: Float!",
-                    f"$filter{index}: String",
-                ]
-            )
-            fields.append(
-                f"q{index}: table("
-                f"dataType: $dataType{index}, fightIDs: $fightIDs{index}, "
-                f"startTime: $startTime{index}, endTime: $endTime{index}, "
-                f"filterExpression: $filter{index})"
-            )
-            variables.update(
-                {
-                    f"dataType{index}": request["data_type"],
-                    f"fightIDs{index}": [int(value) for value in request.get("fight_ids") or []],
-                    f"startTime{index}": float(request["start"]),
-                    f"endTime{index}": float(request["end"]),
-                    f"filter{index}": request.get("filter_expr"),
-                }
-            )
-        query = (
-            f"query({', '.join(definitions)}) {{ reportData {{ report(code: $code) {{ "
-            f"{' '.join(fields)} }} }} }}"
+    chunks = [
+        requested[chunk_start : chunk_start + safe_batch_size]
+        for chunk_start in range(0, len(requested), safe_batch_size)
+    ]
+    if len(chunks) == 1 or _table_batch_workers == 1:
+        chunk_results = [
+            _fetch_table_chunk(session, token, code=code, requests_chunk=chunk)
+            for chunk in chunks
+        ]
+    else:
+        # Each GraphQL document is independent. Running bounded chunks in
+        # parallel removes serial network waits while gql() still enforces the
+        # process-wide Warcraft Logs concurrency and retry limits.
+        with ThreadPoolExecutor(
+            max_workers=min(len(chunks), _table_batch_workers),
+            thread_name_prefix="wcl-tables",
+        ) as executor:
+            futures = [
+                executor.submit(
+                    _fetch_table_chunk,
+                    session,
+                    token,
+                    code=code,
+                    requests_chunk=chunk,
+                )
+                for chunk in chunks
+            ]
+            chunk_results = [future.result() for future in futures]
+    return [table for chunk in chunk_results for table in chunk]
+
+
+def _fetch_table_chunk(
+    session: requests.Session,
+    token: str,
+    *,
+    code: str,
+    requests_chunk: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Fetch one bounded GraphQL table batch and preserve request order."""
+    definitions = ["$code: String!"]
+    fields: List[str] = []
+    variables: Dict[str, Any] = {"code": code}
+    for index, request in enumerate(requests_chunk):
+        definitions.extend(
+            [
+                f"$dataType{index}: TableDataType!",
+                f"$fightIDs{index}: [Int!]",
+                f"$startTime{index}: Float!",
+                f"$endTime{index}: Float!",
+                f"$filter{index}: String",
+            ]
         )
-        payload = gql(session, token, query, variables)
-        report = payload["reportData"]["report"]
-        for index in range(len(chunk)):
-            tables.append(((report.get(f"q{index}") or {}).get("data") or {}))
-    return tables
+        fields.append(
+            f"q{index}: table("
+            f"dataType: $dataType{index}, fightIDs: $fightIDs{index}, "
+            f"startTime: $startTime{index}, endTime: $endTime{index}, "
+            f"filterExpression: $filter{index})"
+        )
+        variables.update(
+            {
+                f"dataType{index}": request["data_type"],
+                f"fightIDs{index}": [
+                    int(value) for value in request.get("fight_ids") or []
+                ],
+                f"startTime{index}": float(request["start"]),
+                f"endTime{index}": float(request["end"]),
+                f"filter{index}": request.get("filter_expr"),
+            }
+        )
+    query = (
+        f"query({', '.join(definitions)}) {{ reportData {{ report(code: $code) {{ "
+        f"{' '.join(fields)} }} }} }}"
+    )
+    payload = gql(session, token, query, variables)
+    report = payload["reportData"]["report"]
+    return [
+        ((report.get(f"q{index}") or {}).get("data") or {})
+        for index in range(len(requests_chunk))
+    ]
 

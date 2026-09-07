@@ -252,6 +252,7 @@ class ReportPageModel(ViewModelBase):
     report_code: str = Field(..., alias="reportCode")
     header: ReportHeaderModel
     summary: List[SummaryMetricModel] = Field(default_factory=list)
+    summary_by_view: Dict[str, List[SummaryMetricModel]] = Field(default_factory=dict, alias="summaryByView")
     content: ReportContentModel
     footnotes: List[str] = Field(default_factory=list)
     spec_analysis: Optional[SpecAnalysisModel] = Field(None, alias="specAnalysis")

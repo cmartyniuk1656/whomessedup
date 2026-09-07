@@ -37,6 +37,7 @@ from .common import (
     compute_fight_duration_ms,
 )
 from .death_reports import resolve_damage_ability, resolve_damage_amount
+from .report_pulls import ReportPull, build_report_pulls, merge_report_pulls
 
 AvoidableEventFilter = Callable[[BossAbilityMetadata, Dict[str, object], str], bool]
 AvoidableEventFilterFactory = Callable[..., Optional[AvoidableEventFilter]]
@@ -88,6 +89,7 @@ class AvoidableDamageSummary:
     player_specs: Dict[str, Optional[str]]
     player_events: Dict[str, List[AvoidableDamageEvent]]
     abilities: List[BossAbilityMetadata]
+    pulls: List[ReportPull] = field(default_factory=list)
     source_reports: List[str] = field(default_factory=list)
 
 
@@ -438,6 +440,12 @@ def _fetch_single_avoidable_damage_summary(
 
     total_damage_amount = sum(entry.total_damage for entry in entries)
     pull_count = len(chosen)
+    report_pulls = build_report_pulls(
+        report_code,
+        chosen,
+        participants_by_fight,
+        roles_by_fight,
+    )
 
     return AvoidableDamageSummary(
         report_code=report_code,
@@ -453,6 +461,7 @@ def _fetch_single_avoidable_damage_summary(
         player_specs={player: player_specs.get(player) for player in all_players},
         player_events={player: list(events) for player, events in events_by_player.items()},
         abilities=selected_abilities,
+        pulls=report_pulls,
         source_reports=[report_code],
     )
 
@@ -467,9 +476,11 @@ def _merge_avoidable_damage_summaries(summaries: List[AvoidableDamageSummary]) -
     combined_events: DefaultDict[str, List[AvoidableDamageEvent]] = defaultdict(list)
     combined_pull_count = 0
     source_reports: List[str] = []
+    pull_groups: List[List[ReportPull]] = []
 
     for summary in summaries:
         combined_pull_count += summary.pull_count
+        pull_groups.append(summary.pulls)
         for code in summary.source_reports or [summary.report_code]:
             if code not in source_reports:
                 source_reports.append(code)
@@ -539,6 +550,7 @@ def _merge_avoidable_damage_summaries(summaries: List[AvoidableDamageSummary]) -
         player_specs=combined_player_specs,
         player_events=player_events,
         abilities=primary.abilities,
+        pulls=merge_report_pulls(pull_groups),
         source_reports=source_reports,
     )
 
