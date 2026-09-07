@@ -298,6 +298,10 @@ This is the result model the frontend renders.
     { "id": "pulls", "label": "Pulls counted", "value": 42, "format": "integer" },
     { "id": "total_damage", "label": "Combined add damage", "value": 1234567, "format": "integer" }
   ],
+  "summaryByView": {
+    "aggregate": [],
+    "pull:ABC:12": []
+  },
   "content": {
     "variant": "table",
     "table": {
@@ -333,6 +337,19 @@ This is the key contract. The backend decides the columns and row cells. The fro
       "details": null
     }
   ],
+  "rowsByView": {
+    "aggregate": [],
+    "pull:ABC:12": []
+  },
+  "viewControl": {
+    "id": "pull_view",
+    "label": "Pull",
+    "defaultValue": "aggregate",
+    "options": [
+      { "value": "aggregate", "label": "All pulls" },
+      { "value": "pull:ABC:12", "label": "Pull 3" }
+    ]
+  },
   "emptyState": "No events matched the filters."
 }
 ```
@@ -349,6 +366,9 @@ Shared table rules:
   - `link` cells may include an `href`
 - Styling metadata should stay semantic, not presentational. The backend should send small enums or tokens such as class/role/tone identifiers, and the frontend should map those tokens to actual colors and badge styles.
 - Do not send raw CSS classes or arbitrary inline styling in the API contract.
+- Standard reports expose aggregate rows under `rows` and `rowsByView.aggregate`, then add one stable `pull:<report-code>:<fight-id>` entry per pull. The aggregate option remains the default.
+- When a table exposes pull views, `summaryByView` provides the matching summary cards so the whole visible report stays in the selected scope.
+- Per-pull rows must be calculated from per-fight data and attendance. They must not be approximated by filtering an already-aggregated total.
 
 ### 4. Row details model
 
@@ -610,3 +630,4 @@ The following implementation choices are now fixed for this refactor:
 11. The first migration slice is `dimensius-add-damage`.
 12. Damage-report pages may emit an optional `specAnalysis` block for modal visualizations; the first consumer is `imperator-averzian-damage`, using average damage per player per counted pull across boss, priority, and pad buckets.
 13. Target-damage reports that are intended to mirror Warcraft Logs UI totals should source player damage from WCLogs `table(dataType: DamageDone)` aggregation rather than reconstructing totals from raw damage events.
+14. Death, avoidable-damage, damage, and cooldown-usage tables expose a shared `viewControl` dropdown with `All pulls` as the default and stable, report-qualified pull views for individual analysis.

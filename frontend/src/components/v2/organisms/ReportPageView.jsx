@@ -54,6 +54,7 @@ export function ReportPageView({ page, shareUrl }) {
   const { config, selectedTargets, selectedMetrics, toggleTarget, toggleMetric, filteredTable } =
     useDamageTableFilters(tableForView);
   const table = filteredTable;
+  const summary = page?.summaryByView?.[selectedTableView] ?? page?.summary;
   const { sortConfig, sortedRows, handleSort } = useTableSorting(table);
 
   useEffect(() => {
@@ -84,6 +85,7 @@ export function ReportPageView({ page, shareUrl }) {
       ...page.content,
       table,
     },
+    summary,
   };
 
   return (
@@ -93,8 +95,11 @@ export function ReportPageView({ page, shareUrl }) {
         rows={sortedRows}
         shareUrl={shareUrl}
       />
-      <SpecAnalysisCallout analysis={page.specAnalysis} onOpen={() => setIsSpecAnalysisOpen(true)} />
-      <ReportSummaryGrid metrics={page.summary} />
+      <SpecAnalysisCallout
+        analysis={selectedTableView === defaultTableView ? page.specAnalysis : null}
+        onOpen={() => setIsSpecAnalysisOpen(true)}
+      />
+      <ReportSummaryGrid metrics={summary} />
       <ReportTableViewSelector control={viewControl} value={selectedTableView} onChange={setSelectedTableView} />
       <DamageTableFilters
         config={config}

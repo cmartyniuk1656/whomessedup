@@ -6,8 +6,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, List, Optional, Tuple
 
-from ..avoidable_damage import AvoidableDamageEvent, AvoidableDamageSummary
+from ..avoidable_damage import AvoidableDamageEntry, AvoidableDamageEvent, AvoidableDamageSummary
 from ..common import ROLE_PRIORITY, ROLE_UNKNOWN
+from ..report_pulls import ReportPull, event_belongs_to_pull
 from .common import (
     CellKind,
     ContentVariant,
@@ -38,6 +39,7 @@ from .helpers import (
     merged_reports_label,
     role_tone,
 )
+from .report_pulls import AGGREGATE_VIEW_ID, build_pull_view_control
 
 
 @dataclass(frozen=True)
@@ -175,8 +177,48 @@ def build_avoidable_damage_report_page(
     config: AvoidableDamagePageConfig,
     extra_tags: Iterable[HeaderTagModel] = (),
 ) -> ReportPageModel:
+    rows = _build_rows(summary.entries, summary=summary)
+    rows_by_view = {AGGREGATE_VIEW_ID: rows}
+    summary_by_view = {
+        AGGREGATE_VIEW_ID: _build_summary_metrics(summary.entries, pull_count=summary.pull_count)
+    }
+    for pull in summary.pulls:
+        pull_entries = _entries_for_pull(summary, pull)
+        rows_by_view[pull.view_id] = _build_rows(pull_entries, summary=summary)
+        summary_by_view[pull.view_id] = _build_summary_metrics(pull_entries, pull_count=1)
+
+    return ReportPageModel(
+        reportId=config.report_id,
+        title=config.title,
+        reportCode=summary.report_code,
+        header=ReportHeaderModel(
+            subtitle=f"Report {summary.report_code}",
+            tags=_build_header_tags(summary, extra_tags),
+        ),
+        summary=summary_by_view[AGGREGATE_VIEW_ID],
+        summaryByView=summary_by_view,
+        content=ReportContentModel(
+            variant=ContentVariant.TABLE,
+            table=TableModel(
+                defaultSort=SortModel(columnId="average_damage", direction=SortDirection.DESC),
+                columns=_build_columns(),
+                rows=rows,
+                rowsByView=rows_by_view,
+                viewControl=build_pull_view_control(summary.pulls, control_id="avoidable_damage_pull_view"),
+                emptyState="No avoidable damage matched the filters.",
+            ),
+        ),
+        footnotes=list(config.footnotes),
+    )
+
+
+def _build_rows(
+    entries: Iterable[AvoidableDamageEntry],
+    *,
+    summary: AvoidableDamageSummary,
+) -> List[TableRowModel]:
     rows: List[TableRowModel] = []
-    for entry in summary.entries:
+    for entry in entries:
         role = entry.role or ROLE_UNKNOWN
         role_priority = ROLE_PRIORITY.get(role, ROLE_PRIORITY[ROLE_UNKNOWN])
         rows.append(
@@ -205,86 +247,106 @@ def build_avoidable_damage_report_page(
             )
         )
 
-    return ReportPageModel(
-        reportId=config.report_id,
-        title=config.title,
-        reportCode=summary.report_code,
-        header=ReportHeaderModel(
-            subtitle=f"Report {summary.report_code}",
-            tags=_build_header_tags(summary, extra_tags),
+    return rows
+
+
+def _build_summary_metrics(
+    entries: Iterable[AvoidableDamageEntry],
+    *,
+    pull_count: int,
+) -> List[SummaryMetricModel]:
+    total_damage = sum(float(entry.total_damage) for entry in entries)
+    return [
+        SummaryMetricModel(
+            id="pull_count",
+            label="Pulls counted",
+            value=pull_count,
+            format=ValueFormat.INTEGER,
         ),
-        summary=[
-            SummaryMetricModel(
-                id="pull_count",
-                label="Pulls counted",
-                value=summary.pull_count,
-                format=ValueFormat.INTEGER,
-            ),
-            SummaryMetricModel(
-                id="total_damage",
-                label="Total avoidable damage",
-                value=summary.total_damage,
-                format=ValueFormat.INTEGER,
-            ),
-            SummaryMetricModel(
-                id="avg_damage_per_pull",
-                label="Avg avoidable damage / Pull",
-                value=summary.avg_damage_per_pull,
-                format=ValueFormat.DECIMAL,
-                precision=0,
-            ),
-        ],
-        content=ReportContentModel(
-            variant=ContentVariant.TABLE,
-            table=TableModel(
-                defaultSort=SortModel(columnId="average_damage", direction=SortDirection.DESC),
-                columns=[
-                    TableColumnModel(
-                        id="player",
-                        label="Player",
-                        align=TextAlign.LEFT,
-                        sortable=True,
-                        cellKind=CellKind.PLAYER,
-                    ),
-                    TableColumnModel(
-                        id="role",
-                        label="Role",
-                        align=TextAlign.LEFT,
-                        sortable=True,
-                        cellKind=CellKind.BADGE,
-                    ),
-                    TableColumnModel(
-                        id="pulls",
-                        label="Pulls",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.INTEGER,
-                    ),
-                    TableColumnModel(
-                        id="total_damage",
-                        label="Total Avoidable Damage",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.INTEGER,
-                    ),
-                    TableColumnModel(
-                        id="average_damage",
-                        label="Avg Avoidable Damage / Pull",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.DECIMAL,
-                        precision=0,
-                    ),
-                ],
-                rows=rows,
-                emptyState="No avoidable damage matched the filters.",
-            ),
+        SummaryMetricModel(
+            id="total_damage",
+            label="Total avoidable damage",
+            value=total_damage,
+            format=ValueFormat.INTEGER,
         ),
-        footnotes=list(config.footnotes),
-    )
+        SummaryMetricModel(
+            id="avg_damage_per_pull",
+            label="Avg avoidable damage / Pull",
+            value=total_damage / pull_count if pull_count else 0.0,
+            format=ValueFormat.DECIMAL,
+            precision=0,
+        ),
+    ]
+
+
+def _build_columns() -> List[TableColumnModel]:
+    return [
+        TableColumnModel(
+            id="player",
+            label="Player",
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.PLAYER,
+        ),
+        TableColumnModel(
+            id="role",
+            label="Role",
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.BADGE,
+        ),
+        TableColumnModel(
+            id="pulls",
+            label="Pulls",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.INTEGER,
+        ),
+        TableColumnModel(
+            id="total_damage",
+            label="Total Avoidable Damage",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.INTEGER,
+        ),
+        TableColumnModel(
+            id="average_damage",
+            label="Avg Avoidable Damage / Pull",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.DECIMAL,
+            precision=0,
+        ),
+    ]
+
+
+def _entries_for_pull(summary: AvoidableDamageSummary, pull: ReportPull) -> List[AvoidableDamageEntry]:
+    participants = set(pull.participants)
+    scoped_entries: List[AvoidableDamageEntry] = []
+    for entry in summary.entries:
+        events = [
+            event
+            for event in entry.events
+            if event_belongs_to_pull(event, pull, summary.report_code)
+        ]
+        if entry.player not in participants and not events:
+            continue
+        total_damage = sum(float(event.damage_amount) for event in events)
+        scoped_entries.append(
+            AvoidableDamageEntry(
+                player=entry.player,
+                role=pull.player_roles.get(entry.player) or entry.role,
+                class_name=entry.class_name,
+                pulls=1,
+                total_damage=total_damage,
+                average_damage=total_damage,
+                events=events,
+            )
+        )
+    return scoped_entries
 
 
 __all__ = [

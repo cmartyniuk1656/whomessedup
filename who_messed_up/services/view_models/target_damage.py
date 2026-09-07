@@ -5,10 +5,15 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import DefaultDict, Dict, List, Optional, Tuple
+from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple
 
 from ..common import ROLE_PRIORITY, ROLE_UNKNOWN
-from ..target_damage import EncounterTargetBucket, EncounterTargetDamageSummary
+from ..target_damage import (
+    EncounterTargetBucket,
+    EncounterTargetDamageEntry,
+    EncounterTargetDamageSummary,
+    EncounterTargetSummary,
+)
 from .common import (
     CellKind,
     ContentVariant,
@@ -35,6 +40,7 @@ from .common import (
     ValueFormat,
 )
 from .helpers import class_color_token, role_tone
+from .report_pulls import AGGREGATE_VIEW_ID, build_pull_view_control
 
 
 SPEC_ANALYSIS_METRICS: Tuple[Tuple[str, str, EncounterTargetBucket], ...] = (
@@ -164,81 +170,25 @@ def build_target_damage_report_page(
             )
         )
 
-    rows: List[TableRowModel] = []
-    for entry in summary.entries:
-        role = entry.role or ROLE_UNKNOWN
-        role_priority = ROLE_PRIORITY.get(role, ROLE_PRIORITY[ROLE_UNKNOWN])
-        cells = {
-            "player": TableCellModel(
-                value=entry.player,
-                colorToken=class_color_token(entry.class_name),
-            ),
-            "role": TableCellModel(
-                value=role,
-                sortValue=role_priority,
-                tone=role_tone(role),
-            ),
-            "pulls": TableCellModel(value=entry.pulls),
-            "total_damage": TableCellModel(value=entry.total_damage),
-            "average_damage": TableCellModel(value=entry.average_damage),
-        }
-        for target in summary.targets:
-            breakdown = entry.target_totals.get(target.target)
-            cells[f"target_total_{target.target}"] = TableCellModel(value=breakdown.total_damage if breakdown else 0)
-            cells[f"target_average_{target.target}"] = TableCellModel(
-                value=breakdown.average_damage if breakdown else 0
-            )
-        rows.append(TableRowModel(id=entry.player, cells=cells, details=None))
-
-    summary_metrics: List[SummaryMetricModel] = []
-    if config.show_pull_count_summary:
-        summary_metrics.append(
-            SummaryMetricModel(
-                id="pull_count",
-                label="Pulls counted",
-                value=summary.pull_count,
-                format=ValueFormat.INTEGER,
-            )
+    rows = _build_rows(summary.entries, summary.targets)
+    rows_by_view = {AGGREGATE_VIEW_ID: rows}
+    summary_by_view = {
+        AGGREGATE_VIEW_ID: _build_summary_metrics(
+            summary.entries,
+            summary.targets,
+            config=config,
+            pull_count=summary.pull_count,
         )
-    if config.show_combined_total_summary:
-        summary_metrics.append(
-            SummaryMetricModel(
-                id="total_damage",
-                label=config.combined_total_label,
-                value=summary.total_damage,
-                format=ValueFormat.INTEGER,
-            )
+    }
+    for pull in summary.pulls:
+        pull_entries = summary.entries_by_pull.get(pull.view_id, [])
+        rows_by_view[pull.view_id] = _build_rows(pull_entries, summary.targets)
+        summary_by_view[pull.view_id] = _build_summary_metrics(
+            pull_entries,
+            summary.targets,
+            config=config,
+            pull_count=1,
         )
-    if config.show_combined_average_summary:
-        summary_metrics.append(
-            SummaryMetricModel(
-                id="avg_damage_per_pull",
-                label=config.combined_average_label,
-                value=summary.avg_damage_per_pull,
-                format=ValueFormat.DECIMAL,
-                precision=0,
-            )
-        )
-    for target in summary.targets:
-        if config.show_target_total_summaries:
-            summary_metrics.append(
-                SummaryMetricModel(
-                    id=f"summary_total_{target.target}",
-                    label=f"{target.label} Total",
-                    value=target.total_damage,
-                    format=ValueFormat.INTEGER,
-                )
-            )
-        if config.show_target_average_summaries:
-            summary_metrics.append(
-                SummaryMetricModel(
-                    id=f"summary_average_{target.target}",
-                    label=f"{target.label} Avg / Pull",
-                    value=target.avg_damage_per_pull,
-                    format=ValueFormat.DECIMAL,
-                    precision=0,
-                )
-            )
 
     return ReportPageModel(
         reportId=config.report_id,
@@ -248,13 +198,16 @@ def build_target_damage_report_page(
             subtitle=f"Report {summary.report_code}",
             tags=tags,
         ),
-        summary=summary_metrics,
+        summary=summary_by_view[AGGREGATE_VIEW_ID],
+        summaryByView=summary_by_view,
         content=ReportContentModel(
             variant=ContentVariant.TABLE,
             table=TableModel(
                 defaultSort=SortModel(columnId="average_damage", direction=SortDirection.DESC),
                 columns=columns,
                 rows=rows,
+                rowsByView=rows_by_view,
+                viewControl=build_pull_view_control(summary.pulls, control_id="damage_pull_view"),
                 emptyState=config.empty_state,
                 damageFilterConfig=DamageTableFilterConfigModel(
                     targetFilter=TableFilterModel(
@@ -294,6 +247,110 @@ def build_target_damage_report_page(
         footnotes=list(config.footnotes),
         specAnalysis=build_target_damage_spec_analysis(summary, config=config),
     )
+
+
+def _build_rows(
+    entries: Iterable[EncounterTargetDamageEntry],
+    targets: Iterable[EncounterTargetSummary],
+) -> List[TableRowModel]:
+    selected_targets = list(targets)
+    rows: List[TableRowModel] = []
+    for entry in entries:
+        role = entry.role or ROLE_UNKNOWN
+        role_priority = ROLE_PRIORITY.get(role, ROLE_PRIORITY[ROLE_UNKNOWN])
+        cells = {
+            "player": TableCellModel(
+                value=entry.player,
+                colorToken=class_color_token(entry.class_name),
+            ),
+            "role": TableCellModel(
+                value=role,
+                sortValue=role_priority,
+                tone=role_tone(role),
+            ),
+            "pulls": TableCellModel(value=entry.pulls),
+            "total_damage": TableCellModel(value=entry.total_damage),
+            "average_damage": TableCellModel(value=entry.average_damage),
+        }
+        for target in selected_targets:
+            breakdown = entry.target_totals.get(target.target)
+            cells[f"target_total_{target.target}"] = TableCellModel(value=breakdown.total_damage if breakdown else 0)
+            cells[f"target_average_{target.target}"] = TableCellModel(
+                value=breakdown.average_damage if breakdown else 0
+            )
+        rows.append(TableRowModel(id=entry.player, cells=cells, details=None))
+    return rows
+
+
+def _build_summary_metrics(
+    entries: Iterable[EncounterTargetDamageEntry],
+    targets: Iterable[EncounterTargetSummary],
+    *,
+    config: TargetDamageReportConfig,
+    pull_count: int,
+) -> List[SummaryMetricModel]:
+    selected_entries = list(entries)
+    selected_targets = list(targets)
+    total_damage = sum(float(entry.total_damage) for entry in selected_entries)
+    target_totals = {
+        target.target: sum(
+            float(entry.target_totals.get(target.target).total_damage)
+            for entry in selected_entries
+            if entry.target_totals.get(target.target) is not None
+        )
+        for target in selected_targets
+    }
+    metrics: List[SummaryMetricModel] = []
+    if config.show_pull_count_summary:
+        metrics.append(
+            SummaryMetricModel(
+                id="pull_count",
+                label="Pulls counted",
+                value=pull_count,
+                format=ValueFormat.INTEGER,
+            )
+        )
+    if config.show_combined_total_summary:
+        metrics.append(
+            SummaryMetricModel(
+                id="total_damage",
+                label=config.combined_total_label,
+                value=total_damage,
+                format=ValueFormat.INTEGER,
+            )
+        )
+    if config.show_combined_average_summary:
+        metrics.append(
+            SummaryMetricModel(
+                id="avg_damage_per_pull",
+                label=config.combined_average_label,
+                value=total_damage / pull_count if pull_count else 0.0,
+                format=ValueFormat.DECIMAL,
+                precision=0,
+            )
+        )
+    for target in selected_targets:
+        target_total = target_totals[target.target]
+        if config.show_target_total_summaries:
+            metrics.append(
+                SummaryMetricModel(
+                    id=f"summary_total_{target.target}",
+                    label=f"{target.label} Total",
+                    value=target_total,
+                    format=ValueFormat.INTEGER,
+                )
+            )
+        if config.show_target_average_summaries:
+            metrics.append(
+                SummaryMetricModel(
+                    id=f"summary_average_{target.target}",
+                    label=f"{target.label} Avg / Pull",
+                    value=target_total / pull_count if pull_count else 0.0,
+                    format=ValueFormat.DECIMAL,
+                    precision=0,
+                )
+            )
+    return metrics
 
 
 def build_target_damage_spec_analysis(

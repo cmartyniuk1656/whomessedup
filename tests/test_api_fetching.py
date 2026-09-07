@@ -1,3 +1,4 @@
+import threading
 from unittest.mock import Mock, patch
 
 from who_messed_up import api
@@ -84,6 +85,45 @@ def test_fetch_tables_aliases_requests_and_preserves_order():
     assert tables == [
         {"entries": [{"id": 1}]},
         {"entries": [{"id": 2}]},
+    ]
+
+
+def test_fetch_tables_runs_chunks_concurrently_and_preserves_order():
+    started = threading.Barrier(2)
+
+    def fake_gql(session, token, query, variables):
+        started.wait(timeout=2)
+        fight_id = variables["fightIDs0"][0]
+        return {
+            "reportData": {
+                "report": {"q0": {"data": {"entries": [{"fightID": fight_id}]}}}
+            }
+        }
+
+    requests = [
+        {
+            "data_type": "DamageDone",
+            "fight_ids": [fight_id],
+            "start": 10,
+            "end": 20,
+        }
+        for fight_id in (1, 2)
+    ]
+    with (
+        patch("who_messed_up.api.gql", side_effect=fake_gql),
+        patch("who_messed_up.api._table_batch_workers", 2),
+    ):
+        tables = api.fetch_tables(
+            Mock(),
+            "token",
+            code="report",
+            table_requests=requests,
+            batch_size=1,
+        )
+
+    assert tables == [
+        {"entries": [{"fightID": 1}]},
+        {"entries": [{"fightID": 2}]},
     ]
 
 

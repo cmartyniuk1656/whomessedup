@@ -39,6 +39,7 @@ from .consumables import (
     collect_healing_consumable_uses,
     healing_consumable_ability_names,
 )
+from .report_pulls import ReportPull, build_report_pulls, merge_report_pulls
 
 BATTLE_RESURRECTION_SPELL_IDS = {
     20484,  # Rebirth
@@ -112,6 +113,7 @@ class DeathReportSummary:
     player_specs: Dict[str, Optional[str]]
     player_events: Dict[str, List[DeathReportEvent]]
     ability_labels: Dict[int, str]
+    pulls: List[ReportPull] = field(default_factory=list)
     source_reports: List[str] = field(default_factory=list)
 
 
@@ -394,6 +396,12 @@ def _fetch_single_death_report_summary(
                 events_by_player[target_name].append(death_event)
 
     pull_count = len(chosen)
+    report_pulls = build_report_pulls(
+        report_code,
+        chosen,
+        participants_by_fight,
+        roles_by_fight,
+    )
     name_to_class: Dict[str, Optional[str]] = {}
     for actor_id, name in actor_names.items():
         if name:
@@ -451,6 +459,7 @@ def _fetch_single_death_report_summary(
         player_specs={player: player_specs.get(player) for player in all_players},
         player_events={player: list(events) for player, events in events_by_player.items()},
         ability_labels=ability_labels,
+        pulls=report_pulls,
         source_reports=[report_code],
     )
 
@@ -467,9 +476,11 @@ def _merge_death_report_summaries(summaries: List[DeathReportSummary]) -> DeathR
     combined_ability_labels: Dict[int, str] = {}
     combined_pull_count = 0
     source_reports: List[str] = []
+    pull_groups: List[List[ReportPull]] = []
 
     for summary in summaries:
         combined_pull_count += summary.pull_count
+        pull_groups.append(summary.pulls)
         for code in summary.source_reports or [summary.report_code]:
             if code not in source_reports:
                 source_reports.append(code)
@@ -555,6 +566,7 @@ def _merge_death_report_summaries(summaries: List[DeathReportSummary]) -> DeathR
         player_specs=combined_player_specs,
         player_events=player_events,
         ability_labels=combined_ability_labels,
+        pulls=merge_report_pulls(pull_groups),
         source_reports=source_reports,
     )
 

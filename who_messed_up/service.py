@@ -195,6 +195,7 @@ from .services.phase_damage import (
     fetch_phase_damage_summary,
 )
 from .services.phases import PhasePlayerEntry, PhaseSummary, fetch_phase_summary
+from .services.report_pulls import ReportPull, build_report_pulls, report_pull_view_id
 from .services.target_damage import (
     EncounterTargetConfig,
     EncounterTargetDamageBreakdown,
@@ -277,11 +278,13 @@ __all__ = [
     "PhaseSummary",
     "ROLE_PRIORITY",
     "ROLE_UNKNOWN",
+    "ReportPull",
     "TokenError",
     "VORASIUS_MANIFEST",
     "WarcraftLogsCredentialsError",
     "OBLIVION_FILTER_DEFAULT",
     "fetch_dimensius_add_damage_summary",
+    "build_report_pulls",
     "discover_guild_reports",
     "fetch_dimensius_phase_one_summary",
     "fetch_dimensius_priority_damage_summary",
@@ -300,6 +303,7 @@ __all__ = [
     "fetch_phase_damage_summary",
     "fetch_phase_summary",
     "normalize_ghost_miss_mode",
+    "report_pull_view_id",
     "DimensiusPhaseOneEntry",
     "DimensiusPhaseOneSummary",
     "PriorityDamageEntry",

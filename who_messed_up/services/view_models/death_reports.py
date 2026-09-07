@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from typing import Iterable, List, Optional, Tuple
 
 from ..common import ROLE_PRIORITY, ROLE_UNKNOWN
-from ..death_reports import DeathReportEvent, DeathReportSummary
+from ..death_reports import DeathReportEntry, DeathReportEvent, DeathReportSummary, count_avoidable_death_events
+from ..report_pulls import ReportPull, event_belongs_to_pull
 from .common import (
     CellKind,
     ContentVariant,
@@ -39,6 +40,7 @@ from .helpers import (
     merged_reports_label,
     role_tone,
 )
+from .report_pulls import AGGREGATE_VIEW_ID, build_pull_view_control
 
 
 @dataclass(frozen=True)
@@ -289,8 +291,44 @@ def build_death_report_page(
     config: DeathReportPageConfig,
     extra_tags: Iterable[HeaderTagModel] = (),
 ) -> ReportPageModel:
+    rows = _build_rows(summary.entries, summary=summary)
+    rows_by_view = {AGGREGATE_VIEW_ID: rows}
+    summary_by_view = {
+        AGGREGATE_VIEW_ID: _build_summary_metrics(summary.entries, pull_count=summary.pull_count)
+    }
+    for pull in summary.pulls:
+        pull_entries = _entries_for_pull(summary, pull)
+        rows_by_view[pull.view_id] = _build_rows(pull_entries, summary=summary)
+        summary_by_view[pull.view_id] = _build_summary_metrics(pull_entries, pull_count=1)
+
+    return ReportPageModel(
+        reportId=config.report_id,
+        title=config.title,
+        reportCode=summary.report_code,
+        header=ReportHeaderModel(
+            subtitle=f"Report {summary.report_code}",
+            tags=_build_header_tags(summary, extra_tags),
+        ),
+        summary=summary_by_view[AGGREGATE_VIEW_ID],
+        summaryByView=summary_by_view,
+        content=ReportContentModel(
+            variant=ContentVariant.TABLE,
+            table=TableModel(
+                defaultSort=SortModel(columnId="death_rate", direction=SortDirection.DESC),
+                columns=_build_columns(),
+                rows=rows,
+                rowsByView=rows_by_view,
+                viewControl=build_pull_view_control(summary.pulls, control_id="death_pull_view"),
+                emptyState="No deaths matched the filters.",
+            ),
+        ),
+        footnotes=list(config.footnotes),
+    )
+
+
+def _build_rows(entries: Iterable[DeathReportEntry], *, summary: DeathReportSummary) -> List[TableRowModel]:
     rows: List[TableRowModel] = []
-    for entry in summary.entries:
+    for entry in entries:
         role = entry.role or ROLE_UNKNOWN
         role_priority = ROLE_PRIORITY.get(role, ROLE_PRIORITY[ROLE_UNKNOWN])
         avoidable_death_rate = (getattr(entry, "avoidable_deaths", 0) / entry.pulls) if entry.pulls else 0.0
@@ -322,110 +360,134 @@ def build_death_report_page(
             )
         )
 
-    return ReportPageModel(
-        reportId=config.report_id,
-        title=config.title,
-        reportCode=summary.report_code,
-        header=ReportHeaderModel(
-            subtitle=f"Report {summary.report_code}",
-            tags=_build_header_tags(summary, extra_tags),
+    return rows
+
+
+def _build_summary_metrics(
+    entries: Iterable[DeathReportEntry],
+    *,
+    pull_count: int,
+) -> List[SummaryMetricModel]:
+    selected_entries = list(entries)
+    total_deaths = sum(entry.deaths for entry in selected_entries)
+    total_avoidable_deaths = sum(entry.avoidable_deaths for entry in selected_entries)
+    return [
+        SummaryMetricModel(
+            id="pull_count",
+            label="Pulls counted",
+            value=pull_count,
+            format=ValueFormat.INTEGER,
         ),
-        summary=[
-            SummaryMetricModel(
-                id="pull_count",
-                label="Pulls counted",
-                value=summary.pull_count,
-                format=ValueFormat.INTEGER,
-            ),
-            SummaryMetricModel(
-                id="total_deaths",
-                label="Total deaths",
-                value=summary.total_deaths,
-                format=ValueFormat.INTEGER,
-            ),
-            SummaryMetricModel(
-                id="avoidable_deaths",
-                label="Avoidable deaths",
-                value=getattr(summary, "total_avoidable_deaths", 0),
-                format=ValueFormat.INTEGER,
-                display=f"{getattr(summary, 'total_avoidable_deaths', 0):,} / {summary.total_deaths:,}",
-            ),
-            SummaryMetricModel(
-                id="avg_deaths_per_pull",
-                label="Avg deaths / Pull",
-                value=(summary.total_deaths / summary.pull_count) if summary.pull_count else 0,
-                format=ValueFormat.DECIMAL,
-                precision=3,
-            ),
-        ],
-        content=ReportContentModel(
-            variant=ContentVariant.TABLE,
-            table=TableModel(
-                defaultSort=SortModel(columnId="death_rate", direction=SortDirection.DESC),
-                columns=[
-                    TableColumnModel(
-                        id="player",
-                        label="Player",
-                        align=TextAlign.LEFT,
-                        sortable=True,
-                        cellKind=CellKind.PLAYER,
-                    ),
-                    TableColumnModel(
-                        id="role",
-                        label="Role",
-                        align=TextAlign.LEFT,
-                        sortable=True,
-                        cellKind=CellKind.BADGE,
-                    ),
-                    TableColumnModel(
-                        id="pulls",
-                        label="Pulls",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.INTEGER,
-                    ),
-                    TableColumnModel(
-                        id="deaths",
-                        label="Deaths",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.INTEGER,
-                    ),
-                    TableColumnModel(
-                        id="avoidable_deaths",
-                        label="Avoidable Deaths",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.INTEGER,
-                    ),
-                    TableColumnModel(
-                        id="avoidable_death_rate",
-                        label="Avoidable Death Rate",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.DECIMAL,
-                        precision=3,
-                    ),
-                    TableColumnModel(
-                        id="death_rate",
-                        label="Death Rate",
-                        align=TextAlign.RIGHT,
-                        sortable=True,
-                        cellKind=CellKind.NUMBER,
-                        format=ValueFormat.DECIMAL,
-                        precision=3,
-                    ),
-                ],
-                rows=rows,
-                emptyState="No deaths matched the filters.",
-            ),
+        SummaryMetricModel(
+            id="total_deaths",
+            label="Total deaths",
+            value=total_deaths,
+            format=ValueFormat.INTEGER,
         ),
-        footnotes=list(config.footnotes),
-    )
+        SummaryMetricModel(
+            id="avoidable_deaths",
+            label="Avoidable deaths",
+            value=total_avoidable_deaths,
+            format=ValueFormat.INTEGER,
+            display=f"{total_avoidable_deaths:,} / {total_deaths:,}",
+        ),
+        SummaryMetricModel(
+            id="avg_deaths_per_pull",
+            label="Avg deaths / Pull",
+            value=(total_deaths / pull_count) if pull_count else 0,
+            format=ValueFormat.DECIMAL,
+            precision=3,
+        ),
+    ]
+
+
+def _build_columns() -> List[TableColumnModel]:
+    return [
+        TableColumnModel(
+            id="player",
+            label="Player",
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.PLAYER,
+        ),
+        TableColumnModel(
+            id="role",
+            label="Role",
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.BADGE,
+        ),
+        TableColumnModel(
+            id="pulls",
+            label="Pulls",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.INTEGER,
+        ),
+        TableColumnModel(
+            id="deaths",
+            label="Deaths",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.INTEGER,
+        ),
+        TableColumnModel(
+            id="avoidable_deaths",
+            label="Avoidable Deaths",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.INTEGER,
+        ),
+        TableColumnModel(
+            id="avoidable_death_rate",
+            label="Avoidable Death Rate",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.DECIMAL,
+            precision=3,
+        ),
+        TableColumnModel(
+            id="death_rate",
+            label="Death Rate",
+            align=TextAlign.RIGHT,
+            sortable=True,
+            cellKind=CellKind.NUMBER,
+            format=ValueFormat.DECIMAL,
+            precision=3,
+        ),
+    ]
+
+
+def _entries_for_pull(summary: DeathReportSummary, pull: ReportPull) -> List[DeathReportEntry]:
+    participants = set(pull.participants)
+    scoped_entries: List[DeathReportEntry] = []
+    for entry in summary.entries:
+        events = [
+            event
+            for event in entry.events
+            if event_belongs_to_pull(event, pull, summary.report_code)
+        ]
+        if entry.player not in participants and not events:
+            continue
+        deaths = len(events)
+        avoidable_deaths = count_avoidable_death_events(events)
+        scoped_entries.append(
+            DeathReportEntry(
+                player=entry.player,
+                role=pull.player_roles.get(entry.player) or entry.role,
+                class_name=entry.class_name,
+                pulls=1,
+                deaths=deaths,
+                avoidable_deaths=avoidable_deaths,
+                death_rate=float(deaths),
+                events=events,
+            )
+        )
+    return scoped_entries
 
 
 __all__ = [
