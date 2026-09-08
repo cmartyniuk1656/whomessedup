@@ -1,7 +1,10 @@
 import unittest
 
 from who_messed_up.services.boss_manifests import get_boss_manifest
-from who_messed_up.services.boss_manifest_types import is_avoidable_ability
+from who_messed_up.services.boss_manifest_types import (
+    EncounterTargetBucket,
+    is_avoidable_ability,
+)
 
 
 class NekZaliHeroicManifestTests(unittest.TestCase):
@@ -48,6 +51,14 @@ class NekZaliHeroicManifestTests(unittest.TestCase):
             {1288554, 1290390, 1292899, 1294846, 1295085},
         )
 
+    def test_restless_amani_is_classified_as_pad_damage(self):
+        manifest = get_boss_manifest("nek-zali-the-soulcoiler", "heroic")
+
+        self.assertEqual(
+            manifest.target_configs["restless_amani"].bucket,
+            EncounterTargetBucket.PAD_ADD,
+        )
+
 
 class NekZaliMythicManifestTests(unittest.TestCase):
     def test_manifest_resolves_for_mythic(self):
@@ -80,6 +91,9 @@ class NekZaliMythicManifestTests(unittest.TestCase):
             ability.game_id for ability in mythic.abilities if is_avoidable_ability(ability)
         }
         self.assertEqual(mythic_avoidable - heroic_avoidable, {1300239})
+
+        swirling_spirit = mythic.ability_for(ability_id=1300239)
+        self.assertEqual(swirling_spirit.avoidable_hit_group_window_ms, 2_000.0)
 
 
 class EntombedSentinelsHeroicManifestTests(unittest.TestCase):

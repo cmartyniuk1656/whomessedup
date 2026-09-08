@@ -42,12 +42,18 @@ const resolveSortConfig = (table, preferredSort) => {
     return null;
   }
 
-  const columnIds = new Set(columns.map((column) => column.id));
-  if (preferredSort?.columnId && columnIds.has(preferredSort.columnId)) {
+  const columnsById = new Map(columns.map((column) => [column.id, column]));
+  if (
+    preferredSort?.columnId &&
+    columnsById.get(preferredSort.columnId)?.sortable
+  ) {
     return preferredSort;
   }
 
-  if (table?.defaultSort?.columnId && columnIds.has(table.defaultSort.columnId)) {
+  if (
+    table?.defaultSort?.columnId &&
+    columnsById.get(table.defaultSort.columnId)?.sortable
+  ) {
     return table.defaultSort;
   }
 

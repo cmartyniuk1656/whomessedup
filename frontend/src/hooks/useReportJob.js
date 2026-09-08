@@ -6,6 +6,7 @@ export function useReportJob() {
   const [error, setError] = useState("");
   const [pendingJob, setPendingJob] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const pollRef = useRef({ timer: null, jobId: null });
 
   const stopPolling = useCallback(() => {
@@ -27,6 +28,7 @@ export function useReportJob() {
     setError("");
     setPendingJob(null);
     setIsSubmitting(false);
+    setIsRefreshing(false);
   }, [stopPolling]);
 
   const requestJobStatus = useCallback(
@@ -46,6 +48,7 @@ export function useReportJob() {
           stopPolling();
           setPendingJob(null);
           setIsSubmitting(false);
+          setIsRefreshing(false);
           setPage(data.result);
           return;
         }
@@ -54,6 +57,7 @@ export function useReportJob() {
           stopPolling();
           setPendingJob(null);
           setIsSubmitting(false);
+          setIsRefreshing(false);
           setError(data.error || "Report generation failed.");
           return;
         }
@@ -67,14 +71,15 @@ export function useReportJob() {
         stopPolling();
         setPendingJob(null);
         setIsSubmitting(false);
+        setIsRefreshing(false);
         setError(err.message || "Failed to poll job status.");
       }
     },
     [stopPolling]
   );
 
-  const runReport = useCallback(
-    async ({ reportId, values }) => {
+  const submitReport = useCallback(
+    async ({ reportId, values, preservePage = false }) => {
       if (!reportId) {
         setError("No report selected.");
         return false;
@@ -83,8 +88,11 @@ export function useReportJob() {
       stopPolling();
       setError("");
       setPendingJob(null);
-      setPage(null);
+      if (!preservePage) {
+        setPage(null);
+      }
       setIsSubmitting(true);
+      setIsRefreshing(preservePage);
 
       try {
         const response = await fetch(`/api/v2/reports/${reportId}/jobs`, {
@@ -114,13 +122,15 @@ export function useReportJob() {
 
         const data = await response.json();
         setPage(data);
+        setIsRefreshing(false);
         return true;
       } catch (err) {
         const message =
           err instanceof TypeError
-            ? "Report request failed. Confirm the backend is running on http://localhost:8088."
+            ? "Report request failed. Confirm the backend and development API proxy are running."
             : err.message || "Something went wrong.";
         setError(message);
+        setIsRefreshing(false);
         return false;
       } finally {
         if (!pollRef.current.jobId) {
@@ -129,6 +139,21 @@ export function useReportJob() {
       }
     },
     [requestJobStatus, stopPolling]
+  );
+
+  const runReport = useCallback(
+    ({ reportId, values }) => submitReport({ reportId, values, preservePage: false }),
+    [submitReport]
+  );
+
+  const refreshReport = useCallback(
+    ({ reportId, values }) =>
+      submitReport({
+        reportId,
+        values: { ...values, fresh_run: true },
+        preservePage: true,
+      }),
+    [submitReport]
   );
 
   const loadCachedReport = useCallback(
@@ -143,6 +168,7 @@ export function useReportJob() {
       setPendingJob(null);
       setPage(null);
       setIsSubmitting(true);
+      setIsRefreshing(false);
 
       try {
         const encodedValues = encodeReportValues(values);
@@ -165,7 +191,7 @@ export function useReportJob() {
       } catch (err) {
         const message =
           err instanceof TypeError
-            ? "Cached report request failed. Confirm the backend is running on http://localhost:8088."
+            ? "Cached report request failed. Confirm the backend and development API proxy are running."
             : err.message || "Cached report request failed.";
         setError(message);
         return { ok: false, cacheMiss: false };
@@ -181,9 +207,11 @@ export function useReportJob() {
     page,
     error,
     isSubmitting,
+    isRefreshing,
     pendingJob,
     loadCachedReport,
     runReport,
+    refreshReport,
     setError,
   };
 }

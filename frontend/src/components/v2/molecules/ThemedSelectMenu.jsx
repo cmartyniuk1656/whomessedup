@@ -34,6 +34,7 @@ export function ThemedSelectMenu({
   value,
   onChange,
   className = "",
+  ariaLabel,
 }) {
   const rootRef = useRef(null);
   const buttonRef = useRef(null);
@@ -151,12 +152,14 @@ export function ThemedSelectMenu({
 
   return (
     <div ref={rootRef} className={["relative", className].filter(Boolean).join(" ")}>
-      <label
-        className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400"
-        htmlFor={id}
-      >
-        {label}
-      </label>
+      {label ? (
+        <label
+          className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400"
+          htmlFor={id}
+        >
+          {label}
+        </label>
+      ) : null}
       <button
         ref={buttonRef}
         id={id}
@@ -164,8 +167,10 @@ export function ThemedSelectMenu({
         aria-controls={menuId}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        aria-label={ariaLabel}
         className={[
-          "mt-1 flex h-11 w-full items-center justify-between gap-2 rounded-lg border bg-slate-950/70 px-3 text-left text-sm text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30 disabled:cursor-not-allowed disabled:opacity-60",
+          "flex h-11 w-full items-center justify-between gap-2 rounded-lg border bg-slate-950/70 px-3 text-left text-sm text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30 disabled:cursor-not-allowed disabled:opacity-60",
+          label ? "mt-1" : null,
           isOpen
             ? "border-emerald-300/70 ring-2 ring-emerald-400/20"
             : "border-white/10 hover:border-emerald-300/35 hover:bg-slate-950/85",
@@ -192,7 +197,7 @@ export function ThemedSelectMenu({
           id={menuId}
           role="listbox"
           aria-labelledby={id}
-          className="absolute right-0 z-50 mt-1 w-full overflow-hidden rounded-lg border border-emerald-400/25 bg-slate-950/95 p-1 shadow-[0_24px_70px_-30px_rgba(16,185,129,0.85)] ring-1 ring-white/10 backdrop-blur-xl"
+          className="absolute right-0 z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-emerald-400/25 bg-slate-950/95 p-1 shadow-[0_24px_70px_-30px_rgba(16,185,129,0.85)] ring-1 ring-white/10 backdrop-blur-xl"
           onKeyDown={handleMenuKeyDown}
         >
           {normalizedOptions.map((option, index) => {

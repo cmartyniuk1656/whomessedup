@@ -45,6 +45,34 @@ def test_fetch_events_reuses_exact_next_page_timestamp():
     assert gql.call_args_list[1].args[3]["start"] == 1000.0
 
 
+def test_fetch_events_forwards_enemy_hostility_for_cast_streams():
+    response = {
+        "reportData": {
+            "report": {
+                "events": {
+                    "data": [],
+                    "nextPageTimestamp": None,
+                }
+            }
+        }
+    }
+    with patch("who_messed_up.api.gql", return_value=response) as gql:
+        list(
+            api.fetch_events(
+                Mock(),
+                "token",
+                code="report",
+                data_type="Casts",
+                start=0,
+                end=2000,
+                hostility_type="Enemies",
+                sleep_seconds=0,
+            )
+        )
+
+    assert gql.call_args.args[3]["hostilityType"] == "Enemies"
+
+
 def test_fetch_tables_aliases_requests_and_preserves_order():
     def fake_gql(session, token, query, variables):
         assert "q0: table(" in query

@@ -48,6 +48,7 @@ class BossAbilityMetadata:
     avoidable_excludes_active_debuff_ability_id: Optional[int] = None
     avoidable_requires_active_debuff_ability_id: Optional[int] = None
     avoidable_requires_active_debuff_min_age_ms: float = 0.0
+    avoidable_hit_group_window_ms: float = 0.0
 
 
 @dataclass(frozen=True)

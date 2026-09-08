@@ -4,18 +4,25 @@ export function TableMultiSelectFilter({ filter, selectedIds, onToggle }) {
   }
 
   const selected = new Set(selectedIds ?? []);
+  const isSingleSelect = filter.kind === "single_select";
 
   return (
     <div className="space-y-2.5">
       <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{filter.label}</p>
-      <div className="flex flex-wrap gap-2">
+      <div
+        className="flex flex-wrap gap-2"
+        role={isSingleSelect ? "radiogroup" : undefined}
+        aria-label={isSingleSelect ? filter.label : undefined}
+      >
         {filter.options.map((option) => {
           const isActive = selected.has(option.id);
           return (
             <button
               key={`${filter.id}-${option.id}`}
               type="button"
-              aria-pressed={isActive}
+              role={isSingleSelect ? "radio" : undefined}
+              aria-checked={isSingleSelect ? isActive : undefined}
+              aria-pressed={isSingleSelect ? undefined : isActive}
               className={[
                 "rounded-lg border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/40",
                 isActive

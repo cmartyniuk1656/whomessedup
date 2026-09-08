@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "../atoms/Button";
-import { SelectInput } from "../atoms/SelectInput";
+import { ThemedSelectMenu } from "./ThemedSelectMenu";
 
 function reportLabel(report) {
   const date = report.end_time ? new Date(report.end_time).toLocaleDateString() : "Unknown date";
@@ -47,9 +47,16 @@ export function RecentGuildReports({ guild, reports, isLoading, error, onSelectR
       {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
       {!isLoading && guild && reports.length ? (
         <div className="mt-3 space-y-2">
-          <SelectInput className="mt-0" aria-label="Recent Warcraft Logs report" value={selectedCode} onChange={(event) => handleSelection(event.target.value)}>
-            {reports.map((report) => <option key={report.code} value={report.code}>{reportLabel(report)}</option>)}
-          </SelectInput>
+          <ThemedSelectMenu
+            id="recent-guild-report"
+            ariaLabel="Recent Warcraft Logs report"
+            options={reports.map((report) => ({
+              id: report.code,
+              label: reportLabel(report),
+            }))}
+            value={selectedCode}
+            onChange={handleSelection}
+          />
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="accent" onClick={() => onSelectReport(selectedCode)}>Use report</Button>
             <Button size="sm" variant="secondary" onClick={copyCode}>{copyLabel}</Button>

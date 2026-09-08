@@ -207,3 +207,87 @@ html {
     animation: none;
   }
 }
+
+html[data-graphics-quality="low"] .liquid-glow,
+html[data-graphics-quality="low"] .liquid-blob,
+html[data-graphics-quality="low"] .graphics-noise {
+  display: none;
+}
+
+html[data-graphics-quality="low"] .backdrop-blur,
+html[data-graphics-quality="low"] .backdrop-blur-sm,
+html[data-graphics-quality="low"] .backdrop-blur-md,
+html[data-graphics-quality="low"] .backdrop-blur-xl {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-graphics-quality="low"] [class*="drop-shadow-"] {
+  filter: none !important;
+}
+
+html[data-graphics-quality="low"] [class*="shadow-"] {
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+}
+
+html[data-graphics-quality="low"] [class^="bg-slate-950/"],
+html[data-graphics-quality="low"] [class*=" bg-slate-950/"],
+html[data-graphics-quality="low"] [class^="bg-slate-700/"],
+html[data-graphics-quality="low"] [class*=" bg-slate-700/"],
+html[data-graphics-quality="low"] [class^="bg-slate-500/"],
+html[data-graphics-quality="low"] [class*=" bg-slate-500/"] {
+  background-color: hsl(var(--bg-deep)) !important;
+}
+
+html[data-graphics-quality="low"] [class^="bg-white/"],
+html[data-graphics-quality="low"] [class*=" bg-white/"],
+html[data-graphics-quality="low"] [class^="bg-[color:rgba"],
+html[data-graphics-quality="low"] [class*=" bg-[color:rgba"],
+html[data-graphics-quality="low"] [class^="bg-[linear-gradient"],
+html[data-graphics-quality="low"] [class*=" bg-[linear-gradient"] {
+  background-color: hsl(var(--surface)) !important;
+}
+
+html[data-graphics-quality="low"] :where(
+  [class~="bg-emerald-300/10"],
+  [class~="bg-emerald-300/[0.06]"],
+  [class~="bg-emerald-400/10"],
+  [class~="bg-emerald-400/15"],
+  [class~="bg-emerald-400/[0.06]"],
+  [class~="bg-emerald-950/[0.055]"]
+) {
+  background-color: #10352d !important;
+}
+
+html[data-graphics-quality="low"] :where(
+  [class~="bg-rose-400/10"],
+  [class~="bg-rose-500/10"]
+) {
+  background-color: #351923 !important;
+}
+
+html[data-graphics-quality="low"] :where(
+  [class~="bg-amber-300/10"],
+  [class~="bg-amber-400/10"]
+) {
+  background-color: #352916 !important;
+}
+
+html[data-graphics-quality="low"] [class~="bg-violet-400/10"] {
+  background-color: #291f3d !important;
+}
+
+html[data-graphics-quality="low"] :where(
+  [class~="bg-sky-400/10"],
+  [class~="bg-sky-950/[0.07]"]
+) {
+  background-color: #102d3d !important;
+}
+
+html[data-graphics-quality="low"] *,
+html[data-graphics-quality="low"] *::before,
+html[data-graphics-quality="low"] *::after {
+  animation: none !important;
+  transition-duration: 0s !important;
+}

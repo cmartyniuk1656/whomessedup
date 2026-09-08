@@ -1,4 +1,5 @@
 import { Tooltip } from "../atoms/Tooltip";
+import { RelativeBarChart } from "./RelativeBarChart";
 
 const CHILD_TONE_CLASSES = {
   danger: {
@@ -198,7 +199,7 @@ function DetailItemBadges({ item }) {
 }
 
 export function EventGroupList({ details }) {
-  if (!details?.groups?.length) {
+  if (!details?.groups?.length && !details?.barChart) {
     return null;
   }
 
@@ -277,6 +278,12 @@ export function EventGroupList({ details }) {
           </ul>
         </div>
       ))}
+      {details.barChart ? (
+        <RelativeBarChart
+          chart={details.barChart}
+          standalone={!details.groups?.length}
+        />
+      ) : null}
     </div>
   );
 }

@@ -73,6 +73,13 @@ class JobManager:
     def register_handler(self, job_type: str, handler: JobHandler) -> None:
         self._handlers[job_type] = handler
 
+    def execute_registered(self, job_type: str, payload: Dict[str, Any]) -> Any:
+        """Execute a registered handler inline for composite report jobs."""
+        handler = self._handlers.get(job_type)
+        if handler is None:
+            raise KeyError(f"No handler registered for job type '{job_type}'")
+        return handler(payload)
+
     def enqueue(
         self,
         job_type: str,

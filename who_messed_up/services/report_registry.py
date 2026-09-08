@@ -37,6 +37,13 @@ from .mechanic_scorecards import (
     FIGHT_SELECTIONS as SCORECARD_FIGHT_SELECTIONS,
     SCORECARD_ENCOUNTERS,
 )
+from .nek_zali_the_soulcoiler_mechanics import (
+    REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_MECHANICS_DEFAULT_FIGHT,
+    REPORT_DESCRIPTION as REPORT_NEK_ZALI_MECHANICS_DESCRIPTION,
+    REPORT_FOOTNOTES as REPORT_NEK_ZALI_MECHANICS_FOOTNOTES,
+    REPORT_ID as REPORT_NEK_ZALI_MECHANICS_ID,
+    REPORT_TITLE as REPORT_NEK_ZALI_MECHANICS_TITLE,
+)
 from .dimensius_deaths import (
     OBLIVION_FILTER_DEFAULT,
     OBLIVION_FILTER_EXCLUDE_ALL,
@@ -417,6 +424,7 @@ ReportPayloadBuilder = Callable[[Dict[str, Any]], Tuple[Dict[str, Any], bool]]
 JOB_V2_DIMENSIUS_ADD_DAMAGE = "v2_report_dimensius_add_damage"
 JOB_V2_DIMENSIUS_DEATHS = "v2_report_dimensius_deaths"
 JOB_V2_DIMENSIUS_PRIORITY_DAMAGE = "v2_report_dimensius_priority_damage"
+JOB_V2_AGGREGATE_REPORT = "v2_report_aggregate"
 JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE = "v2_report_beloren_child_of_alar_damage"
 JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE = "v2_report_beloren_child_of_alar_avoidable_damage"
 JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS = "v2_report_beloren_child_of_alar_deaths"
@@ -438,6 +446,7 @@ JOB_V2_MIDNIGHT_FALLS_FUCKUPS = "v2_report_midnight_falls_fuckups"
 JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE = "v2_report_nek_zali_the_soulcoiler_avoidable_damage"
 JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE = "v2_report_nek_zali_the_soulcoiler_damage"
 JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS = "v2_report_nek_zali_the_soulcoiler_deaths"
+JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS = "v2_report_nek_zali_the_soulcoiler_mechanics"
 JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE = "v2_report_entombed_sentinels_avoidable_damage"
 JOB_V2_ENTOMBED_SENTINELS_DAMAGE = "v2_report_entombed_sentinels_damage"
 JOB_V2_ENTOMBED_SENTINELS_DEATHS = "v2_report_entombed_sentinels_deaths"
@@ -899,6 +908,21 @@ def _build_nek_zali_the_soulcoiler_mythic_damage_payload(values: Dict[str, Any])
         values,
         manifest=NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
         default_fight=REPORT_NEK_ZALI_DEFAULT_FIGHT,
+    )
+
+
+def _build_nek_zali_the_soulcoiler_mechanics_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    fresh_run = _coerce_bool(values, "fresh_run", default=False)
+    return (
+        {
+            "report": report_codes[0],
+            "extra_reports": report_codes[1:],
+            "fight": REPORT_NEK_ZALI_MECHANICS_DEFAULT_FIGHT,
+        },
+        fresh_run,
     )
 
 
@@ -2995,12 +3019,39 @@ _REPORTS: Dict[str, RegisteredReport] = {
 }
 
 
+_REPORTS[REPORT_NEK_ZALI_MECHANICS_ID] = RegisteredReport(
+    definition=ReportDefinitionModel(
+        id=REPORT_NEK_ZALI_MECHANICS_ID,
+        title=REPORT_NEK_ZALI_MECHANICS_TITLE,
+        description=REPORT_NEK_ZALI_MECHANICS_DESCRIPTION,
+        fightId=NEK_ZALI_THE_SOULCOILER_FIGHT_ID,
+        fightName=REPORT_NEK_ZALI_MECHANICS_DEFAULT_FIGHT,
+        difficulty=ReportDifficulty.MYTHIC,
+        defaultFight=REPORT_NEK_ZALI_MECHANICS_DEFAULT_FIGHT,
+        footnotes=list(REPORT_NEK_ZALI_MECHANICS_FOOTNOTES),
+        requestSchema=RequestSchemaModel(
+            fields=[
+                _build_report_codes_field(),
+                RequestFieldModel(
+                    id="fresh_run",
+                    kind=RequestFieldKind.CHECKBOX,
+                    label="Force fresh run (skip cache)",
+                    defaultValue=False,
+                ),
+            ]
+        ),
+    ),
+    job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS,
+    build_payload=_build_nek_zali_the_soulcoiler_mechanics_payload,
+)
+
+
 def _build_cooldown_usage_definition(
     *,
     report_id: str,
     fight_id: str,
     fight_name: str,
-    difficulty: ReportDifficulty,
+    difficulty: ReportDifficulty | str,
     expected_encounter_id: int | None = None,
 ) -> RegisteredReport:
     difficulty_label = difficulty.value.title()
@@ -3204,6 +3255,208 @@ for _boss_id, _scorecard_encounter in SCORECARD_ENCOUNTERS.items():
     )
 
 
+_AGGREGATE_FIELD_PREFIX = "aggregate__"
+_AGGREGATE_INCLUDE_PREFIX = "aggregate_include__"
+_AGGREGATE_SHARED_FIELD_IDS = {
+    "additional_reports",
+    "fresh_run",
+    "report_code",
+    "report_codes",
+}
+
+
+def _aggregate_field_id(report_id: str, field_id: str) -> str:
+    return f"{_AGGREGATE_FIELD_PREFIX}{report_id}__{field_id}"
+
+
+def _aggregate_include_field_id(report_id: str) -> str:
+    return f"{_AGGREGATE_INCLUDE_PREFIX}{report_id}"
+
+
+def _aggregate_child_values(
+    values: Dict[str, Any],
+    child: RegisteredReport,
+    report_codes: List[str],
+    fresh_run: bool,
+) -> Dict[str, Any]:
+    child_values: Dict[str, Any] = {}
+    for field in child.definition.request_schema.fields:
+        if field.id == "report_codes":
+            child_values[field.id] = list(report_codes)
+        elif field.id == "report_code":
+            child_values[field.id] = report_codes[0]
+        elif field.id == "additional_reports":
+            child_values[field.id] = list(report_codes[1:])
+        elif field.id == "fresh_run":
+            child_values[field.id] = fresh_run
+        else:
+            aggregate_id = _aggregate_field_id(child.definition.id, field.id)
+            if aggregate_id in values:
+                child_values[field.id] = values[aggregate_id]
+    return child_values
+
+
+def _make_aggregate_payload_builder(
+    *,
+    aggregate_report_id: str,
+    aggregate_title: str,
+    child_report_ids: Tuple[str, ...],
+    fight_name: str,
+    difficulty: ReportDifficulty,
+) -> ReportPayloadBuilder:
+    def build(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+        report_codes = _coerce_report_code_list(values)
+        fresh_run = _coerce_bool(values, "fresh_run", default=False)
+        selected_children: List[Dict[str, Any]] = []
+        for child_report_id in child_report_ids:
+            if not _coerce_bool(
+                values,
+                _aggregate_include_field_id(child_report_id),
+                default=True,
+            ):
+                continue
+            child = _REPORTS[child_report_id]
+            child_values = _aggregate_child_values(
+                values, child, report_codes, fresh_run
+            )
+            child_payload, _child_fresh_run = child.build_payload(child_values)
+            if child.definition.difficulty is not None and "difficulty" not in child_payload:
+                child_difficulty = child.definition.difficulty
+                child_payload = dict(child_payload)
+                child_payload["difficulty"] = getattr(
+                    child_difficulty, "value", child_difficulty
+                )
+            selected_children.append(
+                {
+                    "report_id": child.definition.id,
+                    "title": child.definition.title,
+                    "job_type": child.job_type,
+                    "payload": child_payload,
+                }
+            )
+        if not selected_children:
+            raise ValueError("Select at least one report to include.")
+        return (
+            {
+                "report": report_codes[0],
+                "fight": fight_name,
+                "difficulty": getattr(difficulty, "value", difficulty),
+                "kill_only": all(
+                    bool(child["payload"].get("kill_only", False))
+                    for child in selected_children
+                ),
+                "report_id": aggregate_report_id,
+                "report_title": aggregate_title,
+                "reports": selected_children,
+            },
+            fresh_run,
+        )
+
+    return build
+
+
+def _build_aggregate_definition(
+    child_reports: List[RegisteredReport],
+) -> RegisteredReport:
+    first = child_reports[0].definition
+    fight_name = first.fight_name or first.default_fight or "Encounter"
+    difficulty = first.difficulty or ReportDifficulty.HEROIC
+    difficulty_value = str(getattr(difficulty, "value", difficulty))
+    aggregate_report_id = (
+        f"{first.fight_id}-{difficulty_value}-aggregate-reports"
+    )
+    aggregate_title = f"{difficulty_value.title()} {fight_name} - Aggregate Reports"
+    fields: List[RequestFieldModel] = [_build_report_codes_field()]
+    fields.extend(
+        RequestFieldModel(
+            id=_aggregate_include_field_id(child.definition.id),
+            kind=RequestFieldKind.CHECKBOX,
+            label=f"Include {child.definition.title}",
+            description=child.definition.description,
+            defaultValue=True,
+        )
+        for child in child_reports
+    )
+    for child in child_reports:
+        for field in child.definition.request_schema.fields:
+            if field.id in _AGGREGATE_SHARED_FIELD_IDS:
+                continue
+            visible_when = field.visible_when
+            if visible_when and visible_when.get("fieldId"):
+                visible_when = {
+                    **visible_when,
+                    "fieldId": _aggregate_field_id(
+                        child.definition.id, str(visible_when["fieldId"])
+                    ),
+                }
+            updates = {
+                "id": _aggregate_field_id(child.definition.id, field.id),
+                "label": f"{child.definition.title} - {field.label}",
+                "visible_when": visible_when,
+            }
+            if hasattr(field, "model_copy"):
+                fields.append(field.model_copy(deep=True, update=updates))
+            else:  # pragma: no cover - Pydantic v1 compatibility
+                fields.append(field.copy(deep=True, update=updates))
+    fields.append(
+        RequestFieldModel(
+            id="fresh_run",
+            kind=RequestFieldKind.CHECKBOX,
+            label="Force fresh run (skip cache)",
+            defaultValue=False,
+        )
+    )
+    return RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=aggregate_report_id,
+            title=aggregate_title,
+            description="Run several reports together in one view.",
+            fightId=first.fight_id,
+            fightName=fight_name,
+            difficulty=difficulty,
+            defaultFight=fight_name,
+            footnotes=[
+                "Each selected report keeps its own calculations, configuration, and table layout."
+            ],
+            requestSchema=RequestSchemaModel(fields=fields),
+        ),
+        job_type=JOB_V2_AGGREGATE_REPORT,
+        build_payload=_make_aggregate_payload_builder(
+            aggregate_report_id=aggregate_report_id,
+            aggregate_title=aggregate_title,
+            child_report_ids=tuple(
+                child.definition.id for child in child_reports
+            ),
+            fight_name=fight_name,
+            difficulty=difficulty,
+        ),
+    )
+
+
+def _register_aggregate_reports() -> None:
+    grouped: Dict[Tuple[str, str], List[RegisteredReport]] = {}
+    for registered in list(_REPORTS.values()):
+        definition = registered.definition
+        if (
+            not registered.visible
+            or registered.job_type == JOB_V2_COOLDOWN_USAGE
+            or not definition.fight_id
+            or definition.difficulty is None
+        ):
+            continue
+        grouped.setdefault((definition.fight_id, definition.difficulty), []).append(
+            registered
+        )
+    for child_reports in grouped.values():
+        if len(child_reports) < 2:
+            continue
+        aggregate = _build_aggregate_definition(child_reports)
+        _REPORTS[aggregate.definition.id] = aggregate
+
+
+_register_aggregate_reports()
+
+
 def list_report_definitions(*, include_hidden: bool = False) -> List[ReportDefinitionModel]:
     """Return reports exposed in the catalog, optionally including hidden entries."""
     return [
@@ -3231,6 +3484,7 @@ def build_report_job_request(report_id: str, values: Dict[str, Any]) -> Tuple[st
 
 
 __all__ = [
+    "JOB_V2_AGGREGATE_REPORT",
     "JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE",
     "JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE",
     "JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS",
@@ -3278,6 +3532,7 @@ __all__ = [
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE",
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE",
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS",
+    "JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
     "JOB_V2_VORASIUS_DEATHS",

@@ -24,7 +24,7 @@ export function useReportDefinitions() {
       } catch (err) {
         const message =
           err instanceof TypeError
-            ? "Failed to load report definitions. Confirm the backend is running on http://localhost:8088."
+            ? "Failed to load report definitions. Confirm the backend and development API proxy are running."
             : err.message || "Failed to load report definitions.";
         if (!isCancelled) {
           setError(message);

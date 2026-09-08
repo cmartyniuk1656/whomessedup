@@ -3,6 +3,7 @@ import { StatusPill } from "../atoms/StatusPill";
 import { ReportFieldControl } from "../molecules/ReportFieldControl";
 import { ReportRunCard } from "../molecules/ReportRunCard";
 import { RecentGuildReports } from "../molecules/RecentGuildReports";
+import { AggregateConfigurationSections } from "./AggregateConfigurationSections";
 
 const GLOBAL_CONFIGURATION_FIELD_IDS = new Set([
   "ignore_after_deaths",
@@ -27,6 +28,10 @@ function splitFields(fields) {
 }
 
 function isFieldVisible(field, values) {
+  const aggregateMatch = String(field?.id || "").match(/^aggregate__(.+?)__(.+)$/);
+  if (aggregateMatch && values?.[`aggregate_include__${aggregateMatch[1]}`] === false) {
+    return false;
+  }
   const condition = field?.visibleWhen;
   if (!condition?.fieldId) {
     return true;
@@ -66,6 +71,9 @@ export function ReportRequestForm({
   const statusLabel = pendingJob ? (pendingJob.status === "running" ? "Running" : "Queued") : "Ready";
   const statusTone = pendingJob ? (pendingJob.status === "running" ? "accent" : "warning") : "neutral";
   const { primaryFields, globalFields } = splitFields(fields);
+  const hasAggregateSections = primaryFields.filter((field) =>
+    field.id.startsWith("aggregate_include__")
+  ).length > 1;
 
   const renderField = (field, density) => (
     <ReportFieldControl
@@ -99,7 +107,16 @@ export function ReportRequestForm({
               onSelectReport={onSelectRecentReport}
             />
           ) : null}
-          {primaryFields.map((field) => renderField(field, "compact"))}
+          {hasAggregateSections ? (
+            <AggregateConfigurationSections
+              fields={primaryFields}
+              values={values}
+              onValueChange={onValueChange}
+              renderField={renderField}
+            />
+          ) : (
+            primaryFields.map((field) => renderField(field, "compact"))
+          )}
 
           {globalFields.length ? (
             <GlobalConfigurationSection compact>{globalFields.map((field) => renderField(field, "compact"))}</GlobalConfigurationSection>

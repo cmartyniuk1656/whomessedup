@@ -32,21 +32,27 @@ Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into act
    npm install
    npm run dev
    ```
-   Vite will serve the React app (default http://localhost:5173) and proxy API calls to the backend.
+   Vite will serve the React app (default http://localhost:5510) and proxy API calls to the backend.
 
 4. **Run the backend**
    ```bash
-   uvicorn app:app --reload --port 8088
+   python scripts/run_backend.py
    ```
-   The API lives at http://localhost:8088 (see interactive docs at /docs). It also serves the frontend build once you run `npm run build`.
+   The API lives at http://localhost:5511 (see interactive docs at `/docs`). It also serves the frontend build once you run `npm run build`.
+
+   Both development ports can be overridden without editing source. Set `WHO_MESSED_UP_WEB_PORT` for Vite and `WHO_MESSED_UP_API_PORT` for both the backend launcher and Vite proxy. Set `WHO_MESSED_UP_API_ORIGIN` instead when proxying to a non-local API origin.
+
+   These are local-development defaults only. The production service may keep its existing port; the current VPS systemd service and reverse proxy continue to use `8088`.
 
 ## Production Hosting
 
-- Build the frontend (`npm run build`) and run `uvicorn app:app --host 0.0.0.0 --port 8088` under a process manager (systemd, Supervisor, Docker, etc.).
+- Build the frontend (`npm run build`) and run `uvicorn app:app --host 0.0.0.0 --port 8088` under a process manager (systemd, Supervisor, Docker, etc.). Choose a different production port only when the service definition and reverse proxy are updated together.
 - Put Nginx/Traefik/Nginx Proxy Manager in front to terminate TLS and proxy `/` and `/api/*` to the app.
 - Store `WCL_CLIENT_ID` / `WCL_CLIENT_SECRET` securely as environment variables.
 - The job queue and Warcraft Logs request limiter run in-process. Prefer one Uvicorn worker and tune the bounded report pool with `WHO_MESSED_UP_JOB_WORKERS` (default `2`) so separate processes do not independently exceed the upstream rate limit.
 - `WCL_MAX_CONCURRENT_REQUESTS` caps concurrent Warcraft Logs requests (default `4`), `WCL_TABLE_BATCH_WORKERS` controls how many independent table batches can run in parallel (default `4`), and `WCL_REQUEST_ATTEMPTS` controls transient 429/5xx retries (default `3`).
+- Real-time report mode works with any public report code and polls lightweight report metadata every 10 seconds while the results tab is visible. Guild configuration is only needed for recent-report discovery. `WCL_REPORT_WATCH_CACHE_TTL_SECONDS` shares those checks across browser sessions for a report (default `5`, maximum `30`).
+- Aggregate Reports run the selected non-cooldown reports together. `WHO_MESSED_UP_AGGREGATE_REPORT_WORKERS` bounds parallel child-report generation (default `2`, maximum `4`); Warcraft Logs calls remain subject to `WCL_MAX_CONCURRENT_REQUESTS`.
 
 ## Development Tips
 
@@ -94,7 +100,7 @@ When refactoring or adding features, sanity-check the existing reports against t
 
 Recommended workflow:
 
-1. Run the backend (`uvicorn app:app --reload --port 8088`) and the frontend dev server.
+1. Run the backend (`python scripts/run_backend.py`) and the frontend dev server.
 2. Load each tile using the report codes above, once with cached results and once using the “Force fresh run” option.
 3. Export CSVs before/after your changes; diff them (ignoring timestamp/order shifts) to confirm metrics remain identical unless intentionally changed.
 4. When backend-only refactors are done, hit the REST endpoints directly (`/api/nexus-phase1`, `/api/nexus-phase-damage`, `/api/dimensius-add-damage`) with the codes above and compare JSON responses.
@@ -106,13 +112,13 @@ Automating these checks (e.g., via a pytest script that fetches the endpoints an
 Run the helper script (ensure the backend is running locally) to refresh the stored snapshots:
 
 ```bash
-.\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:8088 --out-dir regression_snapshots
+.\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:5511 --out-dir regression_snapshots
 ```
 
 The generated JSON lives in `regression_snapshots/` and acts as the “golden” expectations for future diffs. To run a single case without re-running the entire suite, pass one or more `--case` flags (each matching the case name from `scripts/capture_regressions.py`). Example:
 
 ```bash
-.\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:8088 --out-dir regression_snapshots_current --case ghosts_all
+.\.venv\Scripts\python.exe scripts/capture_regressions.py --base-url http://localhost:5511 --out-dir regression_snapshots_current --case ghosts_all
 git diff --no-index regression_snapshots/ghosts_all.json regression_snapshots_current/ghosts_all.json
 ```
 

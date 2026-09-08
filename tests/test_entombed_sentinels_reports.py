@@ -19,6 +19,7 @@ class EntombedSentinelsReportRegistryTests(unittest.TestCase):
             "entombed-sentinels-damage",
             "entombed-sentinels-cooldowns",
             "entombed-sentinels-mechanics-scorecard",
+            "entombed-sentinels-heroic-aggregate-reports",
         }
         definitions = {
             definition.id: definition

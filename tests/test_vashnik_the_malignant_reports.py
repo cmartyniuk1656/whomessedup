@@ -19,6 +19,7 @@ class VashnikTheMalignantReportRegistryTests(unittest.TestCase):
             "vashnik-the-malignant-damage",
             "vashnik-the-malignant-cooldowns",
             "vashnik-the-malignant-mechanics-scorecard",
+            "vashnik-the-malignant-heroic-aggregate-reports",
         }
         definitions = {
             definition.id: definition

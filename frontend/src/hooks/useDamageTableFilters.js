@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 function defaultSelectedIds(filter) {
-  return (filter?.options ?? []).filter((option) => option.defaultSelected !== false).map((option) => option.id);
+  const selected = (filter?.options ?? [])
+    .filter((option) => option.defaultSelected !== false)
+    .map((option) => option.id);
+  return filter?.kind === "single_select" ? selected.slice(0, 1) : selected;
 }
 
 function toggleOption(current, optionId, options) {
@@ -44,7 +47,13 @@ export function useDamageTableFilters(table) {
     const totalGroupByColumnId = new Map(targetColumnGroups.map((group) => [group.totalColumnId, group]));
     const averageGroupByColumnId = new Map(targetColumnGroups.map((group) => [group.averageColumnId, group]));
     const selectedTargetGroups = targetColumnGroups.filter((group) => selectedTargetIds.has(group.targetId));
-    const showSelectedColumns = selectedTargetGroups.length !== 1;
+    const availableColumnIds = new Set((table.columns ?? []).map((column) => column.id));
+    const hasTargetMetricColumns = selectedTargetGroups.some(
+      (group) =>
+        (selectedMetricIds.has("totals") && availableColumnIds.has(group.totalColumnId)) ||
+        (selectedMetricIds.has("averages") && availableColumnIds.has(group.averageColumnId))
+    );
+    const showSelectedColumns = selectedTargetGroups.length !== 1 || !hasTargetMetricColumns;
 
     const columns = (table.columns ?? []).filter((column) => {
       if (column.id === config.selectedTotalColumnId) {
@@ -100,10 +109,39 @@ export function useDamageTableFilters(table) {
       };
     });
 
+    const relativeBarColumnIds = columns
+      .filter((column) => column.cellKind === "relative_bar")
+      .map((column) => column.id);
+    const maximumByColumn = Object.fromEntries(
+      relativeBarColumnIds.map((columnId) => [
+        columnId,
+        Math.max(0, ...rows.map((row) => asNumber(row?.cells?.[columnId]?.value))),
+      ])
+    );
+    const scaledRows = relativeBarColumnIds.length
+      ? rows.map((row) => {
+          const cells = { ...row.cells };
+          relativeBarColumnIds.forEach((columnId) => {
+            if (cells[columnId]) {
+              cells[columnId] = {
+                ...cells[columnId],
+                maxValue: maximumByColumn[columnId],
+              };
+            }
+          });
+          return { ...row, cells };
+        })
+      : rows;
+    const defaultSort =
+      relativeBarColumnIds.length === 1
+        ? { columnId: relativeBarColumnIds[0], direction: "desc" }
+        : table.defaultSort;
+
     return {
       ...table,
+      defaultSort,
       columns,
-      rows,
+      rows: scaledRows,
     };
   }, [config, selectedMetrics, selectedTargets, table]);
 
@@ -114,7 +152,11 @@ export function useDamageTableFilters(table) {
     toggleTarget: (optionId) =>
       setSelectedTargets((current) => toggleOption(current, optionId, config?.targetFilter?.options)),
     toggleMetric: (optionId) =>
-      setSelectedMetrics((current) => toggleOption(current, optionId, config?.metricFilter?.options)),
+      setSelectedMetrics((current) =>
+        config?.metricFilter?.kind === "single_select"
+          ? [optionId]
+          : toggleOption(current, optionId, config?.metricFilter?.options)
+      ),
     filteredTable,
   };
 }

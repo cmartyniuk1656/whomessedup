@@ -100,6 +100,7 @@ class UlaTekReportTests(unittest.TestCase):
                 "ula-tek-cooldowns",
                 "ula-tek-fuckups",
                 "ula-tek-mechanics-scorecard",
+                "ula-tek-heroic-aggregate-reports",
             },
         )
         self.assertEqual({definition.difficulty for definition in definitions.values()}, {"heroic"})

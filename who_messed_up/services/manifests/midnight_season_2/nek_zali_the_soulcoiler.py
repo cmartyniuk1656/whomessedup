@@ -46,7 +46,7 @@ NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST = BossManifest(
             slug="restless_amani",
             label="Restless Amani",
             enemy_name="Restless Amani",
-            bucket=EncounterTargetBucket.PRIORITY_ADD,
+            bucket=EncounterTargetBucket.PAD_ADD,
         ),
         EncounterTargetConfig(
             slug="echo_of_jawae",
@@ -259,6 +259,7 @@ NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST = BossManifest(
             url="https://www.wowhead.com/spell=1300239/swirling-spirit",
             tags=("Avoidable", "Line", "DoT", "Mythic"),
             avoidable=True,
+            avoidable_hit_group_window_ms=2_000.0,
         ),
     ),
 )

@@ -23,6 +23,10 @@ from .common import (
     ReportContentModel,
     ReportHeaderModel,
     ReportPageModel,
+    RowDetailBarChartModel,
+    RowDetailBarModel,
+    RowDetailsModel,
+    RowDetailsVariant,
     SortDirection,
     SortModel,
     SpecAnalysisMetricModel,
@@ -31,11 +35,14 @@ from .common import (
     SpecAnalysisSortOptionModel,
     SummaryMetricModel,
     TableFilterModel,
+    TableFilterKind,
     TableFilterOptionModel,
     TableCellModel,
     TableColumnModel,
     TableModel,
     TableRowModel,
+    TableViewControlModel,
+    TableViewOptionModel,
     TextAlign,
     ValueFormat,
 )
@@ -49,6 +56,11 @@ SPEC_ANALYSIS_METRICS: Tuple[Tuple[str, str, EncounterTargetBucket], ...] = (
     ("pad", "Pad Damage", EncounterTargetBucket.PAD_ADD),
 )
 SpecAnalysisTargetMetric = Tuple[str, str, str]
+
+DAMAGE_BARS_VIEW_ID = "damage_bars"
+TABLE_VIEW_ID = "table"
+BAR_TOTAL_COLUMN_ID = "bar_total_damage"
+BAR_AVERAGE_COLUMN_ID = "bar_average_damage"
 
 
 @dataclass(frozen=True)
@@ -171,7 +183,13 @@ def build_target_damage_report_page(
         )
 
     rows = _build_rows(summary.entries, summary.targets)
+    bar_columns = _build_bar_columns(config)
+    bar_rows = _build_bar_rows(summary.entries, summary.targets)
     rows_by_view = {AGGREGATE_VIEW_ID: rows}
+    rows_by_combined_view = {
+        _combined_view_id(AGGREGATE_VIEW_ID, DAMAGE_BARS_VIEW_ID): bar_rows,
+        _combined_view_id(AGGREGATE_VIEW_ID, TABLE_VIEW_ID): rows,
+    }
     summary_by_view = {
         AGGREGATE_VIEW_ID: _build_summary_metrics(
             summary.entries,
@@ -182,7 +200,14 @@ def build_target_damage_report_page(
     }
     for pull in summary.pulls:
         pull_entries = summary.entries_by_pull.get(pull.view_id, [])
-        rows_by_view[pull.view_id] = _build_rows(pull_entries, summary.targets)
+        pull_rows = _build_rows(pull_entries, summary.targets)
+        rows_by_view[pull.view_id] = pull_rows
+        rows_by_combined_view[
+            _combined_view_id(pull.view_id, DAMAGE_BARS_VIEW_ID)
+        ] = _build_bar_rows(pull_entries, summary.targets)
+        rows_by_combined_view[
+            _combined_view_id(pull.view_id, TABLE_VIEW_ID)
+        ] = pull_rows
         summary_by_view[pull.view_id] = _build_summary_metrics(
             pull_entries,
             summary.targets,
@@ -203,50 +228,221 @@ def build_target_damage_report_page(
         content=ReportContentModel(
             variant=ContentVariant.TABLE,
             table=TableModel(
-                defaultSort=SortModel(columnId="average_damage", direction=SortDirection.DESC),
-                columns=columns,
-                rows=rows,
+                defaultSort=SortModel(
+                    columnId=BAR_AVERAGE_COLUMN_ID,
+                    direction=SortDirection.DESC,
+                ),
+                defaultSortByView={
+                    DAMAGE_BARS_VIEW_ID: SortModel(
+                        columnId=BAR_AVERAGE_COLUMN_ID,
+                        direction=SortDirection.DESC,
+                    ),
+                    TABLE_VIEW_ID: SortModel(
+                        columnId="average_damage", direction=SortDirection.DESC
+                    ),
+                },
+                columns=bar_columns,
+                columnsByView={
+                    DAMAGE_BARS_VIEW_ID: bar_columns,
+                    TABLE_VIEW_ID: columns,
+                },
+                rows=bar_rows,
                 rowsByView=rows_by_view,
+                rowsByCombinedView=rows_by_combined_view,
                 viewControl=build_pull_view_control(summary.pulls, control_id="damage_pull_view"),
-                emptyState=config.empty_state,
-                damageFilterConfig=DamageTableFilterConfigModel(
-                    targetFilter=TableFilterModel(
-                        id="targets",
-                        label="Targets",
-                        options=[
-                            TableFilterOptionModel(
-                                id=target.target,
-                                label=target.label,
-                                defaultSelected=True,
-                            )
-                            for target in summary.targets
-                        ],
-                    ),
-                    metricFilter=TableFilterModel(
-                        id="metrics",
-                        label="Display",
-                        options=[
-                            TableFilterOptionModel(id="totals", label="Totals", defaultSelected=True),
-                            TableFilterOptionModel(id="averages", label="Averages", defaultSelected=True),
-                        ],
-                    ),
-                    selectedTotalColumnId="total_damage",
-                    selectedAverageColumnId="average_damage",
-                    targetColumns=[
-                        DamageTableColumnGroupModel(
-                            targetId=target.target,
-                            label=target.label,
-                            totalColumnId=f"target_total_{target.target}",
-                            averageColumnId=f"target_average_{target.target}",
-                        )
-                        for target in summary.targets
+                secondaryViewControl=TableViewControlModel(
+                    id="damage_display_view",
+                    label="View",
+                    defaultValue=DAMAGE_BARS_VIEW_ID,
+                    options=[
+                        TableViewOptionModel(
+                            value=DAMAGE_BARS_VIEW_ID, label="Damage bars"
+                        ),
+                        TableViewOptionModel(value=TABLE_VIEW_ID, label="Table"),
                     ],
                 ),
+                emptyState=config.empty_state,
+                damageFilterConfig=_build_damage_filter_config(
+                    summary.targets,
+                    total_column_id=BAR_TOTAL_COLUMN_ID,
+                    average_column_id=BAR_AVERAGE_COLUMN_ID,
+                    single_metric=True,
+                ),
+                damageFilterConfigByView={
+                    DAMAGE_BARS_VIEW_ID: _build_damage_filter_config(
+                        summary.targets,
+                        total_column_id=BAR_TOTAL_COLUMN_ID,
+                        average_column_id=BAR_AVERAGE_COLUMN_ID,
+                        single_metric=True,
+                    ),
+                    TABLE_VIEW_ID: _build_damage_filter_config(
+                        summary.targets,
+                        total_column_id="total_damage",
+                        average_column_id="average_damage",
+                        single_metric=False,
+                    ),
+                },
             ),
         ),
         footnotes=list(config.footnotes),
         specAnalysis=build_target_damage_spec_analysis(summary, config=config),
     )
+
+
+def _build_bar_columns(config: TargetDamageReportConfig) -> List[TableColumnModel]:
+    return [
+        TableColumnModel(
+            id=BAR_TOTAL_COLUMN_ID,
+            label=config.table_total_label,
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.RELATIVE_BAR,
+            format=ValueFormat.INTEGER,
+        ),
+        TableColumnModel(
+            id=BAR_AVERAGE_COLUMN_ID,
+            label=config.table_average_label,
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.RELATIVE_BAR,
+            format=ValueFormat.DECIMAL,
+            precision=0,
+        ),
+    ]
+
+
+def _build_bar_rows(
+    entries: Iterable[EncounterTargetDamageEntry],
+    targets: Iterable[EncounterTargetSummary],
+) -> List[TableRowModel]:
+    selected_entries = list(entries)
+    selected_targets = list(targets)
+    maximum_total = max(
+        (float(entry.total_damage) for entry in selected_entries), default=0.0
+    )
+    maximum_average = max(
+        (float(entry.average_damage) for entry in selected_entries), default=0.0
+    )
+    rows: List[TableRowModel] = []
+    for entry in selected_entries:
+        cells = {
+            BAR_TOTAL_COLUMN_ID: TableCellModel(
+                value=entry.total_damage,
+                label=entry.player,
+                maxValue=maximum_total,
+                colorToken=class_color_token(entry.class_name),
+            ),
+            BAR_AVERAGE_COLUMN_ID: TableCellModel(
+                value=entry.average_damage,
+                label=entry.player,
+                maxValue=maximum_average,
+                colorToken=class_color_token(entry.class_name),
+            ),
+        }
+        for target in selected_targets:
+            breakdown = entry.target_totals.get(target.target)
+            cells[f"target_total_{target.target}"] = TableCellModel(
+                value=breakdown.total_damage if breakdown else 0
+            )
+            cells[f"target_average_{target.target}"] = TableCellModel(
+                value=breakdown.average_damage if breakdown else 0
+            )
+        rows.append(
+            TableRowModel(
+                id=entry.player,
+                cells=cells,
+                details=_build_damage_details(entry, selected_targets),
+            )
+        )
+    return rows
+
+
+def _build_damage_details(
+    entry: EncounterTargetDamageEntry,
+    targets: Iterable[EncounterTargetSummary],
+) -> RowDetailsModel:
+    selected_targets = list(targets)
+    bars: List[RowDetailBarModel] = []
+    for target in selected_targets:
+        breakdown = entry.target_totals.get(target.target)
+        total_damage = float(breakdown.total_damage) if breakdown else 0.0
+        bars.append(
+            RowDetailBarModel(
+                id=f"{entry.player}-{target.target}-damage",
+                label=target.label,
+                value=total_damage,
+                display=f"{total_damage:,.0f}",
+                colorToken=class_color_token(entry.class_name),
+            )
+        )
+
+    return RowDetailsModel(
+        variant=RowDetailsVariant.EVENT_GROUPS,
+        groups=[],
+        barChart=RowDetailBarChartModel(
+            title="Damage by target",
+            subtitle="Target damage scaled relative to this player's highest target.",
+            bars=bars,
+        ),
+    )
+
+
+def _build_damage_filter_config(
+    targets: Iterable[EncounterTargetSummary],
+    *,
+    total_column_id: str,
+    average_column_id: str,
+    single_metric: bool,
+) -> DamageTableFilterConfigModel:
+    selected_targets = list(targets)
+    return DamageTableFilterConfigModel(
+        targetFilter=TableFilterModel(
+            id="targets",
+            label="Targets",
+            options=[
+                TableFilterOptionModel(
+                    id=target.target,
+                    label=target.label,
+                    defaultSelected=True,
+                )
+                for target in selected_targets
+            ],
+        ),
+        metricFilter=TableFilterModel(
+            id="metrics",
+            label="Display",
+            kind=(
+                TableFilterKind.SINGLE_SELECT
+                if single_metric
+                else TableFilterKind.MULTI_SELECT
+            ),
+            options=[
+                TableFilterOptionModel(
+                    id="totals",
+                    label="Totals",
+                    defaultSelected=not single_metric,
+                ),
+                TableFilterOptionModel(
+                    id="averages", label="Averages", defaultSelected=True
+                ),
+            ],
+        ),
+        selectedTotalColumnId=total_column_id,
+        selectedAverageColumnId=average_column_id,
+        targetColumns=[
+            DamageTableColumnGroupModel(
+                targetId=target.target,
+                label=target.label,
+                totalColumnId=f"target_total_{target.target}",
+                averageColumnId=f"target_average_{target.target}",
+            )
+            for target in selected_targets
+        ],
+    )
+
+
+def _combined_view_id(pull_view_id: str, display_view_id: str) -> str:
+    return f"{pull_view_id}::{display_view_id}"
 
 
 def _build_rows(
