@@ -11,9 +11,11 @@ import { ReportRunningPanel } from "../components/v2/organisms/ReportRunningPane
 import { ReportWizardStepFrame } from "../components/v2/organisms/ReportWizardStepFrame";
 import { SettingsModal } from "../components/v2/organisms/SettingsModal";
 import { useGuildReportDiscovery } from "../hooks/useGuildReportDiscovery";
+import { useGraphicsQuality } from "../hooks/useGraphicsQuality";
 import { useReportBrowserState } from "../hooks/useReportBrowserState";
 import { useReportDefinitions } from "../hooks/useReportDefinitions";
 import { useReportJob } from "../hooks/useReportJob";
+import { useRealtimeReport } from "../hooks/useRealtimeReport";
 import { getMidnightRaidIdForFight } from "../config/midnightRaids";
 import { buildCachedReportUrl, parseCachedReportParams } from "../utils/reportShareLink";
 
@@ -34,13 +36,16 @@ export function ReportsPage() {
   const cachedLinkAttemptedRef = useRef(false);
   const { reports, error: definitionsError, loading: definitionsLoading } = useReportDefinitions();
   const guildDiscovery = useGuildReportDiscovery();
+  const graphics = useGraphicsQuality();
   const {
     page,
     error: jobError,
     isSubmitting,
+    isRefreshing,
     pendingJob,
     loadCachedReport,
     runReport,
+    refreshReport,
     clearReportState,
     setError: setJobError,
   } = useReportJob();
@@ -68,6 +73,16 @@ export function ReportsPage() {
     handleAddMultiTextRow,
     handleRemoveMultiTextRow,
   } = useReportBrowserState(reports);
+
+  const realtime = useRealtimeReport({
+    page,
+    reportId: selectedReportId,
+    values: formValues,
+    isActive: activeWizardStep === WIZARD_STEPS.RESULTS,
+    isJobBusy: isSubmitting || isRefreshing,
+    jobError,
+    refreshReport,
+  });
 
   const canSelectReport = Boolean(selectedFight);
   const canViewRunning = Boolean(selectedReport && (hasRunAttempt || pendingJob || isSubmitting || jobError));
@@ -369,7 +384,11 @@ export function ReportsPage() {
       title={page?.title || "Report results"}
       description="Review the completed report."
     >
-      {page ? <ReportResultsPanel page={page} shareUrl={shareUrl} /> : <PanelMessage>Run a report to view results.</PanelMessage>}
+      {page ? (
+        <ReportResultsPanel page={page} shareUrl={shareUrl} realtime={realtime} />
+      ) : (
+        <PanelMessage>Run a report to view results.</PanelMessage>
+      )}
     </ReportWizardStepFrame>
   );
 
@@ -394,7 +413,7 @@ export function ReportsPage() {
       <div aria-hidden className="liquid-blob liquid-blob--emerald -z-20 opacity-70" />
       <div aria-hidden className="liquid-blob liquid-blob--cyan -z-20 opacity-65" />
       <div aria-hidden className="liquid-blob liquid-blob--magenta -z-20 opacity-55" />
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 mix-blend-overlay opacity-25 [background-image:var(--noise)]" />
+      <div aria-hidden className="graphics-noise pointer-events-none fixed inset-0 -z-10 mix-blend-overlay opacity-25 [background-image:var(--noise)]" />
 
       <main className="relative z-10 mx-auto max-w-6xl px-6 pb-16 pt-8">
         <header className="relative isolate overflow-hidden border-b border-white/10 pb-10 pt-3 sm:pb-12">
@@ -452,7 +471,14 @@ export function ReportsPage() {
             onSelectRecentReport={handleSelectRecentReport}
           />
         ) : null}
-        {isSettingsOpen ? <SettingsModal discovery={guildDiscovery} onClose={() => setIsSettingsOpen(false)} /> : null}
+        {isSettingsOpen ? (
+          <SettingsModal
+            discovery={guildDiscovery}
+            graphicsQuality={graphics.graphicsQuality}
+            onGraphicsQualityChange={graphics.setGraphicsQuality}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+        ) : null}
       </main>
     </div>
   );

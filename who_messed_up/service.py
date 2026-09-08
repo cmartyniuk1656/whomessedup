@@ -135,6 +135,21 @@ from .services.nek_zali_the_soulcoiler_avoidable_damage import (
 )
 from .services.nek_zali_the_soulcoiler_damage import fetch_nek_zali_the_soulcoiler_damage_summary
 from .services.nek_zali_the_soulcoiler_deaths import fetch_nek_zali_the_soulcoiler_death_summary
+from .services.nek_zali_the_soulcoiler_mechanics import (
+    AddDamageSet,
+    CremationCarrier,
+    EssenceRendApplication,
+    EssenceRendSet,
+    KillSquadDamageContribution,
+    KillSquadEntrant,
+    KillSquadSet,
+    MechanicsReportView,
+    NekZaliMechanicsSummary,
+    PyreSet,
+    PyreCorpseMiss,
+    PyreSoaker,
+    fetch_nek_zali_mechanics_summary,
+)
 from .services.entombed_sentinels_avoidable_damage import (
     fetch_entombed_sentinels_avoidable_damage_summary,
 )
@@ -195,6 +210,12 @@ from .services.phase_damage import (
     fetch_phase_damage_summary,
 )
 from .services.phases import PhasePlayerEntry, PhaseSummary, fetch_phase_summary
+from .services.report_monitoring import (
+    ReportWatchFight,
+    ReportWatchSnapshot,
+    clear_report_watch_cache,
+    fetch_report_watch_snapshot,
+)
 from .services.report_pulls import ReportPull, build_report_pulls, report_pull_view_id
 from .services.target_damage import (
     EncounterTargetConfig,
@@ -279,13 +300,17 @@ __all__ = [
     "ROLE_PRIORITY",
     "ROLE_UNKNOWN",
     "ReportPull",
+    "ReportWatchFight",
+    "ReportWatchSnapshot",
     "TokenError",
     "VORASIUS_MANIFEST",
     "WarcraftLogsCredentialsError",
     "OBLIVION_FILTER_DEFAULT",
     "fetch_dimensius_add_damage_summary",
     "build_report_pulls",
+    "clear_report_watch_cache",
     "discover_guild_reports",
+    "fetch_report_watch_snapshot",
     "fetch_dimensius_phase_one_summary",
     "fetch_dimensius_priority_damage_summary",
     "fetch_dimensius_death_summary",
@@ -329,6 +354,7 @@ __all__ = [
     "fetch_nek_zali_the_soulcoiler_avoidable_damage_summary",
     "fetch_nek_zali_the_soulcoiler_damage_summary",
     "fetch_nek_zali_the_soulcoiler_death_summary",
+    "fetch_nek_zali_mechanics_summary",
     "fetch_entombed_sentinels_avoidable_damage_summary",
     "fetch_entombed_sentinels_damage_summary",
     "fetch_entombed_sentinels_death_summary",
@@ -350,6 +376,14 @@ __all__ = [
     "MechanicScoreEntry",
     "MechanicScoreView",
     "MechanicScorecardSummary",
+    "MechanicsReportView",
+    "AddDamageSet",
+    "NekZaliMechanicsSummary",
+    "EssenceRendApplication",
+    "EssenceRendSet",
+    "KillSquadDamageContribution",
+    "KillSquadEntrant",
+    "KillSquadSet",
     "fetch_mechanic_scorecard_summary",
     "fetch_the_twin_fangs_avoidable_damage_summary",
     "fetch_the_twin_fangs_damage_summary",

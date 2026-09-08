@@ -69,6 +69,7 @@ class TheCoiledAltarReportTests(unittest.TestCase):
                 "the-coiled-altar-damage",
                 "the-coiled-altar-cooldowns",
                 "the-coiled-altar-mechanics-scorecard",
+                "the-coiled-altar-heroic-aggregate-reports",
             },
         )
         self.assertEqual({definition.difficulty for definition in definitions.values()}, {"heroic"})

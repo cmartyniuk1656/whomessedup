@@ -2,6 +2,7 @@
 """Capture regression baselines for key reports."""
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -89,7 +90,15 @@ REGRESSION_CASES: List[Dict[str, Any]] = [
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Capture regression baselines from the running API server.")
-    parser.add_argument("--base-url", default="http://localhost:8088", help="Backend base URL (default: http://localhost:8088)")
+    default_api_port = os.getenv("WHO_MESSED_UP_API_PORT", "5511")
+    default_base_url = os.getenv(
+        "WHO_MESSED_UP_API_ORIGIN", f"http://localhost:{default_api_port}"
+    )
+    parser.add_argument(
+        "--base-url",
+        default=default_base_url,
+        help=f"Backend base URL (default: {default_base_url})",
+    )
     parser.add_argument(
         "--out-dir",
         default="regression_snapshots",

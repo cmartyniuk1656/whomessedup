@@ -5,13 +5,15 @@ import { PanelMessage } from "../atoms/PanelMessage";
 import { SelectInput } from "../atoms/SelectInput";
 import { SurfacePanel } from "../atoms/SurfacePanel";
 import { TextInput } from "../atoms/TextInput";
+import { GRAPHICS_QUALITY } from "../../../hooks/useGraphicsQuality";
 
 const EMPTY_SETTINGS = { guildName: "", serverSlug: "", serverRegion: "US" };
 
-export function SettingsModal({ discovery, onClose }) {
+export function SettingsModal({ discovery, graphicsQuality, onGraphicsQualityChange, onClose }) {
   const [draft, setDraft] = useState(discovery.settings || EMPTY_SETTINGS);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
+  const isLowGraphics = graphicsQuality === GRAPHICS_QUALITY.LOW;
 
   useEffect(() => {
     setDraft(discovery.settings || EMPTY_SETTINGS);
@@ -49,11 +51,46 @@ export function SettingsModal({ discovery, onClose }) {
           </button>
         </div>
 
-        <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+        <div className="mt-5 flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Guild report discovery</h3>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Show the latest public reports uploaded to your Warcraft Logs guild.</p>
+            <p className="text-sm font-semibold text-slate-100">Low graphics mode</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Use opaque surfaces and disable motion, background effects, and blur.
+            </p>
           </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isLowGraphics}
+            aria-label="Low graphics mode"
+            onClick={() =>
+              onGraphicsQualityChange(
+                isLowGraphics ? GRAPHICS_QUALITY.HIGH : GRAPHICS_QUALITY.LOW
+              )
+            }
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/40 ${
+              isLowGraphics
+                ? "border-emerald-200 bg-emerald-400"
+                : "border-slate-600 bg-slate-700"
+            }`}
+          >
+            <span
+              aria-hidden
+              className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                isLowGraphics ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        <form className="mt-6" onSubmit={handleSubmit}>
+          <fieldset className="space-y-4 rounded-xl border border-white/10 bg-slate-950/25 p-4 sm:p-5">
+            <legend className="px-2 text-sm font-semibold text-slate-100">
+              Guild report discovery
+            </legend>
+            <p className="-mt-1 text-xs leading-5 text-slate-500">
+              Show the latest public reports uploaded to your Warcraft Logs guild.
+            </p>
           <div>
             <label htmlFor="settings-guild-name" className="text-sm font-medium text-slate-200">Guild name</label>
             <TextInput id="settings-guild-name" value={draft.guildName} onChange={(event) => update("guildName", event.target.value)} placeholder="Guild name" required />
@@ -79,10 +116,11 @@ export function SettingsModal({ discovery, onClose }) {
 
           <div className="flex flex-wrap justify-between gap-3 border-t border-white/10 pt-4">
             <Button type="button" variant="secondary" size="sm" onClick={() => { discovery.clearSettings(); setDraft(EMPTY_SETTINGS); setSaved(false); }} disabled={!discovery.settings || discovery.isLoading}>Clear saved guild</Button>
-            <div className="flex gap-3">
-              <Button type="button" variant="secondary" size="sm" onClick={onClose}>Close</Button>
-              <Button type="submit" variant="primary" size="sm" disabled={discovery.isLoading || !draft.guildName.trim() || !draft.serverSlug.trim()}>{discovery.isLoading ? "Checking..." : "Save guild"}</Button>
-            </div>
+            <Button type="submit" variant="primary" size="sm" disabled={discovery.isLoading || !draft.guildName.trim() || !draft.serverSlug.trim()}>{discovery.isLoading ? "Checking..." : "Save guild"}</Button>
+          </div>
+          </fieldset>
+          <div className="mt-4 flex justify-end">
+            <Button type="button" variant="secondary" size="sm" onClick={onClose}>Close</Button>
           </div>
         </form>
       </SurfacePanel>

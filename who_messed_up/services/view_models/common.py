@@ -44,12 +44,15 @@ class ValueFormat(str, Enum):
 
 class TableFilterKind(str, Enum):
     MULTI_SELECT = "multi_select"
+    SINGLE_SELECT = "single_select"
 
 
 class CellKind(str, Enum):
     TEXT = "text"
     NUMBER = "number"
     PLAYER = "player"
+    PLAYER_LIST = "player_list"
+    RELATIVE_BAR = "relative_bar"
     BADGE = "badge"
     LINK = "link"
 
@@ -171,16 +174,35 @@ class TableCellIndicatorModel(ViewModelBase):
     id: str
     label: str
     tone: Optional[str] = None
+    icon: Optional[str] = None
+
+
+class TableCellTextSegmentModel(ViewModelBase):
+    text: str
+    color_token: Optional[str] = Field(None, alias="colorToken")
+
+
+class TableCellPlayerModel(ViewModelBase):
+    name: str
+    color_token: Optional[str] = Field(None, alias="colorToken")
+    tone: Optional[str] = None
+    tooltip: Optional[str] = None
+    indicators: List[TableCellIndicatorModel] = Field(default_factory=list)
+    segments: List[TableCellTextSegmentModel] = Field(default_factory=list)
 
 
 class TableCellModel(ViewModelBase):
     value: ScalarValue
+    label: Optional[str] = None
+    unit_label: Optional[str] = Field(None, alias="unitLabel")
     display: Optional[str] = None
     sort_value: Optional[ScalarValue] = Field(None, alias="sortValue")
+    max_value: Optional[float] = Field(None, alias="maxValue")
     href: Optional[str] = None
     color_token: Optional[str] = Field(None, alias="colorToken")
     tone: Optional[str] = None
     indicators: List[TableCellIndicatorModel] = Field(default_factory=list)
+    players: List[TableCellPlayerModel] = Field(default_factory=list)
 
 
 class RowDetailChildItemModel(ViewModelBase):
@@ -220,25 +242,78 @@ class RowDetailGroupModel(ViewModelBase):
     items: List[RowDetailItemModel] = Field(default_factory=list)
 
 
+class RowDetailBarModel(ViewModelBase):
+    id: str
+    label: str
+    value: float
+    display: str
+    color_token: Optional[str] = Field(None, alias="colorToken")
+
+
+class RowDetailBarChartModel(ViewModelBase):
+    title: str
+    subtitle: Optional[str] = None
+    bars: List[RowDetailBarModel] = Field(default_factory=list)
+
+
 class RowDetailsModel(ViewModelBase):
     variant: RowDetailsVariant
     groups: List[RowDetailGroupModel] = Field(default_factory=list)
+    bar_chart: Optional[RowDetailBarChartModel] = Field(None, alias="barChart")
+
+
+class TableRowGroupModel(ViewModelBase):
+    id: str
+    label: str
+    subtitle: Optional[str] = None
+    href: Optional[str] = None
+    sort_value: Optional[ScalarValue] = Field(None, alias="sortValue")
 
 
 class TableRowModel(ViewModelBase):
     id: str
     cells: Dict[str, TableCellModel] = Field(default_factory=dict)
     details: Optional[RowDetailsModel] = None
+    group: Optional[TableRowGroupModel] = None
 
 
 class TableModel(ViewModelBase):
     default_sort: SortModel = Field(..., alias="defaultSort")
+    default_sort_by_view: Dict[str, SortModel] = Field(
+        default_factory=dict, alias="defaultSortByView"
+    )
     columns: List[TableColumnModel] = Field(default_factory=list)
+    columns_by_view: Dict[str, List[TableColumnModel]] = Field(
+        default_factory=dict, alias="columnsByView"
+    )
     rows: List[TableRowModel] = Field(default_factory=list)
     rows_by_view: Dict[str, List[TableRowModel]] = Field(default_factory=dict, alias="rowsByView")
+    rows_by_combined_view: Dict[str, List[TableRowModel]] = Field(
+        default_factory=dict, alias="rowsByCombinedView"
+    )
     empty_state: str = Field(..., alias="emptyState")
+    empty_state_by_view: Dict[str, str] = Field(
+        default_factory=dict, alias="emptyStateByView"
+    )
+    column_filter: Optional[TableFilterModel] = Field(None, alias="columnFilter")
+    column_filter_by_view: Dict[str, TableFilterModel] = Field(
+        default_factory=dict, alias="columnFilterByView"
+    )
+    row_filter: Optional[TableFilterModel] = Field(None, alias="rowFilter")
+    row_filter_by_view: Dict[str, TableFilterModel] = Field(
+        default_factory=dict, alias="rowFilterByView"
+    )
     damage_filter_config: Optional[DamageTableFilterConfigModel] = Field(None, alias="damageFilterConfig")
+    damage_filter_config_by_view: Dict[str, DamageTableFilterConfigModel] = Field(
+        default_factory=dict, alias="damageFilterConfigByView"
+    )
     view_control: Optional[TableViewControlModel] = Field(None, alias="viewControl")
+    secondary_view_control: Optional[TableViewControlModel] = Field(
+        None, alias="secondaryViewControl"
+    )
+    sub_view_control_by_view: Dict[str, TableViewControlModel] = Field(
+        default_factory=dict, alias="subViewControlByView"
+    )
 
 
 class ReportContentModel(ViewModelBase):
@@ -253,9 +328,16 @@ class ReportPageModel(ViewModelBase):
     header: ReportHeaderModel
     summary: List[SummaryMetricModel] = Field(default_factory=list)
     summary_by_view: Dict[str, List[SummaryMetricModel]] = Field(default_factory=dict, alias="summaryByView")
+    summary_by_combined_view: Dict[str, List[SummaryMetricModel]] = Field(
+        default_factory=dict, alias="summaryByCombinedView"
+    )
     content: ReportContentModel
     footnotes: List[str] = Field(default_factory=list)
     spec_analysis: Optional[SpecAnalysisModel] = Field(None, alias="specAnalysis")
+    report_control: Optional[TableViewControlModel] = Field(None, alias="reportControl")
+    reports_by_view: Dict[str, "ReportPageModel"] = Field(
+        default_factory=dict, alias="reportsByView"
+    )
 
 
 __all__ = [
@@ -268,6 +350,8 @@ __all__ = [
     "ReportHeaderModel",
     "ReportPageModel",
     "RowDetailGroupModel",
+    "RowDetailBarChartModel",
+    "RowDetailBarModel",
     "RowDetailChildItemModel",
     "RowDetailItemModel",
     "RowDetailsModel",
@@ -285,8 +369,11 @@ __all__ = [
     "TableFilterOptionModel",
     "TableCellModel",
     "TableCellIndicatorModel",
+    "TableCellPlayerModel",
+    "TableCellTextSegmentModel",
     "TableColumnModel",
     "TableModel",
+    "TableRowGroupModel",
     "TableRowModel",
     "TableViewControlModel",
     "TableViewOptionModel",

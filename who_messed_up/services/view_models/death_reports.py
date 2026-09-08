@@ -27,8 +27,13 @@ from .common import (
     TableCellIndicatorModel,
     TableCellModel,
     TableColumnModel,
+    TableFilterKind,
+    TableFilterModel,
+    TableFilterOptionModel,
     TableModel,
     TableRowModel,
+    TableViewControlModel,
+    TableViewOptionModel,
     TextAlign,
     ValueFormat,
 )
@@ -41,6 +46,10 @@ from .helpers import (
     role_tone,
 )
 from .report_pulls import AGGREGATE_VIEW_ID, build_pull_view_control
+
+
+DEATH_BARS_VIEW_ID = "death_bars"
+TABLE_VIEW_ID = "table"
 
 
 @dataclass(frozen=True)
@@ -292,13 +301,25 @@ def build_death_report_page(
     extra_tags: Iterable[HeaderTagModel] = (),
 ) -> ReportPageModel:
     rows = _build_rows(summary.entries, summary=summary)
+    bar_rows = _build_bar_rows(summary.entries, summary=summary)
     rows_by_view = {AGGREGATE_VIEW_ID: rows}
+    rows_by_combined_view = {
+        _combined_view_id(AGGREGATE_VIEW_ID, DEATH_BARS_VIEW_ID): bar_rows,
+        _combined_view_id(AGGREGATE_VIEW_ID, TABLE_VIEW_ID): rows,
+    }
     summary_by_view = {
         AGGREGATE_VIEW_ID: _build_summary_metrics(summary.entries, pull_count=summary.pull_count)
     }
     for pull in summary.pulls:
         pull_entries = _entries_for_pull(summary, pull)
-        rows_by_view[pull.view_id] = _build_rows(pull_entries, summary=summary)
+        pull_rows = _build_rows(pull_entries, summary=summary)
+        rows_by_view[pull.view_id] = pull_rows
+        rows_by_combined_view[
+            _combined_view_id(pull.view_id, DEATH_BARS_VIEW_ID)
+        ] = _build_bar_rows(pull_entries, summary=summary)
+        rows_by_combined_view[
+            _combined_view_id(pull.view_id, TABLE_VIEW_ID)
+        ] = pull_rows
         summary_by_view[pull.view_id] = _build_summary_metrics(pull_entries, pull_count=1)
 
     return ReportPageModel(
@@ -315,15 +336,106 @@ def build_death_report_page(
             variant=ContentVariant.TABLE,
             table=TableModel(
                 defaultSort=SortModel(columnId="death_rate", direction=SortDirection.DESC),
-                columns=_build_columns(),
-                rows=rows,
+                defaultSortByView={
+                    DEATH_BARS_VIEW_ID: SortModel(
+                        columnId="death_rate", direction=SortDirection.DESC
+                    ),
+                    TABLE_VIEW_ID: SortModel(
+                        columnId="death_rate", direction=SortDirection.DESC
+                    ),
+                },
+                columns=_build_bar_columns(),
+                columnsByView={
+                    DEATH_BARS_VIEW_ID: _build_bar_columns(),
+                    TABLE_VIEW_ID: _build_columns(),
+                },
+                rows=bar_rows,
                 rowsByView=rows_by_view,
+                rowsByCombinedView=rows_by_combined_view,
                 viewControl=build_pull_view_control(summary.pulls, control_id="death_pull_view"),
+                secondaryViewControl=TableViewControlModel(
+                    id="death_display_view",
+                    label="View",
+                    defaultValue=DEATH_BARS_VIEW_ID,
+                    options=[
+                        TableViewOptionModel(
+                            value=DEATH_BARS_VIEW_ID, label="Death bars"
+                        ),
+                        TableViewOptionModel(value=TABLE_VIEW_ID, label="Table"),
+                    ],
+                ),
+                columnFilterByView={
+                    DEATH_BARS_VIEW_ID: TableFilterModel(
+                        id="death_rate_display",
+                        label="Display",
+                        kind=TableFilterKind.SINGLE_SELECT,
+                        options=[
+                            TableFilterOptionModel(
+                                id="death_rate",
+                                label="Death Rate",
+                                defaultSelected=True,
+                            ),
+                            TableFilterOptionModel(
+                                id="avoidable_death_rate",
+                                label="Avoidable Death Rate",
+                                defaultSelected=False,
+                            ),
+                        ],
+                    )
+                },
                 emptyState="No deaths matched the filters.",
             ),
         ),
         footnotes=list(config.footnotes),
     )
+
+
+def _build_bar_rows(
+    entries: Iterable[DeathReportEntry],
+    *,
+    summary: DeathReportSummary,
+) -> List[TableRowModel]:
+    selected_entries = list(entries)
+    maximum_death_rate = max(
+        (float(entry.death_rate) for entry in selected_entries), default=0.0
+    )
+    maximum_avoidable_death_rate = max(
+        (
+            float(entry.avoidable_deaths) / entry.pulls if entry.pulls else 0.0
+            for entry in selected_entries
+        ),
+        default=0.0,
+    )
+    rows: List[TableRowModel] = []
+    for entry in selected_entries:
+        avoidable_death_rate = (
+            float(entry.avoidable_deaths) / entry.pulls if entry.pulls else 0.0
+        )
+        rows.append(
+            TableRowModel(
+                id=entry.player,
+                cells={
+                    "death_rate": TableCellModel(
+                        value=entry.death_rate,
+                        label=entry.player,
+                        maxValue=maximum_death_rate,
+                        colorToken=class_color_token(entry.class_name),
+                    ),
+                    "avoidable_death_rate": TableCellModel(
+                        value=avoidable_death_rate,
+                        label=entry.player,
+                        maxValue=maximum_avoidable_death_rate,
+                        colorToken=class_color_token(entry.class_name),
+                    ),
+                },
+                details=_build_row_details(
+                    summary.report_code,
+                    entry.events,
+                    source_reports=summary.source_reports or [summary.report_code],
+                ),
+            )
+        )
+    return rows
 
 
 def _build_rows(entries: Iterable[DeathReportEntry], *, summary: DeathReportSummary) -> List[TableRowModel]:
@@ -460,6 +572,33 @@ def _build_columns() -> List[TableColumnModel]:
             precision=3,
         ),
     ]
+
+
+def _build_bar_columns() -> List[TableColumnModel]:
+    return [
+        TableColumnModel(
+            id="death_rate",
+            label="Death Rate",
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.RELATIVE_BAR,
+            format=ValueFormat.DECIMAL,
+            precision=3,
+        ),
+        TableColumnModel(
+            id="avoidable_death_rate",
+            label="Avoidable Death Rate",
+            align=TextAlign.LEFT,
+            sortable=True,
+            cellKind=CellKind.RELATIVE_BAR,
+            format=ValueFormat.DECIMAL,
+            precision=3,
+        ),
+    ]
+
+
+def _combined_view_id(pull_view_id: str, display_view_id: str) -> str:
+    return f"{pull_view_id}::{display_view_id}"
 
 
 def _entries_for_pull(summary: DeathReportSummary, pull: ReportPull) -> List[DeathReportEntry]:

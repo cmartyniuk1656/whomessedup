@@ -87,6 +87,7 @@ class SszorakReportRegistryTests(unittest.TestCase):
             "sszorak-cooldowns",
             "sszorak-tempest",
             "sszorak-mechanics-scorecard",
+            "sszorak-heroic-aggregate-reports",
         }
         definitions = {
             definition.id: definition

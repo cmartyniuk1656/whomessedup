@@ -6,6 +6,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -23,6 +24,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE,
     JOB_V2_BELOREN_CHILD_OF_ALAR_DEATHS,
     JOB_V2_BELOREN_CHILD_OF_ALAR_LIGHT_VOID_MISTAKES,
+    JOB_V2_AGGREGATE_REPORT,
     JOB_V2_CROWN_OF_THE_COSMOS_AVOIDABLE_DAMAGE,
     JOB_V2_CROWN_OF_THE_COSMOS_DEATHS,
     JOB_V2_CROWN_OF_THE_COSMOS_NULL_CORONA_DISPELS,
@@ -66,6 +68,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_NEK_ZALI_THE_SOULCOILER_AVOIDABLE_DAMAGE,
     JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE,
     JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
     JOB_V2_VORASIUS_DEATHS,
@@ -132,6 +135,9 @@ from who_messed_up.services.view_models.nek_zali_the_soulcoiler_damage import (
 )
 from who_messed_up.services.view_models.nek_zali_the_soulcoiler_deaths import (
     build_nek_zali_the_soulcoiler_deaths_report_page,
+)
+from who_messed_up.services.view_models.nek_zali_the_soulcoiler_mechanics import (
+    build_nek_zali_mechanics_report_page,
 )
 from who_messed_up.services.view_models.entombed_sentinels_avoidable_damage import (
     build_entombed_sentinels_avoidable_damage_report_page,
@@ -209,6 +215,7 @@ from who_messed_up.service import (
     UlaTekFuckupSummary,
     SszorakTempestSummary,
     MechanicScorecardSummary,
+    NekZaliMechanicsSummary,
     CooldownUsageSummary,
     CrownNullCoronaDispelSummary,
     CrownSilverHitSummary,
@@ -250,6 +257,7 @@ from who_messed_up.service import (
     fetch_nek_zali_the_soulcoiler_avoidable_damage_summary,
     fetch_nek_zali_the_soulcoiler_damage_summary,
     fetch_nek_zali_the_soulcoiler_death_summary,
+    fetch_nek_zali_mechanics_summary,
     fetch_entombed_sentinels_avoidable_damage_summary,
     fetch_entombed_sentinels_damage_summary,
     fetch_entombed_sentinels_death_summary,
@@ -278,6 +286,7 @@ from who_messed_up.service import (
     fetch_vorasius_avoidable_damage_summary,
     fetch_vorasius_damage_summary,
     fetch_vorasius_death_summary,
+    fetch_report_watch_snapshot,
 )
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
@@ -303,6 +312,29 @@ class DiscoveredReportModel(BaseModel):
 class GuildReportDiscoveryModel(BaseModel):
     guild: DiscoveredGuildModel
     reports: List[DiscoveredReportModel]
+
+
+class ReportWatchRequestModel(BaseModel):
+    values: Dict[str, Any]
+    force_refresh: bool = False
+
+
+class ReportWatchFightModel(BaseModel):
+    id: int
+    encounter_id: Optional[int] = None
+    name: str
+    start_time: float
+    end_time: float
+    kill: bool
+    difficulty: Optional[int] = None
+
+
+class ReportWatchModel(BaseModel):
+    report_code: str
+    end_time: float
+    revision: int
+    segments: int
+    fights: List[ReportWatchFightModel]
 
 
 class FightModel(BaseModel):
@@ -1502,6 +1534,22 @@ def _fetch_nek_zali_the_soulcoiler_deaths_summary_from_payload(
     )
 
 
+def _fetch_nek_zali_mechanics_summary_from_payload(
+    payload: Dict[str, Any],
+) -> NekZaliMechanicsSummary:
+    credentials = _client_credentials()
+    return fetch_nek_zali_mechanics_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=payload.get("fight_ids") or None,
+        difficulty=payload.get("difficulty"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+
+
 def _fetch_entombed_sentinels_deaths_summary_from_payload(
     payload: Dict[str, Any],
 ) -> DeathReportSummary:
@@ -2302,6 +2350,14 @@ def _execute_v2_nek_zali_the_soulcoiler_deaths_job(payload: Dict[str, Any]) -> D
     return page.dict(by_alias=True)
 
 
+def _execute_v2_nek_zali_mechanics_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_nek_zali_mechanics_summary_from_payload(payload)
+    page = build_nek_zali_mechanics_report_page(summary)
+    if hasattr(page, "model_dump"):
+        return page.model_dump(by_alias=True)
+    return page.dict(by_alias=True)
+
+
 def _execute_v2_entombed_sentinels_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_entombed_sentinels_deaths_summary_from_payload(payload)
     page = build_entombed_sentinels_deaths_report_page(summary)
@@ -2584,6 +2640,77 @@ def _execute_v2_lightblinded_vanguard_cooldown_job(payload: Dict[str, Any]) -> D
     return page.dict(by_alias=True)
 
 
+def _aggregate_default_report_id(selected_reports: List[Dict[str, Any]]) -> str:
+    for child in selected_reports:
+        searchable = f"{child.get('report_id', '')} {child.get('title', '')}".lower()
+        if "mechanic" in searchable:
+            return str(child["report_id"])
+    for child in selected_reports:
+        searchable = f"{child.get('report_id', '')} {child.get('title', '')}".lower()
+        if "avoidable" in searchable and "damage" in searchable:
+            return str(child["report_id"])
+    return str(selected_reports[0]["report_id"])
+
+
+def _execute_v2_aggregate_report_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    selected_reports = list(payload.get("reports") or [])
+    if not selected_reports:
+        raise ValueError("Select at least one report to include.")
+
+    try:
+        configured_workers = int(os.getenv("WHO_MESSED_UP_AGGREGATE_REPORT_WORKERS", "2"))
+    except ValueError:
+        configured_workers = 2
+    worker_count = min(max(configured_workers, 1), 4, len(selected_reports))
+
+    def execute_child(child: Dict[str, Any]) -> Dict[str, Any]:
+        return job_manager.execute_registered(child["job_type"], child["payload"])
+
+    if worker_count == 1:
+        pages = [execute_child(child) for child in selected_reports]
+    else:
+        with ThreadPoolExecutor(
+            max_workers=worker_count,
+            thread_name_prefix="aggregate-report",
+        ) as executor:
+            pages = list(executor.map(execute_child, selected_reports))
+
+    report_options = [
+        {"value": child["report_id"], "label": child["title"]}
+        for child in selected_reports
+    ]
+    reports_by_view = {
+        child["report_id"]: page
+        for child, page in zip(selected_reports, pages)
+    }
+    watch_page = pages[0]
+    for page in pages:
+        table = ((page.get("content") or {}).get("table") or {})
+        control_options = table.get("viewControl", {}).get("options", [])
+        if any(
+            str(option.get("value", "")).startswith("pull:")
+            for option in control_options
+        ):
+            watch_page = page
+            break
+    first_page = dict(watch_page)
+    first_page.update(
+        {
+            "reportId": payload.get("report_id") or "aggregate-reports",
+            "title": payload.get("report_title") or "Aggregate Reports",
+            "reportCode": payload.get("report") or first_page.get("reportCode", ""),
+            "reportControl": {
+                "id": "report_view",
+                "label": "Report",
+                "defaultValue": _aggregate_default_report_id(selected_reports),
+                "options": report_options,
+            },
+            "reportsByView": reports_by_view,
+        }
+    )
+    return first_page
+
+
 def _execute_dimensius_phase1_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     credentials = _client_credentials()
     fight_ids = payload.get("fight_ids") or None
@@ -2706,6 +2833,10 @@ job_manager.register_handler(
     _execute_v2_nek_zali_the_soulcoiler_deaths_job,
 )
 job_manager.register_handler(
+    JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS,
+    _execute_v2_nek_zali_mechanics_job,
+)
+job_manager.register_handler(
     JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE,
     _execute_v2_entombed_sentinels_avoidable_damage_job,
 )
@@ -2769,6 +2900,7 @@ job_manager.register_handler(
 job_manager.register_handler(JOB_V2_ULA_TEK_DAMAGE, _execute_v2_ula_tek_damage_job)
 job_manager.register_handler(JOB_V2_ULA_TEK_DEATHS, _execute_v2_ula_tek_deaths_job)
 job_manager.register_handler(JOB_V2_ULA_TEK_FUCKUPS, _execute_v2_ula_tek_fuckup_job)
+job_manager.register_handler(JOB_V2_AGGREGATE_REPORT, _execute_v2_aggregate_report_job)
 
 
 @app.get("/health")
@@ -2804,6 +2936,49 @@ def get_guild_reports(
     return GuildReportDiscoveryModel(
         guild=DiscoveredGuildModel(**discovery.guild.__dict__),
         reports=[DiscoveredReportModel(**report.__dict__) for report in discovery.reports],
+    )
+
+
+@app.post("/api/v2/reports/{report_id}/watch", response_model=ReportWatchModel)
+def watch_v2_report(report_id: str, request: ReportWatchRequestModel) -> ReportWatchModel:
+    """Return lightweight metadata for pulls relevant to a configured report."""
+    try:
+        _job_type, payload, _fresh_run = build_report_job_request(
+            report_id, request.values
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=exc.args[0]) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    report_code = payload.get("report")
+    if not report_code:
+        raise HTTPException(
+            status_code=422,
+            detail="This report does not expose a primary Warcraft Logs report code.",
+        )
+    credentials = _client_credentials()
+    try:
+        snapshot = fetch_report_watch_snapshot(
+            report_code=str(report_code),
+            fight_name=payload.get("fight"),
+            difficulty=payload.get("difficulty"),
+            fight_ids=payload.get("fight_ids"),
+            kill_only=bool(payload.get("kill_only", False)),
+            force_refresh=request.force_refresh,
+            token=payload.get("token"),
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+        )
+    except (ValueError, RuntimeError, requests.RequestException) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return ReportWatchModel(
+        report_code=snapshot.report_code,
+        end_time=snapshot.end_time,
+        revision=snapshot.revision,
+        segments=snapshot.segments,
+        fights=[ReportWatchFightModel(**fight.__dict__) for fight in snapshot.fights],
     )
 
 

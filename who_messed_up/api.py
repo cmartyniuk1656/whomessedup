@@ -94,10 +94,10 @@ query($code: String!, $fightIDs: [Int!], $includeCombatantInfo: Boolean) {
 """
 
 EVENTS_QUERY = """
-query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String, $includeResources: Boolean, $useActorIDs: Boolean, $fightIDs: [Int!], $abilityID: Float, $sourceID: Int, $targetID: Int, $wipeCutoff: Int) {
+query($code: String!, $dataType: EventDataType!, $start: Float!, $end: Float!, $limit: Int!, $filter: String, $includeResources: Boolean, $useActorIDs: Boolean, $fightIDs: [Int!], $abilityID: Float, $sourceID: Int, $targetID: Int, $wipeCutoff: Int, $hostilityType: HostilityType) {
   reportData {
     report(code: $code) {
-      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, filterExpression: $filter, includeResources: $includeResources, useActorIDs: $useActorIDs, fightIDs: $fightIDs, abilityID: $abilityID, sourceID: $sourceID, targetID: $targetID, wipeCutoff: $wipeCutoff) {
+      events(dataType: $dataType, startTime: $start, endTime: $end, limit: $limit, filterExpression: $filter, includeResources: $includeResources, useActorIDs: $useActorIDs, fightIDs: $fightIDs, abilityID: $abilityID, sourceID: $sourceID, targetID: $targetID, wipeCutoff: $wipeCutoff, hostilityType: $hostilityType) {
         data
         nextPageTimestamp
       }
@@ -484,6 +484,7 @@ def fetch_events(
     source_id: Optional[int] = None,
     target_id: Optional[int] = None,
     wipe_cutoff: Optional[int] = None,
+    hostility_type: Optional[str] = None,
     actor_names: Optional[Dict[int, str]] = None,
     sleep_seconds: float = 0.1,
 ) -> Iterator[Dict[str, Any]]:
@@ -513,6 +514,7 @@ def fetch_events(
             "sourceID": int(source_id) if source_id is not None else None,
             "targetID": int(target_id) if target_id is not None else None,
             "wipeCutoff": int(wipe_cutoff) if wipe_cutoff is not None else None,
+            "hostilityType": hostility_type,
         }
         payload = gql(session, token, EVENTS_QUERY, variables)
         events_data = payload["reportData"]["report"]["events"]
@@ -552,6 +554,7 @@ def events_for_fights(
     extra_filter: Optional[str] = None,
     actor_names: Optional[Dict[int, str]] = None,
     use_actor_ids: Optional[bool] = None,
+    hostility_type: Optional[str] = None,
     sleep_seconds: float = 0.1,
 ) -> Iterator[Dict[str, Any]]:
     """
@@ -571,6 +574,7 @@ def events_for_fights(
             extra_filter=extra_filter,
             actor_names=actor_names,
             use_actor_ids=use_actor_ids,
+            hostility_type=hostility_type,
             sleep_seconds=sleep_seconds,
         ):
             yield event
@@ -592,6 +596,7 @@ def fetch_events_grouped(
     source_id: Optional[int] = None,
     target_id: Optional[int] = None,
     wipe_cutoff: Optional[int] = None,
+    hostility_type: Optional[str] = None,
     actor_names: Optional[Dict[int, str]] = None,
     sleep_seconds: float = 0.1,
 ) -> Dict[int, List[Dict[str, Any]]]:
@@ -621,6 +626,7 @@ def fetch_events_grouped(
         source_id=source_id,
         target_id=target_id,
         wipe_cutoff=wipe_cutoff,
+        hostility_type=hostility_type,
         actor_names=actor_names,
         sleep_seconds=sleep_seconds,
     ):

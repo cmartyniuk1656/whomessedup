@@ -1,5 +1,7 @@
 import GlassCard from "../../ui/GlassCard";
+import { orderReportCatalog } from "../../../config/reportTypes";
 import { PanelMessage } from "../atoms/PanelMessage";
+import { ReportTypeIcon } from "../molecules/ReportTypeIcon";
 
 function formatReportDifficulty(difficulty) {
   if (!difficulty) {
@@ -51,6 +53,7 @@ export function ReportCatalog({
   emptyMessage = "",
 }) {
   const hasReports = Boolean(reports?.length);
+  const orderedReports = orderReportCatalog(reports);
 
   return (
     <section aria-label="Available reports" className="space-y-4">
@@ -60,8 +63,8 @@ export function ReportCatalog({
         {description ? <p className="mt-2 text-sm text-slate-400">{description}</p> : null}
       </div>
       {hasReports ? (
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {reports.map((report) => {
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {orderedReports.map((report) => {
             const isSelected = report.id === selectedReportId;
             return (
               <button
@@ -71,23 +74,21 @@ export function ReportCatalog({
                 className="group h-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isBusy}
                 aria-pressed={isSelected}
+                aria-label={`${getShortReportTitle(report)}: ${getReportStatusLabel(report, isSelected)}`}
               >
                 <GlassCard
-                  title={getShortReportTitle(report)}
                   className={
                     isSelected
-                      ? "h-full ring-1 ring-emerald-400/60 shadow-[0_30px_80px_-40px_rgba(16,185,129,0.55)]"
-                      : "h-full"
+                      ? "h-full rounded-xl ring-1 ring-emerald-400/60 shadow-[0_20px_55px_-35px_rgba(16,185,129,0.55)]"
+                      : "h-full rounded-xl"
                   }
+                  bodyClassName="p-4 text-content"
                 >
-                  <div className="flex h-full flex-col gap-4 text-content">
-                    <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                      {getReportStatusLabel(report, isSelected)}
-                    </div>
-                    <p className="text-sm text-muted">{report.description}</p>
-                    <div className="mt-auto inline-flex items-center gap-2 text-sm font-medium text-primary">
-                      {isSelected ? "Editing configuration" : "Open report"}
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <ReportTypeIcon report={report} />
+                    <h3 className="font-medium tracking-tight">
+                      {getShortReportTitle(report)}
+                    </h3>
                   </div>
                 </GlassCard>
               </button>

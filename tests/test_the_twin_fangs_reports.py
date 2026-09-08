@@ -52,6 +52,7 @@ class TheTwinFangsReportRegistryTests(unittest.TestCase):
             "the-twin-fangs-cooldowns",
             "the-twin-fangs-fuckups",
             "the-twin-fangs-mechanics-scorecard",
+            "the-twin-fangs-heroic-aggregate-reports",
         }
         definitions = {
             definition.id: definition
