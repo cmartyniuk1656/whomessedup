@@ -1390,7 +1390,7 @@ def _build_pyre_details(pyre_set: PyreSet) -> RowDetailsModel:
                 ),
                 label="No Cremation carriers observed",
                 description=(
-                    "No Slithering Flame or Cremation aura application was "
+                    "No Slithering Flame aura application was "
                     "matched to this Pyre."
                 ),
                 tone="warning",

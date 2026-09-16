@@ -12,6 +12,7 @@ from who_messed_up.services.nek_zali_the_soulcoiler_mechanics import (
     KILL_SQUADS_VIEW_ID,
     PYRE_SOAKS_VIEW_ID,
     REPORT_ID,
+    SLITHERING_FLAME_ID,
     SOUL_EXHAUSTION_ID,
     SOULCOILED_IDS,
     VESSEL_OF_AWAKENING_ID,
@@ -309,7 +310,7 @@ def test_pyre_sets_are_cast_anchored_and_track_unique_soakers_and_deaths():
         end=180_000,
         kill=False,
         difficulty=5,
-        friendly_player_ids=(1, 2),
+        friendly_player_ids=(1, 2, 3),
     )
     pyre_sets = build_pyre_sets(
         report_code="REPORT",
@@ -337,20 +338,20 @@ def test_pyre_sets_are_cast_anchored_and_track_unique_soakers_and_deaths():
                 }
             ]
         },
-        actor_names={1: "Alpha", 2: "Bravo", 99: "Restless Amani"},
-        actor_classes={1: "Paladin", 2: "Mage"},
+        actor_names={1: "Alpha", 2: "Bravo", 3: "Charlie", 99: "Restless Amani"},
+        actor_classes={1: "Paladin", 2: "Mage", 3: "Priest"},
         aura_events_by_fight={
             10: [
                 {
                     "timestamp": 125_000,
-                    "abilityGameID": CREMATION_ID,
-                    "targetID": 2,
+                    "abilityGameID": SLITHERING_FLAME_ID,
+                    "targetID": 3,
                     "type": "applydebuff",
                 },
                 {
-                    "timestamp": 145_000,
-                    "abilityGameID": CREMATION_ID,
-                    "targetID": 2,
+                    "timestamp": 133_000,
+                    "abilityGameID": SLITHERING_FLAME_ID,
+                    "targetID": 3,
                     "type": "removedebuff",
                 },
             ]
@@ -394,14 +395,70 @@ def test_pyre_sets_are_cast_anchored_and_track_unique_soakers_and_deaths():
     assert pyre_sets[0].death_count == 1
     assert pyre_sets[0].soakers[1].death_offset_ms == 23_200
     assert [carrier.player for carrier in pyre_sets[0].cremation_carriers] == [
-        "Bravo"
+        "Charlie"
     ]
-    assert pyre_sets[0].cremation_carriers[0].removal_offset_ms == 45_000
+    assert pyre_sets[0].cremation_carriers[0].removal_offset_ms == 33_000
     assert pyre_sets[0].corpse_opportunity_count == 1
     assert pyre_sets[0].confirmed_miss_count == 1
     assert pyre_sets[0].confirmed_misses[0].source_instance == 1
     assert pyre_sets[1].soakers == ()
     assert pyre_sets[1].corpse_opportunity_count == 1
+
+
+def test_pyre_carriers_require_slithering_flame_not_cremation_exposure():
+    # Reduced from J3y9gP2bqmkphY7f, fight 3, Pyre 1. Cremation reaches
+    # soakers both at impact and when a nearby Slithering Flame expires.
+    fight = Fight(
+        id=3,
+        name="Nek'zali the Soulcoiler",
+        start=0,
+        end=250_000,
+        kill=False,
+        difficulty=5,
+        friendly_player_ids=(1, 2, 3, 4),
+    )
+    aura_rows = [
+        (213_092, SLITHERING_FLAME_ID, 1, "applydebuff"),
+        (213_093, CREMATION_ID, 2, "applydebuff"),
+        (213_093, CREMATION_ID, 4, "applydebuff"),
+        (221_095, SLITHERING_FLAME_ID, 1, "removedebuff"),
+        (221_097, CREMATION_ID, 1, "applydebuff"),
+        (221_097, CREMATION_ID, 2, "refreshdebuff"),
+        (221_097, CREMATION_ID, 3, "applydebuff"),
+    ]
+    kwargs = dict(
+        report_code="J3y9gP2bqmkphY7f",
+        fights=[fight],
+        casts_by_fight={3: [
+            {"timestamp": 213_075, "abilityGameID": HUNGERING_PYRE_ID, "type": "cast"}
+        ]},
+        damage_taken_by_fight={3: [
+            _damage_event(213_179, HUNGERING_PYRE_ID, target_id)
+            for target_id in (2, 3)
+        ]},
+        deaths_by_fight={},
+        actor_names={1: "Deimortus", 2: "Monkorith", 3: "Navori", 4: "Exposure only"},
+        actor_classes={},
+    )
+    auras = [
+        {"timestamp": timestamp, "abilityGameID": ability_id,
+         "targetID": target_id, "type": event_type}
+        for timestamp, ability_id, target_id, event_type in aura_rows
+    ]
+    pyre = build_pyre_sets(**kwargs, aura_events_by_fight={3: auras})[0]
+    assert [carrier.player for carrier in pyre.cremation_carriers] == ["Deimortus"]
+    carrier = pyre.cremation_carriers[0]
+    assert carrier.ability_id == SLITHERING_FLAME_ID
+    assert carrier.ability_name == "Slithering Flame"
+    assert carrier.application_offset_ms == 213_092
+    assert carrier.removal_offset_ms == 221_095
+    assert {soaker.player for soaker in pyre.soakers} == {"Monkorith", "Navori"}
+
+    # Cremation alone must not become a fallback assignment, even when
+    # its recipient has no logged Pyre damage.
+    cremation_only = [event for event in auras if event["abilityGameID"] == CREMATION_ID]
+    pyre = build_pyre_sets(**kwargs, aura_events_by_fight={3: cremation_only})[0]
+    assert pyre.cremation_carriers == ()
 
 
 def test_pyre_view_has_its_own_columns_rows_details_and_summary():
@@ -432,13 +489,13 @@ def test_pyre_view_has_its_own_columns_rows_details_and_summary():
             10: [
                 {
                     "timestamp": 125_000,
-                    "abilityGameID": CREMATION_ID,
+                    "abilityGameID": SLITHERING_FLAME_ID,
                     "targetID": 2,
                     "type": "applydebuff",
                 },
                 {
-                    "timestamp": 139_000,
-                    "abilityGameID": CREMATION_ID,
+                    "timestamp": 133_000,
+                    "abilityGameID": SLITHERING_FLAME_ID,
                     "targetID": 2,
                     "type": "removedebuff",
                 },

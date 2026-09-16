@@ -8,6 +8,8 @@ that they entered the downstairs realm.
 Hungering Pyre sets are anchored to completed enemy casts, then matched to the
 friendly-player damage events at that impact.  Cast anchoring retains unsoaked
 Pyres instead of silently dropping them from the report.
+Carrier assignments come from Slithering Flame; Cremation applications also
+mark exposed bystanders and cannot identify who carried the flame.
 
 Essence Rend sets are anchored to each tight application wave.  Successful
 dispels are matched by target so aura expiry is never mistaken for a healer
@@ -44,7 +46,7 @@ REPORT_FOOTNOTES = (
     "A skull marks a logged death after that player's entry within the set window; the ejection marker uses the resulting Soulcoiled aura as the definitive signal that Soulcoiler's Curse removed the player from downstairs.",
     "Drowned Echo damage is matched by target instance, stops at the killing blow, excludes one-point post-death residue, and credits pet damage to the owning player.",
     "Pyre sets are anchored to completed Hungering Pyre casts; a soaker is a friendly player hit by that cast, and its skull marks a death attributed to Hungering Pyre.",
-    "Cremation carriers are matched from Slithering Flame or Cremation aura applications after each Pyre; their application and removal times are shown in the details.",
+    "Cremation carriers are identified by Slithering Flame applications after each Pyre; its application and removal times are shown in the details. Cremation exposure alone does not identify a carrier.",
     "Corpse opportunities count unique Restless Amani deaths in that Pyre's burn window. Confirmed misses count distinct Amani instances that later produced Vessel of Awakening damage; Warcraft Logs does not expose successful corpse-burn events or the exact number simultaneously present.",
     "Essence Rend waves are grouped from near-simultaneous aura applications. A dispel is credited only when Warcraft Logs records an Essence Rend dispel event for that target; ordinary aura removal is not treated as a dispel.",
     "Add Damage includes Restless Amani waves and the intermission Echoes of Jawae. Drowned Echo damage remains in Kill Squads. Warcraft Logs does not expose encounter-NPC summons, so Amani waves are reconstructed from distinct target lives whose first player damage occurs within the same 15-second cluster.",
@@ -807,7 +809,9 @@ def _pyre_carriers(
         timestamp = float(event.get("timestamp") or 0)
         if timestamp < cast_timestamp - 500.0 or timestamp >= application_end:
             continue
-        if _event_ability_id(event) not in {CREMATION_ID, SLITHERING_FLAME_ID}:
+        # Cremation also hits soakers and nearby players. Only Slithering
+        # Flame identifies the assignment that will trigger the explosion.
+        if _event_ability_id(event) != SLITHERING_FLAME_ID:
             continue
         if str(event.get("type") or "").lower() not in {
             "applydebuff",
@@ -823,7 +827,7 @@ def _pyre_carriers(
 
     carriers: List[CremationCarrier] = []
     for target_id, application in applications_by_target.items():
-        ability_id = _event_ability_id(application) or CREMATION_ID
+        ability_id = SLITHERING_FLAME_ID
         application_timestamp = float(application.get("timestamp") or 0)
         removal_timestamp = next(
             (
@@ -843,11 +847,7 @@ def _pyre_carriers(
                 player=actor_names.get(target_id, str(target_id)),
                 class_name=actor_classes.get(target_id),
                 ability_id=ability_id,
-                ability_name=(
-                    "Slithering Flame"
-                    if ability_id == SLITHERING_FLAME_ID
-                    else "Cremation"
-                ),
+                ability_name="Slithering Flame",
                 application_timestamp=application_timestamp,
                 application_offset_ms=application_timestamp - fight.start,
                 removal_timestamp=removal_timestamp,
