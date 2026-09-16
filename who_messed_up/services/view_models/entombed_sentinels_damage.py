@@ -1,6 +1,9 @@
-"""View-model builder for the Heroic Entombed Sentinels damage report."""
+"""View-model builder for the Heroic and Mythic Entombed Sentinels damage report."""
 from __future__ import annotations
 
+from dataclasses import replace
+
+from ..boss_manifest_types import normalize_manifest_difficulty
 from ..target_damage import EncounterTargetDamageSummary
 from .target_damage import TargetDamageReportConfig, build_target_damage_report_page
 
@@ -8,6 +11,9 @@ REPORT_ID = "entombed-sentinels-damage"
 REPORT_TITLE = "Heroic Entombed Sentinels - Damage Report"
 REPORT_DESCRIPTION = "Damage report for Heroic Entombed Sentinels."
 REPORT_DEFAULT_FIGHT = "Entombed Sentinels"
+MYTHIC_REPORT_ID = "entombed-sentinels-damage-mythic"
+MYTHIC_REPORT_TITLE = "Mythic Entombed Sentinels - Damage Report"
+MYTHIC_REPORT_DESCRIPTION = "Damage Report for Mythic Entombed Sentinels."
 REPORT_FOOTNOTES = [
     "Use the target toggles to include or exclude Blood of Ula'tek, Breath of Ula'tek, and Venom Coagulation damage.",
     (
@@ -36,11 +42,31 @@ REPORT_CONFIG = TargetDamageReportConfig(
 )
 
 
-def build_entombed_sentinels_damage_report_page(summary: EncounterTargetDamageSummary):
-    return build_target_damage_report_page(summary, config=REPORT_CONFIG)
+MYTHIC_REPORT_CONFIG = replace(
+    REPORT_CONFIG,
+    report_id=MYTHIC_REPORT_ID,
+    title=MYTHIC_REPORT_TITLE,
+    footnotes=tuple(REPORT_FOOTNOTES),
+)
+
+
+def build_entombed_sentinels_damage_report_page(
+    summary: EncounterTargetDamageSummary,
+    *,
+    difficulty: str | int | None = None,
+):
+    config = (
+        MYTHIC_REPORT_CONFIG
+        if normalize_manifest_difficulty(difficulty) == "mythic"
+        else REPORT_CONFIG
+    )
+    return build_target_damage_report_page(summary, config=config)
 
 
 __all__ = [
+    "MYTHIC_REPORT_ID",
+    "MYTHIC_REPORT_TITLE",
+    "MYTHIC_REPORT_DESCRIPTION",
     "REPORT_DEFAULT_FIGHT",
     "REPORT_DESCRIPTION",
     "REPORT_FOOTNOTES",

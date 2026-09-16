@@ -11,6 +11,7 @@ from .boss_manifests import (
     BELOREN_CHILD_OF_ALAR_MANIFEST,
     CROWN_OF_THE_COSMOS_MANIFEST,
     ENTOMBED_SENTINELS_HEROIC_MANIFEST,
+    ENTOMBED_SENTINELS_MYTHIC_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     NEK_ZALI_THE_SOULCOILER_HEROIC_MANIFEST,
@@ -36,6 +37,13 @@ from .mechanic_scorecards import (
     FIGHT_SELECTION_SPECIFIC as SCORECARD_FIGHT_SELECTION_SPECIFIC,
     FIGHT_SELECTIONS as SCORECARD_FIGHT_SELECTIONS,
     SCORECARD_ENCOUNTERS,
+)
+from .entombed_sentinels_mechanics import (
+    REPORT_ID as REPORT_SENTINELS_MECHANICS_ID,
+    REPORT_TITLE as REPORT_SENTINELS_MECHANICS_TITLE,
+    REPORT_DESCRIPTION as REPORT_SENTINELS_MECHANICS_DESCRIPTION,
+    REPORT_DEFAULT_FIGHT as REPORT_SENTINELS_MECHANICS_DEFAULT_FIGHT,
+    REPORT_FOOTNOTES as REPORT_SENTINELS_MECHANICS_FOOTNOTES,
 )
 from .nek_zali_the_soulcoiler_mechanics import (
     REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_MECHANICS_DEFAULT_FIGHT,
@@ -221,6 +229,10 @@ from .view_models.nek_zali_the_soulcoiler_deaths import (
     REPORT_TITLE as REPORT_NEK_ZALI_DEATHS_TITLE,
 )
 from .view_models.entombed_sentinels_avoidable_damage import (
+    MYTHIC_REPORT_ID as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_TITLE,
+    MYTHIC_REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_DESCRIPTION,
+    MYTHIC_REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_FOOTNOTES,
     REPORT_DEFAULT_FIGHT as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DESCRIPTION,
     REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_FOOTNOTES,
@@ -228,6 +240,9 @@ from .view_models.entombed_sentinels_avoidable_damage import (
     REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_AVOIDABLE_TITLE,
 )
 from .view_models.entombed_sentinels_damage import (
+    MYTHIC_REPORT_ID as REPORT_ENTOMBED_SENTINELS_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_MYTHIC_TITLE,
+    MYTHIC_REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_MYTHIC_DESCRIPTION,
     REPORT_DEFAULT_FIGHT as REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_DESCRIPTION,
     REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_FOOTNOTES,
@@ -235,6 +250,10 @@ from .view_models.entombed_sentinels_damage import (
     REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_TITLE,
 )
 from .view_models.entombed_sentinels_deaths import (
+    MYTHIC_REPORT_ID as REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_TITLE,
+    MYTHIC_REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_DESCRIPTION,
+    MYTHIC_REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_FOOTNOTES,
     REPORT_DEFAULT_FIGHT as REPORT_ENTOMBED_SENTINELS_DEATHS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_ENTOMBED_SENTINELS_DEATHS_DESCRIPTION,
     REPORT_FOOTNOTES as REPORT_ENTOMBED_SENTINELS_DEATHS_FOOTNOTES,
@@ -450,6 +469,7 @@ JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS = "v2_report_nek_zali_the_soulcoiler_me
 JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE = "v2_report_entombed_sentinels_avoidable_damage"
 JOB_V2_ENTOMBED_SENTINELS_DAMAGE = "v2_report_entombed_sentinels_damage"
 JOB_V2_ENTOMBED_SENTINELS_DEATHS = "v2_report_entombed_sentinels_deaths"
+JOB_V2_ENTOMBED_SENTINELS_MECHANICS = "v2_report_entombed_sentinels_mechanics"
 JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE = "v2_report_the_lost_explorers_avoidable_damage"
 JOB_V2_THE_LOST_EXPLORERS_DAMAGE = "v2_report_the_lost_explorers_damage"
 JOB_V2_THE_LOST_EXPLORERS_DEATHS = "v2_report_the_lost_explorers_deaths"
@@ -926,10 +946,25 @@ def _build_nek_zali_the_soulcoiler_mechanics_payload(
     )
 
 
+def _build_sentinels_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    return ({"report": report_codes[0], "extra_reports": report_codes[1:],
+             "fight": REPORT_SENTINELS_MECHANICS_DEFAULT_FIGHT, "difficulty": "mythic"},
+            _coerce_bool(values, "fresh_run", default=False))
+
+
 def _build_entombed_sentinels_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_target_damage_payload(
         values,
         manifest=ENTOMBED_SENTINELS_HEROIC_MANIFEST,
+        default_fight=REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
+    )
+
+
+def _build_entombed_sentinels_mythic_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=ENTOMBED_SENTINELS_MYTHIC_MANIFEST,
         default_fight=REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
     )
 
@@ -1176,6 +1211,16 @@ def _build_entombed_sentinels_avoidable_damage_payload(
     return _build_avoidable_damage_payload(
         values,
         manifest=ENTOMBED_SENTINELS_HEROIC_MANIFEST,
+        default_fight=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_entombed_sentinels_mythic_avoidable_damage_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=ENTOMBED_SENTINELS_MYTHIC_MANIFEST,
         default_fight=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
     )
 
@@ -1783,6 +1828,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_ENTOMBED_SENTINELS_DEATHS,
         build_payload=_build_entombed_sentinels_deaths_payload,
     ),
+    REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_ID,
+            title=REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_TITLE,
+            description=REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_DESCRIPTION,
+            fightId=ENTOMBED_SENTINELS_FIGHT_ID,
+            fightName=REPORT_ENTOMBED_SENTINELS_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_ENTOMBED_SENTINELS_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ENTOMBED_SENTINELS_DEATHS_MYTHIC_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ENTOMBED_SENTINELS_DEATHS,
+        build_payload=_build_entombed_sentinels_deaths_payload,
+    ),
     REPORT_THE_LOST_EXPLORERS_DEATHS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_THE_LOST_EXPLORERS_DEATHS_ID,
@@ -2184,6 +2256,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE,
         build_payload=_build_entombed_sentinels_avoidable_damage_payload,
+    ),
+    REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_ID,
+            title=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_TITLE,
+            description=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_DESCRIPTION,
+            fightId=ENTOMBED_SENTINELS_FIGHT_ID,
+            fightName=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_ENTOMBED_SENTINELS_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ENTOMBED_SENTINELS_AVOIDABLE_MYTHIC_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(ENTOMBED_SENTINELS_MYTHIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE,
+        build_payload=_build_entombed_sentinels_mythic_avoidable_damage_payload,
     ),
     REPORT_THE_LOST_EXPLORERS_AVOIDABLE_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -2869,6 +2968,27 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_ENTOMBED_SENTINELS_DAMAGE,
         build_payload=_build_entombed_sentinels_damage_payload,
     ),
+    REPORT_ENTOMBED_SENTINELS_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_ENTOMBED_SENTINELS_MYTHIC_ID,
+            title=REPORT_ENTOMBED_SENTINELS_MYTHIC_TITLE,
+            description=REPORT_ENTOMBED_SENTINELS_MYTHIC_DESCRIPTION,
+            fightId=ENTOMBED_SENTINELS_FIGHT_ID,
+            fightName=REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_ENTOMBED_SENTINELS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_ENTOMBED_SENTINELS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(ENTOMBED_SENTINELS_MYTHIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Entombed Sentinels"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_ENTOMBED_SENTINELS_DAMAGE,
+        build_payload=_build_entombed_sentinels_mythic_damage_payload,
+    ),
     REPORT_THE_LOST_EXPLORERS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_THE_LOST_EXPLORERS_ID,
@@ -3043,6 +3163,27 @@ _REPORTS[REPORT_NEK_ZALI_MECHANICS_ID] = RegisteredReport(
     ),
     job_type=JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS,
     build_payload=_build_nek_zali_the_soulcoiler_mechanics_payload,
+)
+
+
+_REPORTS[REPORT_SENTINELS_MECHANICS_ID] = RegisteredReport(
+    definition=ReportDefinitionModel(
+        id=REPORT_SENTINELS_MECHANICS_ID,
+        title=REPORT_SENTINELS_MECHANICS_TITLE,
+        description=REPORT_SENTINELS_MECHANICS_DESCRIPTION,
+        fightId=ENTOMBED_SENTINELS_FIGHT_ID,
+        fightName=REPORT_SENTINELS_MECHANICS_DEFAULT_FIGHT,
+        difficulty=ReportDifficulty.MYTHIC,
+        defaultFight=REPORT_SENTINELS_MECHANICS_DEFAULT_FIGHT,
+        footnotes=list(REPORT_SENTINELS_MECHANICS_FOOTNOTES),
+        requestSchema=RequestSchemaModel(fields=[
+            _build_report_codes_field(),
+            RequestFieldModel(id="fresh_run", kind=RequestFieldKind.CHECKBOX,
+                              label="Force fresh run (skip cache)", defaultValue=False),
+        ]),
+    ),
+    job_type=JOB_V2_ENTOMBED_SENTINELS_MECHANICS,
+    build_payload=_build_sentinels_mechanics_payload,
 )
 
 
@@ -3245,6 +3386,15 @@ for _fight_id, _fight_name, _difficulty in COOLDOWN_USAGE_FIGHTS:
         difficulty=_difficulty,
         expected_encounter_id=COOLDOWN_USAGE_ENCOUNTER_IDS.get(_fight_id),
     )
+
+
+_REPORTS["entombed-sentinels-cooldowns-mythic"] = _build_cooldown_usage_definition(
+    report_id="entombed-sentinels-cooldowns-mythic",
+    fight_id=ENTOMBED_SENTINELS_FIGHT_ID,
+    fight_name="Entombed Sentinels",
+    difficulty=ReportDifficulty.MYTHIC,
+    expected_encounter_id=3445,
+)
 
 
 for _boss_id, _scorecard_encounter in SCORECARD_ENCOUNTERS.items():
@@ -3533,6 +3683,7 @@ __all__ = [
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_DAMAGE",
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS",
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS",
+    "JOB_V2_ENTOMBED_SENTINELS_MECHANICS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
     "JOB_V2_VORASIUS_DEATHS",

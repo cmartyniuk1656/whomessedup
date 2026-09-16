@@ -31,6 +31,7 @@ from .services.boss_manifests import (
     BOSS_MANIFESTS,
     CROWN_OF_THE_COSMOS_MANIFEST,
     ENTOMBED_SENTINELS_HEROIC_MANIFEST,
+    ENTOMBED_SENTINELS_MYTHIC_MANIFEST,
     IMPERATOR_AVERZIAN_MANIFEST,
     LIGHTBLINDED_VANGUARD_MANIFEST,
     MANIFEST_TIERS,
@@ -135,6 +136,10 @@ from .services.nek_zali_the_soulcoiler_avoidable_damage import (
 )
 from .services.nek_zali_the_soulcoiler_damage import fetch_nek_zali_the_soulcoiler_damage_summary
 from .services.nek_zali_the_soulcoiler_deaths import fetch_nek_zali_the_soulcoiler_death_summary
+from .services.entombed_sentinels_mechanics import (
+    SentinelsMechanicsSummary,
+    fetch_sentinels_mechanics_summary,
+)
 from .services.nek_zali_the_soulcoiler_mechanics import (
     AddDamageSet,
     CremationCarrier,
@@ -240,6 +245,7 @@ __all__ = [
     "BossManifest",
     "CROWN_OF_THE_COSMOS_MANIFEST",
     "ENTOMBED_SENTINELS_HEROIC_MANIFEST",
+    "ENTOMBED_SENTINELS_MYTHIC_MANIFEST",
     "CrownNullCoronaDispelEntry",
     "CrownNullCoronaDispelEvent",
     "CrownNullCoronaDispelSummary",
@@ -355,6 +361,8 @@ __all__ = [
     "fetch_nek_zali_the_soulcoiler_damage_summary",
     "fetch_nek_zali_the_soulcoiler_death_summary",
     "fetch_nek_zali_mechanics_summary",
+    "fetch_sentinels_mechanics_summary",
+    "SentinelsMechanicsSummary",
     "fetch_entombed_sentinels_avoidable_damage_summary",
     "fetch_entombed_sentinels_damage_summary",
     "fetch_entombed_sentinels_death_summary",

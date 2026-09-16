@@ -269,6 +269,8 @@ def test_avoidable_damage_report_defaults_to_relative_player_bars_with_hit_count
     assert bob.cells["hit_count"].value == 1
     assert alice.details is not None
     assert len(alice.details.groups[0].items) == 2
+    assert [(bar.label, bar.value) for bar in alice.details.bar_chart.bars] == [("Bad", 300.0)]
+    assert [(bar.label, bar.value) for bar in bob.details.bar_chart.bars] == [("Worse", 150.0)]
     assert "average_damage" in table.rows_by_combined_view["aggregate::table"][0].cells
 
 
@@ -323,6 +325,7 @@ def test_avoidable_damage_groups_configured_dot_ticks_into_hit_instances():
 
     assert row.cells["hit_count"].value == 2
     assert row.cells["damage"].value == 300.0
+    assert row.details.bar_chart.bars[0].value == 300.0
     assert row.details is not None
     assert len(row.details.groups[0].items) == 2
     assert [item.description for item in row.details.groups[0].items] == [

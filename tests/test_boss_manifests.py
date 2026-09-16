@@ -97,12 +97,11 @@ class NekZaliMythicManifestTests(unittest.TestCase):
 
 
 class EntombedSentinelsHeroicManifestTests(unittest.TestCase):
-    def test_manifest_resolves_only_for_heroic(self):
+    def test_manifest_resolves_for_heroic(self):
         manifest = get_boss_manifest("entombed-sentinels", "heroic")
 
         self.assertIsNotNone(manifest)
         self.assertEqual(manifest.boss_name, "Entombed Sentinels")
-        self.assertIsNone(get_boss_manifest("entombed-sentinels", "mythic"))
 
     def test_manifest_contains_observed_targets_and_damage_abilities(self):
         manifest = get_boss_manifest("entombed-sentinels", "heroic")

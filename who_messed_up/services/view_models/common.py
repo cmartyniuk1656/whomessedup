@@ -4,7 +4,7 @@ Shared Pydantic models for the v2 report rendering contract.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -253,6 +253,7 @@ class RowDetailBarModel(ViewModelBase):
 class RowDetailBarChartModel(ViewModelBase):
     title: str
     subtitle: Optional[str] = None
+    unit_label: Optional[str] = Field(None, alias="unitLabel")
     bars: List[RowDetailBarModel] = Field(default_factory=list)
 
 
@@ -260,6 +261,7 @@ class RowDetailsModel(ViewModelBase):
     variant: RowDetailsVariant
     groups: List[RowDetailGroupModel] = Field(default_factory=list)
     bar_chart: Optional[RowDetailBarChartModel] = Field(None, alias="barChart")
+    bar_chart_position: Literal["before", "after"] = Field("after", alias="barChartPosition")
 
 
 class TableRowGroupModel(ViewModelBase):

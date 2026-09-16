@@ -205,6 +205,9 @@ export function EventGroupList({ details }) {
 
   return (
     <div className="space-y-3">
+      {details.barChart && details.barChartPosition === "before" ? (
+        <RelativeBarChart chart={details.barChart} standalone />
+      ) : null}
       {details.groups.map((group) => (
         <div
           key={group.id}
@@ -278,7 +281,7 @@ export function EventGroupList({ details }) {
           </ul>
         </div>
       ))}
-      {details.barChart ? (
+      {details.barChart && details.barChartPosition !== "before" ? (
         <RelativeBarChart
           chart={details.barChart}
           standalone={!details.groups?.length}

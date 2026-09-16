@@ -1,9 +1,14 @@
 """
-Heroic Entombed Sentinels ability and target metadata for Midnight Season 2.
+Entombed Sentinels ability and target metadata for Midnight Season 2.
 
 Observed across Warcraft Logs report ZARtb8Dxjhg9H4BF, fights 8-12
 (encounter 3445), then cross-checked against Method's Heroic guide and live
 spell descriptions.
+
+Mythic extends the shared encounter with Vashnik's Protovenom, observed in
+J3y9gP2bqmkphY7f, fights 15-19 and 21-26, and checked against Mythic Trap
+and the encounter journal. See docs/analysis/entombed-sentinels-mythic.md
+for coverage, attribution limits, and future mechanics-report event IDs.
 """
 from __future__ import annotations
 
@@ -180,7 +185,7 @@ ENTOMBED_SENTINELS_HEROIC_MANIFEST = BossManifest(
             name="Blighted Blood",
             game_id=1284471,
             description=(
-                "Selected players receive a dispellable Shadow damage-over-time effect. On Heroic, its removal "
+                "Selected players receive a dispellable Shadow damage-over-time effect. On Heroic and Mythic, its removal "
                 "also creates a Blood Venom pool that must be placed safely."
             ),
             url="https://www.wowhead.com/spell=1284471",
@@ -214,4 +219,40 @@ ENTOMBED_SENTINELS_HEROIC_MANIFEST = BossManifest(
 )
 
 
-__all__ = ["ENTOMBED_SENTINELS_HEROIC_MANIFEST"]
+ENTOMBED_SENTINELS_MYTHIC_MANIFEST = BossManifest(
+    boss_id="entombed-sentinels",
+    boss_name="Entombed Sentinels",
+    difficulty="mythic",
+    targets=ENTOMBED_SENTINELS_HEROIC_MANIFEST.targets,
+    abilities=ENTOMBED_SENTINELS_HEROIC_MANIFEST.abilities
+    + (
+        # The cast (1296878) and carrier aura (1296880) have different IDs
+        # from the periodic damage. Do not use damage victims as assignments.
+        BossAbilityMetadata(
+            name="Shifting Protovenom",
+            game_id=1296882,
+            description=(
+                "Vashnik infects selected players with periodic Plague damage. Contact with another infected "
+                "player clears the venoms; contact with an uninfected player triggers Protovenom Eruption. "
+                "The assigned carrier's periodic damage is not an avoidable hit."
+            ),
+            url="https://www.wowhead.com/spell=1296882/shifting-protovenom",
+            tags=("Mythic", "Targeted", "DoT", "Pairing"),
+        ),
+        BossAbilityMetadata(
+            name="Protovenom Eruption",
+            game_id=1296962,
+            description=(
+                "An incompatible Protovenom collision damages and knocks back players within 10 yards. "
+                "This records exposure to an avoidable explosion; a damage recipient is not necessarily "
+                "the player who caused the collision."
+            ),
+            url="https://www.wowhead.com/spell=1296962/protovenom-eruption",
+            tags=("Mythic", "Avoidable", "Explosion", "Knockback", "Collision Failure"),
+            avoidable=True,
+        ),
+    ),
+)
+
+
+__all__ = ["ENTOMBED_SENTINELS_HEROIC_MANIFEST", "ENTOMBED_SENTINELS_MYTHIC_MANIFEST"]

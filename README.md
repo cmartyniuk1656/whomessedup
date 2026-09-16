@@ -93,6 +93,10 @@ who-messed-up/
 
 ## Regression Test References
 
+- Mythic Entombed Sentinels base reports use `J3y9gP2bqmkphY7f` (11 wipes). See [the metadata and mechanics research notes](docs/analysis/entombed-sentinels-mythic.md) for classification evidence, spell IDs, and the `sentinels_mythic_*` regression cases. The existing Heroic report IDs remain available; Mythic base report IDs end in `-mythic`.
+- `entombed-sentinels-mythic-mechanics` adds Protovenom, Helical Toxins, Miasma, Droplets, Coagulations, Dispels, and Intermission Resolution to the Mythic catalog and aggregate. Fetch/merge orchestration, pure per-pull analysis, event lifetimes, and rendering live in separate `entombed_sentinels_mechanics*` service modules. All seven views use the shared pull selectors and expandable table contract. Dispels offers cast sets and healer bars; Intermission Resolution separates toxin-clear timing from full Stasis healing. Their calculators live in `entombed_sentinels_mechanics_resolution.py`, and the renderer shares count-bar aggregation between dispels and droplets.
+- All avoidable-damage reports use the shared `view_models/avoidable_damage.py` source chart in expanded player rows, in both Damage bars and Table layouts. Charts sum filtered damage by spell and follow the selected pull/report scope. `RowDetailsModel.barChartPosition` can place a chart before the event history; existing detail charts default to after it.
+
 When refactoring or adding features, sanity-check the existing reports against these known Warcraft Logs reports:
 
 - **Nexus-King Regression**: `WczAN4bDfXxPhV93` (use the Nexus-King tiles, including phase damage and combined fuck-up dashboards).

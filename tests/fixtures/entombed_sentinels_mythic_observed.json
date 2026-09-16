@@ -1,0 +1,327 @@
+{
+  "report_code": "J3y9gP2bqmkphY7f",
+  "fight_ids": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+  ],
+  "damage_abilities": [
+    {
+      "game_id": 1284209,
+      "name": "Living Venom",
+      "hits": 270,
+      "targets": 20,
+      "sources": [
+        "Breath of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 108,
+        "Healer": 59,
+        "Ranged": 37,
+        "Tank": 66
+      },
+      "max_cluster_100ms": 3
+    },
+    {
+      "game_id": 1284210,
+      "name": "Blood Venom",
+      "hits": 1359,
+      "targets": 20,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Healer": 305,
+        "Tank": 188,
+        "Ranged": 323,
+        "Melee": 543
+      },
+      "max_cluster_100ms": 9
+    },
+    {
+      "game_id": 1284258,
+      "name": "Contaminate",
+      "hits": 8056,
+      "targets": 20,
+      "sources": [
+        "Venom Coagulation"
+      ],
+      "roles": {
+        "Melee": 2817,
+        "Ranged": 2753,
+        "Tank": 845,
+        "Healer": 1641
+      },
+      "max_cluster_100ms": 20
+    },
+    {
+      "game_id": 1284451,
+      "name": "Toxic Droplets",
+      "hits": 1528,
+      "targets": 20,
+      "sources": [
+        "Breath of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 588,
+        "Healer": 283,
+        "Tank": 224,
+        "Ranged": 433
+      },
+      "max_cluster_100ms": 5
+    },
+    {
+      "game_id": 1284452,
+      "name": "Noxious Blast",
+      "hits": 218,
+      "targets": 20,
+      "sources": [
+        "Breath of Ula'tek"
+      ],
+      "roles": {
+        "Ranged": 71,
+        "Melee": 80,
+        "Healer": 40,
+        "Tank": 27
+      },
+      "max_cluster_100ms": 20
+    },
+    {
+      "game_id": 1284458,
+      "name": "Empowering Slam",
+      "hits": 119,
+      "targets": 2,
+      "sources": [
+        "Breath of Ula'tek"
+      ],
+      "roles": {
+        "Tank": 119
+      },
+      "max_cluster_100ms": 1
+    },
+    {
+      "game_id": 1284471,
+      "name": "Blighted Blood",
+      "hits": 233,
+      "targets": 20,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 67,
+        "Tank": 45,
+        "Ranged": 83,
+        "Healer": 38
+      },
+      "max_cluster_100ms": 2
+    },
+    {
+      "game_id": 1284487,
+      "name": "Bloodvenom Injection",
+      "hits": 117,
+      "targets": 2,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Tank": 117
+      },
+      "max_cluster_100ms": 1
+    },
+    {
+      "game_id": 1284500,
+      "name": "Mark of Acid",
+      "hits": 17617,
+      "targets": 20,
+      "sources": [
+        "Breath of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 5861,
+        "Ranged": 6355,
+        "Healer": 3647,
+        "Tank": 1754
+      },
+      "max_cluster_100ms": 20
+    },
+    {
+      "game_id": 1284506,
+      "name": "Mark of Blood",
+      "hits": 16847,
+      "targets": 20,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 6048,
+        "Ranged": 5576,
+        "Tank": 1728,
+        "Healer": 3495
+      },
+      "max_cluster_100ms": 20
+    },
+    {
+      "game_id": 1284813,
+      "name": "Helical Toxins",
+      "hits": 1488,
+      "targets": 20,
+      "sources": [
+        "Blood of Ula'tek",
+        "Breath of Ula'tek"
+      ],
+      "roles": {
+        "Healer": 325,
+        "Melee": 500,
+        "Tank": 182,
+        "Ranged": 481
+      },
+      "max_cluster_100ms": 12
+    },
+    {
+      "game_id": 1284941,
+      "name": "Cultivated Burst",
+      "hits": 13,
+      "targets": 11,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 6,
+        "Ranged": 2,
+        "Healer": 3,
+        "Tank": 2
+      },
+      "max_cluster_100ms": 2
+    },
+    {
+      "game_id": 1284948,
+      "name": "Cultivated Burst",
+      "hits": 30,
+      "targets": 9,
+      "sources": [
+        "Blood of Ula'tek",
+        "Breath of Ula'tek"
+      ],
+      "roles": {
+        "Ranged": 2,
+        "Melee": 13,
+        "Healer": 14,
+        "Tank": 1
+      },
+      "max_cluster_100ms": 2
+    },
+    {
+      "game_id": 1288282,
+      "name": "Unstable Miasma",
+      "hits": 497,
+      "targets": 20,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 186,
+        "Healer": 103,
+        "Tank": 55,
+        "Ranged": 153
+      },
+      "max_cluster_100ms": 10
+    },
+    {
+      "game_id": 1296882,
+      "name": "Shifting Protovenom",
+      "hits": 328,
+      "targets": 20,
+      "sources": [
+        "Vashnik"
+      ],
+      "roles": {
+        "Ranged": 104,
+        "Melee": 101,
+        "Healer": 69,
+        "Tank": 54
+      },
+      "max_cluster_100ms": 4
+    },
+    {
+      "game_id": 1296962,
+      "name": "Protovenom Eruption",
+      "hits": 57,
+      "targets": 16,
+      "sources": [
+        "Vashnik"
+      ],
+      "roles": {
+        "Melee": 21,
+        "Healer": 11,
+        "Tank": 5,
+        "Ranged": 20
+      },
+      "max_cluster_100ms": 4
+    },
+    {
+      "game_id": 1297338,
+      "name": "Deadly Venom",
+      "hits": 226,
+      "targets": 19,
+      "sources": [
+        "Environment"
+      ],
+      "roles": {
+        "Healer": 45,
+        "Melee": 99,
+        "Ranged": 63,
+        "Tank": 19
+      },
+      "max_cluster_100ms": 3
+    },
+    {
+      "game_id": 1303097,
+      "name": "Clinging Murk",
+      "hits": 1270,
+      "targets": 20,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Melee": 487,
+        "Tank": 134,
+        "Healer": 267,
+        "Ranged": 382
+      },
+      "max_cluster_100ms": 8
+    },
+    {
+      "game_id": 1310126,
+      "name": "Bloodvenom Injection",
+      "hits": 2988,
+      "targets": 2,
+      "sources": [
+        "Blood of Ula'tek"
+      ],
+      "roles": {
+        "Tank": 2988
+      },
+      "max_cluster_100ms": 2
+    }
+  ],
+  "ignored_ability_ids": [
+    1,
+    32409,
+    210380,
+    1287955,
+    124255,
+    387846,
+    1309786,
+    1292299,
+    111400,
+    361029
+  ]
+}

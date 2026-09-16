@@ -3,6 +3,7 @@ import { colorWithAlpha } from "../../../utils/colorPresentation";
 
 export function RelativeBarChart({ chart, standalone = false }) {
   const bars = chart?.bars ?? [];
+  const unitLabel = chart?.unitLabel || "damage";
   const maximum = Math.max(0, ...bars.map((bar) => Number(bar?.value ?? 0)));
 
   return (
@@ -30,7 +31,7 @@ export function RelativeBarChart({ chart, standalone = false }) {
                   className="grid grid-cols-[10rem_minmax(20rem,1fr)] items-center gap-3"
                   role="listitem"
                 >
-                  <span className="truncate text-right text-sm font-semibold tracking-tight" style={{ color }}>
+                  <span className="truncate text-right text-sm font-semibold tracking-tight" style={{ color }} title={bar.label}>
                     {bar.label}
                   </span>
                   <div className="h-7 overflow-hidden rounded-md border border-white/10 bg-slate-950/45">
@@ -43,11 +44,11 @@ export function RelativeBarChart({ chart, standalone = false }) {
                         boxShadow: `0 0 18px -8px ${colorWithAlpha(color, 0.9)}`,
                       }}
                       role="progressbar"
-                      aria-label={`${bar.label}: ${bar.display} damage, ${percent}% of the highest contributor`}
+                      aria-label={`${bar.label}: ${bar.display} ${unitLabel}, ${percent}% of the highest contributor`}
                       aria-valuemin={0}
                       aria-valuemax={100}
                       aria-valuenow={percent}
-                      title={`${bar.label}: ${bar.display} damage (${percent}%)`}
+                      title={`${bar.label}: ${bar.display} ${unitLabel} (${percent}%)`}
                     >
                       <span>{bar.display} · {percent}%</span>
                     </div>

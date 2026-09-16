@@ -1,5 +1,8 @@
 """
 Shared view-model builder for v2 avoidable-damage reports.
+
+Both display modes share a source chart built from the row's already-filtered
+events. Charts precede the event history and sum damage, including grouped DoTs.
 """
 from __future__ import annotations
 
@@ -16,6 +19,8 @@ from .common import (
     ReportContentModel,
     ReportHeaderModel,
     ReportPageModel,
+    RowDetailBarChartModel,
+    RowDetailBarModel,
     RowDetailGroupModel,
     RowDetailItemModel,
     RowDetailsModel,
@@ -87,6 +92,30 @@ def _group_sort_key(group_key: Tuple[str, int, int], source_order: dict[str, int
     return (source_order.get(source_report, len(source_order)), pull, fight_id)
 
 
+def _build_source_chart(events: List[AvoidableDamageEvent]) -> Optional[RowDetailBarChartModel]:
+    totals: dict[str, float] = {}
+    labels: dict[str, str] = {}
+    for event in events:
+        amount = float(event.damage_amount or 0)
+        if amount <= 0:
+            continue
+        label = event.ability_label or (f"Spell {event.ability_id}" if event.ability_id is not None else "Unknown source")
+        key = f"spell:{event.ability_id}" if event.ability_id is not None else f"name:{label.strip().casefold()}"
+        totals[key] = totals.get(key, 0.0) + amount
+        labels.setdefault(key, label)
+    if not totals:
+        return None
+    return RowDetailBarChartModel(
+        title="Avoidable damage by source",
+        subtitle="Damage in the selected pulls, scaled to the largest source.",
+        unitLabel="damage",
+        bars=[
+            RowDetailBarModel(id=key, label=labels[key], value=amount, display=f"{amount:,.0f}")
+            for key, amount in sorted(totals.items(), key=lambda item: (-item[1], labels[item[0]], item[0]))
+        ],
+    )
+
+
 def _build_row_details(
     report_code: str,
     events: List[AvoidableDamageEvent],
@@ -141,7 +170,10 @@ def _build_row_details(
             )
         )
 
-    return RowDetailsModel(variant=RowDetailsVariant.EVENT_GROUPS, groups=groups)
+    return RowDetailsModel(
+        variant=RowDetailsVariant.EVENT_GROUPS, groups=groups,
+        barChart=_build_source_chart(events), barChartPosition="before",
+    )
 
 
 def _build_header_tags(summary: AvoidableDamageSummary, extra_tags: Iterable[HeaderTagModel]) -> List[HeaderTagModel]:

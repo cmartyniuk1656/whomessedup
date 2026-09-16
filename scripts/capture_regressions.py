@@ -87,6 +87,20 @@ REGRESSION_CASES: List[Dict[str, Any]] = [
     },
 ]
 
+REGRESSION_CASES.extend(
+    {
+        "name": f"sentinels_mythic_{kind.replace('-', '_')}",
+        "path": f"/api/v2/reports/entombed-sentinels-{kind}-mythic/jobs",
+        "body": {"values": {"report_codes": ["J3y9gP2bqmkphY7f"], "fresh_run": True}},
+    }
+    for kind in ("damage", "deaths", "avoidable-damage")
+)
+REGRESSION_CASES.append({
+    "name": "sentinels_mythic_mechanics",
+    "path": "/api/v2/reports/entombed-sentinels-mythic-mechanics/jobs",
+    "body": {"values": {"report_codes": ["J3y9gP2bqmkphY7f"], "fresh_run": True}},
+})
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Capture regression baselines from the running API server.")
@@ -127,10 +141,12 @@ def main() -> int:
             print(f"Warning: unknown regression case(s): {', '.join(sorted(missing))}")
     for case in cases:
         url = args.base_url.rstrip("/") + case["path"]
-        params = case["params"]
+        params = case.get("params")
         print(f"Fetching {case['name']} -> {url}")
         try:
-            data = fetch_with_poll(session, url, params=params, base_url=args.base_url)
+            data = fetch_with_poll(
+                session, url, params=params, body=case.get("body"), base_url=args.base_url
+            )
         except Exception as exc:  # pylint: disable=broad-except
             failures += 1
             print(f"  ERROR: {exc}")
@@ -152,11 +168,16 @@ def fetch_with_poll(
     url: str,
     *,
     params: Optional[Dict[str, Any]] = None,
+    body: Optional[Dict[str, Any]] = None,
     base_url: str,
     poll_interval: float = 2.0,
     poll_timeout: float = 180.0,
 ) -> Dict[str, Any]:
-    response = session.get(url, params=params, timeout=120)
+    response = (
+        session.post(url, json=body, timeout=120)
+        if body is not None
+        else session.get(url, params=params, timeout=120)
+    )
     if response.status_code == 202:
         payload = response.json()
         job = payload.get("job") or {}

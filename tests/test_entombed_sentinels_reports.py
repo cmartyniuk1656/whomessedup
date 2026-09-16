@@ -25,6 +25,7 @@ class EntombedSentinelsReportRegistryTests(unittest.TestCase):
             definition.id: definition
             for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "entombed-sentinels"
+            and definition.difficulty == "heroic"
         }
 
         self.assertEqual(set(definitions), expected_ids)
@@ -98,6 +99,75 @@ class EntombedSentinelsReportRegistryTests(unittest.TestCase):
         self.assertEqual(payload["fight"], "Entombed Sentinels")
         self.assertEqual(payload["fight_ids"], [12])
         self.assertEqual(payload["difficulty"], "heroic")
+
+
+class EntombedSentinelsMythicReportRegistryTests(unittest.TestCase):
+    def test_mythic_base_and_mechanics_reports_are_registered(self):
+        definitions = {
+            definition.id: definition
+            for definition in list_report_definitions(include_hidden=True)
+            if definition.fight_id == "entombed-sentinels"
+            and definition.difficulty == "mythic"
+        }
+        self.assertEqual(set(definitions), {
+            "entombed-sentinels-damage-mythic",
+            "entombed-sentinels-deaths-mythic",
+            "entombed-sentinels-avoidable-damage-mythic",
+            "entombed-sentinels-cooldowns-mythic",
+            "entombed-sentinels-mythic-aggregate-reports",
+            "entombed-sentinels-mythic-mechanics",
+        })
+
+    def test_mythic_defaults_and_ability_toggle_do_not_change_heroic(self):
+        values = {"report_codes": ["J3y9gP2bqmkphY7f"]}
+        _, damage, _ = build_report_job_request("entombed-sentinels-damage-mythic", values)
+        _, deaths, _ = build_report_job_request("entombed-sentinels-deaths-mythic", values)
+        _, avoidable, _ = build_report_job_request("entombed-sentinels-avoidable-damage-mythic", values)
+        for payload in (damage, deaths, avoidable):
+            self.assertEqual(payload["difficulty"], "mythic")
+            self.assertEqual(payload["fight"], "Entombed Sentinels")
+        self.assertEqual(damage["targets"], [
+            "blood_of_ula_tek", "breath_of_ula_tek", "venom_coagulation"
+        ])
+        self.assertFalse(damage["kill_only"])
+        self.assertEqual(avoidable["ability_keys"], [
+            "1284210", "1284209", "1284948", "1284941", "1297338", "1296962"
+        ])
+        _, excluded, _ = build_report_job_request(
+            "entombed-sentinels-avoidable-damage-mythic",
+            {**values, "include_avoidable_1296962": False},
+        )
+        _, heroic, _ = build_report_job_request("entombed-sentinels-avoidable-damage", values)
+        self.assertEqual(excluded["ability_keys"], heroic["ability_keys"])
+        self.assertEqual(heroic["difficulty"], "heroic")
+
+    def test_mythic_aggregate_keeps_all_children_at_mythic(self):
+        _, payload, _ = build_report_job_request(
+            "entombed-sentinels-mythic-aggregate-reports",
+            {"report_codes": ["J3y9gP2bqmkphY7f"]},
+        )
+        self.assertEqual({child["report_id"] for child in payload["reports"]}, {
+            "entombed-sentinels-mythic-mechanics",
+            "entombed-sentinels-damage-mythic",
+            "entombed-sentinels-deaths-mythic",
+            "entombed-sentinels-avoidable-damage-mythic",
+        })
+        self.assertEqual({child["payload"]["difficulty"] for child in payload["reports"]}, {"mythic"})
+
+    def test_mythic_cooldowns_select_the_requested_pull(self):
+        _, payload, _ = build_report_job_request(
+            "entombed-sentinels-cooldowns-mythic",
+            {
+                "report_codes": "https://www.warcraftlogs.com/reports/J3y9gP2bqmkphY7f?fight=26",
+                "fight_selection": "specific",
+                "nsrt_reminders": (
+                    "EncounterID:3445;Name:Entombed Sentinels - Mythic;Difficulty:Mythic\n"
+                    "time:11;ph:1;tag:Player;spellid:31884;"
+                ),
+            },
+        )
+        self.assertEqual(payload["difficulty"], "mythic")
+        self.assertEqual(payload["fight_ids"], [26])
 
 
 if __name__ == "__main__":
