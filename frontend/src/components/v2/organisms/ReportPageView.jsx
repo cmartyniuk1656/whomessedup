@@ -3,6 +3,7 @@ import { useDamageTableFilters } from "../../../hooks/useDamageTableFilters";
 import { useTableColumnFilters } from "../../../hooks/useTableColumnFilters";
 import { useTableRowFilters } from "../../../hooks/useTableRowFilters";
 import { useTableSorting } from "../../../hooks/useTableSorting";
+import { resolveReportRows } from "../../../utils/reportRows";
 import { DamageTableFilters } from "./DamageTableFilters";
 import { ReportPageHeader } from "../molecules/ReportPageHeader";
 import { ReportUpdateNotification } from "../molecules/ReportUpdateNotification";
@@ -128,7 +129,7 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
       return null;
     }
     if (!viewControl && !secondaryViewControl) {
-      return baseTable;
+      return { ...baseTable, rows: resolveReportRows(baseTable) };
     }
     const combinedViewId = secondaryViewControl
       ? activeSubTableView
@@ -136,11 +137,9 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
         : `${selectedTableView}::${selectedSecondaryTableView}`
       : null;
     const columnViewId = activeSubTableView ?? selectedSecondaryTableView;
-    const rows =
-      (combinedViewId ? baseTable.rowsByCombinedView?.[combinedViewId] : null) ??
-      baseTable.rowsByView?.[selectedTableView] ??
-      baseTable.rowsByView?.[defaultTableView] ??
-      baseTable.rows;
+    const rows = resolveReportRows(
+      baseTable, selectedTableView, combinedViewId, defaultTableView
+    );
     return {
       ...baseTable,
       defaultSort:

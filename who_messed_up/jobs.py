@@ -8,6 +8,8 @@ import os
 import threading
 import time
 import uuid
+from concurrent.futures import Future
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -16,6 +18,7 @@ from .api import clear_report_context_cache
 from .cache import ResultCache, result_cache
 
 JobHandler = Callable[[Dict[str, Any]], Any]
+_fresh_execution = ContextVar("fresh_report_execution", default=False)
 
 
 @dataclass
@@ -52,6 +55,8 @@ class JobManager:
         self._active_by_cache_key: Dict[str, str] = {}
         self._queue: "queue.Queue[str]" = queue.Queue()
         self._lock = threading.Lock()
+        self._execution_lock = threading.Lock()
+        self._executions: Dict[str, Future] = {}
         configured_workers = worker_count
         if configured_workers is None:
             try:
@@ -73,12 +78,67 @@ class JobManager:
     def register_handler(self, job_type: str, handler: JobHandler) -> None:
         self._handlers[job_type] = handler
 
-    def execute_registered(self, job_type: str, payload: Dict[str, Any]) -> Any:
-        """Execute a registered handler inline for composite report jobs."""
+    @property
+    def fresh_run(self) -> bool:
+        return _fresh_execution.get()
+
+    def execute_registered(self, job_type: str, payload: Dict[str, Any], *,
+                           use_cache: bool = False, bust_cache: Optional[bool] = None) -> Any:
+        """Run inline, optionally sharing cached/in-flight work with queued jobs.
+
+        Coalesce executions, never queued job records: a child cannot wait for
+        work queued behind its own parent. Fresh runs start a new execution and
+        supersede older cache writes; the parent passes freshness to pool tasks.
+        """
         handler = self._handlers.get(job_type)
         if handler is None:
             raise KeyError(f"No handler registered for job type '{job_type}'")
-        return handler(payload)
+        fresh = self.fresh_run if bust_cache is None else bust_cache
+
+        def run():
+            context = _fresh_execution.set(fresh)
+            try:
+                return handler(payload)
+            finally:
+                _fresh_execution.reset(context)
+
+        if not use_cache:
+            return run()
+        key = self._cache.make_key(job_type, payload)
+        with self._execution_lock:
+            if not fresh:
+                cached = self._cache.get(key)
+                if cached is not None:
+                    return cached
+                existing = self._executions.get(key)
+                if existing is not None:
+                    owner = False
+                    future = existing
+                else:
+                    owner = True
+                    future = Future()
+                    self._executions[key] = future
+            else:
+                self._cache.invalidate(key)
+                owner = True
+                future = Future()
+                self._executions[key] = future
+        if not owner:
+            return future.result()
+        try:
+            result = run()
+            with self._execution_lock:
+                if self._executions.get(key) is future:
+                    self._cache.set(key, result)
+                    del self._executions[key]
+            future.set_result(result)
+            return result
+        except BaseException as exc:
+            with self._execution_lock:
+                if self._executions.get(key) is future:
+                    del self._executions[key]
+            future.set_exception(exc)
+            raise
 
     def enqueue(
         self,
@@ -197,9 +257,9 @@ class JobManager:
                 if job.bust_cache:
                     # A fresh run must also bypass the short-lived metadata cache.
                     clear_report_context_cache()
-                result = handler(job.payload)
-                if job.cache_key:
-                    self._cache.set(job.cache_key, result)
+                result = self.execute_registered(
+                    job.job_type, job.payload, use_cache=True, bust_cache=job.bust_cache,
+                )
                 with self._lock:
                     job.result = result
                     job.status = "completed"

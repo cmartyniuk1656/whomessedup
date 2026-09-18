@@ -345,9 +345,19 @@ class CompactTableModel(TableModel):
     layout: Literal["compact"]
 
 
+class IndexedTableModel(TableModel):
+    """Opt-in row references; legacy tables keep their existing serialized shape."""
+    row_storage: Literal["indexed"] = Field(..., alias="rowStorage")
+    layout: Optional[Literal["compact"]] = None
+    rows_by_id: Dict[str, TableRowModel] = Field(..., alias="rowsById")
+    row_ids: List[str] = Field(..., alias="rowIds")
+    row_ids_by_view: Dict[str, List[str]] = Field(..., alias="rowIdsByView")
+    row_ids_by_combined_view: Dict[str, List[str]] = Field(..., alias="rowIdsByCombinedView")
+
+
 class ReportContentModel(ViewModelBase):
     variant: ContentVariant
-    table: Union[CompactTableModel, TableModel]
+    table: Union[IndexedTableModel, CompactTableModel, TableModel]
 
 
 class ReportPageModel(ViewModelBase):
@@ -402,6 +412,7 @@ __all__ = [
     "MetricListCellModel",
     "CompactRowDetailsModel",
     "CompactTableModel",
+    "IndexedTableModel",
     "TableCellIndicatorModel",
     "TableCellPlayerModel",
     "TableCellTextSegmentModel",

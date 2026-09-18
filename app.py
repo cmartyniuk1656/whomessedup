@@ -14,11 +14,14 @@ import requests
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel
 
 from who_messed_up import load_env
 from who_messed_up.api import Fight
 from who_messed_up.jobs import job_manager
+from who_messed_up.services.aggregate_reports import aggregate_execution_order, aggregate_shell
+from who_messed_up.services.view_models.indexed_rows import index_report_rows
 from who_messed_up.services.report_registry import (
     JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE,
     JOB_V2_BELOREN_CHILD_OF_ALAR_DAMAGE,
@@ -298,6 +301,7 @@ from who_messed_up.service import (
 )
 
 app = FastAPI(title="Who Messed Up", version="0.1.0")
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 load_env()
 
 
@@ -2398,7 +2402,8 @@ def _execute_v2_vashnik_mechanics_job(payload: Dict[str, Any]) -> Dict[str, Any]
         client_secret=credentials["client_secret"],
     )
     page = build_vashnik_mechanics_report_page(summary)
-    return page.model_dump(by_alias=True) if hasattr(page, "model_dump") else page.dict(by_alias=True)
+    data = page.model_dump(by_alias=True) if hasattr(page, "model_dump") else page.dict(by_alias=True)
+    return index_report_rows(data)
 
 
 def _execute_v2_entombed_sentinels_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -2712,17 +2717,25 @@ def _execute_v2_aggregate_report_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         configured_workers = 2
     worker_count = min(max(configured_workers, 1), 4, len(selected_reports))
 
-    def execute_child(child: Dict[str, Any]) -> Dict[str, Any]:
-        return job_manager.execute_registered(child["job_type"], child["payload"])
+    execution_order = aggregate_execution_order(selected_reports)
+    fresh_run = job_manager.fresh_run
+
+    def execute_child(index):
+        child = selected_reports[index]
+        return index, job_manager.execute_registered(
+            child["job_type"], child["payload"], use_cache=True, bust_cache=fresh_run,
+        )
 
     if worker_count == 1:
-        pages = [execute_child(child) for child in selected_reports]
+        results = [execute_child(index) for index in execution_order]
     else:
         with ThreadPoolExecutor(
             max_workers=worker_count,
             thread_name_prefix="aggregate-report",
         ) as executor:
-            pages = list(executor.map(execute_child, selected_reports))
+            results = list(executor.map(execute_child, execution_order))
+
+    pages = [page for _, page in sorted(results)]
 
     report_options = [
         {"value": child["report_id"], "label": child["title"]}
@@ -2742,7 +2755,7 @@ def _execute_v2_aggregate_report_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         ):
             watch_page = page
             break
-    first_page = dict(watch_page)
+    first_page = aggregate_shell(watch_page)
     first_page.update(
         {
             "reportId": payload.get("report_id") or "aggregate-reports",

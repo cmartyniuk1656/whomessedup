@@ -1,11 +1,10 @@
 """Fetch Mythic Vashnik evidence; calculators also accept recorded event streams."""
-from concurrent.futures import ThreadPoolExecutor
-
 import requests
 
-from ..api import fetch_events_grouped, fetch_fights
+from ..api import fetch_fights
 from ..env import load_env
 from .common import _resolve_token, _sanitize_report_code, _select_fights
+from .event_streams import fetch_event_streams
 from .mechanics_context import PullContext
 from .report_pulls import build_report_pulls, merge_report_pulls
 from .vashnik_mechanics_adds import build_adds
@@ -50,18 +49,10 @@ def build_vashnik_mechanics_summary(*, report_code, fights, streams, actor_names
 
 
 def _fetch_streams(code, fights, bearer, names):
-    if not fights:
-        return {}
-
-    def fetch(item):
-        name, spec = item
-        with requests.Session() as session:
-            grouped = fetch_events_grouped(session, bearer, code=code, fights=fights,
-                                           actor_names=names, limit=10000, **spec)
-        return name, grouped
-
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        return dict(pool.map(fetch, STREAM_SPECS.items()))
+    return fetch_event_streams(
+        code=code, fights=fights, token=bearer, actor_names=names,
+        streams=STREAM_SPECS, partitioned_streams=("add_damage", "damage_taken"),
+    )
 
 
 def fetch_vashnik_mechanics_summary(*, report_code, fight_name=None, fight_ids=None,

@@ -1,5 +1,6 @@
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
 from who_messed_up.cache import ResultCache
@@ -78,3 +79,89 @@ def test_fresh_job_invalidates_report_context_cache_before_execution():
 
     clear.assert_called_once_with()
     assert observed == [{"value": 1}]
+
+
+def test_inline_children_reuse_completed_standalone_results_and_populate_cache():
+    manager = JobManager(ResultCache(), worker_count=1)
+    calls = []
+    manager.register_handler("child", lambda payload: calls.append(payload) or {"value": len(calls)})
+    job, _ = manager.enqueue("child", {"id": 1})
+    assert _wait_until(lambda: job.status == "completed")
+    assert manager.execute_registered("child", {"id": 1}, use_cache=True) == {"value": 1}
+    manager.execute_registered("child", {"id": 2}, use_cache=True)
+    second, cached = manager.enqueue("child", {"id": 2})
+    assert cached and second.result == {"value": 2}
+    assert len(calls) == 2
+
+
+def test_inline_child_does_not_wait_for_a_job_queued_behind_parent():
+    manager = JobManager(ResultCache(), worker_count=1)
+    calls = []
+    manager.register_handler("child", lambda payload: calls.append(payload) or payload)
+
+    def parent(payload):
+        manager.enqueue("child", payload)
+        return manager.execute_registered("child", payload, use_cache=True)
+
+    manager.register_handler("parent", parent)
+    job, _ = manager.enqueue("parent", {"id": 1})
+    assert _wait_until(lambda: job.status == "completed")
+    assert _wait_until(lambda: all(j.status == "completed" for j in manager._jobs.values()))
+    assert len(calls) == 1
+
+
+def test_concurrent_inline_children_share_one_execution():
+    manager = JobManager(ResultCache(), worker_count=1)
+    entered = threading.Event()
+    release = threading.Event()
+    calls = []
+
+    def child(payload):
+        calls.append(payload)
+        entered.set()
+        assert release.wait(2)
+        return payload
+
+    manager.register_handler("child", child)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(manager.execute_registered, "child", {"id": 1}, use_cache=True)
+        assert entered.wait(1)
+        second = pool.submit(manager.execute_registered, "child", {"id": 1}, use_cache=True)
+        release.set()
+        assert first.result() == second.result() == {"id": 1}
+    assert len(calls) == 1
+
+
+def test_fresh_execution_bypasses_inflight_work_and_prevents_stale_cache_write():
+    manager = JobManager(ResultCache(), worker_count=1)
+    entered = threading.Event()
+    release = threading.Event()
+
+    def child(payload):
+        if manager.fresh_run:
+            return {"fresh": True}
+        entered.set()
+        assert release.wait(2)
+        return {"fresh": False}
+
+    manager.register_handler("child", child)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        older = pool.submit(manager.execute_registered, "child", {}, use_cache=True)
+        assert entered.wait(1)
+        assert manager.execute_registered("child", {}, use_cache=True, bust_cache=True) == {"fresh": True}
+        release.set()
+        assert older.result() == {"fresh": False}
+    assert manager.cached_result("child", {}) == {"fresh": True}
+    assert manager.fresh_run is False
+
+
+def test_failed_execution_does_not_poison_later_retry():
+    manager = JobManager(ResultCache(), worker_count=1)
+    def fail(payload):
+        raise ValueError("failed")
+    manager.register_handler("child", fail)
+    import pytest
+    with pytest.raises(ValueError, match="failed"):
+        manager.execute_registered("child", {}, use_cache=True)
+    manager.register_handler("child", lambda payload: {"ok": True})
+    assert manager.execute_registered("child", {}, use_cache=True) == {"ok": True}

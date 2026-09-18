@@ -117,7 +117,7 @@ def test_aggregate_handler_returns_independent_report_pages_with_selector():
         ],
     }
 
-    def execute(job_type, _payload):
+    def execute(job_type, _payload, **_options):
         page = _minimal_page(
             "deaths" if job_type == "child-deaths" else "damage",
             "Death Report" if job_type == "child-deaths" else "Damage Report",
@@ -191,7 +191,7 @@ def test_aggregate_handler_prefers_mechanics_then_avoidable_damage(
         patch.object(
             application.job_manager,
             "execute_registered",
-            side_effect=lambda job_type, _payload: _minimal_page(
+            side_effect=lambda job_type, _payload, **_options: _minimal_page(
                 job_type.removeprefix("child-"), job_type
             ),
         ),
@@ -204,3 +204,46 @@ def test_aggregate_handler_prefers_mechanics_then_avoidable_damage(
         else ReportPageModel.parse_obj(result)
     )
     assert parsed.report_control.default_value == expected_default
+
+
+def test_mechanics_runs_first_without_reordering_selector_or_copying_child_rows():
+    children = [{"report_id": name, "title": name, "job_type": name, "payload": {}}
+                for name in ("deaths", "mechanics", "damage")]
+    calls = []
+
+    def execute(name, payload, **options):
+        calls.append(name)
+        assert options == {"use_cache": True, "bust_cache": False}
+        page = _minimal_page(name, name)
+        page["content"]["table"]["rows"] = [{"id": name, "cells": {}}]
+        return page
+
+    with (patch.dict(application.os.environ, {"WHO_MESSED_UP_AGGREGATE_REPORT_WORKERS": "1"}),
+          patch.object(application.job_manager, "execute_registered", side_effect=execute)):
+        result = application._execute_v2_aggregate_report_job({"reports": children})
+    assert calls == ["mechanics", "deaths", "damage"]
+    assert [o["value"] for o in result["reportControl"]["options"]] == ["deaths", "mechanics", "damage"]
+    assert result["content"]["table"]["rows"] == []
+    assert result["reportsByView"]["deaths"]["content"]["table"]["rows"]
+
+
+def test_fresh_aggregate_propagates_freshness_through_child_pool():
+    from who_messed_up.cache import ResultCache
+    from who_messed_up.jobs import JobManager
+
+    manager = JobManager(ResultCache(), worker_count=1)
+    observed = []
+
+    def child(payload):
+        observed.append(manager.fresh_run)
+        return _minimal_page("child", "Fresh" if manager.fresh_run else "Cached")
+
+    manager.register_handler("child", child)
+    manager.register_handler("aggregate", application._execute_v2_aggregate_report_job)
+    manager.execute_registered("child", {}, use_cache=True)
+    payload = {"reports": [{"report_id": name, "title": name, "job_type": "child", "payload": {}}
+                           for name in ("mechanics", "damage")]}
+    with patch.object(application, "job_manager", manager):
+        result = manager.execute_registered("aggregate", payload, use_cache=True, bust_cache=True)
+    assert observed == [False, True, True]
+    assert all(page["title"] == "Fresh" for page in result["reportsByView"].values())
