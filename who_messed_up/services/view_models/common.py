@@ -53,6 +53,9 @@ class CellKind(str, Enum):
     PLAYER = "player"
     PLAYER_LIST = "player_list"
     RELATIVE_BAR = "relative_bar"
+    OUTCOME_BAR = "outcome_bar"
+    HEADING = "heading"
+    METRIC_LIST = "metric_list"
     BADGE = "badge"
     LINK = "link"
 
@@ -205,6 +208,21 @@ class TableCellModel(ViewModelBase):
     players: List[TableCellPlayerModel] = Field(default_factory=list)
 
 
+class OutcomeSegmentModel(ViewModelBase):
+    id: str
+    label: str
+    value: int
+    tone: str
+
+
+class OutcomeBarCellModel(TableCellModel):
+    outcomes: List[OutcomeSegmentModel]
+
+
+class MetricListCellModel(TableCellModel):
+    metrics: List[SummaryMetricModel]
+
+
 class RowDetailChildItemModel(ViewModelBase):
     id: str
     label: str
@@ -264,6 +282,11 @@ class RowDetailsModel(ViewModelBase):
     bar_chart_position: Literal["before", "after"] = Field("after", alias="barChartPosition")
 
 
+class CompactRowDetailsModel(RowDetailsModel):
+    layout: Literal["compact"]
+    metrics: List[SummaryMetricModel] = Field(default_factory=list)
+
+
 class TableRowGroupModel(ViewModelBase):
     id: str
     label: str
@@ -274,8 +297,8 @@ class TableRowGroupModel(ViewModelBase):
 
 class TableRowModel(ViewModelBase):
     id: str
-    cells: Dict[str, TableCellModel] = Field(default_factory=dict)
-    details: Optional[RowDetailsModel] = None
+    cells: Dict[str, Union[OutcomeBarCellModel, MetricListCellModel, TableCellModel]] = Field(default_factory=dict)
+    details: Optional[Union[CompactRowDetailsModel, RowDetailsModel]] = None
     group: Optional[TableRowGroupModel] = None
 
 
@@ -318,9 +341,13 @@ class TableModel(ViewModelBase):
     )
 
 
+class CompactTableModel(TableModel):
+    layout: Literal["compact"]
+
+
 class ReportContentModel(ViewModelBase):
     variant: ContentVariant
-    table: TableModel
+    table: Union[CompactTableModel, TableModel]
 
 
 class ReportPageModel(ViewModelBase):
@@ -370,6 +397,11 @@ __all__ = [
     "TableFilterModel",
     "TableFilterOptionModel",
     "TableCellModel",
+    "OutcomeBarCellModel",
+    "OutcomeSegmentModel",
+    "MetricListCellModel",
+    "CompactRowDetailsModel",
+    "CompactTableModel",
     "TableCellIndicatorModel",
     "TableCellPlayerModel",
     "TableCellTextSegmentModel",

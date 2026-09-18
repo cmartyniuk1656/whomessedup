@@ -2,6 +2,8 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { EventGroupList } from "../molecules/EventGroupList";
 import { SortableColumnHeader } from "../molecules/SortableColumnHeader";
 import { TableCellContent } from "../molecules/TableCellContent";
+import { CompactEventDetails } from "../molecules/CompactEventDetails";
+import "./ReportTable.css";
 
 const DETAIL_ANIMATION_MS = 220;
 
@@ -69,6 +71,7 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
   const usesRelativeBars = table.columns.some(
     (column) => column.cellKind === "relative_bar"
   );
+  const compact = table.layout === "compact";
 
   const toggleRow = (rowId) => {
     if (expandedRows[rowId]) {
@@ -95,8 +98,9 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
   const rowSections = groupRowsForDisplay(rows);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <table className="min-w-full divide-y divide-white/10 text-sm">
+    <div className={`${compact ? "min-w-0" : "overflow-x-auto"} rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]`}>
+      <table className={`${compact ? "report-table-compact" : "min-w-full"} divide-y divide-white/10 text-sm`}>
+        {compact ? <colgroup>{table.columns.map((column, index) => <col key={column.id} style={{ width: table.columns.length === 1 ? "100%" : index === 0 ? "22%" : `${78 / (table.columns.length - 1)}%` }} />)}</colgroup> : null}
         <thead className="bg-slate-950/55 text-xs uppercase tracking-[0.16em] text-slate-400">
           <tr>
             {table.columns.map((column) => {
@@ -156,7 +160,7 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
                 ) : null}
                 {section.rows.map((row) => {
                   const hasDetails = Boolean(
-                    row?.details?.groups?.length || row?.details?.barChart
+                    row?.details?.groups?.length || row?.details?.barChart || row?.details?.metrics?.length
                   );
                   const isExpanded = Boolean(expandedRows[row.id]);
                   const shouldRenderDetails = hasDetails && Boolean(mountedDetailRows[row.id]);
@@ -182,15 +186,16 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
                       return (
                         <td
                           key={`${row.id}-${column.id}`}
+                          data-label={compact ? column.label : undefined}
                           className={`${usesRelativeBars ? "px-3 py-2" : "px-4 py-3.5"} ${alignClass}`}
                         >
                           <div>
-                            <TableCellContent column={column} cell={row.cells?.[column.id]} />
+                            <TableCellContent column={column} cell={row.cells?.[column.id]} compact={compact} />
                             {index === 0 && hasDetails ? (
                               <button
                                 type="button"
                                 className={
-                                  usesRelativeBars
+                                  usesRelativeBars && !compact
                                     ? "sr-only"
                                     : "mt-1 block text-xs font-medium text-emerald-300 transition hover:text-emerald-200"
                                 }
@@ -198,6 +203,8 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
                                   event.stopPropagation();
                                   toggleRow(row.id);
                                 }}
+                                aria-expanded={isExpanded}
+                                aria-label={`${isExpanded ? "Hide" : "Show"} details for ${row.cells?.set?.value || row.id}`}
                               >
                                 {isExpanded ? "Hide details" : "Show details"}
                               </button>
@@ -223,7 +230,7 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
                           ].join(" ")}
                         >
                           <div className="overflow-hidden">
-                            <EventGroupList details={row.details} />
+                            {row.details.layout === "compact" ? <CompactEventDetails details={row.details} /> : <EventGroupList details={row.details} />}
                           </div>
                         </div>
                       </td>

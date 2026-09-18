@@ -70,6 +70,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
     JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS,
     JOB_V2_ENTOMBED_SENTINELS_MECHANICS,
+    JOB_V2_VASHNIK_MECHANICS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
     JOB_V2_VORASIUS_DEATHS,
@@ -137,6 +138,7 @@ from who_messed_up.services.view_models.nek_zali_the_soulcoiler_damage import (
 from who_messed_up.services.view_models.nek_zali_the_soulcoiler_deaths import (
     build_nek_zali_the_soulcoiler_deaths_report_page,
 )
+from who_messed_up.services.view_models.vashnik_mechanics import build_vashnik_mechanics_report_page
 from who_messed_up.services.view_models.entombed_sentinels_mechanics import (
     build_sentinels_mechanics_report_page,
 )
@@ -263,6 +265,7 @@ from who_messed_up.service import (
     fetch_nek_zali_the_soulcoiler_death_summary,
     fetch_nek_zali_mechanics_summary,
     fetch_sentinels_mechanics_summary,
+    fetch_vashnik_mechanics_summary,
     fetch_entombed_sentinels_avoidable_damage_summary,
     fetch_entombed_sentinels_damage_summary,
     fetch_entombed_sentinels_death_summary,
@@ -2293,7 +2296,7 @@ def _execute_v2_the_lost_explorers_damage_job(payload: Dict[str, Any]) -> Dict[s
 
 def _execute_v2_vashnik_the_malignant_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_vashnik_the_malignant_damage_summary_from_payload(payload)
-    page = build_vashnik_the_malignant_damage_report_page(summary)
+    page = build_vashnik_the_malignant_damage_report_page(summary, difficulty=payload.get("difficulty"))
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2382,6 +2385,22 @@ def _execute_v2_sentinels_mechanics_job(payload: Dict[str, Any]) -> Dict[str, An
     return page.model_dump(by_alias=True) if hasattr(page, "model_dump") else page.dict(by_alias=True)
 
 
+def _execute_v2_vashnik_mechanics_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    summary = fetch_vashnik_mechanics_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=payload.get("fight_ids") or None,
+        difficulty=payload.get("difficulty"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+    page = build_vashnik_mechanics_report_page(summary)
+    return page.model_dump(by_alias=True) if hasattr(page, "model_dump") else page.dict(by_alias=True)
+
+
 def _execute_v2_entombed_sentinels_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_entombed_sentinels_deaths_summary_from_payload(payload)
     page = build_entombed_sentinels_deaths_report_page(
@@ -2403,7 +2422,7 @@ def _execute_v2_the_lost_explorers_deaths_job(payload: Dict[str, Any]) -> Dict[s
 
 def _execute_v2_vashnik_the_malignant_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_vashnik_the_malignant_deaths_summary_from_payload(payload)
-    page = build_vashnik_the_malignant_deaths_report_page(summary)
+    page = build_vashnik_the_malignant_deaths_report_page(summary, difficulty=payload.get("difficulty"))
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2489,7 +2508,7 @@ def _execute_v2_the_lost_explorers_avoidable_damage_job(payload: Dict[str, Any])
 
 def _execute_v2_vashnik_the_malignant_avoidable_damage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_vashnik_the_malignant_avoidable_damage_summary_from_payload(payload)
-    page = build_vashnik_the_malignant_avoidable_damage_report_page(summary)
+    page = build_vashnik_the_malignant_avoidable_damage_report_page(summary, difficulty=payload.get("difficulty"))
     if hasattr(page, "model_dump"):
         return page.model_dump(by_alias=True)
     return page.dict(by_alias=True)
@@ -2873,6 +2892,10 @@ job_manager.register_handler(
 job_manager.register_handler(
     JOB_V2_ENTOMBED_SENTINELS_MECHANICS,
     _execute_v2_sentinels_mechanics_job,
+)
+job_manager.register_handler(
+    JOB_V2_VASHNIK_MECHANICS,
+    _execute_v2_vashnik_mechanics_job,
 )
 job_manager.register_handler(
     JOB_V2_ENTOMBED_SENTINELS_DAMAGE,

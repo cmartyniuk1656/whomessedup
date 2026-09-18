@@ -1,10 +1,14 @@
-"""Heroic Vashnik the Malignant avoidable-damage summary wrapper."""
+"""Heroic and Mythic Vashnik the Malignant avoidable-damage summary wrapper."""
 from __future__ import annotations
 
 from typing import Iterable, Optional
 
 from .avoidable_damage import AvoidableDamageSummary, fetch_avoidable_damage_summary
-from .boss_manifests import VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST
+from .boss_manifest_types import normalize_manifest_difficulty
+from .boss_manifests import (
+    VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+    VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST,
+)
 
 REPORT_DEFAULT_FIGHT = "Vashnik the Malignant"
 
@@ -22,9 +26,14 @@ def fetch_vashnik_the_malignant_avoidable_damage_summary(
     client_id: Optional[str] = None,
     client_secret: Optional[str] = None,
 ) -> AvoidableDamageSummary:
+    manifest = (
+        VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST
+        if normalize_manifest_difficulty(difficulty) == "mythic"
+        else VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST
+    )
     return fetch_avoidable_damage_summary(
         report_code=report_code,
-        boss_manifest=VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+        boss_manifest=manifest,
         fight_name=fight_name or REPORT_DEFAULT_FIGHT,
         fight_ids=fight_ids,
         difficulty=difficulty,

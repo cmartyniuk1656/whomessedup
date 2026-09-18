@@ -9,7 +9,7 @@ from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple,
 
 import requests
 
-from ..api import REPORT_OVERVIEW_QUERY, fetch_events, fetch_fights, fetch_player_details, fetch_table, gql
+from ..api import REPORT_OVERVIEW_QUERY, fetch_events, fetch_fights, fetch_player_details, gql
 from ..env import load_env
 from .ability_event_filters import (
     collect_avoidable_active_exclusion_windows,
@@ -40,6 +40,7 @@ from .consumables import (
     healing_consumable_ability_names,
 )
 from .report_pulls import ReportPull, build_report_pulls, merge_report_pulls
+from .death_tables import fetch_complete_death_table
 
 BATTLE_RESURRECTION_SPELL_IDS = {
     20484,  # Rebirth
@@ -248,14 +249,11 @@ def _fetch_single_death_report_summary(
         ability_names=healing_consumable_ability_names(),
         actor_names=actor_names,
     )
-    death_table = fetch_table(
+    death_table = fetch_complete_death_table(
         session,
         bearer,
         code=report_code,
-        data_type="Deaths",
-        fight_ids=fight_id_list,
-        start=min(float(fight.start) for fight in chosen),
-        end=max(float(fight.end) for fight in chosen),
+        fights=chosen,
     )
     death_entries_by_fight: DefaultDict[int, List[Dict[str, Any]]] = defaultdict(list)
     ability_labels: Dict[int, str] = {}

@@ -1,0 +1,1222 @@
+{
+  "encounter_id": 3455,
+  "difficulty": 5,
+  "reports": [
+    {
+      "code": "AZfwY8vr1DanQbch",
+      "fights": [
+        {
+          "id": 40,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 8563347,
+          "endTime": 8886802,
+          "kill": true,
+          "difficulty": 5
+        }
+      ]
+    },
+    {
+      "code": "Nr7yQvGqjz8atHYc",
+      "fights": [
+        {
+          "id": 11,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 2691073,
+          "endTime": 2986321,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 13,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 3212535,
+          "endTime": 3378431,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 14,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 3469548,
+          "endTime": 3592180,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 15,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 3680465,
+          "endTime": 4105300,
+          "kill": true,
+          "difficulty": 5
+        }
+      ]
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fights": [
+        {
+          "id": 36,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 7771461,
+          "endTime": 7940335,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 37,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 8022263,
+          "endTime": 8326884,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 38,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 8394865,
+          "endTime": 8560217,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 40,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 8625398,
+          "endTime": 9051611,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 41,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 9122792,
+          "endTime": 9498869,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 42,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 9563215,
+          "endTime": 9853178,
+          "kill": false,
+          "difficulty": 5
+        },
+        {
+          "id": 43,
+          "encounterID": 3455,
+          "name": "Vashnik the Malignant",
+          "startTime": 9909844,
+          "endTime": 10334791,
+          "kill": true,
+          "difficulty": 5
+        }
+      ]
+    }
+  ],
+  "damage_abilities": [
+    {
+      "id": 1284561,
+      "name": "Toxic Vapor",
+      "hits": 32931,
+      "damage": 439793587,
+      "roles": {
+        "dps": 21486,
+        "healers": 8074,
+        "tanks": 3371
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 20,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Vashnik": 32931
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 1.983,
+        "Nr7yQvGqjz8atHYc:11": 2.002,
+        "Nr7yQvGqjz8atHYc:13": 2.008,
+        "Nr7yQvGqjz8atHYc:14": 1.999,
+        "Nr7yQvGqjz8atHYc:15": 1.994,
+        "6x4fbqFQLagcRCKD:36": 1.914,
+        "6x4fbqFQLagcRCKD:37": 2.013,
+        "6x4fbqFQLagcRCKD:38": 1.93,
+        "6x4fbqFQLagcRCKD:40": 2.015,
+        "6x4fbqFQLagcRCKD:41": 2.031,
+        "6x4fbqFQLagcRCKD:42": 1.924,
+        "6x4fbqFQLagcRCKD:43": 1.932
+      }
+    },
+    {
+      "id": 1305901,
+      "name": "Burning Presence",
+      "hits": 18630,
+      "damage": 335237780,
+      "roles": {
+        "dps": 12078,
+        "healers": 4582,
+        "tanks": 1970
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 20,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Burning Venom": 18630
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 27.032,
+        "Nr7yQvGqjz8atHYc:11": 27.026,
+        "Nr7yQvGqjz8atHYc:13": 27.022,
+        "Nr7yQvGqjz8atHYc:14": 27.032,
+        "Nr7yQvGqjz8atHYc:15": 27.044,
+        "6x4fbqFQLagcRCKD:36": 27.025,
+        "6x4fbqFQLagcRCKD:37": 27.039,
+        "6x4fbqFQLagcRCKD:38": 26.98,
+        "6x4fbqFQLagcRCKD:40": 27.136,
+        "6x4fbqFQLagcRCKD:41": 27.089,
+        "6x4fbqFQLagcRCKD:42": 27.058,
+        "6x4fbqFQLagcRCKD:43": 26.949
+      }
+    },
+    {
+      "id": 1285979,
+      "name": "Caustic Surge",
+      "hits": 8163,
+      "damage": 443483648,
+      "roles": {
+        "dps": 5356,
+        "healers": 2010,
+        "tanks": 797
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 20,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Burning Venom": 8163
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 35.335,
+        "Nr7yQvGqjz8atHYc:11": 32.119,
+        "Nr7yQvGqjz8atHYc:13": 34.991,
+        "Nr7yQvGqjz8atHYc:14": 32.516,
+        "Nr7yQvGqjz8atHYc:15": 35.459,
+        "6x4fbqFQLagcRCKD:36": 43.504,
+        "6x4fbqFQLagcRCKD:37": 48.933,
+        "6x4fbqFQLagcRCKD:38": 40.436,
+        "6x4fbqFQLagcRCKD:40": 39.765,
+        "6x4fbqFQLagcRCKD:41": 36.707,
+        "6x4fbqFQLagcRCKD:42": 46.353,
+        "6x4fbqFQLagcRCKD:43": 35.034
+      }
+    },
+    {
+      "id": 1295209,
+      "name": "Caustic Explosion",
+      "hits": 5444,
+      "damage": 717102394,
+      "roles": {
+        "dps": 3544,
+        "healers": 1342,
+        "tanks": 558
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 20,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Vashnik": 5444
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 44.443,
+        "Nr7yQvGqjz8atHYc:11": 45.229,
+        "Nr7yQvGqjz8atHYc:13": 44.769,
+        "Nr7yQvGqjz8atHYc:14": 45.17,
+        "Nr7yQvGqjz8atHYc:15": 44.902,
+        "6x4fbqFQLagcRCKD:36": 52.006,
+        "6x4fbqFQLagcRCKD:37": 45.658,
+        "6x4fbqFQLagcRCKD:38": 49.237,
+        "6x4fbqFQLagcRCKD:40": 48.192,
+        "6x4fbqFQLagcRCKD:41": 49.571,
+        "6x4fbqFQLagcRCKD:42": 53.069,
+        "6x4fbqFQLagcRCKD:43": 48.007
+      }
+    },
+    {
+      "id": 1281925,
+      "name": "Plague Froth",
+      "hits": 3598,
+      "damage": 353025639,
+      "roles": {
+        "dps": 2692,
+        "tanks": 168,
+        "healers": 738
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 19,
+        "Nr7yQvGqjz8atHYc:14": 17,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 16,
+      "sources": {
+        "Vashnik": 3598
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 14.026,
+        "Nr7yQvGqjz8atHYc:11": 14.048,
+        "Nr7yQvGqjz8atHYc:13": 14.012,
+        "Nr7yQvGqjz8atHYc:14": 14.043,
+        "Nr7yQvGqjz8atHYc:15": 14.001,
+        "6x4fbqFQLagcRCKD:36": 13.956,
+        "6x4fbqFQLagcRCKD:37": 14.062,
+        "6x4fbqFQLagcRCKD:38": 14.0,
+        "6x4fbqFQLagcRCKD:40": 14.073,
+        "6x4fbqFQLagcRCKD:41": 14.046,
+        "6x4fbqFQLagcRCKD:42": 13.963,
+        "6x4fbqFQLagcRCKD:43": 13.971
+      }
+    },
+    {
+      "id": 1304459,
+      "name": "Malignance",
+      "hits": 2133,
+      "damage": 297676424,
+      "roles": {
+        "dps": 1306,
+        "healers": 507,
+        "tanks": 320
+      },
+      "unique_players": 40,
+      "players_per_pull": {
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 12,
+        "6x4fbqFQLagcRCKD:36": 19,
+        "6x4fbqFQLagcRCKD:37": 18,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 18,
+        "6x4fbqFQLagcRCKD:41": 19,
+        "6x4fbqFQLagcRCKD:42": 6,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Malignant Totem": 2133
+      },
+      "first_hit_seconds_per_pull": {
+        "Nr7yQvGqjz8atHYc:13": 111.631,
+        "Nr7yQvGqjz8atHYc:14": 112.189,
+        "6x4fbqFQLagcRCKD:36": 112.707,
+        "6x4fbqFQLagcRCKD:37": 280.556,
+        "6x4fbqFQLagcRCKD:38": 111.861,
+        "6x4fbqFQLagcRCKD:40": 364.185,
+        "6x4fbqFQLagcRCKD:41": 363.683,
+        "6x4fbqFQLagcRCKD:42": 280.151,
+        "6x4fbqFQLagcRCKD:43": 364.705
+      }
+    },
+    {
+      "id": 1291467,
+      "name": "Virulent Fumes",
+      "hits": 1957,
+      "damage": 14722444,
+      "roles": {
+        "tanks": 297,
+        "dps": 1381,
+        "healers": 279
+      },
+      "unique_players": 56,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 16,
+        "Nr7yQvGqjz8atHYc:11": 16,
+        "Nr7yQvGqjz8atHYc:13": 14,
+        "Nr7yQvGqjz8atHYc:14": 15,
+        "Nr7yQvGqjz8atHYc:15": 19,
+        "6x4fbqFQLagcRCKD:36": 15,
+        "6x4fbqFQLagcRCKD:37": 17,
+        "6x4fbqFQLagcRCKD:38": 15,
+        "6x4fbqFQLagcRCKD:40": 17,
+        "6x4fbqFQLagcRCKD:41": 15,
+        "6x4fbqFQLagcRCKD:42": 15,
+        "6x4fbqFQLagcRCKD:43": 19
+      },
+      "largest_100ms_cluster": 3,
+      "sources": {
+        "Vashnik": 1957
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 2.301,
+        "Nr7yQvGqjz8atHYc:11": 5.761,
+        "Nr7yQvGqjz8atHYc:13": 14.701,
+        "Nr7yQvGqjz8atHYc:14": 14.594,
+        "Nr7yQvGqjz8atHYc:15": 2.531,
+        "6x4fbqFQLagcRCKD:36": 4.066,
+        "6x4fbqFQLagcRCKD:37": 3.943,
+        "6x4fbqFQLagcRCKD:38": 3.876,
+        "6x4fbqFQLagcRCKD:40": 4.135,
+        "6x4fbqFQLagcRCKD:41": 4.424,
+        "6x4fbqFQLagcRCKD:42": 3.429,
+        "6x4fbqFQLagcRCKD:43": 3.72
+      }
+    },
+    {
+      "id": 1305833,
+      "name": "Congealing Bolt",
+      "hits": 1832,
+      "damage": 179648646,
+      "roles": {
+        "dps": 1143,
+        "tanks": 240,
+        "healers": 449
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 18,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 8,
+      "sources": {
+        "Shrouded Venom": 1832
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 26.584,
+        "Nr7yQvGqjz8atHYc:11": 26.66,
+        "Nr7yQvGqjz8atHYc:13": 26.657,
+        "Nr7yQvGqjz8atHYc:14": 26.613,
+        "Nr7yQvGqjz8atHYc:15": 26.641,
+        "6x4fbqFQLagcRCKD:36": 26.646,
+        "6x4fbqFQLagcRCKD:37": 26.634,
+        "6x4fbqFQLagcRCKD:38": 26.609,
+        "6x4fbqFQLagcRCKD:40": 26.635,
+        "6x4fbqFQLagcRCKD:41": 26.663,
+        "6x4fbqFQLagcRCKD:42": 26.599,
+        "6x4fbqFQLagcRCKD:43": 26.595
+      }
+    },
+    {
+      "id": 1295173,
+      "name": "Exploding Infection",
+      "hits": 1814,
+      "damage": 147915366,
+      "roles": {
+        "dps": 1739,
+        "healers": 73,
+        "tanks": 2
+      },
+      "unique_players": 44,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 11,
+        "Nr7yQvGqjz8atHYc:11": 12,
+        "Nr7yQvGqjz8atHYc:13": 9,
+        "Nr7yQvGqjz8atHYc:14": 5,
+        "Nr7yQvGqjz8atHYc:15": 12,
+        "6x4fbqFQLagcRCKD:36": 9,
+        "6x4fbqFQLagcRCKD:37": 12,
+        "6x4fbqFQLagcRCKD:38": 10,
+        "6x4fbqFQLagcRCKD:40": 13,
+        "6x4fbqFQLagcRCKD:41": 11,
+        "6x4fbqFQLagcRCKD:42": 9,
+        "6x4fbqFQLagcRCKD:43": 8
+      },
+      "largest_100ms_cluster": 3,
+      "sources": {
+        "Vashnik": 1814
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 44.206,
+        "Nr7yQvGqjz8atHYc:11": 44.283,
+        "Nr7yQvGqjz8atHYc:13": 44.311,
+        "Nr7yQvGqjz8atHYc:14": 44.399,
+        "Nr7yQvGqjz8atHYc:15": 44.648,
+        "6x4fbqFQLagcRCKD:36": 44.514,
+        "6x4fbqFQLagcRCKD:37": 44.468,
+        "6x4fbqFQLagcRCKD:38": 44.29,
+        "6x4fbqFQLagcRCKD:40": 44.651,
+        "6x4fbqFQLagcRCKD:41": 44.898,
+        "6x4fbqFQLagcRCKD:42": 44.781,
+        "6x4fbqFQLagcRCKD:43": 44.922
+      }
+    },
+    {
+      "id": 1280934,
+      "name": "Dripping Fangs",
+      "hits": 1721,
+      "damage": 201548038,
+      "roles": {
+        "tanks": 1721
+      },
+      "unique_players": 6,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 2,
+        "Nr7yQvGqjz8atHYc:11": 2,
+        "Nr7yQvGqjz8atHYc:13": 2,
+        "Nr7yQvGqjz8atHYc:14": 2,
+        "Nr7yQvGqjz8atHYc:15": 2,
+        "6x4fbqFQLagcRCKD:36": 2,
+        "6x4fbqFQLagcRCKD:37": 2,
+        "6x4fbqFQLagcRCKD:38": 2,
+        "6x4fbqFQLagcRCKD:40": 2,
+        "6x4fbqFQLagcRCKD:41": 2,
+        "6x4fbqFQLagcRCKD:42": 2,
+        "6x4fbqFQLagcRCKD:43": 2
+      },
+      "largest_100ms_cluster": 2,
+      "sources": {
+        "Vashnik": 1721
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 14.025,
+        "Nr7yQvGqjz8atHYc:11": 17.984,
+        "Nr7yQvGqjz8atHYc:13": 12.035,
+        "Nr7yQvGqjz8atHYc:14": 12.019,
+        "Nr7yQvGqjz8atHYc:15": 12.008,
+        "6x4fbqFQLagcRCKD:36": 17.965,
+        "6x4fbqFQLagcRCKD:37": 12.0,
+        "6x4fbqFQLagcRCKD:38": 17.969,
+        "6x4fbqFQLagcRCKD:40": 18.033,
+        "6x4fbqFQLagcRCKD:41": 18.05,
+        "6x4fbqFQLagcRCKD:42": 18.005,
+        "6x4fbqFQLagcRCKD:43": 17.965
+      }
+    },
+    {
+      "id": 1282525,
+      "name": "Malignant Catalyst",
+      "hits": 1498,
+      "damage": 285664266,
+      "roles": {
+        "dps": 975,
+        "healers": 367,
+        "tanks": 156
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 20,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Vashnik": 1498
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 35.011,
+        "Nr7yQvGqjz8atHYc:11": 35.071,
+        "Nr7yQvGqjz8atHYc:13": 35.042,
+        "Nr7yQvGqjz8atHYc:14": 35.041,
+        "Nr7yQvGqjz8atHYc:15": 35.036,
+        "6x4fbqFQLagcRCKD:36": 34.933,
+        "6x4fbqFQLagcRCKD:37": 35.082,
+        "6x4fbqFQLagcRCKD:38": 35.052,
+        "6x4fbqFQLagcRCKD:40": 35.032,
+        "6x4fbqFQLagcRCKD:41": 35.103,
+        "6x4fbqFQLagcRCKD:42": 34.954,
+        "6x4fbqFQLagcRCKD:43": 35.018
+      }
+    },
+    {
+      "id": 1294994,
+      "name": "Stygian Infection",
+      "hits": 881,
+      "damage": 25258701,
+      "roles": {
+        "dps": 753,
+        "healers": 128
+      },
+      "unique_players": 49,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 14,
+        "Nr7yQvGqjz8atHYc:11": 13,
+        "Nr7yQvGqjz8atHYc:13": 7,
+        "Nr7yQvGqjz8atHYc:14": 5,
+        "Nr7yQvGqjz8atHYc:15": 16,
+        "6x4fbqFQLagcRCKD:36": 9,
+        "6x4fbqFQLagcRCKD:37": 14,
+        "6x4fbqFQLagcRCKD:38": 9,
+        "6x4fbqFQLagcRCKD:40": 16,
+        "6x4fbqFQLagcRCKD:41": 14,
+        "6x4fbqFQLagcRCKD:42": 13,
+        "6x4fbqFQLagcRCKD:43": 17
+      },
+      "largest_100ms_cluster": 3,
+      "sources": {
+        "Vashnik": 881
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 44.091,
+        "Nr7yQvGqjz8atHYc:11": 43.957,
+        "Nr7yQvGqjz8atHYc:13": 43.782,
+        "Nr7yQvGqjz8atHYc:14": 43.831,
+        "Nr7yQvGqjz8atHYc:15": 43.723,
+        "6x4fbqFQLagcRCKD:36": 44.12,
+        "6x4fbqFQLagcRCKD:37": 44.292,
+        "6x4fbqFQLagcRCKD:38": 44.001,
+        "6x4fbqFQLagcRCKD:40": 43.754,
+        "6x4fbqFQLagcRCKD:41": 43.81,
+        "6x4fbqFQLagcRCKD:42": 43.822,
+        "6x4fbqFQLagcRCKD:43": 43.88
+      }
+    },
+    {
+      "id": 1298587,
+      "name": "Conflagrating Expulsion",
+      "hits": 863,
+      "damage": 104949046,
+      "roles": {
+        "dps": 565,
+        "healers": 212,
+        "tanks": 86
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 20,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Vashnik": 863
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 24.033,
+        "Nr7yQvGqjz8atHYc:11": 24.04,
+        "Nr7yQvGqjz8atHYc:13": 24.056,
+        "Nr7yQvGqjz8atHYc:14": 24.041,
+        "Nr7yQvGqjz8atHYc:15": 24.055,
+        "6x4fbqFQLagcRCKD:36": 24.016,
+        "6x4fbqFQLagcRCKD:37": 24.063,
+        "6x4fbqFQLagcRCKD:38": 23.996,
+        "6x4fbqFQLagcRCKD:40": 24.051,
+        "6x4fbqFQLagcRCKD:41": 24.094,
+        "6x4fbqFQLagcRCKD:42": 23.948,
+        "6x4fbqFQLagcRCKD:43": 23.989
+      }
+    },
+    {
+      "id": 1298583,
+      "name": "Gloom Expulsion",
+      "hits": 862,
+      "damage": 103407655,
+      "roles": {
+        "dps": 564,
+        "healers": 212,
+        "tanks": 86
+      },
+      "unique_players": 60,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 20,
+        "Nr7yQvGqjz8atHYc:11": 20,
+        "Nr7yQvGqjz8atHYc:13": 20,
+        "Nr7yQvGqjz8atHYc:14": 20,
+        "Nr7yQvGqjz8atHYc:15": 20,
+        "6x4fbqFQLagcRCKD:36": 20,
+        "6x4fbqFQLagcRCKD:37": 20,
+        "6x4fbqFQLagcRCKD:38": 20,
+        "6x4fbqFQLagcRCKD:40": 20,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:42": 20,
+        "6x4fbqFQLagcRCKD:43": 20
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Vashnik": 862
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 24.036,
+        "Nr7yQvGqjz8atHYc:11": 24.025,
+        "Nr7yQvGqjz8atHYc:13": 24.058,
+        "Nr7yQvGqjz8atHYc:14": 24.039,
+        "Nr7yQvGqjz8atHYc:15": 24.075,
+        "6x4fbqFQLagcRCKD:36": 23.999,
+        "6x4fbqFQLagcRCKD:37": 24.076,
+        "6x4fbqFQLagcRCKD:38": 24.004,
+        "6x4fbqFQLagcRCKD:40": 24.076,
+        "6x4fbqFQLagcRCKD:41": 24.108,
+        "6x4fbqFQLagcRCKD:42": 23.949,
+        "6x4fbqFQLagcRCKD:43": 23.975
+      }
+    },
+    {
+      "id": 1282602,
+      "name": "Catalytic Bile",
+      "hits": 370,
+      "damage": 58037292,
+      "roles": {
+        "healers": 103,
+        "dps": 237,
+        "tanks": 30
+      },
+      "unique_players": 44,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 10,
+        "Nr7yQvGqjz8atHYc:11": 11,
+        "Nr7yQvGqjz8atHYc:13": 10,
+        "Nr7yQvGqjz8atHYc:14": 8,
+        "Nr7yQvGqjz8atHYc:15": 15,
+        "6x4fbqFQLagcRCKD:36": 10,
+        "6x4fbqFQLagcRCKD:37": 14,
+        "6x4fbqFQLagcRCKD:38": 8,
+        "6x4fbqFQLagcRCKD:40": 14,
+        "6x4fbqFQLagcRCKD:41": 10,
+        "6x4fbqFQLagcRCKD:42": 12,
+        "6x4fbqFQLagcRCKD:43": 16
+      },
+      "largest_100ms_cluster": 2,
+      "sources": {
+        "Vashnik": 370
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 42.046,
+        "Nr7yQvGqjz8atHYc:11": 42.078,
+        "Nr7yQvGqjz8atHYc:13": 42.061,
+        "Nr7yQvGqjz8atHYc:14": 42.059,
+        "Nr7yQvGqjz8atHYc:15": 42.034,
+        "6x4fbqFQLagcRCKD:36": 41.926,
+        "6x4fbqFQLagcRCKD:37": 42.093,
+        "6x4fbqFQLagcRCKD:38": 42.049,
+        "6x4fbqFQLagcRCKD:40": 42.092,
+        "6x4fbqFQLagcRCKD:41": 42.084,
+        "6x4fbqFQLagcRCKD:42": 41.991,
+        "6x4fbqFQLagcRCKD:43": 41.988
+      }
+    },
+    {
+      "id": 1295798,
+      "name": "Plague Wave",
+      "hits": 338,
+      "damage": 144518909,
+      "roles": {
+        "tanks": 65,
+        "dps": 162,
+        "healers": 111
+      },
+      "unique_players": 46,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 9,
+        "Nr7yQvGqjz8atHYc:11": 15,
+        "Nr7yQvGqjz8atHYc:13": 12,
+        "Nr7yQvGqjz8atHYc:14": 9,
+        "Nr7yQvGqjz8atHYc:15": 12,
+        "6x4fbqFQLagcRCKD:36": 13,
+        "6x4fbqFQLagcRCKD:37": 15,
+        "6x4fbqFQLagcRCKD:38": 9,
+        "6x4fbqFQLagcRCKD:40": 17,
+        "6x4fbqFQLagcRCKD:41": 14,
+        "6x4fbqFQLagcRCKD:42": 13,
+        "6x4fbqFQLagcRCKD:43": 18
+      },
+      "largest_100ms_cluster": 3,
+      "sources": {
+        "Vashnik": 338
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 19.107,
+        "Nr7yQvGqjz8atHYc:11": 20.562,
+        "Nr7yQvGqjz8atHYc:13": 19.799,
+        "Nr7yQvGqjz8atHYc:14": 20.072,
+        "Nr7yQvGqjz8atHYc:15": 20.182,
+        "6x4fbqFQLagcRCKD:36": 20.354,
+        "6x4fbqFQLagcRCKD:37": 19.253,
+        "6x4fbqFQLagcRCKD:38": 19.312,
+        "6x4fbqFQLagcRCKD:40": 19.755,
+        "6x4fbqFQLagcRCKD:41": 19.153,
+        "6x4fbqFQLagcRCKD:42": 18.987,
+        "6x4fbqFQLagcRCKD:43": 19.137
+      }
+    },
+    {
+      "id": 1297338,
+      "name": "Deadly Venom",
+      "hits": 148,
+      "damage": 7561779,
+      "roles": {
+        "healers": 34,
+        "tanks": 43,
+        "dps": 71
+      },
+      "unique_players": 25,
+      "players_per_pull": {
+        "Nr7yQvGqjz8atHYc:11": 1,
+        "Nr7yQvGqjz8atHYc:13": 5,
+        "Nr7yQvGqjz8atHYc:14": 8,
+        "6x4fbqFQLagcRCKD:36": 8,
+        "6x4fbqFQLagcRCKD:37": 1,
+        "6x4fbqFQLagcRCKD:38": 10,
+        "6x4fbqFQLagcRCKD:42": 5
+      },
+      "largest_100ms_cluster": 3,
+      "sources": {
+        "Environment": 148
+      },
+      "first_hit_seconds_per_pull": {
+        "Nr7yQvGqjz8atHYc:11": 289.245,
+        "Nr7yQvGqjz8atHYc:13": 143.744,
+        "Nr7yQvGqjz8atHYc:14": 105.798,
+        "6x4fbqFQLagcRCKD:36": 159.235,
+        "6x4fbqFQLagcRCKD:37": 296.576,
+        "6x4fbqFQLagcRCKD:38": 148.442,
+        "6x4fbqFQLagcRCKD:42": 272.239
+      }
+    },
+    {
+      "id": 1280935,
+      "name": "Dripping Fangs",
+      "hits": 125,
+      "damage": 25710779,
+      "roles": {
+        "tanks": 124,
+        "dps": 1
+      },
+      "unique_players": 7,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 2,
+        "Nr7yQvGqjz8atHYc:11": 3,
+        "Nr7yQvGqjz8atHYc:13": 2,
+        "Nr7yQvGqjz8atHYc:14": 2,
+        "Nr7yQvGqjz8atHYc:15": 2,
+        "6x4fbqFQLagcRCKD:36": 2,
+        "6x4fbqFQLagcRCKD:37": 2,
+        "6x4fbqFQLagcRCKD:38": 2,
+        "6x4fbqFQLagcRCKD:40": 2,
+        "6x4fbqFQLagcRCKD:41": 2,
+        "6x4fbqFQLagcRCKD:42": 2,
+        "6x4fbqFQLagcRCKD:43": 2
+      },
+      "largest_100ms_cluster": 1,
+      "sources": {
+        "Vashnik": 125
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 10.013,
+        "Nr7yQvGqjz8atHYc:11": 9.986,
+        "Nr7yQvGqjz8atHYc:13": 10.021,
+        "Nr7yQvGqjz8atHYc:14": 10.018,
+        "Nr7yQvGqjz8atHYc:15": 9.996,
+        "6x4fbqFQLagcRCKD:36": 9.909,
+        "6x4fbqFQLagcRCKD:37": 10.038,
+        "6x4fbqFQLagcRCKD:38": 9.969,
+        "6x4fbqFQLagcRCKD:40": 10.05,
+        "6x4fbqFQLagcRCKD:41": 10.031,
+        "6x4fbqFQLagcRCKD:42": 9.953,
+        "6x4fbqFQLagcRCKD:43": 9.968
+      }
+    },
+    {
+      "id": 1302489,
+      "name": "Stygian Burst",
+      "hits": 94,
+      "damage": 36394594,
+      "roles": {
+        "healers": 38,
+        "dps": 41,
+        "tanks": 15
+      },
+      "unique_players": 30,
+      "players_per_pull": {
+        "AZfwY8vr1DanQbch:40": 3,
+        "Nr7yQvGqjz8atHYc:11": 8,
+        "Nr7yQvGqjz8atHYc:13": 1,
+        "Nr7yQvGqjz8atHYc:14": 2,
+        "Nr7yQvGqjz8atHYc:15": 7,
+        "6x4fbqFQLagcRCKD:36": 1,
+        "6x4fbqFQLagcRCKD:37": 6,
+        "6x4fbqFQLagcRCKD:38": 3,
+        "6x4fbqFQLagcRCKD:40": 8,
+        "6x4fbqFQLagcRCKD:41": 7,
+        "6x4fbqFQLagcRCKD:42": 11,
+        "6x4fbqFQLagcRCKD:43": 8
+      },
+      "largest_100ms_cluster": 4,
+      "sources": {
+        "Vashnik": 94
+      },
+      "first_hit_seconds_per_pull": {
+        "AZfwY8vr1DanQbch:40": 185.847,
+        "Nr7yQvGqjz8atHYc:11": 105.144,
+        "Nr7yQvGqjz8atHYc:13": 104.14,
+        "Nr7yQvGqjz8atHYc:14": 46.847,
+        "Nr7yQvGqjz8atHYc:15": 183.769,
+        "6x4fbqFQLagcRCKD:36": 47.565,
+        "6x4fbqFQLagcRCKD:37": 47.338,
+        "6x4fbqFQLagcRCKD:38": 47.31,
+        "6x4fbqFQLagcRCKD:40": 102.53,
+        "6x4fbqFQLagcRCKD:41": 46.833,
+        "6x4fbqFQLagcRCKD:42": 48.33,
+        "6x4fbqFQLagcRCKD:43": 48.394
+      }
+    },
+    {
+      "id": 1282616,
+      "name": "Catalytic Bile",
+      "hits": 94,
+      "damage": 32543008,
+      "roles": {
+        "healers": 29,
+        "dps": 50,
+        "tanks": 15
+      },
+      "unique_players": 22,
+      "players_per_pull": {
+        "Nr7yQvGqjz8atHYc:11": 1,
+        "Nr7yQvGqjz8atHYc:13": 1,
+        "6x4fbqFQLagcRCKD:36": 12,
+        "6x4fbqFQLagcRCKD:37": 12,
+        "6x4fbqFQLagcRCKD:38": 2,
+        "6x4fbqFQLagcRCKD:40": 7,
+        "6x4fbqFQLagcRCKD:41": 20,
+        "6x4fbqFQLagcRCKD:43": 19
+      },
+      "largest_100ms_cluster": 20,
+      "sources": {
+        "Vashnik": 94
+      },
+      "first_hit_seconds_per_pull": {
+        "Nr7yQvGqjz8atHYc:11": 294.148,
+        "Nr7yQvGqjz8atHYc:13": 165.054,
+        "6x4fbqFQLagcRCKD:36": 165.154,
+        "6x4fbqFQLagcRCKD:37": 294.334,
+        "6x4fbqFQLagcRCKD:38": 165.027,
+        "6x4fbqFQLagcRCKD:40": 417.463,
+        "6x4fbqFQLagcRCKD:41": 42.153,
+        "6x4fbqFQLagcRCKD:43": 81.359
+      }
+    },
+    {
+      "id": 1286737,
+      "name": "Umbral Ejection",
+      "hits": 16,
+      "damage": 4113130,
+      "roles": {
+        "healers": 5,
+        "tanks": 7,
+        "dps": 4
+      },
+      "unique_players": 10,
+      "players_per_pull": {
+        "Nr7yQvGqjz8atHYc:14": 1,
+        "Nr7yQvGqjz8atHYc:15": 4,
+        "6x4fbqFQLagcRCKD:36": 1,
+        "6x4fbqFQLagcRCKD:37": 1,
+        "6x4fbqFQLagcRCKD:40": 2,
+        "6x4fbqFQLagcRCKD:42": 1,
+        "6x4fbqFQLagcRCKD:43": 4
+      },
+      "largest_100ms_cluster": 2,
+      "sources": {
+        "Shrouded Venom": 16
+      },
+      "first_hit_seconds_per_pull": {
+        "Nr7yQvGqjz8atHYc:14": 31.949,
+        "Nr7yQvGqjz8atHYc:15": 31.981,
+        "6x4fbqFQLagcRCKD:36": 122.651,
+        "6x4fbqFQLagcRCKD:37": 30.857,
+        "6x4fbqFQLagcRCKD:40": 119.589,
+        "6x4fbqFQLagcRCKD:42": 122.464,
+        "6x4fbqFQLagcRCKD:43": 31.36
+      }
+    },
+    {
+      "id": 1280189,
+      "name": "Malignant Burst",
+      "hits": 10,
+      "damage": 3183040,
+      "roles": {
+        "tanks": 7,
+        "healers": 2,
+        "dps": 1
+      },
+      "unique_players": 5,
+      "players_per_pull": {
+        "6x4fbqFQLagcRCKD:40": 5
+      },
+      "largest_100ms_cluster": 5,
+      "sources": {
+        "Shrouded Venom": 10
+      },
+      "first_hit_seconds_per_pull": {
+        "6x4fbqFQLagcRCKD:40": 418.604
+      }
+    }
+  ],
+  "ignored": [
+    {
+      "id": 1291461,
+      "name": "Virulent Fumes",
+      "hits": 15,
+      "damage": 0,
+      "roles": {
+        "healers": 7,
+        "dps": 8
+      },
+      "unique_players": 3,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 1305826,
+      "name": "Congealing Bolt",
+      "hits": 8,
+      "damage": 0,
+      "roles": {
+        "healers": 2,
+        "dps": 6
+      },
+      "unique_players": 3,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 1305832,
+      "name": "Congealing Bolt",
+      "hits": 8,
+      "damage": 0,
+      "roles": {
+        "healers": 2,
+        "dps": 6
+      },
+      "unique_players": 3,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 132466,
+      "name": "Chi Wave",
+      "hits": 5,
+      "damage": 0,
+      "roles": {
+        "healers": 2,
+        "dps": 3
+      },
+      "unique_players": 3,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 387846,
+      "name": "Fel Armor",
+      "hits": 9878,
+      "damage": 1268678,
+      "roles": {
+        "dps": 9878
+      },
+      "unique_players": 4,
+      "largest_100ms_cluster": 2
+    },
+    {
+      "id": 1309786,
+      "name": "Refraction",
+      "hits": 5391,
+      "damage": 30047863,
+      "roles": {
+        "dps": 5391
+      },
+      "unique_players": 5,
+      "largest_100ms_cluster": 2
+    },
+    {
+      "id": 1292299,
+      "name": "Seriously Sharp Seashell",
+      "hits": 1664,
+      "damage": 1545974,
+      "roles": {
+        "healers": 823,
+        "dps": 841
+      },
+      "unique_players": 14,
+      "largest_100ms_cluster": 3
+    },
+    {
+      "id": 1287955,
+      "name": "Rune of Void-Tainted Shell",
+      "hits": 1346,
+      "damage": 673549,
+      "roles": {
+        "tanks": 100,
+        "dps": 1127,
+        "healers": 119
+      },
+      "unique_players": 14,
+      "largest_100ms_cluster": 7
+    },
+    {
+      "id": 1,
+      "name": "Melee",
+      "hits": 895,
+      "damage": 173898788,
+      "roles": {
+        "tanks": 889,
+        "dps": 6
+      },
+      "unique_players": 12,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 453286,
+      "name": "Set Fire to the Pain",
+      "hits": 633,
+      "damage": 516561,
+      "roles": {
+        "dps": 633
+      },
+      "unique_players": 3,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 6940,
+      "name": "Blessing of Sacrifice",
+      "hits": 125,
+      "damage": 1890112,
+      "roles": {
+        "healers": 83,
+        "dps": 42
+      },
+      "unique_players": 5,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 111400,
+      "name": "Burning Rush",
+      "hits": 97,
+      "damage": 3035805,
+      "roles": {
+        "dps": 97
+      },
+      "unique_players": 4,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 361029,
+      "name": "Time Dilation",
+      "hits": 84,
+      "damage": 2540962,
+      "roles": {
+        "dps": 64,
+        "healers": 16,
+        "tanks": 4
+      },
+      "unique_players": 6,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 448005,
+      "name": "Light of the Martyr",
+      "hits": 9,
+      "damage": 0,
+      "roles": {
+        "healers": 9
+      },
+      "unique_players": 2,
+      "largest_100ms_cluster": 1
+    },
+    {
+      "id": 32409,
+      "name": "Shadow Word: Death",
+      "hits": 8,
+      "damage": 125286,
+      "roles": {
+        "dps": 8
+      },
+      "unique_players": 1,
+      "largest_100ms_cluster": 1
+    }
+  ],
+  "inherited_unobserved_ids": [
+    1295229,
+    1295224,
+    1298582
+  ]
+}

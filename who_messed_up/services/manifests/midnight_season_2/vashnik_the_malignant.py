@@ -1,11 +1,16 @@
 """
-Heroic Vashnik the Malignant ability and target metadata for Midnight Season 2.
+Heroic and Mythic Vashnik ability and target metadata for Midnight Season 2.
 
 Observed in Warcraft Logs report ZARtb8Dxjhg9H4BF, fights 23, 28, and 35
 (encounter 3455), then cross-checked against Method's Heroic guide and live
 spell descriptions.
+
+Mythic composes the shared mechanics with difficulty-specific classifications.
+See docs/analysis/vashnik-mythic.md for log coverage and excluded event IDs.
 """
 from __future__ import annotations
+
+from dataclasses import replace
 
 from ...boss_manifest_types import (
     BossAbilityMetadata,
@@ -272,4 +277,56 @@ VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST = BossManifest(
 )
 
 
-__all__ = ["VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST"]
+_MYTHIC_ABILITY_OVERRIDES = {
+    1302489: BossAbilityMetadata(
+        name="Stygian Burst",
+        game_id=1302489,
+        description=(
+            "Stygian Infection creates ground eruptions near the infected player. Move out of the "
+            "marked impacts, which damage players within 3.5 yards. The infection's own DoT and "
+            "healing absorb are separate from this dodgeable impact."
+        ),
+        url="https://www.wowhead.com/spell=1302489/stygian-burst",
+        tags=("Avoidable", "Swirl", "Ground Impact"),
+        avoidable=True,
+    ),
+}
+
+
+VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST = replace(
+    VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+    difficulty="mythic",
+    # Tumors (logged as Malignant Totem) are cleared by Plague Waves, not a
+    # player DPS assignment. Keep the four existing selectable damage targets.
+    abilities=tuple(
+        _MYTHIC_ABILITY_OVERRIDES.get(ability.game_id, ability)
+        for ability in VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST.abilities
+    ) + (
+        BossAbilityMetadata(
+            name="Malignance",
+            game_id=1304459,
+            description=(
+                "A surviving Malignant Tumor (logged as Malignant Totem) completes its cast, "
+                "damaging the entire raid and applying a stacking one-minute Nature DoT. "
+                "Clear tumors with Plague Waves. This is a group failure, not individual "
+                "avoidable damage assigned to every victim."
+            ),
+            url="https://www.wowhead.com/spell=1304459/malignance",
+            tags=("Raid Damage", "Raid Failure", "DoT", "Stacking", "Mythic"),
+        ),
+        BossAbilityMetadata(
+            name="Deadly Venom",
+            game_id=1297338,
+            description="Venom damages players every second while they remain in the hazardous area.",
+            url="https://www.wowhead.com/spell=1297338/deadly-venom",
+            tags=("Avoidable", "Area Denial", "Periodic"),
+            avoidable=True,
+        ),
+    ),
+)
+
+
+__all__ = [
+    "VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST",
+    "VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST",
+]

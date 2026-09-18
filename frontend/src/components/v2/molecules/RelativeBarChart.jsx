@@ -1,10 +1,23 @@
 import { CLASS_COLORS, DEFAULT_PLAYER_COLOR } from "../../../config/presentation";
 import { colorWithAlpha } from "../../../utils/colorPresentation";
+import { RelativeBar } from "./RelativeBar";
 
-export function RelativeBarChart({ chart, standalone = false }) {
+export function RelativeBarChart({ chart, standalone = false, compact = false }) {
   const bars = chart?.bars ?? [];
   const unitLabel = chart?.unitLabel || "damage";
   const maximum = Math.max(0, ...bars.map((bar) => Number(bar?.value ?? 0)));
+
+  if (compact) {
+    return <section className="min-w-0 space-y-3">
+      <h4 className="text-sm font-semibold text-emerald-300">{chart?.title}</h4>
+      {chart?.subtitle ? <p className="text-xs text-slate-400">{chart.subtitle}</p> : null}
+      <div className="grid min-w-0 gap-x-6 gap-y-3 sm:grid-cols-2">
+        {bars.map((bar) => <RelativeBar key={bar.id} label={bar.label} value={Number(bar.value)} maximum={maximum}
+          display={bar.display} unitLabel={unitLabel} colorToken={bar.colorToken} />)}
+      </div>
+      {!bars.length ? <p className="text-sm text-slate-400">No contributions observed.</p> : null}
+    </section>;
+  }
 
   return (
     <section className={standalone ? "" : "mt-4 border-t border-white/10 pt-4"}>

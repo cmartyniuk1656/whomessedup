@@ -1,12 +1,18 @@
-"""View-model builder for the Heroic Vashnik damage report."""
+"""View-model builder for the Heroic and Mythic Vashnik damage report."""
 from __future__ import annotations
 
+from dataclasses import replace
+
+from ..boss_manifest_types import normalize_manifest_difficulty
 from ..target_damage import EncounterTargetDamageSummary
 from .target_damage import TargetDamageReportConfig, build_target_damage_report_page
 
 REPORT_ID = "vashnik-the-malignant-damage"
+MYTHIC_REPORT_ID = "vashnik-the-malignant-damage-mythic"
 REPORT_TITLE = "Heroic Vashnik the Malignant - Damage Report"
+MYTHIC_REPORT_TITLE = "Mythic Vashnik the Malignant - Damage Report"
 REPORT_DESCRIPTION = "Damage report for Heroic Vashnik the Malignant."
+MYTHIC_REPORT_DESCRIPTION = "Damage report for Mythic Vashnik the Malignant."
 REPORT_DEFAULT_FIGHT = "Vashnik the Malignant"
 REPORT_FOOTNOTES = [
     "Use the target toggles to include or exclude Vashnik and each Living Venom add type.",
@@ -35,8 +41,20 @@ REPORT_CONFIG = TargetDamageReportConfig(
 )
 
 
-def build_vashnik_the_malignant_damage_report_page(summary: EncounterTargetDamageSummary):
-    return build_target_damage_report_page(summary, config=REPORT_CONFIG)
+MYTHIC_REPORT_CONFIG = replace(
+    REPORT_CONFIG,
+    report_id=MYTHIC_REPORT_ID,
+    title=MYTHIC_REPORT_TITLE,
+)
+
+
+def build_vashnik_the_malignant_damage_report_page(
+    summary: EncounterTargetDamageSummary,
+    *,
+    difficulty: str | int | None = None,
+):
+    config = MYTHIC_REPORT_CONFIG if normalize_manifest_difficulty(difficulty) == "mythic" else REPORT_CONFIG
+    return build_target_damage_report_page(summary, config=config)
 
 
 __all__ = [
@@ -44,6 +62,9 @@ __all__ = [
     "REPORT_DESCRIPTION",
     "REPORT_FOOTNOTES",
     "REPORT_ID",
+    "MYTHIC_REPORT_ID",
+    "MYTHIC_REPORT_TITLE",
+    "MYTHIC_REPORT_DESCRIPTION",
     "REPORT_TITLE",
     "build_vashnik_the_malignant_damage_report_page",
 ]

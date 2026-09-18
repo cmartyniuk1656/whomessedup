@@ -177,7 +177,7 @@ function ConsumableChildItem({ child }) {
   );
 }
 
-function DetailItemBadges({ item }) {
+function DetailItemBadges({ item, compact = false }) {
   if (!item.badges?.length) {
     return null;
   }
@@ -185,7 +185,7 @@ function DetailItemBadges({ item }) {
   const toneClasses = DETAIL_ITEM_TONE_CLASSES[item.tone] || DETAIL_ITEM_TONE_CLASSES.default;
 
   return (
-    <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+    <div className={compact ? "flex max-w-full flex-wrap gap-1.5" : "flex shrink-0 flex-wrap justify-end gap-1.5"}>
       {item.badges.map((badge) => (
         <span
           key={`${item.id}-${badge}`}
@@ -198,7 +198,7 @@ function DetailItemBadges({ item }) {
   );
 }
 
-export function EventGroupList({ details }) {
+export function EventGroupList({ details, compact = false }) {
   if (!details?.groups?.length && !details?.barChart) {
     return null;
   }
@@ -211,9 +211,9 @@ export function EventGroupList({ details }) {
       {details.groups.map((group) => (
         <div
           key={group.id}
-          className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+          className={compact ? "min-w-0 px-1" : "rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"}
         >
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className={compact ? "hidden" : "flex flex-wrap items-baseline gap-x-3 gap-y-1"}>
             {group.link ? (
               <a
                 href={group.link}
@@ -228,19 +228,19 @@ export function EventGroupList({ details }) {
             )}
             {group.subtitle ? <p className="text-xs text-slate-400">{group.subtitle}</p> : null}
           </div>
-          <ul className="mt-3 ml-5 list-disc space-y-1.5 text-sm text-slate-300">
+          <ul className={compact ? "divide-y divide-white/5 text-sm text-slate-300" : "mt-3 ml-5 list-disc space-y-1.5 text-sm text-slate-300"}>
             {group.items.map((item) => {
               const toneClasses = DETAIL_ITEM_TONE_CLASSES[item.tone] || DETAIL_ITEM_TONE_CLASSES.default;
               return (
-                <li key={item.id} className={toneClasses.item}>
-                  <div className="flex items-start justify-between gap-3">
+                <li key={item.id} className={`${toneClasses.item} ${compact ? "py-2 [overflow-wrap:anywhere]" : ""}`}>
+                  <div className={`flex items-start gap-2 ${compact ? "flex-col" : "justify-between"}`}>
                     <div className="min-w-0 flex-1">
                       <span className={toneClasses.label}>{item.label}</span>
                       {item.timestampLabel ? <span className={toneClasses.timestamp}>{item.timestampLabel}</span> : null}
                       <AbilityText child={item} />
                       {item.description ? <span className={toneClasses.description}>{item.description}</span> : null}
                     </div>
-                    <DetailItemBadges item={item} />
+                    <DetailItemBadges item={item} compact={compact} />
                   </div>
                   {item.children?.length ? (
                     <ul className="mt-2 ml-1 space-y-1.5 border-l border-white/10 pl-3">
@@ -267,7 +267,7 @@ export function EventGroupList({ details }) {
                                 {child.description ? <span className="ml-1 text-slate-100">{child.description}</span> : null}
                               </div>
                               {child.badges?.length ? (
-                                <DetailItemBadges item={child} />
+                                <DetailItemBadges item={child} compact={compact} />
                               ) : null}
                             </div>
                           </li>

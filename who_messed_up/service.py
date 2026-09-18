@@ -40,6 +40,7 @@ from .services.boss_manifests import (
     NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
     THE_LOST_EXPLORERS_HEROIC_MANIFEST,
     VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+    VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST,
     SSZORAK_HEROIC_MANIFEST,
     THE_TWIN_FANGS_HEROIC_MANIFEST,
     THE_COILED_ALTAR_HEROIC_MANIFEST,
@@ -136,6 +137,7 @@ from .services.nek_zali_the_soulcoiler_avoidable_damage import (
 )
 from .services.nek_zali_the_soulcoiler_damage import fetch_nek_zali_the_soulcoiler_damage_summary
 from .services.nek_zali_the_soulcoiler_deaths import fetch_nek_zali_the_soulcoiler_death_summary
+from .services.vashnik_mechanics import fetch_vashnik_mechanics_summary, VashnikMechanicsSummary
 from .services.entombed_sentinels_mechanics import (
     SentinelsMechanicsSummary,
     fetch_sentinels_mechanics_summary,
@@ -277,6 +279,7 @@ __all__ = [
     "NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST",
     "THE_LOST_EXPLORERS_HEROIC_MANIFEST",
     "VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST",
+    "VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST",
     "SSZORAK_HEROIC_MANIFEST",
     "THE_TWIN_FANGS_HEROIC_MANIFEST",
     "THE_COILED_ALTAR_HEROIC_MANIFEST",
@@ -362,6 +365,8 @@ __all__ = [
     "fetch_nek_zali_the_soulcoiler_death_summary",
     "fetch_nek_zali_mechanics_summary",
     "fetch_sentinels_mechanics_summary",
+    "fetch_vashnik_mechanics_summary",
+    "VashnikMechanicsSummary",
     "SentinelsMechanicsSummary",
     "fetch_entombed_sentinels_avoidable_damage_summary",
     "fetch_entombed_sentinels_damage_summary",

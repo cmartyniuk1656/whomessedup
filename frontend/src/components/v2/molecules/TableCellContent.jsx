@@ -2,6 +2,9 @@ import { CLASS_COLORS, DEFAULT_PLAYER_COLOR, ROLE_BADGE_STYLES } from "../../../
 import { formatReportTableCellValue } from "../../../utils/reportTablePresentation";
 import { colorWithAlpha } from "../../../utils/colorPresentation";
 import { Tooltip } from "../atoms/Tooltip";
+import { OutcomeBar } from "./OutcomeBar";
+import { MetricList } from "./MetricList";
+import { RelativeBar } from "./RelativeBar";
 
 const BADGE_TONES = {
   tank: ROLE_BADGE_STYLES.Tank,
@@ -91,14 +94,31 @@ function AttentionIndicator({ indicator }) {
   );
 }
 
-export function TableCellContent({ column, cell }) {
+export function TableCellContent({ column, cell, compact = false }) {
   const content = formatReportTableCellValue({
     value: cell?.value,
     display: cell?.display,
     column,
   });
 
+  if (column.cellKind === "outcome_bar") {
+    return <OutcomeBar cell={cell} compact={compact} />;
+  }
+  if (column.cellKind === "metric_list") {
+    return <MetricList metrics={cell?.metrics} />;
+  }
+  if (column.cellKind === "heading") {
+    return <div className="min-w-0 space-y-1 break-words">
+      <span className={`font-medium ${cell?.tone === "danger" ? "text-rose-300" : cell?.tone === "success" ? "text-emerald-300" : "text-slate-100"}`}>{content}</span>
+      {cell?.label ? <span className="block text-xs font-normal text-slate-400">{cell.label}</span> : null}
+    </div>;
+  }
+
   if (column.cellKind === "relative_bar") {
+    if (compact) {
+      return <RelativeBar label={cell?.label || column.label} value={Number(cell?.value ?? 0)}
+        maximum={Number(cell?.maxValue ?? 0)} display={content} unitLabel={cell?.unitLabel || "damage"} colorToken={cell?.colorToken} />;
+    }
     const value = Number(cell?.value ?? 0);
     const maximum = Number(cell?.maxValue ?? 0);
     const ratio = maximum > 0 ? Math.min(Math.max(value / maximum, 0), 1) : 0;
@@ -189,7 +209,7 @@ export function TableCellContent({ column, cell }) {
       return <span className="text-slate-400">{content}</span>;
     }
     return (
-      <span className="flex min-w-72 flex-wrap gap-x-3 gap-y-1.5">
+      <span className={`flex flex-wrap gap-y-1.5 ${compact ? "min-w-0 gap-x-2" : "min-w-72 gap-x-3"}`}>
         {cell?.players?.map((player) => {
           const color =
             CLASS_COLORS[String(player?.colorToken || "").toLowerCase()] ??
@@ -222,6 +242,7 @@ export function TableCellContent({ column, cell }) {
               key={player.name}
               className={[
                 "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5",
+                compact ? "max-w-full [overflow-wrap:anywhere]" : "",
                 PLAYER_LIST_TONES[player?.tone] || PLAYER_LIST_TONES.default,
               ].join(" ")}
             >

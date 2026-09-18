@@ -194,7 +194,11 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
   const combinedSummaryViewId = secondaryViewControl
     ? `${selectedTableView}::${selectedSecondaryTableView}`
     : null;
+  const subSummaryViewId = combinedSummaryViewId && activeSubTableView
+    ? `${combinedSummaryViewId}::${activeSubTableView}`
+    : null;
   const summary =
+    (subSummaryViewId ? page?.summaryByCombinedView?.[subSummaryViewId] : null) ??
     (combinedSummaryViewId
       ? page?.summaryByCombinedView?.[combinedSummaryViewId]
       : null) ??

@@ -1,0 +1,802 @@
+{
+  "encounter_id": 3455,
+  "difficulty": 5,
+  "scope": "Research observations, not production scores",
+  "attribution_travel_window_ms": 10000,
+  "attribution_boundary_tolerance_ms": 250,
+  "pulls": [
+    {
+      "code": "AZfwY8vr1DanQbch",
+      "fight": 40,
+      "kill": true,
+      "duration": 323.45,
+      "froth_assignments": 40,
+      "froth_sets": 8,
+      "normal_froth_expiries": 40,
+      "totems_spawned": 96,
+      "totem_deaths": 92,
+      "totem_completions": 0,
+      "wave_associated_deaths": 92,
+      "carrier_candidate_counts": {
+        "5": 92
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 28,
+          "outcomes": {
+            "Removed alive": 28
+          },
+          "median_removed_alive_seconds": 6.291,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 39787496,
+          "absorb_events": 1509
+        },
+        "exploding": {
+          "assignments": 28,
+          "outcomes": {
+            "Removed alive": 28
+          },
+          "median_removed_alive_seconds": 6.434,
+          "observed_dispels": 28,
+          "matched_dispels": 28
+        }
+      },
+      "burning_explosions": 11,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 32
+      },
+      "add_deaths": {
+        "Shrouded Venom": 32,
+        "Burning Venom": 11
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 8,
+        "soak_hits": 35,
+        "missed_soak_clusters": 0
+      },
+      "imbibe_casts": 4,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 92
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "Nr7yQvGqjz8atHYc",
+      "fight": 11,
+      "kill": false,
+      "duration": 295.25,
+      "froth_assignments": 35,
+      "froth_sets": 7,
+      "normal_froth_expiries": 35,
+      "totems_spawned": 96,
+      "totem_deaths": 72,
+      "totem_completions": 0,
+      "wave_associated_deaths": 72,
+      "carrier_candidate_counts": {
+        "5": 72
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 24,
+          "outcomes": {
+            "Removed alive": 22,
+            "Died before resolution": 2
+          },
+          "median_removed_alive_seconds": 5.941,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 34036164,
+          "absorb_events": 1343
+        },
+        "exploding": {
+          "assignments": 24,
+          "outcomes": {
+            "Removed alive": 22,
+            "Died before resolution": 2
+          },
+          "median_removed_alive_seconds": 5.814,
+          "observed_dispels": 23,
+          "matched_dispels": 23
+        }
+      },
+      "burning_explosions": 9,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 32
+      },
+      "add_deaths": {
+        "Shrouded Venom": 25,
+        "Burning Venom": 9
+      },
+      "add_leak_casts": 1,
+      "bile": {
+        "catalyst_casts": 7,
+        "soak_hits": 30,
+        "missed_soak_clusters": 2
+      },
+      "imbibe_casts": 4,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 72
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "Nr7yQvGqjz8atHYc",
+      "fight": 13,
+      "kill": false,
+      "duration": 165.9,
+      "froth_assignments": 20,
+      "froth_sets": 4,
+      "normal_froth_expiries": 18,
+      "totems_spawned": 48,
+      "totem_deaths": 42,
+      "totem_completions": 1,
+      "wave_associated_deaths": 38,
+      "carrier_candidate_counts": {
+        "5": 38
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 12,
+          "outcomes": {
+            "Removed alive": 9,
+            "Died before resolution": 3
+          },
+          "median_removed_alive_seconds": 5.578,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 14376038,
+          "absorb_events": 687
+        },
+        "exploding": {
+          "assignments": 12,
+          "outcomes": {
+            "Removed alive": 12
+          },
+          "median_removed_alive_seconds": 5.389,
+          "observed_dispels": 13,
+          "matched_dispels": 12
+        }
+      },
+      "burning_explosions": 5,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 16
+      },
+      "add_deaths": {
+        "Shrouded Venom": 16,
+        "Burning Venom": 5
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 4,
+        "soak_hits": 15,
+        "missed_soak_clusters": 2
+      },
+      "imbibe_casts": 2,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 39,
+          "1": 3
+        },
+        "unique_candidates": [
+          {
+            "player": "Lazerzpewpew",
+            "removed": 142.078,
+            "totem_death": 142.157,
+            "held_seconds": 4.017,
+            "totem_id": 121,
+            "instance": 20
+          },
+          {
+            "player": "Lazerzpewpew",
+            "removed": 142.078,
+            "totem_death": 142.473,
+            "held_seconds": 4.017,
+            "totem_id": 119,
+            "instance": 16
+          },
+          {
+            "player": "Lazerzpewpew",
+            "removed": 142.078,
+            "totem_death": 142.584,
+            "held_seconds": 4.017,
+            "totem_id": 119,
+            "instance": 24
+          }
+        ]
+      }
+    },
+    {
+      "code": "Nr7yQvGqjz8atHYc",
+      "fight": 14,
+      "kill": false,
+      "duration": 122.63,
+      "froth_assignments": 15,
+      "froth_sets": 3,
+      "normal_froth_expiries": 15,
+      "totems_spawned": 48,
+      "totem_deaths": 22,
+      "totem_completions": 2,
+      "wave_associated_deaths": 22,
+      "carrier_candidate_counts": {
+        "5": 22
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 8,
+          "outcomes": {
+            "Removed alive": 7,
+            "Died before resolution": 1
+          },
+          "median_removed_alive_seconds": 4.536,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 10755404,
+          "absorb_events": 442
+        },
+        "exploding": {
+          "assignments": 8,
+          "outcomes": {
+            "Removed alive": 8
+          },
+          "median_removed_alive_seconds": 4.189,
+          "observed_dispels": 8,
+          "matched_dispels": 8
+        }
+      },
+      "burning_explosions": 3,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 16
+      },
+      "add_deaths": {
+        "Shrouded Venom": 8,
+        "Burning Venom": 3
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 3,
+        "soak_hits": 10,
+        "missed_soak_clusters": 0
+      },
+      "imbibe_casts": 2,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 22
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "Nr7yQvGqjz8atHYc",
+      "fight": 15,
+      "kill": true,
+      "duration": 424.83,
+      "froth_assignments": 55,
+      "froth_sets": 11,
+      "normal_froth_expiries": 50,
+      "totems_spawned": 120,
+      "totem_deaths": 114,
+      "totem_completions": 0,
+      "wave_associated_deaths": 114,
+      "carrier_candidate_counts": {
+        "5": 114
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 36,
+          "outcomes": {
+            "Removed alive": 32,
+            "Died before resolution": 4
+          },
+          "median_removed_alive_seconds": 4.881,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 50175015,
+          "absorb_events": 1996
+        },
+        "exploding": {
+          "assignments": 36,
+          "outcomes": {
+            "Removed alive": 36
+          },
+          "median_removed_alive_seconds": 5.687,
+          "observed_dispels": 37,
+          "matched_dispels": 36
+        }
+      },
+      "burning_explosions": 14,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 40
+      },
+      "add_deaths": {
+        "Shrouded Venom": 40,
+        "Burning Venom": 14
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 10,
+        "soak_hits": 50,
+        "missed_soak_clusters": 0
+      },
+      "imbibe_casts": 5,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 114
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fight": 36,
+      "kill": false,
+      "duration": 168.87,
+      "froth_assignments": 20,
+      "froth_sets": 4,
+      "normal_froth_expiries": 19,
+      "totems_spawned": 48,
+      "totem_deaths": 41,
+      "totem_completions": 1,
+      "wave_associated_deaths": 38,
+      "carrier_candidate_counts": {
+        "5": 38
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 12,
+          "outcomes": {
+            "Removed alive": 11,
+            "Died before resolution": 1
+          },
+          "median_removed_alive_seconds": 5.469,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 15672899,
+          "absorb_events": 607
+        },
+        "exploding": {
+          "assignments": 12,
+          "outcomes": {
+            "Removed alive": 10,
+            "Died before resolution": 2
+          },
+          "median_removed_alive_seconds": 8.916,
+          "observed_dispels": 11,
+          "matched_dispels": 11
+        }
+      },
+      "burning_explosions": 6,
+      "burning_deaths_within_3s": 1,
+      "add_spawns": {
+        "Shrouded Venom": 16
+      },
+      "add_deaths": {
+        "Shrouded Venom": 16,
+        "Burning Venom": 6
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 4,
+        "soak_hits": 15,
+        "missed_soak_clusters": 2
+      },
+      "imbibe_casts": 2,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 40,
+          "1": 1
+        },
+        "unique_candidates": [
+          {
+            "player": "Grisnaingui",
+            "removed": 143.078,
+            "totem_death": 143.236,
+            "held_seconds": 5.077,
+            "totem_id": 366,
+            "instance": 14
+          }
+        ]
+      }
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fight": 37,
+      "kill": false,
+      "duration": 304.62,
+      "froth_assignments": 35,
+      "froth_sets": 7,
+      "normal_froth_expiries": 34,
+      "totems_spawned": 96,
+      "totem_deaths": 71,
+      "totem_completions": 1,
+      "wave_associated_deaths": 71,
+      "carrier_candidate_counts": {
+        "5": 71
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 26,
+          "outcomes": {
+            "Removed alive": 24,
+            "Died before resolution": 2
+          },
+          "median_removed_alive_seconds": 6.0,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 35283108,
+          "absorb_events": 1760
+        },
+        "exploding": {
+          "assignments": 25,
+          "outcomes": {
+            "Removed alive": 21,
+            "Died before resolution": 4
+          },
+          "median_removed_alive_seconds": 11.141,
+          "observed_dispels": 21,
+          "matched_dispels": 21
+        }
+      },
+      "burning_explosions": 9,
+      "burning_deaths_within_3s": 1,
+      "add_spawns": {
+        "Shrouded Venom": 32
+      },
+      "add_deaths": {
+        "Shrouded Venom": 25,
+        "Burning Venom": 9
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 7,
+        "soak_hits": 33,
+        "missed_soak_clusters": 2
+      },
+      "imbibe_casts": 4,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 71
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fight": 38,
+      "kill": false,
+      "duration": 165.35,
+      "froth_assignments": 20,
+      "froth_sets": 4,
+      "normal_froth_expiries": 18,
+      "totems_spawned": 48,
+      "totem_deaths": 40,
+      "totem_completions": 1,
+      "wave_associated_deaths": 37,
+      "carrier_candidate_counts": {
+        "5": 37
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 12,
+          "outcomes": {
+            "Removed alive": 11,
+            "Died before resolution": 1
+          },
+          "median_removed_alive_seconds": 4.648,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 17026989,
+          "absorb_events": 708
+        },
+        "exploding": {
+          "assignments": 12,
+          "outcomes": {
+            "Removed alive": 12
+          },
+          "median_removed_alive_seconds": 9.213,
+          "observed_dispels": 12,
+          "matched_dispels": 12
+        }
+      },
+      "burning_explosions": 5,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 16
+      },
+      "add_deaths": {
+        "Shrouded Venom": 16,
+        "Burning Venom": 5
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 4,
+        "soak_hits": 15,
+        "missed_soak_clusters": 1
+      },
+      "imbibe_casts": 2,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 38,
+          "2": 2
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fight": 40,
+      "kill": false,
+      "duration": 426.21,
+      "froth_assignments": 51,
+      "froth_sets": 11,
+      "normal_froth_expiries": 46,
+      "totems_spawned": 120,
+      "totem_deaths": 108,
+      "totem_completions": 1,
+      "wave_associated_deaths": 102,
+      "carrier_candidate_counts": {
+        "5": 102
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 35,
+          "outcomes": {
+            "Removed alive": 34,
+            "Died before resolution": 1
+          },
+          "median_removed_alive_seconds": 4.736,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 48886421,
+          "absorb_events": 2042
+        },
+        "exploding": {
+          "assignments": 36,
+          "outcomes": {
+            "Removed alive": 32,
+            "Died before resolution": 4
+          },
+          "median_removed_alive_seconds": 11.567,
+          "observed_dispels": 33,
+          "matched_dispels": 32
+        }
+      },
+      "burning_explosions": 12,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 40
+      },
+      "add_deaths": {
+        "Shrouded Venom": 40,
+        "Burning Venom": 12
+      },
+      "add_leak_casts": 3,
+      "bile": {
+        "catalyst_casts": 10,
+        "soak_hits": 49,
+        "missed_soak_clusters": 1
+      },
+      "imbibe_casts": 5,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 101,
+          "2": 6,
+          "3": 1
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fight": 41,
+      "kill": false,
+      "duration": 376.08,
+      "froth_assignments": 45,
+      "froth_sets": 9,
+      "normal_froth_expiries": 44,
+      "totems_spawned": 120,
+      "totem_deaths": 92,
+      "totem_completions": 4,
+      "wave_associated_deaths": 92,
+      "carrier_candidate_counts": {
+        "5": 92
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 32,
+          "outcomes": {
+            "Removed alive": 32
+          },
+          "median_removed_alive_seconds": 4.806,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 45471424,
+          "absorb_events": 2018
+        },
+        "exploding": {
+          "assignments": 32,
+          "outcomes": {
+            "Removed alive": 30,
+            "Died before resolution": 2
+          },
+          "median_removed_alive_seconds": 10.699,
+          "observed_dispels": 31,
+          "matched_dispels": 31
+        }
+      },
+      "burning_explosions": 12,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 40
+      },
+      "add_deaths": {
+        "Shrouded Venom": 32,
+        "Burning Venom": 12
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 9,
+        "soak_hits": 39,
+        "missed_soak_clusters": 1
+      },
+      "imbibe_casts": 5,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 92
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fight": 42,
+      "kill": false,
+      "duration": 289.96,
+      "froth_assignments": 35,
+      "froth_sets": 7,
+      "normal_froth_expiries": 35,
+      "totems_spawned": 96,
+      "totem_deaths": 70,
+      "totem_completions": 2,
+      "wave_associated_deaths": 70,
+      "carrier_candidate_counts": {
+        "5": 70
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 24,
+          "outcomes": {
+            "Removed alive": 24
+          },
+          "median_removed_alive_seconds": 5.303,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 34103568,
+          "absorb_events": 1589
+        },
+        "exploding": {
+          "assignments": 24,
+          "outcomes": {
+            "Removed alive": 21,
+            "Died before resolution": 3
+          },
+          "median_removed_alive_seconds": 13.875,
+          "observed_dispels": 21,
+          "matched_dispels": 21
+        }
+      },
+      "burning_explosions": 9,
+      "burning_deaths_within_3s": 1,
+      "add_spawns": {
+        "Shrouded Venom": 32
+      },
+      "add_deaths": {
+        "Shrouded Venom": 24,
+        "Burning Venom": 9
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 7,
+        "soak_hits": 30,
+        "missed_soak_clusters": 0
+      },
+      "imbibe_casts": 4,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 70
+        },
+        "unique_candidates": []
+      }
+    },
+    {
+      "code": "6x4fbqFQLagcRCKD",
+      "fight": 43,
+      "kill": true,
+      "duration": 424.95,
+      "froth_assignments": 55,
+      "froth_sets": 11,
+      "normal_froth_expiries": 44,
+      "totems_spawned": 120,
+      "totem_deaths": 114,
+      "totem_completions": 1,
+      "wave_associated_deaths": 112,
+      "carrier_candidate_counts": {
+        "5": 112
+      },
+      "infections": {
+        "stygian": {
+          "assignments": 36,
+          "outcomes": {
+            "Removed alive": 35,
+            "Died before resolution": 1
+          },
+          "median_removed_alive_seconds": 5.401,
+          "observed_dispels": 0,
+          "matched_dispels": 0,
+          "absorb_healing": 50777726,
+          "absorb_events": 2394
+        },
+        "exploding": {
+          "assignments": 36,
+          "outcomes": {
+            "Removed alive": 32,
+            "Died before resolution": 4
+          },
+          "median_removed_alive_seconds": 15.357,
+          "observed_dispels": 33,
+          "matched_dispels": 33
+        }
+      },
+      "burning_explosions": 12,
+      "burning_deaths_within_3s": 0,
+      "add_spawns": {
+        "Shrouded Venom": 40
+      },
+      "add_deaths": {
+        "Shrouded Venom": 40,
+        "Burning Venom": 12
+      },
+      "add_leak_casts": 0,
+      "bile": {
+        "catalyst_casts": 10,
+        "soak_hits": 49,
+        "missed_soak_clusters": 1
+      },
+      "imbibe_casts": 5,
+      "totem_attribution": {
+        "candidate_counts": {
+          "5": 112,
+          "1": 2
+        },
+        "unique_candidates": [
+          {
+            "player": "Bowerdemo",
+            "removed": 394.737,
+            "totem_death": 394.849,
+            "held_seconds": 4.618,
+            "totem_id": 366,
+            "instance": 59
+          },
+          {
+            "player": "Bowerdemo",
+            "removed": 394.737,
+            "totem_death": 395.051,
+            "held_seconds": 4.618,
+            "totem_id": 364,
+            "instance": 53
+          }
+        ]
+      }
+    }
+  ]
+}

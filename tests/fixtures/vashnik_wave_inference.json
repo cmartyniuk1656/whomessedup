@@ -1,0 +1,267 @@
+{
+  "report_code": "Nr7yQvGqjz8atHYc",
+  "fight": {
+    "id": 13,
+    "encounterID": 3455,
+    "name": "Vashnik the Malignant",
+    "startTime": 3212535,
+    "endTime": 3378431,
+    "kill": false,
+    "difficulty": 5
+  },
+  "actors": {
+    "9": "Astraelon",
+    "16": "Beido",
+    "19": "Ogpulse",
+    "55": "Lazerzpewpew",
+    "66": "Sinvoid",
+    "118": "Shadow Tumor Stalker",
+    "119": "Malignant Totem",
+    "120": "Fire Tumor Stalker",
+    "121": "Malignant Totem"
+  },
+  "players": [
+    9,
+    16,
+    19,
+    55,
+    66
+  ],
+  "streams": {
+    "debuffs": [
+      {
+        "timestamp": 3350596,
+        "type": "applydebuff",
+        "sourceID": 95,
+        "targetID": 55,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3350596,
+        "type": "applydebuff",
+        "sourceID": 95,
+        "targetID": 16,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3350597,
+        "type": "applydebuff",
+        "sourceID": 95,
+        "targetID": 19,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3350597,
+        "type": "applydebuff",
+        "sourceID": 95,
+        "targetID": 66,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3350597,
+        "type": "applydebuff",
+        "sourceID": 95,
+        "targetID": 9,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3354613,
+        "type": "removedebuff",
+        "sourceID": 95,
+        "targetID": 55,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3356600,
+        "type": "removedebuff",
+        "sourceID": 95,
+        "targetID": 19,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3356601,
+        "type": "removedebuff",
+        "sourceID": 95,
+        "targetID": 16,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3356601,
+        "type": "removedebuff",
+        "sourceID": 95,
+        "targetID": 9,
+        "abilityGameID": 1281913,
+        "fight": 13
+      },
+      {
+        "timestamp": 3356601,
+        "type": "removedebuff",
+        "sourceID": 95,
+        "targetID": 66,
+        "abilityGameID": 1281913,
+        "fight": 13
+      }
+    ],
+    "totems": [
+      {
+        "timestamp": 3321318,
+        "type": "summon",
+        "sourceID": 118,
+        "targetID": 119,
+        "targetInstance": 14,
+        "abilityGameID": 1306820,
+        "fight": 13
+      },
+      {
+        "timestamp": 3321595,
+        "type": "summon",
+        "sourceID": 118,
+        "targetID": 119,
+        "targetInstance": 16,
+        "abilityGameID": 1306820,
+        "fight": 13
+      },
+      {
+        "timestamp": 3321799,
+        "type": "summon",
+        "sourceID": 120,
+        "targetID": 121,
+        "targetInstance": 20,
+        "abilityGameID": 1306820,
+        "fight": 13
+      },
+      {
+        "timestamp": 3322022,
+        "type": "summon",
+        "sourceID": 118,
+        "targetID": 119,
+        "targetInstance": 24,
+        "abilityGameID": 1306820,
+        "fight": 13
+      },
+      {
+        "timestamp": 3323775,
+        "type": "begincast",
+        "sourceID": 119,
+        "sourceInstance": 14,
+        "targetID": -1,
+        "abilityGameID": 1304459,
+        "fight": 13
+      },
+      {
+        "timestamp": 3323776,
+        "type": "begincast",
+        "sourceID": 119,
+        "sourceInstance": 16,
+        "targetID": -1,
+        "abilityGameID": 1304459,
+        "fight": 13
+      },
+      {
+        "timestamp": 3324240,
+        "type": "begincast",
+        "sourceID": 121,
+        "sourceInstance": 20,
+        "targetID": -1,
+        "abilityGameID": 1304459,
+        "fight": 13
+      },
+      {
+        "timestamp": 3324596,
+        "type": "begincast",
+        "sourceID": 119,
+        "sourceInstance": 24,
+        "targetID": -1,
+        "abilityGameID": 1304459,
+        "fight": 13
+      },
+      {
+        "timestamp": 3354692,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 121,
+        "targetInstance": 20,
+        "abilityGameID": 0,
+        "fight": 13
+      },
+      {
+        "timestamp": 3355008,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 119,
+        "targetInstance": 16,
+        "abilityGameID": 0,
+        "fight": 13
+      },
+      {
+        "timestamp": 3355119,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 119,
+        "targetInstance": 24,
+        "abilityGameID": 0,
+        "fight": 13
+      },
+      {
+        "timestamp": 3356487,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 119,
+        "targetInstance": 14,
+        "abilityGameID": 0,
+        "fight": 13
+      }
+    ],
+    "deaths": [
+      {
+        "timestamp": 3354614,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 55,
+        "abilityGameID": 0,
+        "fight": 13,
+        "killerID": 95,
+        "killingAbilityGameID": 1281925
+      },
+      {
+        "timestamp": 3356672,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 9,
+        "abilityGameID": 0,
+        "fight": 13,
+        "killerID": 95,
+        "killingAbilityGameID": 1281925
+      },
+      {
+        "timestamp": 3362207,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 19,
+        "abilityGameID": 0,
+        "fight": 13,
+        "killerID": 119,
+        "killerInstance": 1,
+        "killingAbilityGameID": 1304459
+      },
+      {
+        "timestamp": 3370605,
+        "type": "death",
+        "sourceID": -1,
+        "targetID": 16,
+        "abilityGameID": 0,
+        "fight": 13,
+        "killerID": 95,
+        "killingAbilityGameID": 1282525
+      }
+    ]
+  }
+}

@@ -195,12 +195,13 @@ class TheLostExplorersHeroicManifestTests(unittest.TestCase):
 
 
 class VashnikTheMalignantHeroicManifestTests(unittest.TestCase):
-    def test_manifest_resolves_only_for_heroic(self):
+    def test_manifest_resolves_by_difficulty(self):
         manifest = get_boss_manifest("vashnik-the-malignant", "heroic")
 
         self.assertIsNotNone(manifest)
         self.assertEqual(manifest.boss_name, "Vashnik the Malignant")
-        self.assertIsNone(get_boss_manifest("vashnik-the-malignant", "mythic"))
+        self.assertIsNotNone(get_boss_manifest("vashnik-the-malignant", "mythic"))
+        self.assertIsNone(get_boss_manifest("vashnik-the-malignant"))
 
     def test_manifest_contains_observed_targets_and_damage_abilities(self):
         manifest = get_boss_manifest("vashnik-the-malignant", "heroic")

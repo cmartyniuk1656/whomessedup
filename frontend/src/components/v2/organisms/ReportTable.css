@@ -1,0 +1,38 @@
+/* Opt-in compact tables fit their container; small screens reflow rows as cards. */
+.report-table-compact {
+  width: 100%;
+  table-layout: fixed;
+}
+.report-table-compact th,
+.report-table-compact td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+.report-table-compact td > div {
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .report-table-compact,
+  .report-table-compact tbody,
+  .report-table-compact tr,
+  .report-table-compact td {
+    display: block;
+    width: 100%;
+  }
+  .report-table-compact colgroup { display: none; }
+  .report-table-compact thead,
+  .report-table-compact thead tr {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .report-table-compact th { display: block; }
+  .report-table-compact td[data-label] { padding: 0.6rem 0.85rem; }
+  .report-table-compact td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #94a3b8;
+    font-size: 0.7rem;
+  }
+  .report-table-compact td[data-label]:first-child::before { display: none; }
+}

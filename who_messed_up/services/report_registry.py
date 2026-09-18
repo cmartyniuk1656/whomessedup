@@ -18,6 +18,7 @@ from .boss_manifests import (
     NEK_ZALI_THE_SOULCOILER_MYTHIC_MANIFEST,
     THE_LOST_EXPLORERS_HEROIC_MANIFEST,
     VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+    VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST,
     SSZORAK_HEROIC_MANIFEST,
     THE_TWIN_FANGS_HEROIC_MANIFEST,
     THE_COILED_ALTAR_HEROIC_MANIFEST,
@@ -44,6 +45,13 @@ from .entombed_sentinels_mechanics import (
     REPORT_DESCRIPTION as REPORT_SENTINELS_MECHANICS_DESCRIPTION,
     REPORT_DEFAULT_FIGHT as REPORT_SENTINELS_MECHANICS_DEFAULT_FIGHT,
     REPORT_FOOTNOTES as REPORT_SENTINELS_MECHANICS_FOOTNOTES,
+)
+from .vashnik_mechanics_models import (
+    REPORT_ID as REPORT_VASHNIK_MECHANICS_ID,
+    REPORT_TITLE as REPORT_VASHNIK_MECHANICS_TITLE,
+    REPORT_DESCRIPTION as REPORT_VASHNIK_MECHANICS_DESCRIPTION,
+    REPORT_DEFAULT_FIGHT as REPORT_VASHNIK_MECHANICS_DEFAULT_FIGHT,
+    REPORT_FOOTNOTES as REPORT_VASHNIK_MECHANICS_FOOTNOTES,
 )
 from .nek_zali_the_soulcoiler_mechanics import (
     REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_MECHANICS_DEFAULT_FIGHT,
@@ -287,6 +295,9 @@ from .view_models.vashnik_the_malignant_avoidable_damage import (
     REPORT_FOOTNOTES as REPORT_VASHNIK_AVOIDABLE_FOOTNOTES,
     REPORT_ID as REPORT_VASHNIK_AVOIDABLE_ID,
     REPORT_TITLE as REPORT_VASHNIK_AVOIDABLE_TITLE,
+    MYTHIC_REPORT_ID as REPORT_VASHNIK_AVOIDABLE_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_VASHNIK_AVOIDABLE_MYTHIC_TITLE,
+    MYTHIC_REPORT_DESCRIPTION as REPORT_VASHNIK_AVOIDABLE_MYTHIC_DESCRIPTION,
 )
 from .view_models.vashnik_the_malignant_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_VASHNIK_DEFAULT_FIGHT,
@@ -294,6 +305,9 @@ from .view_models.vashnik_the_malignant_damage import (
     REPORT_FOOTNOTES as REPORT_VASHNIK_FOOTNOTES,
     REPORT_ID as REPORT_VASHNIK_ID,
     REPORT_TITLE as REPORT_VASHNIK_TITLE,
+    MYTHIC_REPORT_ID as REPORT_VASHNIK_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_VASHNIK_MYTHIC_TITLE,
+    MYTHIC_REPORT_DESCRIPTION as REPORT_VASHNIK_MYTHIC_DESCRIPTION,
 )
 from .view_models.vashnik_the_malignant_deaths import (
     REPORT_DEFAULT_FIGHT as REPORT_VASHNIK_DEATHS_DEFAULT_FIGHT,
@@ -301,6 +315,9 @@ from .view_models.vashnik_the_malignant_deaths import (
     REPORT_FOOTNOTES as REPORT_VASHNIK_DEATHS_FOOTNOTES,
     REPORT_ID as REPORT_VASHNIK_DEATHS_ID,
     REPORT_TITLE as REPORT_VASHNIK_DEATHS_TITLE,
+    MYTHIC_REPORT_ID as REPORT_VASHNIK_DEATHS_MYTHIC_ID,
+    MYTHIC_REPORT_TITLE as REPORT_VASHNIK_DEATHS_MYTHIC_TITLE,
+    MYTHIC_REPORT_DESCRIPTION as REPORT_VASHNIK_DEATHS_MYTHIC_DESCRIPTION,
 )
 from .view_models.sszorak_avoidable_damage import (
     REPORT_DEFAULT_FIGHT as REPORT_SSZORAK_AVOIDABLE_DEFAULT_FIGHT,
@@ -469,6 +486,7 @@ JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS = "v2_report_nek_zali_the_soulcoiler_me
 JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE = "v2_report_entombed_sentinels_avoidable_damage"
 JOB_V2_ENTOMBED_SENTINELS_DAMAGE = "v2_report_entombed_sentinels_damage"
 JOB_V2_ENTOMBED_SENTINELS_DEATHS = "v2_report_entombed_sentinels_deaths"
+JOB_V2_VASHNIK_MECHANICS = "v2_report_vashnik_mechanics"
 JOB_V2_ENTOMBED_SENTINELS_MECHANICS = "v2_report_entombed_sentinels_mechanics"
 JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE = "v2_report_the_lost_explorers_avoidable_damage"
 JOB_V2_THE_LOST_EXPLORERS_DAMAGE = "v2_report_the_lost_explorers_damage"
@@ -953,6 +971,13 @@ def _build_sentinels_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str
             _coerce_bool(values, "fresh_run", default=False))
 
 
+def _build_vashnik_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    return ({"report": report_codes[0], "extra_reports": report_codes[1:],
+             "fight": REPORT_VASHNIK_MECHANICS_DEFAULT_FIGHT, "difficulty": "mythic"},
+            _coerce_bool(values, "fresh_run", default=False))
+
+
 def _build_entombed_sentinels_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     return _build_target_damage_payload(
         values,
@@ -981,6 +1006,14 @@ def _build_vashnik_the_malignant_damage_payload(values: Dict[str, Any]) -> Tuple
     return _build_target_damage_payload(
         values,
         manifest=VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+        default_fight=REPORT_VASHNIK_DEFAULT_FIGHT,
+    )
+
+
+def _build_vashnik_the_malignant_mythic_damage_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    return _build_target_damage_payload(
+        values,
+        manifest=VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST,
         default_fight=REPORT_VASHNIK_DEFAULT_FIGHT,
     )
 
@@ -1241,6 +1274,16 @@ def _build_vashnik_the_malignant_avoidable_damage_payload(
     return _build_avoidable_damage_payload(
         values,
         manifest=VASHNIK_THE_MALIGNANT_HEROIC_MANIFEST,
+        default_fight=REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
+    )
+
+
+def _build_vashnik_the_malignant_mythic_avoidable_damage_payload(
+    values: Dict[str, Any],
+) -> Tuple[Dict[str, Any], bool]:
+    return _build_avoidable_damage_payload(
+        values,
+        manifest=VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST,
         default_fight=REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
     )
 
@@ -1909,6 +1952,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_VASHNIK_THE_MALIGNANT_DEATHS,
         build_payload=_build_vashnik_the_malignant_deaths_payload,
     ),
+    REPORT_VASHNIK_DEATHS_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VASHNIK_DEATHS_MYTHIC_ID,
+            title=REPORT_VASHNIK_DEATHS_MYTHIC_TITLE,
+            description=REPORT_VASHNIK_DEATHS_MYTHIC_DESCRIPTION,
+            fightId=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+            fightName=REPORT_VASHNIK_DEATHS_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_VASHNIK_DEATHS_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VASHNIK_DEATHS_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    _build_ignore_after_deaths_field(),
+                    _build_ignore_unavoidable_after_healer_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VASHNIK_THE_MALIGNANT_DEATHS,
+        build_payload=_build_vashnik_the_malignant_deaths_payload,
+    ),
     REPORT_SSZORAK_DEATHS_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_SSZORAK_DEATHS_ID,
@@ -2337,6 +2407,33 @@ _REPORTS: Dict[str, RegisteredReport] = {
         ),
         job_type=JOB_V2_VASHNIK_THE_MALIGNANT_AVOIDABLE_DAMAGE,
         build_payload=_build_vashnik_the_malignant_avoidable_damage_payload,
+    ),
+    REPORT_VASHNIK_AVOIDABLE_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VASHNIK_AVOIDABLE_MYTHIC_ID,
+            title=REPORT_VASHNIK_AVOIDABLE_MYTHIC_TITLE,
+            description=REPORT_VASHNIK_AVOIDABLE_MYTHIC_DESCRIPTION,
+            fightId=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+            fightName=REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_VASHNIK_AVOIDABLE_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VASHNIK_AVOIDABLE_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_avoidable_ability_fields(VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST),
+                    _build_ignore_after_deaths_field(),
+                    RequestFieldModel(
+                        id="fresh_run",
+                        kind=RequestFieldKind.CHECKBOX,
+                        label="Force fresh run (skip cache)",
+                        defaultValue=False,
+                    ),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VASHNIK_THE_MALIGNANT_AVOIDABLE_DAMAGE,
+        build_payload=_build_vashnik_the_malignant_mythic_avoidable_damage_payload,
     ),
     REPORT_SSZORAK_AVOIDABLE_ID: RegisteredReport(
         definition=ReportDefinitionModel(
@@ -3031,6 +3128,27 @@ _REPORTS: Dict[str, RegisteredReport] = {
         job_type=JOB_V2_VASHNIK_THE_MALIGNANT_DAMAGE,
         build_payload=_build_vashnik_the_malignant_damage_payload,
     ),
+    REPORT_VASHNIK_MYTHIC_ID: RegisteredReport(
+        definition=ReportDefinitionModel(
+            id=REPORT_VASHNIK_MYTHIC_ID,
+            title=REPORT_VASHNIK_MYTHIC_TITLE,
+            description=REPORT_VASHNIK_MYTHIC_DESCRIPTION,
+            fightId=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+            fightName=REPORT_VASHNIK_DEFAULT_FIGHT,
+            difficulty=ReportDifficulty.MYTHIC,
+            defaultFight=REPORT_VASHNIK_DEFAULT_FIGHT,
+            footnotes=list(REPORT_VASHNIK_FOOTNOTES),
+            requestSchema=RequestSchemaModel(
+                fields=[
+                    _build_report_codes_field(),
+                    *_build_target_fields(VASHNIK_THE_MALIGNANT_MYTHIC_MANIFEST),
+                    *_build_target_damage_scope_fields("Vashnik the Malignant"),
+                ]
+            ),
+        ),
+        job_type=JOB_V2_VASHNIK_THE_MALIGNANT_DAMAGE,
+        build_payload=_build_vashnik_the_malignant_mythic_damage_payload,
+    ),
     REPORT_SSZORAK_ID: RegisteredReport(
         definition=ReportDefinitionModel(
             id=REPORT_SSZORAK_ID,
@@ -3184,6 +3302,27 @@ _REPORTS[REPORT_SENTINELS_MECHANICS_ID] = RegisteredReport(
     ),
     job_type=JOB_V2_ENTOMBED_SENTINELS_MECHANICS,
     build_payload=_build_sentinels_mechanics_payload,
+)
+
+
+_REPORTS[REPORT_VASHNIK_MECHANICS_ID] = RegisteredReport(
+    definition=ReportDefinitionModel(
+        id=REPORT_VASHNIK_MECHANICS_ID,
+        title=REPORT_VASHNIK_MECHANICS_TITLE,
+        description=REPORT_VASHNIK_MECHANICS_DESCRIPTION,
+        fightId=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+        fightName=REPORT_VASHNIK_MECHANICS_DEFAULT_FIGHT,
+        difficulty=ReportDifficulty.MYTHIC,
+        defaultFight=REPORT_VASHNIK_MECHANICS_DEFAULT_FIGHT,
+        footnotes=list(REPORT_VASHNIK_MECHANICS_FOOTNOTES),
+        requestSchema=RequestSchemaModel(fields=[
+            _build_report_codes_field(),
+            RequestFieldModel(id="fresh_run", kind=RequestFieldKind.CHECKBOX,
+                              label="Force fresh run (skip cache)", defaultValue=False),
+        ]),
+    ),
+    job_type=JOB_V2_VASHNIK_MECHANICS,
+    build_payload=_build_vashnik_mechanics_payload,
 )
 
 
@@ -3394,6 +3533,15 @@ _REPORTS["entombed-sentinels-cooldowns-mythic"] = _build_cooldown_usage_definiti
     fight_name="Entombed Sentinels",
     difficulty=ReportDifficulty.MYTHIC,
     expected_encounter_id=3445,
+)
+
+
+_REPORTS["vashnik-the-malignant-cooldowns-mythic"] = _build_cooldown_usage_definition(
+    report_id="vashnik-the-malignant-cooldowns-mythic",
+    fight_id=VASHNIK_THE_MALIGNANT_FIGHT_ID,
+    fight_name="Vashnik the Malignant",
+    difficulty=ReportDifficulty.MYTHIC,
+    expected_encounter_id=3455,
 )
 
 
@@ -3684,6 +3832,7 @@ __all__ = [
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS",
     "JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS",
     "JOB_V2_ENTOMBED_SENTINELS_MECHANICS",
+    "JOB_V2_VASHNIK_MECHANICS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
     "JOB_V2_VORASIUS_DEATHS",

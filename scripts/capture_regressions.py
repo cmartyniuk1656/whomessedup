@@ -102,6 +102,29 @@ REGRESSION_CASES.append({
 })
 
 
+REGRESSION_CASES.extend(
+    {
+        "name": f"vashnik_mythic_{kind.replace('-', '_')}",
+        "path": f"/api/v2/reports/vashnik-the-malignant-{kind}-mythic/jobs",
+        "body": {"values": {"report_codes": ["6x4fbqFQLagcRCKD"], "fresh_run": True}},
+    }
+    for kind in ("damage", "deaths", "avoidable-damage")
+)
+
+
+REGRESSION_CASES.append({
+    "name": "vashnik_mythic_mechanics",
+    "path": "/api/v2/reports/vashnik-the-malignant-mythic-mechanics/jobs",
+    "body": {"values": {"report_codes": ["6x4fbqFQLagcRCKD"], "fresh_run": True}},
+})
+
+REGRESSION_CASES.append({
+    "name": "vashnik_mythic_deaths_long_session",
+    "path": "/api/v2/reports/vashnik-the-malignant-deaths-mythic/jobs",
+    "body": {"values": {"report_codes": ["X6FGCJm3pqjQMNdv"], "fresh_run": True}},
+})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Capture regression baselines from the running API server.")
     default_api_port = os.getenv("WHO_MESSED_UP_API_PORT", "5511")
