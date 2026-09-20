@@ -29,11 +29,12 @@ function FullWidthIcon({ expanded }) {
 }
 
 export function ReportResultsPanel({ page, shareUrl, realtime }) {
-  const [isFullWidth, setIsFullWidth] = useState(false);
+  const defaultFullWidth = page?.content?.variant === "timeline";
+  const [isFullWidth, setIsFullWidth] = useState(defaultFullWidth);
 
   useEffect(() => {
-    setIsFullWidth(false);
-  }, [page?.reportCode, page?.reportId]);
+    setIsFullWidth(defaultFullWidth);
+  }, [page?.reportCode, page?.reportId, defaultFullWidth]);
 
   if (!page) {
     return null;

@@ -15,6 +15,16 @@ DIMENSIUS_REPORT = "W4cZgnxQfR2AH1dT"
 
 REGRESSION_CASES: List[Dict[str, Any]] = [
     {
+        "name": "cooldown_coverage_sentinels_mythic",
+        "path": "/api/v2/reports/entombed-sentinels-cooldown-coverage-mythic/jobs",
+        "body": {"values": {"report_codes": ["J3y9gP2bqmkphY7f"], "fresh_run": True}},
+    },
+    {
+        "name": "cooldown_coverage_vashnik_mythic",
+        "path": "/api/v2/reports/vashnik-the-malignant-cooldown-coverage-mythic/jobs",
+        "body": {"values": {"report_codes": ["Nr7yQvGqjz8atHYc"], "fresh_run": True}},
+    },
+    {
         "name": "nexus_phase_combined",
         "path": "/api/nexus-phase1",
         "params": {

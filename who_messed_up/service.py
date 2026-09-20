@@ -4,6 +4,7 @@ Compatibility layer that re-exports the public backend services.
 from __future__ import annotations
 
 from .services.event_streams import fetch_event_streams
+from .services.cooldown_coverage import fetch_cooldown_coverage
 
 from .services.common import (
     DEFAULT_GHOST_MISS_MODE,
@@ -235,6 +236,7 @@ from .services.target_damage import (
 )
 
 __all__ = [
+    "fetch_cooldown_coverage",
     "fetch_event_streams",
     "AddDamageEntry",
     "AddDamageSummary",

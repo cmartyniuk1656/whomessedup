@@ -1,0 +1,4139 @@
+{
+  "schema_version": "1.1.0",
+  "title": "World of Warcraft Midnight 12.1 — Major Healing Cooldowns",
+  "patch": "12.1",
+  "as_of_date": "2026-09-19",
+  "as_of_timezone": "America/Toronto",
+  "retrieved_at_utc": "2026-09-20T00:30:43.602776+00:00",
+  "verified_in_game": false,
+  "scope": {
+    "mode": "PvE party/raid group-healing throughput",
+    "specializations": 7,
+    "definition": "Large direct healing bursts or sustained output windows. A short cooldown is not automatically excluded when its impact is large. Healing/defensive hybrids and hero-tree-dependent throughput windows are explicitly labeled.",
+    "modifier_coverage": "Direct named talent gates, replacements, cooldown/duration changes, and material cooldown-specific throughput interactions. Generic all-healing stats/passives, every downstream proc, equipment, racial abilities, PvP and encounter-specific resets are excluded.",
+    "base_values": "Spell data before optional modifiers. Talent-tree access is still required.",
+    "source_policy": "Official 12.1 changes take precedence for intended design; live talent membership and rank-aware data determine availability. Conflicting sources remain flagged, not silently reconciled."
+  },
+  "field_conventions": {
+    "units": "Seconds unless a field explicitly states otherwise.",
+    "zero": "An instantaneous heal has duration 0; this does not imply it has no cooldown.",
+    "null": "No single fixed duration, an unresolved value, or a value not applicable to that field; never interpret null as zero.",
+    "durations": "Nominal complete channel, buff, summon or HoT windows; cast time and trailing effects are separate. Realized channel timing may vary with haste, interruption or early cancellation.",
+    "variants": "Options are conditional and not necessarily combinable. Refer to choice metadata. Null duration in a variant must not overwrite the base duration as a numeric value.",
+    "spell_ids": "Player-facing cast/talent IDs; triggered combat-log heal IDs can differ. Treat a passive talent ID as a modifier, not a cast event.",
+    "dynamic_recovery": "A flag indicates potential dynamic recovery within the specialization, not that every build receives it. Use named modifiers and character talents.",
+    "icon_file": "Each cooldown.icon.file is a portable relative path from the directory containing this JSON. Its source_url preserves the Lorrgs download URL."
+  },
+  "specializations": [
+    {
+      "specialization_id": 105,
+      "name": "Restoration Druid",
+      "cooldowns": [
+        {
+          "spell_id": 740,
+          "name": "Tranquility",
+          "category": "throughput",
+          "inclusion_reason": "A sustained raid-healing channel.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 82054,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [],
+            "dynamic_recovery_possible": true
+          },
+          "duration": {
+            "base_seconds": 6,
+            "kind": "channel",
+            "label": "6 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 197721,
+              "name": "Flourish",
+              "kind": "duration_extension",
+              "effect": "Tranquility extends your existing heal-over-time effects by 2 seconds every second of the channel. Flourish is a passive modifier here, not a separate scheduled cooldown.",
+              "values": {
+                "hot_extension_per_tick_seconds": 2,
+                "tick_interval_seconds": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_197721",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 383191,
+              "name": "Regenesis",
+              "kind": "throughput",
+              "effect": "Increases Tranquility healing, with a larger benefit on low-health targets. Two-rank talent; does not alter its cooldown or channel length.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_383191",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 2,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Use the full, uninterrupted channel as the nominal window; haste and interruptions can change realized channel time.",
+            "Inner Peace has a -30-second tooltip and appears in legacy modifier data, but is absent from the retrieved current talent tree. Do not assume a 150-second cooldown without checking the character."
+          ],
+          "evidence_status": "availability_conflict_on_legacy_modifier",
+          "issue_ids": [
+            "druid_inner_peace"
+          ],
+          "source_ids": [
+            "spell_740",
+            "live_talents",
+            "method_105",
+            "rotation_105"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_nature_tranquility.jpg",
+            "filename": "spell_nature_tranquility.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_nature_tranquility.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1307,
+            "sha256": "d57de757544a64e8f34e58cfdf95e88bab2e76cf1cb1b238a44d0c62091adca5",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 740,
+            "lorrgs_record_name": "Tranquility",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/druid-restoration/spells"
+          }
+        },
+        {
+          "spell_id": 33891,
+          "name": "Incarnation: Tree of Life",
+          "category": "throughput",
+          "inclusion_reason": "A long throughput window that strengthens core healing spells.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 82064,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              391528
+            ],
+            "mutually_exclusive_names": [
+              "Convoke the Spirits"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [],
+            "dynamic_recovery_possible": true
+          },
+          "duration": {
+            "base_seconds": 30,
+            "kind": "buff",
+            "label": "30 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 393371,
+              "name": "Cenarius’ Guidance",
+              "kind": "dynamic_cooldown",
+              "effect": "Summons a Grove Guardian every 10 seconds during Tree of Life. Each fading Grove Guardian reduces its remaining cooldown by 5 seconds. Total recovery depends on guardian generation and expiry.",
+              "values": {
+                "guardian_interval_seconds": 10,
+                "reduction_per_guardian_expiry_seconds": 5
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_393371",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 434249,
+              "name": "Control of the Dream",
+              "kind": "dynamic_cooldown",
+              "effect": "Keeper of the Grove: time spent ready before activation is subtracted from the next cooldown, capped at 15 seconds. Choice with Power of the Dream. This is variable recovery, not a permanent cooldown reduction.",
+              "values": {
+                "maximum_reduction_seconds": 15
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_434249",
+                "live_talents"
+              ],
+              "talent_tree": "Keeper of the Grove",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Power of the Dream"
+              ]
+            },
+            {
+              "talent_spell_id": 392356,
+              "name": "Reforestation",
+              "kind": "additional_proc",
+              "effect": "Every fourth Swiftmend grants a separate 10-second Tree of Life proc. This does not set the manually activated ability’s duration or cooldown.",
+              "values": {
+                "swiftmend_casts": 4,
+                "proc_duration_seconds": 10
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_392356",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 429420,
+              "name": "Potent Enchantments",
+              "kind": "proc_duration",
+              "effect": "Keeper of the Grove: adds 6 seconds to the Reforestation proc (16 seconds total), not to the manual 30-second Tree of Life.",
+              "values": {
+                "proc_extension_seconds": 6,
+                "proc_total_seconds": 16
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_429420",
+                "live_talents"
+              ],
+              "talent_tree": "Keeper of the Grove",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Grove's Inspiration"
+              ]
+            }
+          ],
+          "notes": [
+            "Tree of Life and Convoke the Spirits occupy the same choice node.",
+            "A fixed 120-second or shorter Tree timer is not its base cooldown; actual reuse depends on the build and guardian activity."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_33891",
+            "live_talents",
+            "method_105",
+            "rotation_105"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_druid_improvedtreeform.jpg",
+            "filename": "ability_druid_improvedtreeform.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_druid_improvedtreeform.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1760,
+            "sha256": "2aeeadd2fb868a01a3573a372623fc307aec6e0c3948b02d080ae2cf5736d5a2",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 33891,
+            "lorrgs_record_name": "Incarnation: Tree of Life",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/druid-restoration/spells"
+          }
+        },
+        {
+          "spell_id": 391528,
+          "name": "Convoke the Spirits",
+          "category": "throughput",
+          "inclusion_reason": "Compresses numerous healing casts into a short burst.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 82064,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              33891
+            ],
+            "mutually_exclusive_names": [
+              "Incarnation: Tree of Life"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 120,
+            "static_variants": [
+              {
+                "label": "Cenarius’ Guidance",
+                "cooldown_seconds": 60,
+                "duration_seconds": 3,
+                "required_talents": [
+                  393371
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": true
+          },
+          "duration": {
+            "base_seconds": 4,
+            "kind": "channel",
+            "label": "4 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 393371,
+              "name": "Cenarius’ Guidance",
+              "kind": "cooldown_and_duration",
+              "effect": "Halves the cooldown and reduces channel duration and spell count by 25%; also improves the chance of an exceptional spell.",
+              "values": {
+                "cooldown_multiplier": 0.5,
+                "duration_multiplier": 0.75,
+                "base_spell_count": 16,
+                "modified_spell_count": 12
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_393371",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 434249,
+              "name": "Control of the Dream",
+              "kind": "dynamic_cooldown",
+              "effect": "Keeper of the Grove: time spent ready before activation is subtracted from the next cooldown, capped at 15 seconds. Choice with Power of the Dream. This is variable recovery, not a permanent cooldown reduction.",
+              "values": {
+                "maximum_reduction_seconds": 15
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_434249",
+                "live_talents"
+              ],
+              "talent_tree": "Keeper of the Grove",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Power of the Dream"
+              ]
+            }
+          ],
+          "notes": [
+            "Tree of Life and Convoke are alternatives.",
+            "Control of the Dream may subtract up to a further 15 seconds on a given use; that reduction requires prior ready time."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_391528",
+            "live_talents",
+            "method_105",
+            "rotation_105"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_ardenweald_druid.jpg",
+            "filename": "ability_ardenweald_druid.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_ardenweald_druid.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 2139,
+            "sha256": "78d3af8f70863716410643c3a9a22e841f7d81bd85a1b4c6e66013f34ccba075",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 391528,
+            "lorrgs_record_name": "Convoke the Spirits",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/druid-restoration/spells"
+          }
+        }
+      ]
+    },
+    {
+      "specialization_id": 1468,
+      "name": "Preservation Evoker",
+      "cooldowns": [
+        {
+          "spell_id": 363534,
+          "name": "Rewind",
+          "category": "throughput",
+          "inclusion_reason": "Group recovery scaled to damage recently taken.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 93337,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 240,
+            "static_variants": [
+              {
+                "label": "Temporal Artificer",
+                "cooldown_seconds": 180,
+                "duration_seconds": 4,
+                "required_talents": [
+                  381922
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": true,
+            "dynamic_recovery_talent_spell_ids": [
+              431695
+            ]
+          },
+          "duration": {
+            "base_seconds": 4,
+            "kind": "heal_over_time",
+            "label": "4 seconds",
+            "secondary_effects": [
+              {
+                "kind": "damage_lookback",
+                "seconds": 5
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 381922,
+              "name": "Temporal Artificer",
+              "kind": "cooldown",
+              "effect": "Reduces Rewind’s cooldown by 60 seconds.",
+              "values": {
+                "flat_reduction_seconds": 60
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_381922",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 431984,
+              "name": "Time Convergence",
+              "kind": "secondary_buff",
+              "effect": "Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell.",
+              "values": {
+                "base_buff_seconds": 15,
+                "extension_per_essence_spell_seconds": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_431984",
+                "live_talents"
+              ],
+              "talent_tree": "Chronowarden",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Double-time"
+              ]
+            }
+          ],
+          "notes": [
+            "The damage look-back is 5 seconds; the healing-over-time effect is 4 seconds. These are different windows.",
+            "Chronowarden Temporal Burst can accelerate cooldown recovery dynamically; do not hard-code its recovery as a flat reduction."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_363534",
+            "live_talents",
+            "method_1468",
+            "rotation_1468"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_evoker_rewind.jpg",
+            "filename": "ability_evoker_rewind.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_evoker_rewind.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1818,
+            "sha256": "caf163f29fc4d8ced4d0de658b256dbe1155eca68fb9da017277fd8d4b2cd9da",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 363534,
+            "lorrgs_record_name": "Rewind",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/evoker-preservation/spells"
+          }
+        },
+        {
+          "spell_id": 359816,
+          "name": "Dream Flight",
+          "category": "throughput",
+          "inclusion_reason": "An initial path heal followed by a large healing-over-time effect.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 93267,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              370537
+            ],
+            "mutually_exclusive_names": [
+              "Stasis"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 120,
+            "static_variants": [],
+            "dynamic_recovery_possible": true,
+            "dynamic_recovery_talent_spell_ids": [
+              431695
+            ]
+          },
+          "duration": {
+            "base_seconds": 15,
+            "kind": "heal_over_time",
+            "label": "15 seconds",
+            "secondary_effects": [
+              {
+                "kind": "inner_flame_buff",
+                "seconds": 20,
+                "requires_talent_spell_id": 1242745
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 1242745,
+              "name": "Inner Flame",
+              "kind": "secondary_buff",
+              "effect": "Activating Dream Flight or Stasis adds a substantial healing-over-time bonus and increases Essence Burst generation from Living Flame/Reversion. The buff lasts 20 seconds for Dream Flight or 15 seconds for Stasis.",
+              "values": {
+                "dream_flight_buff_seconds": 20,
+                "stasis_buff_seconds": 15
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1242745",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 431984,
+              "name": "Time Convergence",
+              "kind": "secondary_buff",
+              "effect": "Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell.",
+              "values": {
+                "base_buff_seconds": 15,
+                "extension_per_essence_spell_seconds": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_431984",
+                "live_talents"
+              ],
+              "talent_tree": "Chronowarden",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Double-time"
+              ]
+            }
+          ],
+          "notes": [
+            "Dream Flight and Stasis are mutually exclusive.",
+            "The 15 seconds describes the heal over time, not time spent flying. Flight travel depends on distance; Trailblazer affects travel speed."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_359816",
+            "live_talents",
+            "method_1468",
+            "rotation_1468"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_evoker_dreamflight.jpg",
+            "filename": "ability_evoker_dreamflight.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_evoker_dreamflight.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1407,
+            "sha256": "be21b1671462733e47cb26f629cb39a131779ef8ea7b2eb0be7d85f9a5e70022",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 359816,
+            "lorrgs_record_name": "Dreamflight",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/evoker-preservation/spells"
+          }
+        },
+        {
+          "spell_id": 370537,
+          "name": "Stasis",
+          "category": "throughput",
+          "inclusion_reason": "Stores and replays three healing spells for a large prepared burst.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 93267,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              359816
+            ],
+            "mutually_exclusive_names": [
+              "Dream Flight"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 90,
+            "static_variants": [],
+            "dynamic_recovery_possible": true,
+            "dynamic_recovery_talent_spell_ids": [
+              431695
+            ]
+          },
+          "duration": {
+            "base_seconds": null,
+            "kind": "stored_spell_replay",
+            "label": "Variable replay; 30-second release window",
+            "secondary_effects": [
+              {
+                "kind": "storage_release_window",
+                "seconds": 30
+              },
+              {
+                "kind": "inner_flame_buff",
+                "seconds": 15,
+                "requires_talent_spell_id": 1242745
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 1242745,
+              "name": "Inner Flame",
+              "kind": "secondary_buff",
+              "effect": "Activating Dream Flight or Stasis adds a substantial healing-over-time bonus and increases Essence Burst generation from Living Flame/Reversion. The buff lasts 20 seconds for Dream Flight or 15 seconds for Stasis.",
+              "values": {
+                "dream_flight_buff_seconds": 20,
+                "stasis_buff_seconds": 15
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1242745",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 431984,
+              "name": "Time Convergence",
+              "kind": "secondary_buff",
+              "effect": "Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell.",
+              "values": {
+                "base_buff_seconds": 15,
+                "extension_per_essence_spell_seconds": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_431984",
+                "live_talents"
+              ],
+              "talent_tree": "Chronowarden",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Double-time"
+              ]
+            }
+          ],
+          "notes": [
+            "Dream Flight and Stasis are mutually exclusive.",
+            "Stores three helpful spells; after the sequence is loaded, the release window is 30 seconds. Healing duration depends on the spells stored.",
+            "Spell data marks cooldown start after the aura fades; cooldown planners should confirm the observed release/end event rather than starting a timer from the first preparation press."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_370537",
+            "live_talents",
+            "method_1468",
+            "rotation_1468"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_evoker_stasis.jpg",
+            "filename": "ability_evoker_stasis.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_evoker_stasis.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1605,
+            "sha256": "88ec07c0861595dcb44f3701f875cd67c84abf4657f6222ac1721493a5b14633",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 370537,
+            "lorrgs_record_name": "Stasis",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/evoker-preservation/spells"
+          }
+        },
+        {
+          "spell_id": 370553,
+          "name": "Tip the Scales — Temporal Burst build",
+          "category": "conditional_throughput",
+          "inclusion_reason": "Included as a major throughput window specifically when Chronowarden’s Temporal Burst is selected.",
+          "availability": {
+            "talent_required": true,
+            "tree": "class",
+            "talent_node_id": 93350,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 120,
+            "static_variants": [
+              {
+                "label": "Temporal Burst + Chronoboon",
+                "cooldown_seconds": 90,
+                "duration_seconds": 30,
+                "required_talents": [
+                  431695,
+                  1260484
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": true,
+            "dynamic_recovery_talent_spell_ids": [
+              431695
+            ]
+          },
+          "duration": {
+            "base_seconds": null,
+            "kind": "next_empower_and_optional_buff",
+            "label": "Next empower; 30-second Temporal Burst when talented",
+            "secondary_effects": [
+              {
+                "kind": "temporal_burst",
+                "seconds": 30,
+                "requires_talent_spell_id": 431695
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 431695,
+              "name": "Temporal Burst",
+              "kind": "secondary_buff_and_dynamic_cooldown",
+              "effect": "Chronowarden: Tip the Scales grants a 30-second window of decaying haste, movement speed and cooldown recovery, starting at 30%.",
+              "values": {
+                "buff_seconds": 30,
+                "initial_recovery_bonus_percent": 30
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_431695",
+                "live_talents"
+              ],
+              "talent_tree": "Chronowarden",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1260484,
+              "name": "Chronoboon",
+              "kind": "cooldown",
+              "effect": "Chronowarden: reduces Tip the Scales’ cooldown by 30 seconds.",
+              "values": {
+                "flat_reduction_seconds": 30
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1260484",
+                "live_talents"
+              ],
+              "talent_tree": "Chronowarden",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 431984,
+              "name": "Time Convergence",
+              "kind": "secondary_buff",
+              "effect": "Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell.",
+              "values": {
+                "base_buff_seconds": 15,
+                "extension_per_essence_spell_seconds": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_431984",
+                "live_talents"
+              ],
+              "talent_tree": "Chronowarden",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Double-time"
+              ]
+            }
+          ],
+          "notes": [
+            "Without Temporal Burst, Tip the Scales is principally an instant maximum-rank empower enabler and falls below this report’s major-throughput scope.",
+            "The base effect is consumed by the next empowered spell; it is not itself a fixed 30-second healing buff.",
+            "Temporal Burst’s changing recovery rate prevents a universal effective cooldown for the Evoker kit."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_370553",
+            "live_talents",
+            "method_1468",
+            "rotation_1468"
+          ],
+          "inclusion_requires_talent_spell_ids": [
+            431695
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_evoker_tipthescales.jpg",
+            "filename": "ability_evoker_tipthescales.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_evoker_tipthescales.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1923,
+            "sha256": "7f2aa5ca7725b34b25015ba3d92a20abaf297ee2b9ee0c4996f113014087a286",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 370553,
+            "lorrgs_record_name": "Tip the Scales",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/evoker-preservation/spells"
+          }
+        }
+      ]
+    },
+    {
+      "specialization_id": 270,
+      "name": "Mistweaver Monk",
+      "cooldowns": [
+        {
+          "spell_id": 115310,
+          "name": "Revival",
+          "category": "throughput",
+          "inclusion_reason": "Immediate raid healing with a broad dispel.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 101131,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              388615
+            ],
+            "mutually_exclusive_names": [
+              "Restoral"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [
+              {
+                "label": "Uplifted Spirits",
+                "cooldown_seconds": 150,
+                "duration_seconds": 0,
+                "required_talents": [
+                  388551
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 0,
+            "kind": "instant_heal",
+            "label": "0 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 388551,
+              "name": "Uplifted Spirits",
+              "kind": "cooldown_and_throughput",
+              "effect": "Reduces Revival/Restoral cooldown by 30 seconds and increases their healing.",
+              "values": {
+                "flat_reduction_seconds": 30
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_388551",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Choice with Restoral. Revival also removes up to three Magic effects plus Poison and Disease effects."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_115310",
+            "live_talents",
+            "method_270",
+            "rotation_270"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_monk_revival.jpg",
+            "filename": "spell_monk_revival.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_monk_revival.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1905,
+            "sha256": "5aa955bd7b36e93958ca879723d2eec2758a52c9ab7eef71bcc8d979f8c2f4ad",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 115310,
+            "lorrgs_record_name": "Revival",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/monk-mistweaver/spells"
+          }
+        },
+        {
+          "spell_id": 388615,
+          "name": "Restoral",
+          "category": "throughput",
+          "inclusion_reason": "Alternative immediate raid heal, usable while stunned.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 101131,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              115310
+            ],
+            "mutually_exclusive_names": [
+              "Revival"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [
+              {
+                "label": "Uplifted Spirits",
+                "cooldown_seconds": 150,
+                "duration_seconds": 0,
+                "required_talents": [
+                  388551
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 0,
+            "kind": "instant_heal",
+            "label": "0 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 388551,
+              "name": "Uplifted Spirits",
+              "kind": "cooldown_and_throughput",
+              "effect": "Reduces Revival/Restoral cooldown by 30 seconds and increases their healing.",
+              "values": {
+                "flat_reduction_seconds": 30
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_388551",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Choice with Revival. Removes Poison and Disease; does not perform Revival’s Magic dispel."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_388615",
+            "live_talents",
+            "method_270",
+            "rotation_270"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_monk_revival.jpg",
+            "filename": "spell_monk_revival.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_monk_revival.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1905,
+            "sha256": "5aa955bd7b36e93958ca879723d2eec2758a52c9ab7eef71bcc8d979f8c2f4ad",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "lorrgs_variation",
+            "lorrgs_record_spell_id": 115310,
+            "lorrgs_record_name": "Revival",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/monk-mistweaver/spells",
+            "mapping_note": "Lorrgs groups this spell under the parent record and uses that record’s icon. It is intentionally shared, not a missing download."
+          }
+        },
+        {
+          "spell_id": 322118,
+          "name": "Invoke Yu’lon, the Jade Serpent",
+          "category": "throughput",
+          "inclusion_reason": "A sustained celestial healing window with cheaper Enveloping Mist.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 101129,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              325197
+            ],
+            "mutually_exclusive_names": [
+              "Invoke Chi-Ji, the Red Crane"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 120,
+            "static_variants": [
+              {
+                "label": "Gift of the Celestials",
+                "cooldown_seconds": 60,
+                "duration_seconds": 12,
+                "required_talents": [
+                  388212
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 25,
+            "kind": "summon",
+            "label": "25 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 388212,
+              "name": "Gift of the Celestials",
+              "kind": "cooldown_and_duration",
+              "effect": "Reduces the summon cooldown by 60 seconds and sets its duration to 12 seconds. Choice with Jade Bond.",
+              "values": {
+                "flat_reduction_seconds": 60,
+                "duration_override_seconds": 12
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_388212",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Jade Bond"
+              ]
+            },
+            {
+              "talent_spell_id": 388031,
+              "name": "Jade Bond",
+              "kind": "throughput",
+              "effect": "Alternative to Gift of the Celestials. Strengthens the celestial’s healing; expiring/consumed Chi Cocoons apply 4 seconds of Enveloping Mist. Current version does not reduce the summon cooldown.",
+              "values": {
+                "enveloping_mist_seconds": 4
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_388031",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Gift of the Celestials"
+              ]
+            },
+            {
+              "talent_spell_id": 343655,
+              "name": "Celestial Harmony",
+              "kind": "secondary_absorb",
+              "effect": "Adds 10-second Chi Cocoons to five allies on invocation, plus a celestial-specific benefit to Teachings of the Monastery or Enveloping Mist.",
+              "values": {
+                "absorb_seconds": 10
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_343655",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 442719,
+              "name": "Restore Balance",
+              "kind": "throughput",
+              "effect": "Conduit of the Celestials: increases healing while either celestial is active. Choice with Yu’lon’s Knowledge.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_442719",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Yu'lon's Knowledge"
+              ]
+            },
+            {
+              "talent_spell_id": 443087,
+              "name": "Courage of the White Tiger",
+              "kind": "throughput",
+              "effect": "Conduit of the Celestials: invoking either celestial guarantees the next eligible Tiger Palm, Vivify or Sheilun’s Gift triggers the White Tiger effect.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_443087",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Choice with Invoke Chi-Ji.",
+            "The summon lasts 25 seconds baseline. The separate 4.5-second Soothing Breath effect is not Yu’lon’s summon duration."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_322118",
+            "live_talents",
+            "method_270",
+            "rotation_270"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_monk_dragonkick.jpg",
+            "filename": "ability_monk_dragonkick.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_monk_dragonkick.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 2242,
+            "sha256": "254011584db75b79985bcd141ddf60186baad4e10c5613f06db38a74f26a8672",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 322118,
+            "lorrgs_record_name": "Invoke Yu'lon, the Jade Serpent",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/monk-mistweaver/spells"
+          }
+        },
+        {
+          "spell_id": 325197,
+          "name": "Invoke Chi-Ji, the Red Crane",
+          "category": "throughput",
+          "inclusion_reason": "A melee-driven healing window with stronger access to Enveloping Mist.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 101129,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              322118
+            ],
+            "mutually_exclusive_names": [
+              "Invoke Yu'lon, the Jade Serpent"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 120,
+            "static_variants": [
+              {
+                "label": "Gift of the Celestials",
+                "cooldown_seconds": 60,
+                "duration_seconds": 12,
+                "required_talents": [
+                  388212
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 25,
+            "kind": "summon",
+            "label": "25 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 388212,
+              "name": "Gift of the Celestials",
+              "kind": "cooldown_and_duration",
+              "effect": "Reduces the summon cooldown by 60 seconds and sets its duration to 12 seconds. Choice with Jade Bond.",
+              "values": {
+                "flat_reduction_seconds": 60,
+                "duration_override_seconds": 12
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_388212",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Jade Bond"
+              ]
+            },
+            {
+              "talent_spell_id": 388031,
+              "name": "Jade Bond",
+              "kind": "throughput",
+              "effect": "Alternative to Gift of the Celestials. Strengthens the celestial’s healing; expiring/consumed Chi Cocoons apply 4 seconds of Enveloping Mist. Current version does not reduce the summon cooldown.",
+              "values": {
+                "enveloping_mist_seconds": 4
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_388031",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Gift of the Celestials"
+              ]
+            },
+            {
+              "talent_spell_id": 343655,
+              "name": "Celestial Harmony",
+              "kind": "secondary_absorb",
+              "effect": "Adds 10-second Chi Cocoons to five allies on invocation, plus a celestial-specific benefit to Teachings of the Monastery or Enveloping Mist.",
+              "values": {
+                "absorb_seconds": 10
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_343655",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 442719,
+              "name": "Restore Balance",
+              "kind": "throughput",
+              "effect": "Conduit of the Celestials: increases healing while either celestial is active. Choice with Yu’lon’s Knowledge.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_442719",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Yu'lon's Knowledge"
+              ]
+            },
+            {
+              "talent_spell_id": 443087,
+              "name": "Courage of the White Tiger",
+              "kind": "throughput",
+              "effect": "Conduit of the Celestials: invoking either celestial guarantees the next eligible Tiger Palm, Vivify or Sheilun’s Gift triggers the White Tiger effect.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_443087",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Choice with Invoke Yu’lon."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_325197",
+            "live_talents",
+            "method_270",
+            "rotation_270"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/inv_pet_cranegod.jpg",
+            "filename": "inv_pet_cranegod.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/inv_pet_cranegod.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1789,
+            "sha256": "2ab8dee926a3a943ad1d5f1b55688807ea3bebaaddc6172575b066413d7a5e80",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 325197,
+            "lorrgs_record_name": "Invoke Chi-Ji, the Red Crane",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/monk-mistweaver/spells"
+          }
+        },
+        {
+          "spell_id": 443028,
+          "name": "Celestial Conduit",
+          "category": "throughput",
+          "inclusion_reason": "A major group-healing channel exclusive to Conduit of the Celestials.",
+          "availability": {
+            "talent_required": true,
+            "tree": "Conduit of the Celestials",
+            "talent_node_id": 110067,
+            "hero_tree_required": "Conduit of the Celestials",
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 90,
+            "static_variants": [],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 4,
+            "kind": "channel",
+            "label": "4 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 443589,
+              "name": "Unity Within",
+              "kind": "throughput",
+              "effect": "Can be activated once during the channel to call all four celestials at increased effectiveness; triggers automatically at the end if unused. It is part of this cooldown, not a separate scheduled cooldown.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_443589",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1273154,
+              "name": "Path of the Falling Star",
+              "kind": "throughput",
+              "effect": "Raises Celestial Conduit output most strongly when healing fewer targets.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1273154",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 443059,
+              "name": "Jade Sanctuary",
+              "kind": "secondary_defensive",
+              "effect": "Adds immediate self-healing and damage reduction during the channel and for 8 seconds after it ends. Choice with Niuzao’s Protection.",
+              "values": {
+                "post_channel_seconds": 8
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_443059",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Niuzao's Protection"
+              ]
+            },
+            {
+              "talent_spell_id": 443566,
+              "name": "Chi-Ji’s Swiftness",
+              "kind": "delivery",
+              "effect": "Increases movement speed during the channel; subsequent celestial assistance adds a short movement buff.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_443566",
+                "live_talents"
+              ],
+              "talent_tree": "Conduit of the Celestials",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Movement is allowed; casting another healing or damaging spell cancels the channel.",
+            "No fixed cooldown-reduction talent for Celestial Conduit was established in the current tree. The pet cooldown reductions do not apply to this ability."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_443028",
+            "live_talents",
+            "method_270",
+            "rotation_270"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/inv_ability_conduitofthecelestialsmonk_celestialconduit.jpg",
+            "filename": "inv_ability_conduitofthecelestialsmonk_celestialconduit.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_conduitofthecelestialsmonk_celestialconduit.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 2325,
+            "sha256": "e13f66086d111292e451a9488e6768afe5ef9df2cd0dc37535d9d14a868a4166",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 443028,
+            "lorrgs_record_name": "Celestial Conduit",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/monk-mistweaver/spells"
+          }
+        }
+      ]
+    },
+    {
+      "specialization_id": 65,
+      "name": "Holy Paladin",
+      "cooldowns": [
+        {
+          "spell_id": 31884,
+          "name": "Avenging Wrath",
+          "category": "throughput",
+          "inclusion_reason": "A primary sustained healing-throughput window.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 81584,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              216331
+            ],
+            "mutually_exclusive_names": [
+              "Avenging Crusader"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 120,
+            "static_variants": [
+              {
+                "label": "Sanctified Wrath; no Call of the Righteous",
+                "cooldown_seconds": 120,
+                "duration_seconds": 30.0,
+                "required_talents": [
+                  53376
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": [
+                  1241511
+                ]
+              },
+              {
+                "label": "Call of the Righteous rank 1",
+                "cooldown_seconds": 105,
+                "duration_seconds": null,
+                "required_talents": [
+                  1241511
+                ],
+                "status": "duration_unresolved",
+                "notes": "Cooldown from rank-aware tree; effective duration unresolved.",
+                "required_talent_ranks": {
+                  "1241511": 1
+                },
+                "excluded_talent_spell_ids": []
+              },
+              {
+                "label": "Call of the Righteous rank 2",
+                "cooldown_seconds": 90,
+                "duration_seconds": null,
+                "required_talents": [
+                  1241511
+                ],
+                "status": "duration_unresolved",
+                "notes": "Cooldown from rank-aware tree; effective duration unresolved.",
+                "required_talent_ranks": {
+                  "1241511": 2
+                },
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 20,
+            "kind": "buff",
+            "label": "20 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 53376,
+              "name": "Sanctified Wrath",
+              "kind": "duration",
+              "effect": "Increases Avenging Wrath and Avenging Crusader duration by 50%. Choice with Awakening.",
+              "values": {
+                "duration_multiplier": 1.5
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_53376",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Awakening"
+              ]
+            },
+            {
+              "talent_spell_id": 1241511,
+              "name": "Call of the Righteous",
+              "kind": "cooldown_and_duration",
+              "effect": "Two ranks shorten the cooldown and duration. The rank-aware tree, generic tooltip and 12.1 patch notes disagree on duration values; see the flagged issue.",
+              "values": {
+                "max_rank": 2,
+                "avenging_wrath_cooldown_reduction_per_rank_seconds": 15,
+                "avenging_crusader_cooldown_reduction_per_rank_seconds": 7.5,
+                "patch_intended_wrath_duration_reduction_per_rank_seconds": 3,
+                "patch_intended_crusader_duration_reduction_per_rank_seconds": 2
+              },
+              "status": "conflicting_sources",
+              "source_ids": [
+                "spell_1241511",
+                "live_talents",
+                "patch_12_1"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 2,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1241275,
+              "name": "Tyr’s Deliverance",
+              "kind": "triggered_healing",
+              "effect": "Wings activates an initial multi-target heal and periodic ally healing; affected allies receive a 12-second bonus to healing from Holy Light, Flash of Light and Holy Shock. Current talent is passive, not an additional manually scheduled cooldown. Choice with Hand of Divinity.",
+              "values": {
+                "recipient_bonus_seconds": 12
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1241275",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Hand of Divinity"
+              ]
+            },
+            {
+              "talent_spell_id": 1242008,
+              "name": "Hand of Divinity",
+              "kind": "triggered_charges",
+              "effect": "Alternative to Tyr’s Deliverance: Wings makes the next two Holy Lights instant and cheaper; Avenging Crusader grants one.",
+              "values": {
+                "wrath_charges": 2,
+                "crusader_charges": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1242008",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Tyr's Deliverance"
+              ]
+            },
+            {
+              "talent_spell_id": 433011,
+              "name": "Blessing of the Forge",
+              "kind": "throughput",
+              "effect": "Lightsmith: Wings summons an additional Sacred Weapon and empowers its spell/finisher interactions.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_433011",
+                "live_talents"
+              ],
+              "talent_tree": "Lightsmith",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1263782,
+              "name": "Walk Into Light",
+              "kind": "throughput",
+              "effect": "Herald of the Sun: increases Infusion of Light generation during Wings.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1263782",
+                "live_talents"
+              ],
+              "talent_tree": "Herald of the Sun",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1263920,
+              "name": "Born in Sunlight",
+              "kind": "throughput",
+              "effect": "Herald of the Sun: increases Dawnlight critical-strike chance during Wings.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1263920",
+                "live_talents"
+              ],
+              "talent_tree": "Herald of the Sun",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 414195,
+              "name": "Awakening",
+              "kind": "throughput",
+              "effect": "Choice with Sanctified Wrath. Wings activates a Judgment bonus; current Awakening is not the old random extra-Wings-duration talent.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_414195",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Sanctified Wrath"
+              ]
+            }
+          ],
+          "notes": [
+            "Avenging Wrath and Avenging Crusader are mutually exclusive.",
+            "Do not combine the listed duration options automatically: Call of the Righteous values and its ordering with Sanctified Wrath need a live-client check."
+          ],
+          "evidence_status": "duration_conflict_with_optional_talent",
+          "issue_ids": [
+            "paladin_call_of_righteous"
+          ],
+          "source_ids": [
+            "spell_31884",
+            "live_talents",
+            "method_65",
+            "rotation_65"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_holy_avenginewrath.jpg",
+            "filename": "spell_holy_avenginewrath.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_holy_avenginewrath.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1953,
+            "sha256": "4886c1803a5971723b41eb94a1ac2b8abc73b1f30f9441260c33b6776188b7e4",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 31884,
+            "lorrgs_record_name": "Avenging Wrath",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/paladin-holy/spells"
+          }
+        },
+        {
+          "spell_id": 216331,
+          "name": "Avenging Crusader",
+          "category": "throughput",
+          "inclusion_reason": "A primary sustained healing-throughput window.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 81584,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              31884
+            ],
+            "mutually_exclusive_names": [
+              "Avenging Wrath"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 60,
+            "static_variants": [
+              {
+                "label": "Sanctified Wrath; no Call of the Righteous",
+                "cooldown_seconds": 60,
+                "duration_seconds": 22.5,
+                "required_talents": [
+                  53376
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": [
+                  1241511
+                ]
+              },
+              {
+                "label": "Call of the Righteous rank 1",
+                "cooldown_seconds": 52.5,
+                "duration_seconds": null,
+                "required_talents": [
+                  1241511
+                ],
+                "status": "duration_unresolved",
+                "notes": "Cooldown from rank-aware tree; effective duration unresolved.",
+                "required_talent_ranks": {
+                  "1241511": 1
+                },
+                "excluded_talent_spell_ids": []
+              },
+              {
+                "label": "Call of the Righteous rank 2",
+                "cooldown_seconds": 45.0,
+                "duration_seconds": null,
+                "required_talents": [
+                  1241511
+                ],
+                "status": "duration_unresolved",
+                "notes": "Cooldown from rank-aware tree; effective duration unresolved.",
+                "required_talent_ranks": {
+                  "1241511": 2
+                },
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 15,
+            "kind": "buff",
+            "label": "15 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 53376,
+              "name": "Sanctified Wrath",
+              "kind": "duration",
+              "effect": "Increases Avenging Wrath and Avenging Crusader duration by 50%. Choice with Awakening.",
+              "values": {
+                "duration_multiplier": 1.5
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_53376",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Awakening"
+              ]
+            },
+            {
+              "talent_spell_id": 1241511,
+              "name": "Call of the Righteous",
+              "kind": "cooldown_and_duration",
+              "effect": "Two ranks shorten the cooldown and duration. The rank-aware tree, generic tooltip and 12.1 patch notes disagree on duration values; see the flagged issue.",
+              "values": {
+                "max_rank": 2,
+                "avenging_wrath_cooldown_reduction_per_rank_seconds": 15,
+                "avenging_crusader_cooldown_reduction_per_rank_seconds": 7.5,
+                "patch_intended_wrath_duration_reduction_per_rank_seconds": 3,
+                "patch_intended_crusader_duration_reduction_per_rank_seconds": 2
+              },
+              "status": "conflicting_sources",
+              "source_ids": [
+                "spell_1241511",
+                "live_talents",
+                "patch_12_1"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 2,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1241275,
+              "name": "Tyr’s Deliverance",
+              "kind": "triggered_healing",
+              "effect": "Wings activates an initial multi-target heal and periodic ally healing; affected allies receive a 12-second bonus to healing from Holy Light, Flash of Light and Holy Shock. Current talent is passive, not an additional manually scheduled cooldown. Choice with Hand of Divinity.",
+              "values": {
+                "recipient_bonus_seconds": 12
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1241275",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Hand of Divinity"
+              ]
+            },
+            {
+              "talent_spell_id": 1242008,
+              "name": "Hand of Divinity",
+              "kind": "triggered_charges",
+              "effect": "Alternative to Tyr’s Deliverance: Wings makes the next two Holy Lights instant and cheaper; Avenging Crusader grants one.",
+              "values": {
+                "wrath_charges": 2,
+                "crusader_charges": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1242008",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Tyr's Deliverance"
+              ]
+            },
+            {
+              "talent_spell_id": 433011,
+              "name": "Blessing of the Forge",
+              "kind": "throughput",
+              "effect": "Lightsmith: Wings summons an additional Sacred Weapon and empowers its spell/finisher interactions.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_433011",
+                "live_talents"
+              ],
+              "talent_tree": "Lightsmith",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1263782,
+              "name": "Walk Into Light",
+              "kind": "throughput",
+              "effect": "Herald of the Sun: increases Infusion of Light generation during Wings.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1263782",
+                "live_talents"
+              ],
+              "talent_tree": "Herald of the Sun",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1263920,
+              "name": "Born in Sunlight",
+              "kind": "throughput",
+              "effect": "Herald of the Sun: increases Dawnlight critical-strike chance during Wings.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1263920",
+                "live_talents"
+              ],
+              "talent_tree": "Herald of the Sun",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 414195,
+              "name": "Awakening",
+              "kind": "throughput",
+              "effect": "Choice with Sanctified Wrath. Wings activates a Judgment bonus; current Awakening is not the old random extra-Wings-duration talent.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_414195",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Sanctified Wrath"
+              ]
+            }
+          ],
+          "notes": [
+            "Avenging Wrath and Avenging Crusader are mutually exclusive.",
+            "Do not combine the listed duration options automatically: Call of the Righteous values and its ordering with Sanctified Wrath need a live-client check."
+          ],
+          "evidence_status": "duration_conflict_with_optional_talent",
+          "issue_ids": [
+            "paladin_call_of_righteous"
+          ],
+          "source_ids": [
+            "spell_216331",
+            "live_talents",
+            "method_65",
+            "rotation_65"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_paladin_veneration.jpg",
+            "filename": "ability_paladin_veneration.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_paladin_veneration.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 2157,
+            "sha256": "9e5ddd8425fef7e30e08985120125c3973211a7165448b6e5edd3de2eb279cfd",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 216331,
+            "lorrgs_record_name": "Avenging Crusader",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/paladin-holy/spells"
+          }
+        },
+        {
+          "spell_id": 375576,
+          "name": "Divine Toll",
+          "category": "throughput",
+          "inclusion_reason": "An impactful multi-target Holy Shock burst; included despite its shorter cooldown.",
+          "availability": {
+            "talent_required": true,
+            "tree": "class",
+            "talent_node_id": 81496,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              114165
+            ],
+            "mutually_exclusive_names": [
+              "Holy Prism"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 60,
+            "static_variants": [
+              {
+                "label": "Quickened Invocation",
+                "cooldown_seconds": 45,
+                "duration_seconds": 0,
+                "required_talents": [
+                  379391
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 0,
+            "kind": "instant_heal",
+            "label": "0 seconds",
+            "secondary_effects": [
+              {
+                "kind": "divine_resonance_sequence",
+                "seconds": 15,
+                "requires_talent_spell_id": 386738
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 379391,
+              "name": "Quickened Invocation",
+              "kind": "cooldown",
+              "effect": "Reduces Divine Toll’s cooldown by 15 seconds for Holy. Choice with Divine Resonance.",
+              "values": {
+                "flat_reduction_seconds": 15
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_379391",
+                "live_talents"
+              ],
+              "talent_tree": "class",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Divine Resonance"
+              ]
+            },
+            {
+              "talent_spell_id": 386738,
+              "name": "Divine Resonance",
+              "kind": "secondary_healing",
+              "effect": "Alternative to Quickened Invocation: adds automatic Holy Shocks every 5 seconds for 15 seconds. This extends the healing sequence, not the initial instant cast.",
+              "values": {
+                "window_seconds": 15,
+                "interval_seconds": 5
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_386738",
+                "live_talents"
+              ],
+              "talent_tree": "class",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Quickened Invocation"
+              ]
+            },
+            {
+              "talent_spell_id": 431377,
+              "name": "Dawnlight",
+              "kind": "triggered_healing",
+              "effect": "Herald of the Sun: empowers the next two Holy Power spenders to apply an 8-second Dawnlight heal-over-time effect.",
+              "values": {
+                "charges": 2,
+                "hot_seconds": 8
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_431377",
+                "live_talents"
+              ],
+              "talent_tree": "Herald of the Sun",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 439760,
+              "name": "Aurora",
+              "kind": "throughput",
+              "effect": "Herald of the Sun: grants a free, stronger Holy Power spender after Divine Toll.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_439760",
+                "live_talents"
+              ],
+              "talent_tree": "Herald of the Sun",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1241542,
+              "name": "Ringing of the Heavens",
+              "kind": "additional_trigger",
+              "effect": "Aura Mastery triggers a separate Divine Toll at increased effectiveness. This does not establish a shorter cooldown for the manually cast Divine Toll.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1241542",
+                "live_talents",
+                "patch_12_1"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Choice with Holy Prism. Divine Resonance and Quickened Invocation cannot be selected together."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_375576",
+            "live_talents",
+            "method_65",
+            "rotation_65"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/inv_ability_paladin_divinetoll.jpg",
+            "filename": "inv_ability_paladin_divinetoll.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_paladin_divinetoll.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 2145,
+            "sha256": "6f8cb4ce9c8798254483c312cc1b69594e8f4a3ad7fd4b0d789f21304af1ebf9",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 375576,
+            "lorrgs_record_name": "Divine Toll",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/paladin-holy/spells"
+          }
+        },
+        {
+          "spell_id": 31821,
+          "name": "Aura Mastery",
+          "category": "healing_defensive_hybrid",
+          "inclusion_reason": "A major raid defensive with direct healing-throughput additions when talented.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 81567,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [
+              {
+                "label": "Unwavering Spirit",
+                "cooldown_seconds": 150,
+                "duration_seconds": 8,
+                "required_talents": [
+                  392911
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 8,
+            "kind": "aura_buff",
+            "label": "8 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 392911,
+              "name": "Unwavering Spirit",
+              "kind": "cooldown",
+              "effect": "Reduces Aura Mastery’s cooldown by 30 seconds. Choice with Protection of Tyr.",
+              "values": {
+                "flat_reduction_seconds": 30
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_392911",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Protection of Tyr"
+              ]
+            },
+            {
+              "talent_spell_id": 200430,
+              "name": "Protection of Tyr",
+              "kind": "throughput",
+              "effect": "Adds increased healing received for affected allies during Aura Mastery. Choice with Unwavering Spirit.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_200430",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Unwavering Spirit"
+              ]
+            },
+            {
+              "talent_spell_id": 1241542,
+              "name": "Ringing of the Heavens",
+              "kind": "triggered_healing",
+              "effect": "On activation, casts Divine Toll at 200% effectiveness.",
+              "values": {
+                "triggered_toll_effectiveness_percent": 200
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1241542",
+                "live_talents",
+                "patch_12_1"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Without Protection of Tyr or Ringing of the Heavens, this is principally damage mitigation/utility rather than healing throughput."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_31821",
+            "live_talents",
+            "method_65",
+            "rotation_65"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_holy_auramastery.jpg",
+            "filename": "spell_holy_auramastery.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_holy_auramastery.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1820,
+            "sha256": "f8dcb9a48b85b148ce24844b6f11d78137fdaf34bd9c718fa82c1cfc9df3d7a8",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 31821,
+            "lorrgs_record_name": "Aura Mastery",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/paladin-holy/spells"
+          }
+        }
+      ]
+    },
+    {
+      "specialization_id": 256,
+      "name": "Discipline Priest",
+      "cooldowns": [
+        {
+          "spell_id": 472433,
+          "name": "Evangelism",
+          "category": "throughput",
+          "inclusion_reason": "An empowered Radiance plus two instant follow-up Radiances supports a major healing ramp.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 82577,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 90,
+            "static_variants": [],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": null,
+            "kind": "instant_heal_and_charges",
+            "label": "Instant initial heal + 2 charges; 18-second Archangel or 12-second Mindbender",
+            "secondary_effects": [
+              {
+                "kind": "archangel_buff",
+                "seconds": 18,
+                "requires_talent_spell_id": 197862
+              },
+              {
+                "kind": "mindbender_summon",
+                "seconds": 12,
+                "requires_talent_spell_id": 1280137
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 197862,
+              "name": "Archangel",
+              "kind": "secondary_buff",
+              "effect": "Adds 18 seconds of increased healing and absorption. Choice with Mindbender.",
+              "values": {
+                "buff_seconds": 18
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_197862",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Mindbender"
+              ]
+            },
+            {
+              "talent_spell_id": 1280137,
+              "name": "Mindbender",
+              "kind": "secondary_summon",
+              "effect": "Alternative to Archangel: summons a Mindbender for 12 seconds when Evangelism is used. This is not an additional manual cooldown.",
+              "values": {
+                "summon_seconds": 12
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1280137",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Archangel"
+              ]
+            },
+            {
+              "talent_spell_id": 373427,
+              "name": "Inescapable Torment",
+              "kind": "dynamic_pet_extension",
+              "effect": "When using the Mindbender branch, eligible spells trigger extra pet attacks and extend its life. Extension depends on actual casts.",
+              "values": {
+                "extension_per_trigger_seconds": 0.7
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_373427",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Current Evangelism is not the old flat Atonement-extension button. Its core effect is an immediate empowered Radiance and two charges consumed by later Radiance casts.",
+            "Do not assign Archangel’s 18 seconds to builds using the alternative Mindbender talent."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_472433",
+            "live_talents",
+            "method_256",
+            "rotation_256"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_holy_divineillumination.jpg",
+            "filename": "spell_holy_divineillumination.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_holy_divineillumination.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1459,
+            "sha256": "065590dd4f06cee17f76f2abd8b0e3f1d5a8992009540e678618b110ee4f7276",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 472433,
+            "lorrgs_record_name": "Evangelism",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/priest-discipline/spells"
+          }
+        },
+        {
+          "spell_id": 421453,
+          "name": "Ultimate Penitence",
+          "category": "throughput",
+          "inclusion_reason": "A large Penance-bolt barrage used directly for healing or through Atonement.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 82564,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              62618
+            ],
+            "mutually_exclusive_names": [
+              "Power Word: Barrier"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 240,
+            "static_variants": [],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 6,
+            "kind": "channel",
+            "label": "6 seconds",
+            "secondary_effects": [
+              {
+                "kind": "initial_cast",
+                "seconds": 1.5
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 450612,
+              "name": "Void Infusion",
+              "kind": "throughput",
+              "effect": "Voidweaver: improves Atonement transfer from the Penance family during Entropic Rift; relevant to offensive Ultimate Penitence sequencing. Does not change the base cooldown.",
+              "values": {},
+              "status": "guide_supported",
+              "source_ids": [
+                "spell_450612",
+                "live_talents"
+              ],
+              "talent_tree": "Voidweaver",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Has a 1.5-second nominal initial cast before the 6-second healing/damage sequence.",
+            "Choice with Power Word: Barrier. Barrier is mitigation, so it is not another throughput entry.",
+            "Legacy Heaven’s Wrath/Overloaded with Light cooldown-reduction claims were not supported by the current talent tree and are not applied."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_421453",
+            "live_talents",
+            "method_256",
+            "rotation_256"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_priest_ascendance.jpg",
+            "filename": "ability_priest_ascendance.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_priest_ascendance.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1916,
+            "sha256": "08ee86e69d6ff9268c34b450188682f4ce3e8369890301f39a15b69a8eea1b95",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 421453,
+            "lorrgs_record_name": "Ultimate Penitence",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/priest-discipline/spells"
+          }
+        }
+      ]
+    },
+    {
+      "specialization_id": 257,
+      "name": "Holy Priest",
+      "cooldowns": [
+        {
+          "spell_id": 64843,
+          "name": "Divine Hymn",
+          "category": "throughput",
+          "inclusion_reason": "A raid-healing channel that also increases subsequent healing received.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 82621,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [
+              {
+                "label": "Seraphic Crescendo",
+                "cooldown_seconds": 120,
+                "duration_seconds": 5,
+                "required_talents": [
+                  419110
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 5,
+            "kind": "channel",
+            "label": "5 seconds",
+            "secondary_effects": [
+              {
+                "kind": "healing_received_buff_after_last_refresh",
+                "seconds": 15
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 419110,
+              "name": "Seraphic Crescendo",
+              "kind": "cooldown",
+              "effect": "Reduces Divine Hymn’s cooldown by 60 seconds. Choice with Gales of Song.",
+              "values": {
+                "flat_reduction_seconds": 60
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_419110",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Gales of Song"
+              ]
+            },
+            {
+              "talent_spell_id": 372370,
+              "name": "Gales of Song",
+              "kind": "throughput",
+              "effect": "Alternative to Seraphic Crescendo: distributes Prayer of Mending stacks each second during the channel.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_372370",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Seraphic Crescendo"
+              ]
+            },
+            {
+              "talent_spell_id": 1262760,
+              "name": "Benediction",
+              "kind": "triggered_healing",
+              "effect": "The relevant Apex effect adds a Cosmic Ripple to each Divine Hymn pulse.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1262760",
+                "live_talents",
+                "patch_12_1"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Each pulse applies/refreshes a 15-second stacking healing-received buff. That trailing buff is separate from the 5-second channel.",
+            "The current channel is 5 seconds, not the 8 seconds retained by some trackers."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_64843",
+            "live_talents",
+            "method_257",
+            "rotation_257"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_holy_divinehymn.jpg",
+            "filename": "spell_holy_divinehymn.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_holy_divinehymn.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1773,
+            "sha256": "f4921db94832d3dcafb4a72514a48a897eae8c740ff3d0cc161358efa2381578",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 64843,
+            "lorrgs_record_name": "Divine Hymn",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/priest-holy/spells"
+          }
+        },
+        {
+          "spell_id": 200183,
+          "name": "Apotheosis",
+          "category": "throughput",
+          "inclusion_reason": "A high-output Holy Word window with greatly improved access to Holy Words.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 82614,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 120,
+            "static_variants": [
+              {
+                "label": "Eternal Sanctity, before dynamic extensions",
+                "cooldown_seconds": 120,
+                "duration_seconds": 32,
+                "required_talents": [
+                  1215245
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 20,
+            "kind": "buff",
+            "label": "20 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 1215245,
+              "name": "Eternal Sanctity",
+              "kind": "duration",
+              "effect": "Adds 12 seconds, giving a 32-second base window. Choice with Divinity.",
+              "values": {
+                "flat_extension_seconds": 12
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_1215245",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Divinity"
+              ]
+            },
+            {
+              "talent_spell_id": 1215241,
+              "name": "Divinity",
+              "kind": "throughput",
+              "effect": "Alternative to Eternal Sanctity: adds healing during Apotheosis and empowers the next three Prayers of Healing.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1215241",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Eternal Sanctity"
+              ]
+            },
+            {
+              "talent_spell_id": 453917,
+              "name": "Perfected Form",
+              "kind": "throughput",
+              "effect": "Archon: increases healing during Apotheosis.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_453917",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 454001,
+              "name": "Sustained Potency",
+              "kind": "dynamic_duration",
+              "effect": "Archon: each created Halo extends Apotheosis by 1 second; up to 6 seconds can be stored while it is inactive. Also pauses its duration during certain downtime, up to 20 seconds. Choice with Energy Compression.",
+              "values": {
+                "extension_per_created_halo_seconds": 1,
+                "maximum_stored_seconds": 6,
+                "maximum_pause_seconds": 20
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_454001",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Energy Compression"
+              ]
+            }
+          ],
+          "notes": [
+            "Sustained Potency makes the total window variable. Do not assume 20 or 32 seconds is always the final observed length.",
+            "Older Answered Prayers/Divine Word advice was not used as evidence of current additional cooldowns."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_200183",
+            "live_talents",
+            "method_257",
+            "rotation_257"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_priest_ascension.jpg",
+            "filename": "ability_priest_ascension.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_priest_ascension.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1893,
+            "sha256": "b42c63fa2d500b79ae52931b41f1325506df92ea04db8f6e965f671a292fe1b0",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 200183,
+            "lorrgs_record_name": "Apotheosis",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/priest-holy/spells"
+          }
+        },
+        {
+          "spell_id": 120517,
+          "name": "Halo — Archon",
+          "category": "throughput",
+          "inclusion_reason": "Archon turns Halo into a substantial multi-wave group-healing event.",
+          "availability": {
+            "talent_required": true,
+            "tree": "Archon",
+            "talent_node_id": 108724,
+            "hero_tree_required": "Archon",
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 60,
+            "static_variants": [],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": null,
+            "kind": "traveling_heal_sequence",
+            "label": "10-second emission sequence with Power Surge; travel varies",
+            "secondary_effects": [
+              {
+                "kind": "initial_cast",
+                "seconds": 1.5
+              },
+              {
+                "kind": "power_surge_emission_window",
+                "seconds": 10,
+                "requires_talent_spell_id": 453109
+              }
+            ],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 453109,
+              "name": "Power Surge",
+              "kind": "healing_sequence",
+              "effect": "Adds another Halo at 5 and 10 seconds after the initial creation.",
+              "values": {
+                "extra_emission_times_seconds": [
+                  5,
+                  10
+                ]
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_453109",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 449806,
+              "name": "Divine Halo",
+              "kind": "throughput",
+              "effect": "Makes each ring return and heal allies again as it passes. Travel time depends on position; returning rings are not additional manual casts.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_449806",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 449874,
+              "name": "Energy Compression",
+              "kind": "throughput",
+              "effect": "Increases Halo’s output. Choice with Sustained Potency.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_449874",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Sustained Potency"
+              ]
+            },
+            {
+              "talent_spell_id": 454001,
+              "name": "Sustained Potency",
+              "kind": "linked_cooldown_duration",
+              "effect": "Alternative to Energy Compression: Halo creation extends or banks duration for Apotheosis.",
+              "values": {
+                "apotheosis_extension_per_creation_seconds": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_454001",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Energy Compression"
+              ]
+            },
+            {
+              "talent_spell_id": 453845,
+              "name": "Resonant Energy",
+              "kind": "secondary_buff",
+              "effect": "Each created Halo grants a stacking 10-second healing bonus.",
+              "values": {
+                "buff_seconds": 10
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_453845",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 453783,
+              "name": "Manifested Power",
+              "kind": "throughput",
+              "effect": "Each created Halo grants Surge of Light, adding follow-up healing.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_453783",
+                "live_talents"
+              ],
+              "talent_tree": "Archon",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 390994,
+              "name": "Voice of Harmony",
+              "kind": "other_ability_recovery",
+              "effect": "Halo creation reduces Holy Word cooldowns; it does not shorten Halo’s own cooldown.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_390994",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Requires the Archon hero tree; do not list Halo for an Oracle build.",
+            "Nominal cast time is 1.5 seconds. With Power Surge the emission window spans 10 seconds, but the final returning wave can heal later."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_120517",
+            "live_talents",
+            "method_257",
+            "rotation_257"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_priest_halo.jpg",
+            "filename": "ability_priest_halo.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_priest_halo.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 2026,
+            "sha256": "2ca839e76da3f3ff14d0e72abb36cdfc970b15792f42a7265d67c9c98e9784c2",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 120517,
+            "lorrgs_record_name": "Halo",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/priest-holy/spells"
+          }
+        }
+      ]
+    },
+    {
+      "specialization_id": 264,
+      "name": "Restoration Shaman",
+      "cooldowns": [
+        {
+          "spell_id": 114052,
+          "name": "Ascendance",
+          "category": "throughput",
+          "inclusion_reason": "A large initial heal and a sustained window of stronger core healing spells.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 81032,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              108280
+            ],
+            "mutually_exclusive_names": [
+              "Healing Tide Totem"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [
+              {
+                "label": "First Ascendant",
+                "cooldown_seconds": 120,
+                "duration_seconds": 15,
+                "required_talents": [
+                  462440
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              },
+              {
+                "label": "Preeminence",
+                "cooldown_seconds": 180,
+                "duration_seconds": 18,
+                "required_talents": [
+                  462443
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 15,
+            "kind": "buff",
+            "label": "15 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 462440,
+              "name": "First Ascendant",
+              "kind": "cooldown",
+              "effect": "Reduces Ascendance or Healing Tide Totem cooldown by 60 seconds. Choice with Preeminence.",
+              "values": {
+                "flat_reduction_seconds": 60
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_462440",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Preeminence"
+              ]
+            },
+            {
+              "talent_spell_id": 462443,
+              "name": "Preeminence",
+              "kind": "duration_and_throughput",
+              "effect": "Alternative to First Ascendant: adds 3 seconds to Ascendance/Healing Tide Totem and grants haste while active.",
+              "values": {
+                "flat_extension_seconds": 3
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_462443",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "First Ascendant"
+              ]
+            },
+            {
+              "talent_spell_id": 445030,
+              "name": "Oversurge",
+              "kind": "throughput",
+              "effect": "Totemic: increases Surging Totem output while Ascendance or Healing Tide Totem is active. The generic tooltip mixes specialization effects; no numeric healing coefficient is asserted here.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_445030",
+                "live_talents"
+              ],
+              "talent_tree": "Totemic",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Amplification Core"
+              ]
+            },
+            {
+              "talent_spell_id": 378270,
+              "name": "Deeply Rooted Elements",
+              "kind": "additional_proc",
+              "effect": "Riptide can trigger a separate 6-second Ascendance proc. This does not reduce the manual ability’s cooldown and is not independently schedulable.",
+              "values": {
+                "proc_seconds": 6
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_378270",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Ascendance and Healing Tide Totem are alternatives in the current tree.",
+            "First Ascendant and Preeminence are also alternatives; a 120-second cooldown plus 18-second base duration is not a valid combination of those talents."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_114052",
+            "live_talents",
+            "method_264",
+            "rotation_264"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_fire_elementaldevastation.jpg",
+            "filename": "spell_fire_elementaldevastation.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_fire_elementaldevastation.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1695,
+            "sha256": "6c100095c21696de1281f6dd3b57abcea60295184ea8883e439463c7268998bb",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 114052,
+            "lorrgs_record_name": "Ascendance",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/shaman-restoration/spells"
+          }
+        },
+        {
+          "spell_id": 108280,
+          "name": "Healing Tide Totem",
+          "category": "throughput",
+          "inclusion_reason": "A large automatic group-healing totem.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 81032,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [
+              114052
+            ],
+            "mutually_exclusive_names": [
+              "Ascendance"
+            ]
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [
+              {
+                "label": "First Ascendant",
+                "cooldown_seconds": 120,
+                "duration_seconds": 10,
+                "required_talents": [
+                  462440
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              },
+              {
+                "label": "Preeminence",
+                "cooldown_seconds": 180,
+                "duration_seconds": 13,
+                "required_talents": [
+                  462443
+                ],
+                "status": "supported",
+                "notes": null,
+                "required_talent_ranks": {},
+                "excluded_talent_spell_ids": []
+              }
+            ],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 10,
+            "kind": "summon",
+            "label": "10 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 462440,
+              "name": "First Ascendant",
+              "kind": "cooldown",
+              "effect": "Reduces Ascendance or Healing Tide Totem cooldown by 60 seconds. Choice with Preeminence.",
+              "values": {
+                "flat_reduction_seconds": 60
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_462440",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Preeminence"
+              ]
+            },
+            {
+              "talent_spell_id": 462443,
+              "name": "Preeminence",
+              "kind": "duration_and_throughput",
+              "effect": "Alternative to First Ascendant: adds 3 seconds to Ascendance/Healing Tide Totem and grants haste while active.",
+              "values": {
+                "flat_extension_seconds": 3
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_462443",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "First Ascendant"
+              ]
+            },
+            {
+              "talent_spell_id": 445030,
+              "name": "Oversurge",
+              "kind": "throughput",
+              "effect": "Totemic: increases Surging Totem output while Ascendance or Healing Tide Totem is active. The generic tooltip mixes specialization effects; no numeric healing coefficient is asserted here.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_445030",
+                "live_talents"
+              ],
+              "talent_tree": "Totemic",
+              "max_ranks": 1,
+              "choice_with_names": [
+                "Amplification Core"
+              ]
+            },
+            {
+              "talent_spell_id": 445034,
+              "name": "Lively Totems",
+              "kind": "throughput",
+              "effect": "Totemic: placing Healing Tide Totem also casts a free Chain Heal.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_445034",
+                "live_talents"
+              ],
+              "talent_tree": "Totemic",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 445035,
+              "name": "Splitstream",
+              "kind": "throughput",
+              "effect": "Totemic: increases Healing Tide Totem healing.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_445035",
+                "live_talents"
+              ],
+              "talent_tree": "Totemic",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 1260874,
+              "name": "Primal Catalyst",
+              "kind": "throughput",
+              "effect": "Totemic: Healing Tide pulses can apply Earthliving to healed allies.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_1260874",
+                "live_talents"
+              ],
+              "talent_tree": "Totemic",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Choice with Ascendance. First Ascendant and Preeminence cannot be combined.",
+            "Do not apply Totemic Focus’s Healing Stream duration increase or assume Totemic Surge subtracts 5 seconds from this major totem; those adjustments were not established for this spell."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_108280",
+            "live_talents",
+            "method_264",
+            "rotation_264"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/ability_shaman_healingtide.jpg",
+            "filename": "ability_shaman_healingtide.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/ability_shaman_healingtide.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 1819,
+            "sha256": "956bdf3abebc5fb01563c82f9e7abb47e9847ddd50a32f94e82bafabf420babe",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 108280,
+            "lorrgs_record_name": "Healing Tide Totem",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/shaman-restoration/spells"
+          }
+        },
+        {
+          "spell_id": 98008,
+          "name": "Spirit Link Totem",
+          "category": "healing_defensive_hybrid",
+          "inclusion_reason": "Major group stabilization through redistribution and mitigation; adds direct burst healing with Spouting Spirits.",
+          "availability": {
+            "talent_required": true,
+            "tree": "specialization",
+            "talent_node_id": 81041,
+            "hero_tree_required": null,
+            "mutually_exclusive_spell_ids": [],
+            "mutually_exclusive_names": []
+          },
+          "cooldown": {
+            "base_seconds": 180,
+            "static_variants": [],
+            "dynamic_recovery_possible": false
+          },
+          "duration": {
+            "base_seconds": 6,
+            "kind": "summon",
+            "label": "6 seconds",
+            "secondary_effects": [],
+            "nominal_unhasted": true
+          },
+          "modifiers": [
+            {
+              "talent_spell_id": 462383,
+              "name": "Spouting Spirits",
+              "kind": "triggered_healing",
+              "effect": "Adds a substantial heal 1 second after placement and increases the totem’s damage reduction.",
+              "values": {
+                "heal_delay_seconds": 1
+              },
+              "status": "supported",
+              "source_ids": [
+                "spell_462383",
+                "live_talents"
+              ],
+              "talent_tree": "specialization",
+              "max_ranks": 1,
+              "choice_with_names": []
+            },
+            {
+              "talent_spell_id": 445034,
+              "name": "Lively Totems",
+              "kind": "throughput",
+              "effect": "Totemic: placing Spirit Link Totem also casts a free Chain Heal.",
+              "values": {},
+              "status": "supported",
+              "source_ids": [
+                "spell_445034",
+                "live_talents"
+              ],
+              "talent_tree": "Totemic",
+              "max_ranks": 1,
+              "choice_with_names": []
+            }
+          ],
+          "notes": [
+            "Redistribution alone does not create net group healing. This is included as a healing/defensive hybrid because its current talents add major direct healing.",
+            "The 1-second delayed burst is not the totem’s duration; the totem lasts 6 seconds."
+          ],
+          "evidence_status": "supported",
+          "issue_ids": [],
+          "source_ids": [
+            "spell_98008",
+            "live_talents",
+            "method_264",
+            "rotation_264"
+          ],
+          "icon": {
+            "file": "icons/lorrgs/spells/spell_shaman_spiritlink.jpg",
+            "filename": "spell_shaman_spiritlink.jpg",
+            "source_url": "https://assets2.lorrgs.io/images/spells/spell_shaman_spiritlink.jpg",
+            "mime_type": "image/jpeg",
+            "image_format": "JPEG",
+            "width": 56,
+            "height": 56,
+            "bytes": 2295,
+            "sha256": "7d56f21982dd3273b3e8b05fed51391834853440817dd57a0884cbfa9b7298e8",
+            "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+            "provider": "Lorrgs",
+            "mapping_method": "direct_spell_id",
+            "lorrgs_record_spell_id": 98008,
+            "lorrgs_record_name": "Spirit Link Totem",
+            "mapping_source_url": "https://api2.lorrgs.io/api/specs/shaman-restoration/spells"
+          }
+        }
+      ]
+    }
+  ],
+  "unresolved_issues": [
+    {
+      "id": "paladin_call_of_righteous",
+      "severity": "live_verification_needed",
+      "affected_spell_ids": [
+        31884,
+        216331
+      ],
+      "summary": "Holy Paladin duration values disagree across current public sources. Do not silently select one as a measured live value.",
+      "evidence": [
+        {
+          "source_id": "patch_12_1",
+          "claim": "12.1 notes specify duration penalties of 3 seconds per rank for Avenging Wrath and 2 seconds per rank for Avenging Crusader."
+        },
+        {
+          "source_id": "live_talents",
+          "claim": "Two-rank calculator description instead retains penalties of 4/8 seconds for Wrath and 2.5/5 seconds for Crusader; cooldown reductions are 15/30 and 7.5/15 seconds respectively."
+        },
+        {
+          "source_id": "spell_1241511",
+          "claim": "Generic tooltip presents a different flattened set of values and is unsuitable for rank-aware planning."
+        }
+      ],
+      "intended_durations_without_sanctified_wrath": [
+        {
+          "rank": 1,
+          "avenging_wrath_seconds": 17,
+          "avenging_crusader_seconds": 13
+        },
+        {
+          "rank": 2,
+          "avenging_wrath_seconds": 14,
+          "avenging_crusader_seconds": 11
+        }
+      ],
+      "calculator_durations_without_sanctified_wrath": [
+        {
+          "rank": 1,
+          "avenging_wrath_seconds": 16,
+          "avenging_crusader_seconds": 12.5
+        },
+        {
+          "rank": 2,
+          "avenging_wrath_seconds": 12,
+          "avenging_crusader_seconds": 10
+        }
+      ],
+      "resolution": "Keep effective talented duration null until a live 12.1 character confirms the rank effects and the ordering with Sanctified Wrath."
+    },
+    {
+      "id": "druid_inner_peace",
+      "severity": "availability_verification_needed",
+      "affected_spell_ids": [
+        740
+      ],
+      "summary": "Inner Peace is absent from the retrieved current talent tree, although its spell record and legacy modifier mapping remain.",
+      "evidence": [
+        {
+          "source_id": "live_talents",
+          "claim": "No selectable Inner Peace node was found for Restoration; the modifier map still references it."
+        },
+        {
+          "source_id": "spell_197073",
+          "claim": "The surviving spell tooltip reduces Tranquility cooldown by 30 seconds."
+        },
+        {
+          "source_id": "lorrgs",
+          "claim": "Tracker lists Tranquility at 150 seconds, without proving current talent availability."
+        }
+      ],
+      "candidate_if_available": {
+        "talent_spell_id": 197073,
+        "cooldown_seconds": 150
+      },
+      "resolution": "Use the 180-second unmodified base; only enable the 150-second variant after checking current character talent availability."
+    }
+  ],
+  "excluded_from_primary_catalogue": [
+    {
+      "names": [
+        "Power Word: Barrier",
+        "Zephyr"
+      ],
+      "reason": "Major mitigation, but no direct group-healing throughput; outside the requested throughput list. Barrier also competes with Ultimate Penitence."
+    },
+    {
+      "names": [
+        "Ironbark",
+        "Pain Suppression",
+        "Life Cocoon",
+        "Guardian Spirit",
+        "Lay on Hands"
+      ],
+      "reason": "Single-target protection, healing amplification or emergency rescue, rather than a group-healing throughput cooldown. Worth tracking separately for tank/external assignments."
+    },
+    {
+      "names": [
+        "Emerald Communion"
+      ],
+      "reason": "Current spell is a PvP talent and is absent from the retrieved PvE tree; Lorrgs retaining it does not establish PvE availability."
+    },
+    {
+      "names": [
+        "Innervate",
+        "Symbol of Hope",
+        "Mana Tide Totem",
+        "Power Infusion"
+      ],
+      "reason": "Mana, cooldown support or external haste rather than a direct group-healing cooldown."
+    },
+    {
+      "names": [
+        "Holy Prism",
+        "Holy Words",
+        "Power Word: Radiance",
+        "Swiftmend",
+        "Wild Growth",
+        "Dream Breath",
+        "Spiritbloom",
+        "Thunder Focus Tea",
+        "Sheilun’s Gift",
+        "Healing Stream Totem",
+        "Surging Totem"
+      ],
+      "reason": "Regular rotational, short-cycle, or foundational healing tools; excluded to keep this a major-cooldown catalogue."
+    },
+    {
+      "names": [
+        "Flourish",
+        "Tyr’s Deliverance",
+        "Mindbender",
+        "Reforestation",
+        "Deeply Rooted Elements",
+        "Unity Within"
+      ],
+      "reason": "Relevant current passives, triggered effects, alternative branches or sub-actions are documented under their parent cooldown instead of being counted as additional independent buttons."
+    }
+  ],
+  "sources": {
+    "patch_12_1": {
+      "title": "Blizzard — Curse of Ula’tek content update notes (12.1)",
+      "url": "https://news.blizzard.com/en-us/article/24293281/curse-of-ula-tek-content-update-notes",
+      "kind": "official_patch_notes"
+    },
+    "live_talents": {
+      "title": "Wowhead live talent-calculator data; retrieved snapshot",
+      "url": "https://nether.wowhead.com/data/talents-dragonflight?dv=41&db=1788766620",
+      "kind": "live_talent_database"
+    },
+    "lorrgs": {
+      "title": "Lorrgs cooldown selection",
+      "url": "https://lorrgs.io/",
+      "kind": "scope_reference"
+    },
+    "method_105": {
+      "title": "Method — Restoration Druid talents",
+      "url": "https://www.method.gg/guides/restoration-druid/talents",
+      "kind": "specialist_guide"
+    },
+    "rotation_105": {
+      "title": "Method — Restoration Druid playstyle and rotation",
+      "url": "https://www.method.gg/guides/restoration-druid/playstyle-and-rotation",
+      "kind": "specialist_guide"
+    },
+    "spell_197721": {
+      "title": "Wowhead spell 197721",
+      "url": "https://www.wowhead.com/spell=197721",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/197721",
+      "kind": "spell_database"
+    },
+    "spell_383191": {
+      "title": "Wowhead spell 383191",
+      "url": "https://www.wowhead.com/spell=383191",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/383191",
+      "kind": "spell_database"
+    },
+    "spell_740": {
+      "title": "Wowhead spell 740",
+      "url": "https://www.wowhead.com/spell=740",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/740",
+      "kind": "spell_database"
+    },
+    "spell_434249": {
+      "title": "Wowhead spell 434249",
+      "url": "https://www.wowhead.com/spell=434249",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/434249",
+      "kind": "spell_database"
+    },
+    "spell_393371": {
+      "title": "Wowhead spell 393371",
+      "url": "https://www.wowhead.com/spell=393371",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/393371",
+      "kind": "spell_database"
+    },
+    "spell_392356": {
+      "title": "Wowhead spell 392356",
+      "url": "https://www.wowhead.com/spell=392356",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/392356",
+      "kind": "spell_database"
+    },
+    "spell_429420": {
+      "title": "Wowhead spell 429420",
+      "url": "https://www.wowhead.com/spell=429420",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/429420",
+      "kind": "spell_database"
+    },
+    "spell_33891": {
+      "title": "Wowhead spell 33891",
+      "url": "https://www.wowhead.com/spell=33891",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/33891",
+      "kind": "spell_database"
+    },
+    "spell_391528": {
+      "title": "Wowhead spell 391528",
+      "url": "https://www.wowhead.com/spell=391528",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/391528",
+      "kind": "spell_database"
+    },
+    "method_1468": {
+      "title": "Method — Preservation Evoker talents",
+      "url": "https://www.method.gg/guides/preservation-evoker/talents",
+      "kind": "specialist_guide"
+    },
+    "rotation_1468": {
+      "title": "Method — Preservation Evoker playstyle and rotation",
+      "url": "https://www.method.gg/guides/preservation-evoker/playstyle-and-rotation",
+      "kind": "specialist_guide"
+    },
+    "spell_431984": {
+      "title": "Wowhead spell 431984",
+      "url": "https://www.wowhead.com/spell=431984",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/431984",
+      "kind": "spell_database"
+    },
+    "spell_381922": {
+      "title": "Wowhead spell 381922",
+      "url": "https://www.wowhead.com/spell=381922",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/381922",
+      "kind": "spell_database"
+    },
+    "spell_363534": {
+      "title": "Wowhead spell 363534",
+      "url": "https://www.wowhead.com/spell=363534",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/363534",
+      "kind": "spell_database"
+    },
+    "spell_1242745": {
+      "title": "Wowhead spell 1242745",
+      "url": "https://www.wowhead.com/spell=1242745",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1242745",
+      "kind": "spell_database"
+    },
+    "spell_359816": {
+      "title": "Wowhead spell 359816",
+      "url": "https://www.wowhead.com/spell=359816",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/359816",
+      "kind": "spell_database"
+    },
+    "spell_370537": {
+      "title": "Wowhead spell 370537",
+      "url": "https://www.wowhead.com/spell=370537",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/370537",
+      "kind": "spell_database"
+    },
+    "spell_431695": {
+      "title": "Wowhead spell 431695",
+      "url": "https://www.wowhead.com/spell=431695",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/431695",
+      "kind": "spell_database"
+    },
+    "spell_1260484": {
+      "title": "Wowhead spell 1260484",
+      "url": "https://www.wowhead.com/spell=1260484",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1260484",
+      "kind": "spell_database"
+    },
+    "spell_370553": {
+      "title": "Wowhead spell 370553",
+      "url": "https://www.wowhead.com/spell=370553",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/370553",
+      "kind": "spell_database"
+    },
+    "method_270": {
+      "title": "Method — Mistweaver Monk talents",
+      "url": "https://www.method.gg/guides/mistweaver-monk/talents",
+      "kind": "specialist_guide"
+    },
+    "rotation_270": {
+      "title": "Method — Mistweaver Monk playstyle and rotation",
+      "url": "https://www.method.gg/guides/mistweaver-monk/playstyle-and-rotation",
+      "kind": "specialist_guide"
+    },
+    "spell_388551": {
+      "title": "Wowhead spell 388551",
+      "url": "https://www.wowhead.com/spell=388551",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/388551",
+      "kind": "spell_database"
+    },
+    "spell_115310": {
+      "title": "Wowhead spell 115310",
+      "url": "https://www.wowhead.com/spell=115310",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/115310",
+      "kind": "spell_database"
+    },
+    "spell_388615": {
+      "title": "Wowhead spell 388615",
+      "url": "https://www.wowhead.com/spell=388615",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/388615",
+      "kind": "spell_database"
+    },
+    "spell_388212": {
+      "title": "Wowhead spell 388212",
+      "url": "https://www.wowhead.com/spell=388212",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/388212",
+      "kind": "spell_database"
+    },
+    "spell_388031": {
+      "title": "Wowhead spell 388031",
+      "url": "https://www.wowhead.com/spell=388031",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/388031",
+      "kind": "spell_database"
+    },
+    "spell_343655": {
+      "title": "Wowhead spell 343655",
+      "url": "https://www.wowhead.com/spell=343655",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/343655",
+      "kind": "spell_database"
+    },
+    "spell_442719": {
+      "title": "Wowhead spell 442719",
+      "url": "https://www.wowhead.com/spell=442719",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/442719",
+      "kind": "spell_database"
+    },
+    "spell_443087": {
+      "title": "Wowhead spell 443087",
+      "url": "https://www.wowhead.com/spell=443087",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/443087",
+      "kind": "spell_database"
+    },
+    "spell_322118": {
+      "title": "Wowhead spell 322118",
+      "url": "https://www.wowhead.com/spell=322118",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/322118",
+      "kind": "spell_database"
+    },
+    "spell_325197": {
+      "title": "Wowhead spell 325197",
+      "url": "https://www.wowhead.com/spell=325197",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/325197",
+      "kind": "spell_database"
+    },
+    "spell_443589": {
+      "title": "Wowhead spell 443589",
+      "url": "https://www.wowhead.com/spell=443589",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/443589",
+      "kind": "spell_database"
+    },
+    "spell_1273154": {
+      "title": "Wowhead spell 1273154",
+      "url": "https://www.wowhead.com/spell=1273154",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1273154",
+      "kind": "spell_database"
+    },
+    "spell_443059": {
+      "title": "Wowhead spell 443059",
+      "url": "https://www.wowhead.com/spell=443059",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/443059",
+      "kind": "spell_database"
+    },
+    "spell_443566": {
+      "title": "Wowhead spell 443566",
+      "url": "https://www.wowhead.com/spell=443566",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/443566",
+      "kind": "spell_database"
+    },
+    "spell_443028": {
+      "title": "Wowhead spell 443028",
+      "url": "https://www.wowhead.com/spell=443028",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/443028",
+      "kind": "spell_database"
+    },
+    "method_65": {
+      "title": "Method — Holy Paladin talents",
+      "url": "https://www.method.gg/guides/holy-paladin/talents",
+      "kind": "specialist_guide"
+    },
+    "rotation_65": {
+      "title": "Method — Holy Paladin playstyle and rotation",
+      "url": "https://www.method.gg/guides/holy-paladin/playstyle-and-rotation",
+      "kind": "specialist_guide"
+    },
+    "spell_53376": {
+      "title": "Wowhead spell 53376",
+      "url": "https://www.wowhead.com/spell=53376",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/53376",
+      "kind": "spell_database"
+    },
+    "spell_1241511": {
+      "title": "Wowhead spell 1241511",
+      "url": "https://www.wowhead.com/spell=1241511",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1241511",
+      "kind": "spell_database"
+    },
+    "spell_1241275": {
+      "title": "Wowhead spell 1241275",
+      "url": "https://www.wowhead.com/spell=1241275",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1241275",
+      "kind": "spell_database"
+    },
+    "spell_1242008": {
+      "title": "Wowhead spell 1242008",
+      "url": "https://www.wowhead.com/spell=1242008",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1242008",
+      "kind": "spell_database"
+    },
+    "spell_433011": {
+      "title": "Wowhead spell 433011",
+      "url": "https://www.wowhead.com/spell=433011",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/433011",
+      "kind": "spell_database"
+    },
+    "spell_1263782": {
+      "title": "Wowhead spell 1263782",
+      "url": "https://www.wowhead.com/spell=1263782",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1263782",
+      "kind": "spell_database"
+    },
+    "spell_1263920": {
+      "title": "Wowhead spell 1263920",
+      "url": "https://www.wowhead.com/spell=1263920",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1263920",
+      "kind": "spell_database"
+    },
+    "spell_414195": {
+      "title": "Wowhead spell 414195",
+      "url": "https://www.wowhead.com/spell=414195",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/414195",
+      "kind": "spell_database"
+    },
+    "spell_31884": {
+      "title": "Wowhead spell 31884",
+      "url": "https://www.wowhead.com/spell=31884",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/31884",
+      "kind": "spell_database"
+    },
+    "spell_216331": {
+      "title": "Wowhead spell 216331",
+      "url": "https://www.wowhead.com/spell=216331",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/216331",
+      "kind": "spell_database"
+    },
+    "spell_379391": {
+      "title": "Wowhead spell 379391",
+      "url": "https://www.wowhead.com/spell=379391",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/379391",
+      "kind": "spell_database"
+    },
+    "spell_386738": {
+      "title": "Wowhead spell 386738",
+      "url": "https://www.wowhead.com/spell=386738",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/386738",
+      "kind": "spell_database"
+    },
+    "spell_431377": {
+      "title": "Wowhead spell 431377",
+      "url": "https://www.wowhead.com/spell=431377",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/431377",
+      "kind": "spell_database"
+    },
+    "spell_439760": {
+      "title": "Wowhead spell 439760",
+      "url": "https://www.wowhead.com/spell=439760",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/439760",
+      "kind": "spell_database"
+    },
+    "spell_1241542": {
+      "title": "Wowhead spell 1241542",
+      "url": "https://www.wowhead.com/spell=1241542",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1241542",
+      "kind": "spell_database"
+    },
+    "spell_375576": {
+      "title": "Wowhead spell 375576",
+      "url": "https://www.wowhead.com/spell=375576",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/375576",
+      "kind": "spell_database"
+    },
+    "spell_392911": {
+      "title": "Wowhead spell 392911",
+      "url": "https://www.wowhead.com/spell=392911",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/392911",
+      "kind": "spell_database"
+    },
+    "spell_200430": {
+      "title": "Wowhead spell 200430",
+      "url": "https://www.wowhead.com/spell=200430",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/200430",
+      "kind": "spell_database"
+    },
+    "spell_31821": {
+      "title": "Wowhead spell 31821",
+      "url": "https://www.wowhead.com/spell=31821",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/31821",
+      "kind": "spell_database"
+    },
+    "method_256": {
+      "title": "Method — Discipline Priest talents",
+      "url": "https://www.method.gg/guides/discipline-priest/talents",
+      "kind": "specialist_guide"
+    },
+    "rotation_256": {
+      "title": "Method — Discipline Priest playstyle and rotation",
+      "url": "https://www.method.gg/guides/discipline-priest/playstyle-and-rotation",
+      "kind": "specialist_guide"
+    },
+    "spell_197862": {
+      "title": "Wowhead spell 197862",
+      "url": "https://www.wowhead.com/spell=197862",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/197862",
+      "kind": "spell_database"
+    },
+    "spell_1280137": {
+      "title": "Wowhead spell 1280137",
+      "url": "https://www.wowhead.com/spell=1280137",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1280137",
+      "kind": "spell_database"
+    },
+    "spell_373427": {
+      "title": "Wowhead spell 373427",
+      "url": "https://www.wowhead.com/spell=373427",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/373427",
+      "kind": "spell_database"
+    },
+    "spell_472433": {
+      "title": "Wowhead spell 472433",
+      "url": "https://www.wowhead.com/spell=472433",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/472433",
+      "kind": "spell_database"
+    },
+    "spell_450612": {
+      "title": "Wowhead spell 450612",
+      "url": "https://www.wowhead.com/spell=450612",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/450612",
+      "kind": "spell_database"
+    },
+    "spell_421453": {
+      "title": "Wowhead spell 421453",
+      "url": "https://www.wowhead.com/spell=421453",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/421453",
+      "kind": "spell_database"
+    },
+    "method_257": {
+      "title": "Method — Holy Priest talents",
+      "url": "https://www.method.gg/guides/holy-priest/talents",
+      "kind": "specialist_guide"
+    },
+    "rotation_257": {
+      "title": "Method — Holy Priest playstyle and rotation",
+      "url": "https://www.method.gg/guides/holy-priest/playstyle-and-rotation",
+      "kind": "specialist_guide"
+    },
+    "spell_419110": {
+      "title": "Wowhead spell 419110",
+      "url": "https://www.wowhead.com/spell=419110",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/419110",
+      "kind": "spell_database"
+    },
+    "spell_372370": {
+      "title": "Wowhead spell 372370",
+      "url": "https://www.wowhead.com/spell=372370",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/372370",
+      "kind": "spell_database"
+    },
+    "spell_1262760": {
+      "title": "Wowhead spell 1262760",
+      "url": "https://www.wowhead.com/spell=1262760",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1262760",
+      "kind": "spell_database"
+    },
+    "spell_64843": {
+      "title": "Wowhead spell 64843",
+      "url": "https://www.wowhead.com/spell=64843",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/64843",
+      "kind": "spell_database"
+    },
+    "spell_1215245": {
+      "title": "Wowhead spell 1215245",
+      "url": "https://www.wowhead.com/spell=1215245",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1215245",
+      "kind": "spell_database"
+    },
+    "spell_1215241": {
+      "title": "Wowhead spell 1215241",
+      "url": "https://www.wowhead.com/spell=1215241",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1215241",
+      "kind": "spell_database"
+    },
+    "spell_453917": {
+      "title": "Wowhead spell 453917",
+      "url": "https://www.wowhead.com/spell=453917",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/453917",
+      "kind": "spell_database"
+    },
+    "spell_454001": {
+      "title": "Wowhead spell 454001",
+      "url": "https://www.wowhead.com/spell=454001",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/454001",
+      "kind": "spell_database"
+    },
+    "spell_200183": {
+      "title": "Wowhead spell 200183",
+      "url": "https://www.wowhead.com/spell=200183",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/200183",
+      "kind": "spell_database"
+    },
+    "spell_453109": {
+      "title": "Wowhead spell 453109",
+      "url": "https://www.wowhead.com/spell=453109",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/453109",
+      "kind": "spell_database"
+    },
+    "spell_449806": {
+      "title": "Wowhead spell 449806",
+      "url": "https://www.wowhead.com/spell=449806",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/449806",
+      "kind": "spell_database"
+    },
+    "spell_449874": {
+      "title": "Wowhead spell 449874",
+      "url": "https://www.wowhead.com/spell=449874",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/449874",
+      "kind": "spell_database"
+    },
+    "spell_453845": {
+      "title": "Wowhead spell 453845",
+      "url": "https://www.wowhead.com/spell=453845",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/453845",
+      "kind": "spell_database"
+    },
+    "spell_453783": {
+      "title": "Wowhead spell 453783",
+      "url": "https://www.wowhead.com/spell=453783",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/453783",
+      "kind": "spell_database"
+    },
+    "spell_390994": {
+      "title": "Wowhead spell 390994",
+      "url": "https://www.wowhead.com/spell=390994",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/390994",
+      "kind": "spell_database"
+    },
+    "spell_120517": {
+      "title": "Wowhead spell 120517",
+      "url": "https://www.wowhead.com/spell=120517",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/120517",
+      "kind": "spell_database"
+    },
+    "method_264": {
+      "title": "Method — Restoration Shaman talents",
+      "url": "https://www.method.gg/guides/restoration-shaman/talents",
+      "kind": "specialist_guide"
+    },
+    "rotation_264": {
+      "title": "Method — Restoration Shaman playstyle and rotation",
+      "url": "https://www.method.gg/guides/restoration-shaman/playstyle-and-rotation",
+      "kind": "specialist_guide"
+    },
+    "spell_462440": {
+      "title": "Wowhead spell 462440",
+      "url": "https://www.wowhead.com/spell=462440",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/462440",
+      "kind": "spell_database"
+    },
+    "spell_462443": {
+      "title": "Wowhead spell 462443",
+      "url": "https://www.wowhead.com/spell=462443",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/462443",
+      "kind": "spell_database"
+    },
+    "spell_445030": {
+      "title": "Wowhead spell 445030",
+      "url": "https://www.wowhead.com/spell=445030",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/445030",
+      "kind": "spell_database"
+    },
+    "spell_378270": {
+      "title": "Wowhead spell 378270",
+      "url": "https://www.wowhead.com/spell=378270",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/378270",
+      "kind": "spell_database"
+    },
+    "spell_114052": {
+      "title": "Wowhead spell 114052",
+      "url": "https://www.wowhead.com/spell=114052",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/114052",
+      "kind": "spell_database"
+    },
+    "spell_445034": {
+      "title": "Wowhead spell 445034",
+      "url": "https://www.wowhead.com/spell=445034",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/445034",
+      "kind": "spell_database"
+    },
+    "spell_445035": {
+      "title": "Wowhead spell 445035",
+      "url": "https://www.wowhead.com/spell=445035",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/445035",
+      "kind": "spell_database"
+    },
+    "spell_1260874": {
+      "title": "Wowhead spell 1260874",
+      "url": "https://www.wowhead.com/spell=1260874",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1260874",
+      "kind": "spell_database"
+    },
+    "spell_108280": {
+      "title": "Wowhead spell 108280",
+      "url": "https://www.wowhead.com/spell=108280",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/108280",
+      "kind": "spell_database"
+    },
+    "spell_462383": {
+      "title": "Wowhead spell 462383",
+      "url": "https://www.wowhead.com/spell=462383",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/462383",
+      "kind": "spell_database"
+    },
+    "spell_98008": {
+      "title": "Wowhead spell 98008",
+      "url": "https://www.wowhead.com/spell=98008",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/98008",
+      "kind": "spell_database"
+    },
+    "spell_197073": {
+      "title": "Wowhead spell 197073",
+      "url": "https://www.wowhead.com/spell=197073",
+      "tooltip_url": "https://nether.wowhead.com/tooltip/spell/197073",
+      "kind": "spell_database"
+    }
+  },
+  "icon_collection": {
+    "provider": "Lorrgs",
+    "retrieved_at_utc": "2026-09-20T01:09:29.580105+00:00",
+    "manifest_file": "lorrgs-icon-manifest.json",
+    "icon_path_base": "Directory containing this JSON",
+    "cooldown_research_unchanged": true,
+    "note": "Icons are original downloaded Lorrgs assets. Metadata was added without replacing the earlier cooldown research. Restoral uses the Revival icon because Lorrgs lists it as a variation."
+  }
+}

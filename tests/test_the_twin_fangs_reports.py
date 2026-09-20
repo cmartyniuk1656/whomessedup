@@ -50,6 +50,7 @@ class TheTwinFangsReportRegistryTests(unittest.TestCase):
             "the-twin-fangs-avoidable-damage",
             "the-twin-fangs-damage",
             "the-twin-fangs-cooldowns",
+            "the-twin-fangs-cooldown-coverage-heroic",
             "the-twin-fangs-fuckups",
             "the-twin-fangs-mechanics-scorecard",
             "the-twin-fangs-heroic-aggregate-reports",
@@ -58,6 +59,7 @@ class TheTwinFangsReportRegistryTests(unittest.TestCase):
             definition.id: definition
             for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "the-twin-fangs"
+            and definition.difficulty == "heroic"
         }
 
         self.assertEqual(set(definitions), expected_ids)

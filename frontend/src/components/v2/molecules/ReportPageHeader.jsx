@@ -35,14 +35,16 @@ export function ReportPageHeader({ page, rows, shareUrl }) {
             {copyStatus || "Share Report"}
           </Button>
         ) : null}
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => downloadReportTableCsv(page, rows, page?.content?.table)}
-        >
-          Download CSV
-        </Button>
+        {page?.content?.table && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => downloadReportTableCsv(page, rows, page?.content?.table)}
+          >
+            Download CSV
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,2984 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Lorrgs Midnight 12.1 boss ability icons and descriptions",
+  "patch": "12.1",
+  "season": {
+    "name": "Midnight Season 2",
+    "slug": "midnight_s2",
+    "raids": [
+      53.1,
+      51.2
+    ]
+  },
+  "retrieved_at_utc": "2026-09-20T01:09:29.580105+00:00",
+  "scope": {
+    "selection": "All boss ability records exposed by Lorrgs for its current Midnight Season 2 raids, including records hidden by default.",
+    "difficulty": "The Lorrgs spell catalogue is shared; these records are not a separately verified Mythic tuning dataset.",
+    "completeness": "Complete for the retrieved Lorrgs catalogue, not every ability in the in-game encounter journal.",
+    "descriptions": "Concise paraphrases of the linked game-spell tooltips; unscaled mechanics, not damage-tuning reference values. Lorrgs returned empty inline descriptions for all selected records."
+  },
+  "field_conventions": {
+    "icon_file": "Relative to the directory containing this JSON; preserve the icons subdirectory when moving files.",
+    "display_duration_seconds": "Lorrgs timeline display configuration, not a verified spell-effect duration.",
+    "configured_cooldown_seconds": "Lorrgs display configuration; zero does not mean the boss can cast continuously or has no cooldown.",
+    "shown_by_default": "Lorrgs display preference, not an availability or difficulty flag.",
+    "description_spell_id": "May differ from tracked spell_id if an otherwise empty cast record links to a documented mechanic record; this is explicitly flagged."
+  },
+  "source_urls": [
+    "https://api2.lorrgs.io/api/seasons/current",
+    "https://api2.lorrgs.io/api/zones"
+  ],
+  "raids": [
+    {
+      "raid_id": 53.1,
+      "name": "The Venomous Abyss",
+      "slug": "the-venomous-abyss",
+      "bosses": [
+        {
+          "boss_id": 3470,
+          "name": "Nek'zali the Soulcoiler",
+          "slug": "nekzali-the-soulcoiler",
+          "source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/nekzali-the-soulcoiler",
+          "abilities": [
+            {
+              "spell_id": 1292248,
+              "name": "Soul Transfer",
+              "description": "Jawae channels an essence transfer into an echo; the completion blast damages players caught nearby.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1292248,
+                "url": "https://www.wowhead.com/spell=1292248",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1292248",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells",
+                "tracked_spell_id": 1292248,
+                "tooltip_info": "spell=1292248",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 15.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(49, 97, 72)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_necrolord_fleshcraft.jpg",
+                "filename": "ability_necrolord_fleshcraft.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_necrolord_fleshcraft.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2361,
+                "sha256": "ac9a76f42111d47dc0afb0b2ccb6f1ad18f215d3125e211967d49e2fb2b1f5bf",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1292248,
+                "lorrgs_record_name": "Soul Transfer",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells"
+              }
+            },
+            {
+              "spell_id": 1295124,
+              "name": "Ritual of Awakening",
+              "description": "At half health, Nek'zali becomes protected by Jawae's tethers. Breaking every tether ends the protection and brings her back into the fight.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1289683,
+                "url": "https://www.wowhead.com/spell=1289683",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1289683",
+                "relation": "related_same_named_mechanic",
+                "notes": "Lorrgs tracks the 1295124 cast, whose tooltip has no descriptive text. The description comes from the same-named mechanic record 1289683; the icon and tracked spell ID remain those selected by Lorrgs."
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells",
+                "tracked_spell_id": 1295124,
+                "tooltip_info": "spell=1295124",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 20.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(161, 91, 66)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_helm_mail_raidshamanmythic_s_01.jpg",
+                "filename": "inv_helm_mail_raidshamanmythic_s_01.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_helm_mail_raidshamanmythic_s_01.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2353,
+                "sha256": "c53ed0090caad6e987a1cc97bb1b16c973a9785642f7155855fca0b1d7f0358d",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1295124,
+                "lorrgs_record_name": "Ritual of Awakening",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells"
+              }
+            },
+            {
+              "spell_id": 1285681,
+              "name": "Soulcoil Ignition",
+              "description": "A four-second channel repeatedly invokes the Soulcoil Rite and releases Anguished Echoes from the well.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1285681,
+                "url": "https://www.wowhead.com/spell=1285681",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1285681",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells",
+                "tracked_spell_id": 1285681,
+                "tooltip_info": "spell=1285681",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(116, 213, 242)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_soulleech_2.jpg",
+                "filename": "spell_shadow_soulleech_2.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_soulleech_2.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1759,
+                "sha256": "02476e531ef6563d9ed9b1cf162831755ca1642299de84eceeeb44bfd591639d",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1285681,
+                "lorrgs_record_name": "Soulcoil Ignition",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells"
+              }
+            },
+            {
+              "spell_id": 1299673,
+              "name": "Invoke",
+              "description": "Triggers the Soulcoil Rite and instructs Latent Cultists to carry out Entwined Step.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1299673,
+                "url": "https://www.wowhead.com/spell=1299673",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1299673",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells",
+                "tracked_spell_id": 1299673,
+                "tooltip_info": "spell=1299673",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(204, 179, 155)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/warrior_disruptingshout.jpg",
+                "filename": "warrior_disruptingshout.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/warrior_disruptingshout.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1772,
+                "sha256": "18daef74bd4064594b758774295ef8368f6307de6740978a03c4340783a253d9",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1299673,
+                "lorrgs_record_name": "Invoke",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells"
+              }
+            },
+            {
+              "spell_id": 1284103,
+              "name": "Possession Barrage",
+              "description": "Spectral projectiles travel toward the primary target and cause raid-wide Shadow damage on impact. Longer travel distance reduces the damage.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284103,
+                "url": "https://www.wowhead.com/spell=1284103",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284103",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells",
+                "tracked_spell_id": 1284103,
+                "tooltip_info": "spell=1284103",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 6.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(127, 47, 173)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_possession.jpg",
+                "filename": "spell_shadow_possession.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_possession.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1497,
+                "sha256": "c0b25325fb2053c662477a4566a558464e2f14e9e8307c263a8e414630d95af3",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284103,
+                "lorrgs_record_name": "Possession Barrage",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nekzali-the-soulcoiler/spells"
+              }
+            }
+          ]
+        },
+        {
+          "boss_id": 3445,
+          "name": "Entombed Sentinels",
+          "slug": "entombed-sentinels",
+          "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/entombed-sentinels",
+          "abilities": [
+            {
+              "spell_id": 1296878,
+              "name": "Shifting Protovenom",
+              "description": "A venom debuff periodically damages selected players. Contact between two contaminated players neutralizes it; touching an unaffected player instead causes an eruption.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1296878,
+                "url": "https://www.wowhead.com/spell=1296878",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1296878",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1296878,
+                "tooltip_info": "spell=1296878",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 8.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(245, 158, 20)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_deathvortex.jpg",
+                "filename": "spell_deathvortex.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_deathvortex.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2219,
+                "sha256": "14547d63a30133cea81780072adff1561a5f92172d5244491907759e7badeab9",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1296878,
+                "lorrgs_record_name": "Shifting Protovenom",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            },
+            {
+              "spell_id": 1284635,
+              "name": "Vitriolic Stasis",
+              "description": "At full energy, the sentinels converge for 30 seconds, gain heavy damage reduction, and heal the weaker sentinel until their health matches.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284635,
+                "url": "https://www.wowhead.com/spell=1284635",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284635",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1284635,
+                "tooltip_info": "spell=1284635",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 30.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(230, 41, 120)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_112_raidtrinkets_blobofswirlingvoid_dark.jpg",
+                "filename": "inv_112_raidtrinkets_blobofswirlingvoid_dark.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_112_raidtrinkets_blobofswirlingvoid_dark.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1559,
+                "sha256": "ac7613cc898c6b386eae79fd74c2aef2904ae98c4710a747024a62c0436e3299",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284635,
+                "lorrgs_record_name": "Vitriolic Stasis",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            },
+            {
+              "spell_id": 1284487,
+              "name": "Bloodvenom Injection",
+              "description": "A tank strike combines immediate Physical damage with a long, stacking Shadow damage-over-time effect.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284487,
+                "url": "https://www.wowhead.com/spell=1284487",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284487",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1284487,
+                "tooltip_info": "spell=1284487",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 1.5,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(217, 189, 178)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_warrior_bloodbath.jpg",
+                "filename": "ability_warrior_bloodbath.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_warrior_bloodbath.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1583,
+                "sha256": "113d55ec9ca1ef5ae0bf448dcded5f87f8b61ec76b04373d89b47a087f989e1d",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284487,
+                "lorrgs_record_name": "Bloodvenom Injection",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            },
+            {
+              "spell_id": 1288232,
+              "name": "Unstable Miasma",
+              "description": "A marked player detonates after a delay. Nearby players share the Shadow damage and receive applications of Clinging Murk.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1288232,
+                "url": "https://www.wowhead.com/spell=1288232",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1288232",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1288232,
+                "tooltip_info": "spell=1288232",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 8.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(242, 68, 24)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_deathwing_bloodcorruption_death.jpg",
+                "filename": "ability_deathwing_bloodcorruption_death.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_deathwing_bloodcorruption_death.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1833,
+                "sha256": "5fc58f95335312e066032bf2fe17ff6bd49d9b96df75bed59d3b8f3494822424",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1288232,
+                "lorrgs_record_name": "Unstable Miasma",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            },
+            {
+              "spell_id": 1284471,
+              "name": "Blighted Blood",
+              "description": "Applies a Shadow damage-over-time effect to players, ticking throughout an 18-second window.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284471,
+                "url": "https://www.wowhead.com/spell=1284471",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284471",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1284471,
+                "tooltip_info": "spell=1284471",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 8.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(128, 26, 13)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_lifedrain.jpg",
+                "filename": "spell_shadow_lifedrain.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_lifedrain.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1272,
+                "sha256": "2b43024ccfe8fc3a25506256994e53972608fcb834a3a7628a5a3bba1b3baa34",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284471,
+                "lorrgs_record_name": "Blighted Blood",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            },
+            {
+              "spell_id": 1284458,
+              "name": "Empowering Slam",
+              "description": "A heavy tank hit increases the golem's Physical damage when repeated on the same target. Striking a different target ends that escalation.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284458,
+                "url": "https://www.wowhead.com/spell=1284458",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284458",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1284458,
+                "tooltip_info": "spell=1284458",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 1.5,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(194, 166, 105)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_mace_1h_pvppandarias3_c_01.jpg",
+                "filename": "inv_mace_1h_pvppandarias3_c_01.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_mace_1h_pvppandarias3_c_01.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2111,
+                "sha256": "003fa2470a0dddb2c91b835b7923953abb5dda5a56ae32fec39498e98643c3ec",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284458,
+                "lorrgs_record_name": "Empowering Slam",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            },
+            {
+              "spell_id": 1284434,
+              "name": "Toxic Droplets",
+              "description": "Drops toxic objects that explode if left alone. Players can step on them to destroy them early, taking Nature damage.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284434,
+                "url": "https://www.wowhead.com/spell=1284434",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284434",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1284434,
+                "tooltip_info": "spell=1284434",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 16.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(164, 217, 80)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_ability_poison_orb.jpg",
+                "filename": "inv_ability_poison_orb.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_poison_orb.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1815,
+                "sha256": "000ce2752afbd093907b1068be124e5d81bff4163371fd16636f31e195ba2bdc",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284434,
+                "lorrgs_record_name": "Toxic Droplets",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            },
+            {
+              "spell_id": 1284251,
+              "name": "Venom Coagulation",
+              "description": "Creates a mass of venom that becomes a living slime add.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284251,
+                "url": "https://www.wowhead.com/spell=1284251",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284251",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells",
+                "tracked_spell_id": 1284251,
+                "tooltip_info": "spell=1284251",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 1.5,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(68, 133, 16)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_ability_poison_nova.jpg",
+                "filename": "inv_ability_poison_nova.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_poison_nova.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1955,
+                "sha256": "c5bab5f4307c630a859326f02070a98fabfb7d7bb916f4bb79f3d8944458b7c1",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284251,
+                "lorrgs_record_name": "Venom Coagulation",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/entombed-sentinels/spells"
+              }
+            }
+          ]
+        },
+        {
+          "boss_id": 3455,
+          "name": "Vashnik the Malignant",
+          "slug": "vashnik-the-malignant",
+          "source_url": "https://api2.lorrgs.io/api/bosses/vashnik-the-malignant/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/vashnik-the-malignant",
+          "abilities": [
+            {
+              "spell_id": 1282516,
+              "name": "Malignant Catalyst",
+              "description": "Vashnik detonates a venom orb, causing raid-wide Nature damage and releasing Catalytic Bile.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1282516,
+                "url": "https://www.wowhead.com/spell=1282516",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1282516",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/vashnik-the-malignant/spells",
+                "tracked_spell_id": 1282516,
+                "tooltip_info": "spell=1282516",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(130, 135, 80)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_ability_poison_groundstate.jpg",
+                "filename": "inv_ability_poison_groundstate.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_poison_groundstate.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2029,
+                "sha256": "063b5b77511285203b641b07ff15580418472490bc3f08276b466e61c12c2e54",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1282516,
+                "lorrgs_record_name": "Malignant Catalyst",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/vashnik-the-malignant/spells"
+              }
+            },
+            {
+              "spell_id": 1284663,
+              "name": "Imbibe",
+              "description": "Vashnik draws power from two fountains and gains Toxic Vapor. The fountains release toxins and living venom adds that move toward the cavity.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284663,
+                "url": "https://www.wowhead.com/spell=1284663",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284663",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/vashnik-the-malignant/spells",
+                "tracked_spell_id": 1284663,
+                "tooltip_info": "spell=1284663",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(227, 18, 91)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_nature_poisoncleansingtotem.jpg",
+                "filename": "spell_nature_poisoncleansingtotem.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_nature_poisoncleansingtotem.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2152,
+                "sha256": "66321dbaebef2b8312c43236bc99d5079919099bdd2d95e9e576adca04b639a2",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284663,
+                "lorrgs_record_name": "Imbibe",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/vashnik-the-malignant/spells"
+              }
+            },
+            {
+              "spell_id": 1280935,
+              "name": "Dripping Fangs",
+              "description": "A heavy Physical tank hit adds a long Nature damage-over-time effect and a stacking increase to Physical damage taken.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1280935,
+                "url": "https://www.wowhead.com/spell=1280935",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1280935",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/vashnik-the-malignant/spells",
+                "tracked_spell_id": 1280935,
+                "tooltip_info": "spell=1280935",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 2.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(168, 146, 118)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_creature_poison_01.jpg",
+                "filename": "ability_creature_poison_01.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_creature_poison_01.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1984,
+                "sha256": "eb7a34f5ae4cf01ee114597f225bc8c7a868ca74cf98adf9c8f604f9624623db",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1280935,
+                "lorrgs_record_name": "Dripping Fangs",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/vashnik-the-malignant/spells"
+              }
+            }
+          ]
+        },
+        {
+          "boss_id": 3497,
+          "name": "The Lost Explorers",
+          "slug": "the-lost-explorers",
+          "source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/the-lost-explorers",
+          "abilities": [
+            {
+              "spell_id": 1297075,
+              "name": "Final Ascension",
+              "description": "A prolonged ascension channel deals repeated Shadow damage to the entire raid.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1297075,
+                "url": "https://www.wowhead.com/spell=1297075",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1297075",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells",
+                "tracked_spell_id": 1297075,
+                "tooltip_info": "spell=1297075",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 0.0,
+                "configured_cooldown_seconds": 60.0,
+                "color": "rgb(245, 163, 64)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_animarevendreth_nova.jpg",
+                "filename": "spell_animarevendreth_nova.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_animarevendreth_nova.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1977,
+                "sha256": "bb5dcbd7ded27eb5a23f8a6bf71064978f97b0fcce12bf476d1f2cc3f0008e81",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1297075,
+                "lorrgs_record_name": "Final Ascension",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells"
+              }
+            },
+            {
+              "spell_id": 1296062,
+              "name": "Shell Spin",
+              "description": "Launches three spinning shells in a cone. Players struck by a shell are stunned.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1296062,
+                "url": "https://www.wowhead.com/spell=1296062",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1296062",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells",
+                "tracked_spell_id": 1296062,
+                "tooltip_info": "spell=1296062",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(179, 194, 112)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_cape_special_turtleshell_c_02.jpg",
+                "filename": "inv_cape_special_turtleshell_c_02.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_cape_special_turtleshell_c_02.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1974,
+                "sha256": "159171c70bfc03a0094040ca3b9c36342164ac21e00c95cd33e5804d47376d38",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1296062,
+                "lorrgs_record_name": "Shell Spin",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells"
+              }
+            },
+            {
+              "spell_id": 1296021,
+              "name": "Blink Nova",
+              "description": "After preparing a teleport to a player's position, Iku releases raid-wide Arcane damage that decreases with distance from that destination.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1296021,
+                "url": "https://www.wowhead.com/spell=1296021",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1296021",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells",
+                "tracked_spell_id": 1296021,
+                "tooltip_info": "spell=1296021",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 9.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(101, 67, 181)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_arcane_blink.jpg",
+                "filename": "spell_arcane_blink.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_arcane_blink.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1573,
+                "sha256": "0c9f440fc624dc4e63f7c57554f2c712cc5b159f24ae1ea8d1984a68a22d78cd",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1296021,
+                "lorrgs_record_name": "Blink Nova",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells"
+              }
+            },
+            {
+              "spell_id": 1295854,
+              "name": "Shredding Shards",
+              "description": "A rapid sequence of Frost hits targets one player; each shard increases damage taken from subsequent shards.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1295854,
+                "url": "https://www.wowhead.com/spell=1295854",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1295854",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells",
+                "tracked_spell_id": 1295854,
+                "tooltip_info": "spell=1295854",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 3.5,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(184, 171, 201)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_frost_iceshard.jpg",
+                "filename": "spell_frost_iceshard.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_frost_iceshard.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1907,
+                "sha256": "04bbafd901d9d799a04be05ec8f4c4816d3189dcef6947c330d33b3e002b959b",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1295854,
+                "lorrgs_record_name": "Shredding Shards",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-lost-explorers/spells"
+              }
+            }
+          ]
+        },
+        {
+          "boss_id": 3420,
+          "name": "Sszorak",
+          "slug": "sszorak",
+          "source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/sszorak",
+          "abilities": [
+            {
+              "spell_id": 1277027,
+              "name": "Mutilate",
+              "description": "A frontal Nature attack divides its damage among those hit and applies Mutilated Gash. Too few participants make the strike lethal.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1277027,
+                "url": "https://www.wowhead.com/spell=1277027",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1277027",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells",
+                "tracked_spell_id": 1277027,
+                "tooltip_info": "spell=1277027",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(112, 86, 240)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_ability_poison_missile.jpg",
+                "filename": "inv_ability_poison_missile.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_poison_missile.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1600,
+                "sha256": "124e70f2341da74ca928a8311dfd097cce6b133618b188b65fc35e40e430c4a8",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1277027,
+                "lorrgs_record_name": "Mutilate",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells"
+              }
+            },
+            {
+              "spell_id": 1286033,
+              "name": "Dig In",
+              "description": "Sszorak braces during Howling Maelstrom, creating a 25-second window in which he takes increased damage.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1286033,
+                "url": "https://www.wowhead.com/spell=1286033",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1286033",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells",
+                "tracked_spell_id": 1286033,
+                "tooltip_info": "spell=1286033",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 25.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(181, 60, 13)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_ghoulfrenzy.jpg",
+                "filename": "ability_ghoulfrenzy.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_ghoulfrenzy.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1664,
+                "sha256": "c2bebe7dd18205bf978c102e5cc22b2163d398f9c52e7795b04523975f072b14",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1286033,
+                "lorrgs_record_name": "Dig In",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells"
+              }
+            },
+            {
+              "spell_id": 1305959,
+              "name": "Venomous Surge",
+              "description": "Selected players receive a venom damage-over-time effect. Its expiry creates a Viscous Cyst and a raid-damaging explosion whose damage falls with distance.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1305959,
+                "url": "https://www.wowhead.com/spell=1305959",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1305959",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells",
+                "tracked_spell_id": 1305959,
+                "tooltip_info": "spell=1305959",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 12.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(136, 227, 79)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_creature_poison_06.jpg",
+                "filename": "ability_creature_poison_06.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_creature_poison_06.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1939,
+                "sha256": "9941fe9a91078c9974b3c4b27ff83aab0797af6536a56d0098ffa6009a6411c6",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1305959,
+                "lorrgs_record_name": "Venomous Surge",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells"
+              }
+            },
+            {
+              "spell_id": 1285425,
+              "name": "Raging Crosswinds",
+              "description": "Wind debuffs deal periodic damage, then explode around their targets and knock them in marked directions, applying Turbulent Gusts.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1285425,
+                "url": "https://www.wowhead.com/spell=1285425",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1285425",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells",
+                "tracked_spell_id": 1285425,
+                "tooltip_info": "spell=1285425",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 8.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(163, 160, 122)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_skyreach_wind.jpg",
+                "filename": "ability_skyreach_wind.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_skyreach_wind.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1320,
+                "sha256": "33339fb0ee057472df67a9dbb7b7e69efc4a65152c52c968222c9cde46a193d4",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1285425,
+                "lorrgs_record_name": "Raging Crosswinds",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/sszorak/spells"
+              }
+            }
+          ]
+        },
+        {
+          "boss_id": 3421,
+          "name": "The Twin Fangs",
+          "slug": "the-twin-fangs",
+          "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/the-twin-fangs",
+          "abilities": [
+            {
+              "spell_id": 1294293,
+              "name": "Vile Flood",
+              "description": "A sustained frontal stream of poison repeatedly deals Nature damage and applies Eternal Venom to players it hits.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1294293,
+                "url": "https://www.wowhead.com/spell=1294293",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1294293",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1294293,
+                "tooltip_info": "spell=1294293",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 14.0,
+                "color": "rgb(20, 227, 55)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_rogue_deviouspoisons.jpg",
+                "filename": "ability_rogue_deviouspoisons.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_rogue_deviouspoisons.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1872,
+                "sha256": "0f9c214b0835801e267b152ec1c91209554a8fee96407ce85e2f9ec1bbc08dad",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1294293,
+                "lorrgs_record_name": "Vile Flood",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1291404,
+              "name": "Venomous Emergence",
+              "description": "Summons Vexhul's offspring while damaging the raid and applying Eternal Venom.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1291404,
+                "url": "https://www.wowhead.com/spell=1291404",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1291404",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1291404,
+                "tooltip_info": "spell=1291404",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(102, 212, 135)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_nature_poisoncleansingtotem.jpg",
+                "filename": "spell_nature_poisoncleansingtotem.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_nature_poisoncleansingtotem.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2152,
+                "sha256": "66321dbaebef2b8312c43236bc99d5079919099bdd2d95e9e576adca04b639a2",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1291404,
+                "lorrgs_record_name": "Venomous Emergence",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1290956,
+              "name": "Stir the Depths",
+              "description": "A channel pulses Nature damage across the raid and creates traveling waves that damage players and apply Eternal Venom.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1290956,
+                "url": "https://www.wowhead.com/spell=1290956",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1290956",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1290956,
+                "tooltip_info": "spell=1290956",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 6.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(161, 184, 61)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_ability_poison_wave.jpg",
+                "filename": "inv_ability_poison_wave.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_poison_wave.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2050,
+                "sha256": "e903f56cf75820544965eb11cddae2712d5294169767eb33155b613d8b0ee1d6",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1290956,
+                "lorrgs_record_name": "Stir the Depths",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1289192,
+              "name": "Caustic Deluge",
+              "description": "A sustained toxin attack hits the current target and causes nearby acid impacts, which apply Eternal Venom and create Caustic Globules.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1289192,
+                "url": "https://www.wowhead.com/spell=1289192",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1289192",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1289192,
+                "tooltip_info": "spell=1289192",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(160, 173, 132)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_ability_poison_beam.jpg",
+                "filename": "inv_ability_poison_beam.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_poison_beam.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1351,
+                "sha256": "b88b46b9b395a01739ffff86832eff9de3da52328637a187caa8099be7a547a4",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1289192,
+                "lorrgs_record_name": "Caustic Deluge",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1288538,
+              "name": "Stone Breaker",
+              "description": "After pushing players back, Ithraz repeatedly strikes small areas. Hits apply stacking vulnerability; an unsoaked strike instead damages and knocks back the raid.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1288538,
+                "url": "https://www.wowhead.com/spell=1288538",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1288538",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1288538,
+                "tooltip_info": "spell=1288538",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 1.5,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(161, 129, 106)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_smash.jpg",
+                "filename": "ability_smash.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_smash.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1947,
+                "sha256": "6bf1ffe46c64b6598512574e6512087f4808e6d9fb3522c52e6662a361d49fc9",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1288538,
+                "lorrgs_record_name": "Stone Breaker",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1308356,
+              "name": "Rouse the Brood",
+              "description": "Summons Broodlings of Ithraz and releases raid-wide Shadow damage.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1308356,
+                "url": "https://www.wowhead.com/spell=1308356",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1308356",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1308356,
+                "tooltip_info": "spell=1308356",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(84, 59, 48)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_giantsnake_black.jpg",
+                "filename": "inv_giantsnake_black.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_giantsnake_black.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1194,
+                "sha256": "625db7a955baf688d5b2473be90be04366745888e108282f059077a321ba7aa9",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1308356,
+                "lorrgs_record_name": "Rouse the Brood",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1306872,
+              "name": "Sanguine Storm",
+              "description": "An 18-second shower of gore creates repeated small-area Shadow-damage impacts across the platform.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1306872,
+                "url": "https://www.wowhead.com/spell=1306872",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1306872",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1306872,
+                "tooltip_info": "spell=1306872",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 18.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(230, 21, 49)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_artifact_bloodoftheassassinated.jpg",
+                "filename": "inv_artifact_bloodoftheassassinated.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_artifact_bloodoftheassassinated.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1831,
+                "sha256": "697c200e8a0b2bb95553bb94264479cbd4fca55485472143f324c6451b919dcd",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1306872,
+                "lorrgs_record_name": "Sanguine Storm",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1290516,
+              "name": "Ravenous Feast",
+              "description": "Three successive shared Physical strikes consume Eternal Venom, apply Feasted, and knock players away. Insufficient participants cause the entire raid to suffer.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1290516,
+                "url": "https://www.wowhead.com/spell=1290516",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1290516",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1290516,
+                "tooltip_info": "spell=1290516",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(222, 66, 31)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_warrior_bloodnova.jpg",
+                "filename": "ability_warrior_bloodnova.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_warrior_bloodnova.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1593,
+                "sha256": "366f37285430199a31d54c0dad24d615718da1f9a6e3063890c3952e4c62e7dc",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1290516,
+                "lorrgs_record_name": "Ravenous Feast",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1290814,
+              "name": "Coiling Ichor",
+              "description": "Affected players carry shrinking areas of periodic Shadow damage that intensifies over time, leaving Congealed Gore when the effect ends.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1290814,
+                "url": "https://www.wowhead.com/spell=1290814",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1290814",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1290814,
+                "tooltip_info": "spell=1290814",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 12.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(230, 37, 117)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_ironmaidens_whirlofblood.jpg",
+                "filename": "ability_ironmaidens_whirlofblood.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_ironmaidens_whirlofblood.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1874,
+                "sha256": "c93d2b25c3dbf88b91ff4f2fccd55aa9e84c3d340b0a7439f3b46405c1209583",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1290814,
+                "lorrgs_record_name": "Coiling Ichor",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            },
+            {
+              "spell_id": 1303230,
+              "name": "Blood Torrent",
+              "description": "A five-second attack repeatedly adds stacking healing absorption to its target and creates Barbed Bulwarks around Caustic Globules.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1303230,
+                "url": "https://www.wowhead.com/spell=1303230",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1303230",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells",
+                "tracked_spell_id": 1303230,
+                "tooltip_info": "spell=1303230",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(199, 119, 170)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_artifact_corruptedbloodofzakajz.jpg",
+                "filename": "inv_artifact_corruptedbloodofzakajz.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_artifact_corruptedbloodofzakajz.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1711,
+                "sha256": "ff1c40b3e9ee90a0a6e08d14f5bbdedf983d3e474339844d10443f7721f930bd",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1303230,
+                "lorrgs_record_name": "Blood Torrent",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-twin-fangs/spells"
+              }
+            }
+          ]
+        },
+        {
+          "boss_id": 3429,
+          "name": "The Coiled Altar",
+          "slug": "the-coiled-altar",
+          "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/the-coiled-altar",
+          "abilities": [
+            {
+              "spell_id": 1282487,
+              "name": "Fangs of the Coiled Altar",
+              "description": "An eight-second channel repeatedly damages the raid, adds Twinfang Toxin stacks, and causes spreading hazardous ground beneath the altar's mouths.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1282487,
+                "url": "https://www.wowhead.com/spell=1282487",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1282487",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1282487,
+                "tooltip_info": "spell=1282487",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 8.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(70, 227, 73)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_nature_poisoncleansingtotem.jpg",
+                "filename": "spell_nature_poisoncleansingtotem.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_nature_poisoncleansingtotem.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2152,
+                "sha256": "66321dbaebef2b8312c43236bc99d5079919099bdd2d95e9e576adca04b639a2",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1282487,
+                "lorrgs_record_name": "Fangs of the Coiled Altar",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1299960,
+              "name": "Toxic Deluge",
+              "description": "Venom impacts damage nearby players and leave Coalesced Venom behind.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1299960,
+                "url": "https://www.wowhead.com/spell=1299960",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1299960",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1299960,
+                "tooltip_info": "spell=1299960",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(177, 57, 237)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_plaguecloud.jpg",
+                "filename": "spell_shadow_plaguecloud.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_plaguecloud.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2106,
+                "sha256": "23e1ee223a298822628befa13895854613cb294bcda7cd2e566eca1938e33f3e",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1299960,
+                "lorrgs_record_name": "Toxic Deluge",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1283489,
+              "name": "Guillotine",
+              "description": "A targeted axe impact shares Physical damage among nearby players and adds a strong vulnerability. Insufficient soaking triggers an execution; the axe later erupts.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1283489,
+                "url": "https://www.wowhead.com/spell=1283489",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1283489",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1283489,
+                "tooltip_info": "spell=1283489",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(207, 34, 14)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/warrior_talent_icon_mastercleaver.jpg",
+                "filename": "warrior_talent_icon_mastercleaver.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/warrior_talent_icon_mastercleaver.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1781,
+                "sha256": "02943e926aa2433824741967b759f89d100943942325f1396a49620497ba01f2",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1283489,
+                "lorrgs_record_name": "Guillotine",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1283623,
+              "name": "Widow's Kiss",
+              "description": "The axe releases a large-radius toxic explosion that deals Nature damage.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1283623,
+                "url": "https://www.wowhead.com/spell=1283623",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1283623",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1283623,
+                "tooltip_info": "spell=1283623",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 6.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(250, 192, 177)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_soothingkiss.jpg",
+                "filename": "spell_shadow_soothingkiss.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_soothingkiss.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1702,
+                "sha256": "48002d761a8e70fc90fb75fb67a9ab510f7ee16ad351b96277b08c26142f4719",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1283623,
+                "lorrgs_record_name": "Widow's Kiss",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1306906,
+              "name": "Venomfang",
+              "description": "A poisoned axe passes between multiple players, leaving a Nature damage-over-time effect.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1306906,
+                "url": "https://www.wowhead.com/spell=1306906",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1306906",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1306906,
+                "tooltip_info": "spell=1306906",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 2.0,
+                "configured_cooldown_seconds": 14.0,
+                "color": "rgb(93, 166, 48)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_rogue_poisonedknife.jpg",
+                "filename": "ability_rogue_poisonedknife.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_rogue_poisonedknife.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1538,
+                "sha256": "dbc2d55146c63b67ed0e5c2e555947fbc00181d4e7a4a97e9e8f2b1df5a1b35a",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1306906,
+                "lorrgs_record_name": "Venomfang",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1283832,
+              "name": "Axegrinder",
+              "description": "Thrown axes damage and knock back players at landing points, then roam the arena as persistent Physical-damage hazards.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1283832,
+                "url": "https://www.wowhead.com/spell=1283832",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1283832",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1283832,
+                "tooltip_info": "spell=1283832",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(222, 167, 64)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_warrior_bladestorm.jpg",
+                "filename": "ability_warrior_bladestorm.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_warrior_bladestorm.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1945,
+                "sha256": "02d39acb444ab68c9476fff75c1bc9f71ac5981ec64a4cdf166f3d5b7f7dd43e",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1283832,
+                "lorrgs_record_name": "Axegrinder",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1299684,
+              "name": "Sever",
+              "description": "A frontal cleave applies a strong vulnerability to later Sever hits and destroys Coalesced Venoms and Virulent Mutations caught in its path.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1299684,
+                "url": "https://www.wowhead.com/spell=1299684",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1299684",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1299684,
+                "tooltip_info": "spell=1299684",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(184, 63, 29)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_criticalstrike.jpg",
+                "filename": "ability_criticalstrike.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_criticalstrike.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2052,
+                "sha256": "93a7fa9e7560e4142ea3942373ccbffa0db1bc7ad4b728903d4d27f460393bd9",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1299684,
+                "lorrgs_record_name": "Sever",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1286918,
+              "name": "Eternal Nightfall",
+              "description": "Malacrass shields himself while preparing a devastating raid-wide Shadow attack. Break the shield to interrupt it; falling twilight also adds darkness stacks.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1286918,
+                "url": "https://www.wowhead.com/spell=1286918",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1286918",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1286918,
+                "tooltip_info": "spell=1286918",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 15.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(230, 18, 54)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_twilight.jpg",
+                "filename": "spell_shadow_twilight.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_twilight.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1258,
+                "sha256": "e14a5bf07778e9fe1d9b1887a38d6c7916c904709e02710850524ff0f0af07de",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1286918,
+                "lorrgs_record_name": "Eternal Nightfall",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1285643,
+              "name": "Dreadmarch",
+              "description": "Possessed players gain a damage-absorption shield and walk toward a fatal fall. Removing the possession releases Manifestations of Dread.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1285643,
+                "url": "https://www.wowhead.com/spell=1285643",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1285643",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1285643,
+                "tooltip_info": "spell=1285643",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(196, 33, 150)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_nzinsanity_fearofdeath.jpg",
+                "filename": "spell_nzinsanity_fearofdeath.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_nzinsanity_fearofdeath.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1614,
+                "sha256": "cf8172395e567c2be4f17b270ea97a2f09fc6f114d6cf9bc1db3cf846fa7a552",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1285643,
+                "lorrgs_record_name": "Dreadmarch",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1286441,
+              "name": "Spiritcackle",
+              "description": "Channels a summon that brings several Spiteful Soulcoilers into combat.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1286441,
+                "url": "https://www.wowhead.com/spell=1286441",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1286441",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1286441,
+                "tooltip_info": "spell=1286441",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(182, 178, 217)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_deathsembrace.jpg",
+                "filename": "spell_shadow_deathsembrace.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_deathsembrace.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2124,
+                "sha256": "b5a9957c6721e4f77b554684feda0e3f83d223dcf4ceaac26a99b101b5224ab6",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1286441,
+                "lorrgs_record_name": "Spiritcackle",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1286895,
+              "name": "Gloombomb",
+              "description": "Marked players explode after five seconds, damaging nearby allies and applying Gravebound to those struck.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1286895,
+                "url": "https://www.wowhead.com/spell=1286895",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1286895",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1286895,
+                "tooltip_info": "spell=1286895",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(130, 67, 181)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_shadow_shadowfury.jpg",
+                "filename": "spell_shadow_shadowfury.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_shadow_shadowfury.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1829,
+                "sha256": "2a2d4ff8da0d37566319a69725b5d7252aba3ea0c12ca8337a95de23d62e1e35",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1286895,
+                "lorrgs_record_name": "Gloombomb",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1286620,
+              "name": "Soul Sever",
+              "description": "A frontal Shadow blast applies a damage-over-time effect, a strong vulnerability to repeat hits, and Gravebound; it also destroys Manifestations of Dread.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1286620,
+                "url": "https://www.wowhead.com/spell=1286620",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1286620",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1286620,
+                "tooltip_info": "spell=1286620",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(114, 173, 160)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_demonhunter_soulcleave2.jpg",
+                "filename": "ability_demonhunter_soulcleave2.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_demonhunter_soulcleave2.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1930,
+                "sha256": "7e37a53f742b69d99625490a28280aaa7c339d92bc1b9d6c0beefa2c77f84227",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1286620,
+                "lorrgs_record_name": "Soul Sever",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1304032,
+              "name": "Soulbinding",
+              "description": "Links Malacrass to Zul'jan, copies healing received by Zul'jan to Malacrass, and produces fragments that attempt to return to their host.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1304032,
+                "url": "https://www.wowhead.com/spell=1304032",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1304032",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1304032,
+                "tooltip_info": "spell=1304032",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 35.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(18, 120, 89)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_necro_deathall.jpg",
+                "filename": "spell_necro_deathall.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_necro_deathall.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1845,
+                "sha256": "b48dddf169eb46b1bbc7cf409e3dfe82ec93f3002df4b69331325139565e3603",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1304032,
+                "lorrgs_record_name": "Soulbinding",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1298381,
+              "name": "Defilement of the Coiled Altar",
+              "description": "An eight-second altar channel applies raid-wide healing absorption, adds Corrupted Toxin stacks, and produces spreading Defiled Ground.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1298381,
+                "url": "https://www.wowhead.com/spell=1298381",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1298381",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1298381,
+                "tooltip_info": "spell=1298381",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 8.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(237, 43, 150)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_warlock_shadowflame.jpg",
+                "filename": "ability_warlock_shadowflame.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_warlock_shadowflame.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1945,
+                "sha256": "ce04bfc152f0c5da6981c7e926da5e220b2596a743b47a84d059ea125910c381",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1298381,
+                "lorrgs_record_name": "Defilement of the Coiled Altar",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1299267,
+              "name": "Grim Guillotine",
+              "description": "A targeted axe shares Shadow damage among nearby players and applies healing absorption. Too few soakers cause a lethal alternative; the axe later erupts.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1299267,
+                "url": "https://www.wowhead.com/spell=1299267",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1299267",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1299267,
+                "tooltip_info": "spell=1299267",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.5,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(73, 230, 167)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_polearm_2h_mawnecromancerboss_d_01_darkblue.jpg",
+                "filename": "inv_polearm_2h_mawnecromancerboss_d_01_darkblue.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_polearm_2h_mawnecromancerboss_d_01_darkblue.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1867,
+                "sha256": "899818b1bc2a38565fcbcd2017db789ca84665b089af38598e525af23ba85fbd",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1299267,
+                "lorrgs_record_name": "Grim Guillotine",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            },
+            {
+              "spell_id": 1307292,
+              "name": "Blighted Sever",
+              "description": "A frontal Shadow cleave applies Gravebound and a strong repeat-hit vulnerability while destroying venom objects and Manifestations of Dread in its path.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1307292,
+                "url": "https://www.wowhead.com/spell=1307292",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1307292",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells",
+                "tracked_spell_id": 1307292,
+                "tooltip_info": "spell=1307292",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(174, 201, 141)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_creature_felsunder.jpg",
+                "filename": "ability_creature_felsunder.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_creature_felsunder.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2017,
+                "sha256": "fd54b3c6bca6d4a7a89097ef804488b803df38e4cf99bc5bb355b9c5754f8b45",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1307292,
+                "lorrgs_record_name": "Blighted Sever",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/the-coiled-altar/spells"
+              }
+            }
+          ]
+        },
+        {
+          "boss_id": 3492,
+          "name": "Ula'tek",
+          "slug": "ulatek",
+          "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/ulatek",
+          "abilities": [
+            {
+              "spell_id": 1311807,
+              "name": "Caustic Waves",
+              "description": "Moving venom waves deal immediate Nature damage and a stacking damage-over-time effect. Eggs struck by a wave hatch immediately.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1311807,
+                "url": "https://www.wowhead.com/spell=1311807",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1311807",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1311807,
+                "tooltip_info": "spell=1311807",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 6.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(136, 227, 79)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_ability_poison_wave.jpg",
+                "filename": "inv_ability_poison_wave.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_ability_poison_wave.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2050,
+                "sha256": "e903f56cf75820544965eb11cddae2712d5294169767eb33155b613d8b0ee1d6",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1311807,
+                "lorrgs_record_name": "Caustic Waves",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1304012,
+              "name": "Call of the Serpent",
+              "description": "Spawn fall from above, dealing Nature damage around their landing points.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1304012,
+                "url": "https://www.wowhead.com/spell=1304012",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1304012",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1304012,
+                "tooltip_info": "spell=1304012",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(93, 166, 48)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/8125100.jpg",
+                "filename": "8125100.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/8125100.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1916,
+                "sha256": "5187549b0f69713b10e47b783cd11e6bf1f22717773517b3abce0c7570160b9d",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1304012,
+                "lorrgs_record_name": "Call of the Serpent",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1308927,
+              "name": "Spectral Coils",
+              "description": "Spectral coils slam the platform for raid-wide Nature damage. More players near the impact reduce the resulting damage.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1308927,
+                "url": "https://www.wowhead.com/spell=1308927",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1308927",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1308927,
+                "tooltip_info": "spell=1308927",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 12.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(182, 178, 217)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_animamaldraxxus_nova.jpg",
+                "filename": "spell_animamaldraxxus_nova.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_animamaldraxxus_nova.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2408,
+                "sha256": "c4825c302672cb41e8efd8196180441dc5abe09cdbcad7475fa6ce31565d0972",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1308927,
+                "lorrgs_record_name": "Spectral Coils",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1296301,
+              "name": "Mephitic Thrash",
+              "description": "A tail sweep damages and knocks back nearby players; distant players instead take Nature damage followed by a damage-over-time effect.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1296301,
+                "url": "https://www.wowhead.com/spell=1296301",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1296301",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1296301,
+                "tooltip_info": "spell=1296301",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(130, 135, 80)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_creature_poison_04.jpg",
+                "filename": "ability_creature_poison_04.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_creature_poison_04.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1870,
+                "sha256": "bd3d9a49f0580a76a4a0220b6e7ad340ff5c475a3c03c4ca26fc6effb2f6574d",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1296301,
+                "lorrgs_record_name": "Mephitic Thrash",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1298367,
+              "name": "Mother's Wrath",
+              "description": "Ula'tek knocks back and attacks her marked target, applying Stone Venom and Hobbled. If that target stays out of reach, the effects hit everyone.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1298367,
+                "url": "https://www.wowhead.com/spell=1298367",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1298367",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1298367,
+                "tooltip_info": "spell=1298367",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(227, 18, 91)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_misc_monsterfang_02.jpg",
+                "filename": "inv_misc_monsterfang_02.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_misc_monsterfang_02.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2049,
+                "sha256": "d146b511cebecc54fdb9fe407b2c0c84d1eb9a3163058d63ceff42bfee65664e",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1298367,
+                "lorrgs_record_name": "Mother's Wrath",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1286860,
+              "name": "Rage of the Shackled",
+              "description": "A 20-second rage repeatedly damages the raid, calls falling debris, and exposes the Venomous Heart.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1286860,
+                "url": "https://www.wowhead.com/spell=1286860",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1286860",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1286860,
+                "tooltip_info": "spell=1286860",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 20.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(237, 19, 48)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_121_raid_achievement_ulatek.jpg",
+                "filename": "inv_121_raid_achievement_ulatek.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_121_raid_achievement_ulatek.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1921,
+                "sha256": "76460d3bf682869130551ca4ee1633993f7468f1003975d275a0c9ebff262aac",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1286860,
+                "lorrgs_record_name": "Rage of the Shackled",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1301213,
+              "name": "Shadow Molt",
+              "description": "The Doomscale Warden sheds its shadow skin and relocates.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1301213,
+                "url": "https://www.wowhead.com/spell=1301213",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1301213",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1301213,
+                "tooltip_info": "spell=1301213",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(114, 20, 168)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_warlock_demonsoul.jpg",
+                "filename": "spell_warlock_demonsoul.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_warlock_demonsoul.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2012,
+                "sha256": "3be6ffd79335123cf7a1a275daa527eff9b6457c125e8fbde9f1dca292582eba",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1301213,
+                "lorrgs_record_name": "Shadow Molt",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1302950,
+              "name": "Writhing Gestation",
+              "description": "The Doomscale Warden converts nearby spawn into a clutch that hatches after a delay.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1302950,
+                "url": "https://www.wowhead.com/spell=1302950",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1302950",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1302950,
+                "tooltip_info": "spell=1302950",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 3.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(68, 133, 16)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/rogue_leeching_poison.jpg",
+                "filename": "rogue_leeching_poison.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/rogue_leeching_poison.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2318,
+                "sha256": "ac5744ef0a47d28eac04adbf0ab9edd75d8e4576c94bd3351afb3eb1209d9e40",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1302950,
+                "lorrgs_record_name": "Writhing Gestation",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1301117,
+              "name": "Grasping Fangs",
+              "description": "Fangs attach to selected players, causing periodic Nature damage and slowing them until broken. Breaking a fang applies Blight Vein.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1301117,
+                "url": "https://www.wowhead.com/spell=1301117",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1301117",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1301117,
+                "tooltip_info": "spell=1301117",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 2.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(160, 173, 132)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_121_trinket_raid_ulatek_ulatekclaw.jpg",
+                "filename": "inv_121_trinket_raid_ulatek_ulatekclaw.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_121_trinket_raid_ulatek_ulatekclaw.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1359,
+                "sha256": "ae51c0cb959b55050669149f51d752e5c30cd38231f1d7b0b4950fa51b15b846",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1301117,
+                "lorrgs_record_name": "Grasping Fangs",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1299526,
+              "name": "Venomous Heart",
+              "description": "The exposed Venomous Heart takes doubled damage during a 20-second vulnerability window.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1299526,
+                "url": "https://www.wowhead.com/spell=1299526",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1299526",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1299526,
+                "tooltip_info": "spell=1299526",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 20.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(247, 164, 47)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_121_trinket_raid_ulatek_heart.jpg",
+                "filename": "inv_121_trinket_raid_ulatek_heart.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_121_trinket_raid_ulatek_heart.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1815,
+                "sha256": "ea6c988d558f28339b54976701e207ace095d65203658abb4c5d9b5d789adf8d",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1299526,
+                "lorrgs_record_name": "Venomous Heart",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            },
+            {
+              "spell_id": 1303410,
+              "name": "Defect: Weakened",
+              "description": "Interrupting gestation leaves the Ravenous Doomscale taking doubled damage and prevents it from using Dread Roar.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1303410,
+                "url": "https://www.wowhead.com/spell=1303410",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1303410",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells",
+                "tracked_spell_id": 1303410,
+                "tooltip_info": "spell=1303410",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 0.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(73, 230, 167)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_deathknight_heartstopaura.jpg",
+                "filename": "ability_deathknight_heartstopaura.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_deathknight_heartstopaura.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1883,
+                "sha256": "d6e16dcc034725949e1653ebe51ab0d050295a9584464b2cc9d4034b6bfcbb47",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1303410,
+                "lorrgs_record_name": "Defect: Weakened",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/ulatek/spells"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "raid_id": 51.2,
+      "name": "The Tidebound Grotto",
+      "slug": "the-tidebound-grotto",
+      "bosses": [
+        {
+          "boss_id": 3379,
+          "name": "Nymrissa Wavecaller",
+          "slug": "nymrissa-wavecaller",
+          "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+          "example_lorrgs_page": "https://lorrgs.io/spec_ranking/monk-mistweaver/nymrissa-wavecaller",
+          "abilities": [
+            {
+              "spell_id": 1284015,
+              "name": "Alluring Bubble",
+              "description": "Forms a large water bubble that attracts nearby murlocs into it.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1284015,
+                "url": "https://www.wowhead.com/spell=1284015",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1284015",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+                "tracked_spell_id": 1284015,
+                "tooltip_info": "spell=1284015",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 45.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(55, 225, 237)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_elemental_primal_water.jpg",
+                "filename": "inv_elemental_primal_water.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_elemental_primal_water.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1819,
+                "sha256": "b4652a37ef3a2b4d2900329108bbd72df01d709ed8a794cb1b8100f5584ca512",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1284015,
+                "lorrgs_record_name": "Alluring Bubble",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells"
+              }
+            },
+            {
+              "spell_id": 1258150,
+              "name": "Pop!",
+              "description": "The bubble bursts, dealing Frost damage across the raid and pushing players away.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1258150,
+                "url": "https://www.wowhead.com/spell=1258150",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1258150",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+                "tracked_spell_id": 1258150,
+                "tooltip_info": "spell=1258150",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 2.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(227, 18, 91)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_shawaterelemental_reform.jpg",
+                "filename": "ability_shawaterelemental_reform.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_shawaterelemental_reform.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2002,
+                "sha256": "c3827a3cf220dba937d60fd15a6f4b7db283cf925d25c85892577ad8484ba21d",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1258150,
+                "lorrgs_record_name": "Pop!",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells"
+              }
+            },
+            {
+              "spell_id": 1260837,
+              "name": "Abyssal Rain",
+              "description": "Four seconds of repeated Frost damage also leave a longer Frost damage-over-time effect on affected players.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1260837,
+                "url": "https://www.wowhead.com/spell=1260837",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1260837",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+                "tracked_spell_id": 1260837,
+                "tooltip_info": "spell=1260837",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(70, 89, 232)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_fire_bluerainoffire.jpg",
+                "filename": "spell_fire_bluerainoffire.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_fire_bluerainoffire.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2207,
+                "sha256": "27d7f41a221e3464afdeec59f187b734eabc904b9802b72246bc6f818e3a27da",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1260837,
+                "lorrgs_record_name": "Abyssal Rain",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells"
+              }
+            },
+            {
+              "spell_id": 1258673,
+              "name": "Swirling Whirlpools",
+              "description": "Whirlpools move toward the Alluring Bubble, heavily damaging anyone caught along their routes.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1258673,
+                "url": "https://www.wowhead.com/spell=1258673",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1258673",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+                "tracked_spell_id": 1258673,
+                "tooltip_info": "spell=1258673",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 4.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(180, 199, 212)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_elemental_primal_air.jpg",
+                "filename": "inv_elemental_primal_air.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_elemental_primal_air.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1437,
+                "sha256": "c1446cfbe8ea90cfc30c5e1a0ac45d63febccb562502cdd1448c97ae62183362",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1258673,
+                "lorrgs_record_name": "Swirling Whirlpools",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells"
+              }
+            },
+            {
+              "spell_id": 1313393,
+              "name": "Chilling Frost",
+              "description": "Repeated Frost hits slow affected players and leave Frost Orbs at their positions.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1313393,
+                "url": "https://www.wowhead.com/spell=1313393",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1313393",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+                "tracked_spell_id": 1313393,
+                "tooltip_info": "spell=1313393",
+                "inline_tooltip": "",
+                "shown_by_default": true,
+                "display_duration_seconds": 7.5,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(158, 96, 209)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/spell_fire_blueimmolation.jpg",
+                "filename": "spell_fire_blueimmolation.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/spell_fire_blueimmolation.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2044,
+                "sha256": "e9ce782572b1d19a244f7cb6ad3a1389b562cf1c93c72c1e5f133af26911e573",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1313393,
+                "lorrgs_record_name": "Chilling Frost",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells"
+              }
+            },
+            {
+              "spell_id": 1282937,
+              "name": "Iceblade Flurry",
+              "description": "Repeatedly strikes the current target with Frost damage during a five-second attack sequence.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1282937,
+                "url": "https://www.wowhead.com/spell=1282937",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1282937",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+                "tracked_spell_id": 1282937,
+                "tooltip_info": "spell=1282937",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 5.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(189, 160, 142)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/inv_polearm_2h_draenorchallenge_d_01_02.jpg",
+                "filename": "inv_polearm_2h_draenorchallenge_d_01_02.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/inv_polearm_2h_draenorchallenge_d_01_02.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 2132,
+                "sha256": "c9c7f150672dc5413d65cce666f1283da206f5787f6811c3d185568e6327702a",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1282937,
+                "lorrgs_record_name": "Iceblade Flurry",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells"
+              }
+            },
+            {
+              "spell_id": 1281951,
+              "name": "Water Jet",
+              "description": "A sustained water jet damages and pushes players, clears icy ground, and applies a stacking vulnerability to subsequent Water Jet hits.",
+              "description_kind": "paraphrase_of_linked_game_tooltip",
+              "description_source": {
+                "provider": "Wowhead game-spell data",
+                "spell_id": 1281951,
+                "url": "https://www.wowhead.com/spell=1281951",
+                "tooltip_url": "https://nether.wowhead.com/tooltip/spell/1281951",
+                "relation": "same_spell",
+                "notes": null
+              },
+              "lorrgs_metadata": {
+                "source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells",
+                "tracked_spell_id": 1281951,
+                "tooltip_info": "spell=1281951",
+                "inline_tooltip": "",
+                "shown_by_default": false,
+                "display_duration_seconds": 6.0,
+                "configured_cooldown_seconds": 0.0,
+                "color": "rgb(189, 160, 142)",
+                "tags": []
+              },
+              "icon": {
+                "file": "icons/lorrgs/spells/ability_mage_waterjet.jpg",
+                "filename": "ability_mage_waterjet.jpg",
+                "source_url": "https://assets2.lorrgs.io/images/spells/ability_mage_waterjet.jpg",
+                "mime_type": "image/jpeg",
+                "image_format": "JPEG",
+                "width": 56,
+                "height": 56,
+                "bytes": 1827,
+                "sha256": "37782ec813f0824709702ce13171dff48d56b640c1d3f3fc37a2e9e8027f8afa",
+                "downloaded_at_utc": "2026-09-20T01:09:29.580105+00:00",
+                "provider": "Lorrgs",
+                "mapping_method": "direct_spell_id",
+                "lorrgs_record_spell_id": 1281951,
+                "lorrgs_record_name": "Water Jet",
+                "mapping_source_url": "https://api2.lorrgs.io/api/bosses/nymrissa-wavecaller/spells"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

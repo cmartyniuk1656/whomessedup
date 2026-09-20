@@ -60,6 +60,7 @@ class TheCoiledAltarReportTests(unittest.TestCase):
             definition.id: definition
             for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "the-coiled-altar"
+            and definition.difficulty == "heroic"
         }
         self.assertEqual(
             set(definitions),
@@ -68,6 +69,7 @@ class TheCoiledAltarReportTests(unittest.TestCase):
                 "the-coiled-altar-avoidable-damage",
                 "the-coiled-altar-damage",
                 "the-coiled-altar-cooldowns",
+            "the-coiled-altar-cooldown-coverage-heroic",
                 "the-coiled-altar-mechanics-scorecard",
                 "the-coiled-altar-heroic-aggregate-reports",
             },

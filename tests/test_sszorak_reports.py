@@ -85,6 +85,7 @@ class SszorakReportRegistryTests(unittest.TestCase):
             "sszorak-avoidable-damage",
             "sszorak-damage",
             "sszorak-cooldowns",
+            "sszorak-cooldown-coverage-heroic",
             "sszorak-tempest",
             "sszorak-mechanics-scorecard",
             "sszorak-heroic-aggregate-reports",
@@ -93,6 +94,7 @@ class SszorakReportRegistryTests(unittest.TestCase):
             definition.id: definition
             for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "sszorak"
+            and definition.difficulty == "heroic"
         }
 
         self.assertEqual(set(definitions), expected_ids)

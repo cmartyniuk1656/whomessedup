@@ -18,6 +18,7 @@ class TheLostExplorersReportRegistryTests(unittest.TestCase):
             "the-lost-explorers-avoidable-damage",
             "the-lost-explorers-damage",
             "the-lost-explorers-cooldowns",
+            "the-lost-explorers-cooldown-coverage-heroic",
             "the-lost-explorers-mechanics-scorecard",
             "the-lost-explorers-heroic-aggregate-reports",
         }
@@ -25,6 +26,7 @@ class TheLostExplorersReportRegistryTests(unittest.TestCase):
             definition.id: definition
             for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "the-lost-explorers"
+            and definition.difficulty == "heroic"
         }
 
         self.assertEqual(set(definitions), expected_ids)

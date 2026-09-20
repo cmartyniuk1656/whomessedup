@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
+from .cooldown_coverage import CoverageContentModel
 
 try:  # pragma: no cover - compatibility shim
     from pydantic import ConfigDict
@@ -62,6 +63,7 @@ class CellKind(str, Enum):
 
 class ContentVariant(str, Enum):
     TABLE = "table"
+    TIMELINE = "timeline"
 
 
 class RowDetailsVariant(str, Enum):
@@ -370,7 +372,7 @@ class ReportPageModel(ViewModelBase):
     summary_by_combined_view: Dict[str, List[SummaryMetricModel]] = Field(
         default_factory=dict, alias="summaryByCombinedView"
     )
-    content: ReportContentModel
+    content: Union[ReportContentModel, CoverageContentModel]
     footnotes: List[str] = Field(default_factory=list)
     spec_analysis: Optional[SpecAnalysisModel] = Field(None, alias="specAnalysis")
     report_control: Optional[TableViewControlModel] = Field(None, alias="reportControl")

@@ -14,6 +14,7 @@ import { ReportTable } from "./ReportTable";
 import { SpecAnalysisModal } from "./SpecAnalysisModal";
 import { TableColumnFilters } from "./TableColumnFilters";
 import { TableRowFilters } from "./TableRowFilters";
+import { CooldownCoverageReport } from "../coverage/CooldownCoverageReport";
 
 function ReportTableViewSelector({ control, value, onChange }) {
   if (!control?.options?.length) {
@@ -92,12 +93,20 @@ export function ReportPageView({ page, shareUrl, realtime }) {
         value={selectedReportView}
         onChange={setSelectedReportView}
       />
-      <SingleReportPageView
-        key={selectedReportView || selectedPage.reportId}
-        page={selectedPage}
-        shareUrl={shareUrl}
-        realtime={realtime}
-      />
+      {selectedPage.content?.variant === "timeline" ? (
+        <CooldownCoverageReport
+          key={`${selectedPage.reportId}:${selectedPage.reportCode}`}
+          page={selectedPage}
+          shareUrl={shareUrl}
+        />
+      ) : (
+        <SingleReportPageView
+          key={selectedReportView || selectedPage.reportId}
+          page={selectedPage}
+          shareUrl={shareUrl}
+          realtime={realtime}
+        />
+      )}
     </div>
   );
 }

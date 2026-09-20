@@ -90,6 +90,7 @@ class UlaTekReportTests(unittest.TestCase):
             definition.id: definition
             for definition in list_report_definitions(include_hidden=True)
             if definition.fight_id == "ula-tek"
+            and definition.difficulty == "heroic"
         }
         self.assertEqual(
             set(definitions),
@@ -98,6 +99,7 @@ class UlaTekReportTests(unittest.TestCase):
                 "ula-tek-avoidable-damage",
                 "ula-tek-damage",
                 "ula-tek-cooldowns",
+            "ula-tek-cooldown-coverage-heroic",
                 "ula-tek-fuckups",
                 "ula-tek-mechanics-scorecard",
                 "ula-tek-heroic-aggregate-reports",
