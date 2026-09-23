@@ -5,6 +5,7 @@ import { createServer } from "vite";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { JSDOM } from "jsdom";
+import { timelineTooltipPosition } from "../src/utils/timelineTooltip.js";
 import {
   preciseCoverageTime,
   pressurePath,
@@ -21,6 +22,17 @@ const fixture = JSON.parse(
     "utf8",
   ),
 );
+const desktopPopup = timelineTooltipPosition(
+  { left: 900, right: 920, top: 380, bottom: 400, width: 20 },
+  { width: 370, height: 600 }, { width: 1800, height: 850 },
+);
+assert.equal(desktopPopup.left, 930, "Tall tooltips move beside the marker so clicks still reach it");
+const mobilePopup = timelineTooltipPosition(
+  { left: 180, right: 200, top: 330, bottom: 350, width: 20 },
+  { width: 370, height: 600 }, { width: 390, height: 700 },
+);
+assert.equal(mobilePopup.top, 360);
+assert.equal(mobilePopup.maxHeight, 332, "Narrow viewports scroll the tooltip below its marker");
 const server = await createServer({
   server: { middlewareMode: true },
   appType: "custom",
@@ -59,13 +71,15 @@ try {
   globalThis.document = dom.window.document;
   globalThis.HTMLElement = dom.window.HTMLElement;
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  const browserErrors = [];
+  window.addEventListener("error", (event) => browserErrors.push(event.error));
   const { render, fireEvent, cleanup } = await import("@testing-library/react");
   const view = render(React.createElement(ReportPageView, { page: fixture }));
   const firstDeath = fixture.content.timeline.pulls[0].deaths[0];
   const firstDeathMarker = [
     ...view.container.querySelectorAll(".coverage-death-marker"),
   ].find((marker) =>
-    marker.title.includes(
+    marker.getAttribute("aria-label").includes(
       `${firstDeath.player} died at ${preciseCoverageTime(firstDeath.time)}`,
     ),
   );
@@ -73,12 +87,30 @@ try {
     firstDeathMarker,
     "Recorded deaths appear at their own pull-relative times",
   );
+  assert.equal(firstDeathMarker.hasAttribute("title"), false, "Rich recap replaces the native title tooltip");
+  fireEvent.pointerEnter(firstDeathMarker);
+  const deathTooltip = document.getElementById(firstDeathMarker.getAttribute("aria-describedby"));
+  assert.ok(deathTooltip && deathTooltip.parentElement === document.body, "Tooltip escapes the clipped timeline track");
+  assert.ok(deathTooltip.textContent.includes("Last 5 seconds before death"));
+  assert.ok(deathTooltip.textContent.includes("Killing blow"));
+  assert.ok(deathTooltip.textContent.includes("Effective healing"));
+  assert.equal(deathTooltip.querySelectorAll(".coverage-death-event").length, 6);
+  fireEvent.scroll(window);
+  assert.deepEqual(browserErrors, [], "Tooltip scroll handling must not raise browser errors");
+  assert.ok(document.getElementById(deathTooltip.id), "Focus-induced scrolling must not dismiss keyboard help");
+  fireEvent.keyDown(document, { key: "Escape" });
+  assert.equal(document.getElementById(deathTooltip.id), null);
+  fireEvent.focus(firstDeathMarker);
+  assert.ok(document.getElementById(firstDeathMarker.getAttribute("aria-describedby")), "Keyboard focus exposes the same recap");
   fireEvent.click(firstDeathMarker);
   assert.ok(
     view
       .getByRole("complementary", { name: "Ability details" })
       .textContent.includes(firstDeath.player),
   );
+  const deathDrawer = view.getByRole("complementary", { name: "Ability details" });
+  assert.equal(deathDrawer.querySelectorAll(".coverage-death-event").length, firstDeath.recap.events.length);
+  assert.ok(deathDrawer.textContent.includes("Shifting Protovenom"));
   assert.equal(
     view.container.querySelectorAll(".coverage-pressure-graph").length,
     1,

@@ -15,6 +15,7 @@ from .cooldown_catalog import ability_display, coverage_catalog, resolve_timing,
 from .cooldown_usage import _event_ability_id, _fetch_ability_labels
 from .event_streams import fetch_event_streams
 from .cooldown_effectiveness import add_cast_effectiveness
+from .coverage_deaths import add_death_recaps
 
 
 def build_coverage_pull(*, code, fight, boss, streams, actor_names, player_ids, ability_labels=None, actor_owners=None):
@@ -96,11 +97,13 @@ def build_coverage_pull(*, code, fight, boss, streams, actor_names, player_ids, 
     ordered = sorted(lanes.values(), key=lambda row: (row["kind"] != "boss", row.get("player", ""), row["name"]))
     add_cast_effectiveness(ordered, fight=fight, streams=streams, participants=participants,
                            actor_owners=actor_owners, ability_labels=ability_labels)
+    deaths = death_markers(streams.get("deaths", []), fight, participants, actor_names)
+    add_death_recaps(deaths, streams=streams, fight=fight, actor_names=actor_names, ability_labels=ability_labels)
     return {"id": f"{code}:{fight.id}", "fightId": fight.id, "reportCode": code,
             "duration": duration, "kill": fight.kill, "lanes": ordered,
             "url": f"https://www.warcraftlogs.com/reports/{code}?fight={fight.id}",
             "pressure": pressure_series(streams.get("pressure", []), fight, participants, boss_spells, ability_labels=ability_labels),
-            "deaths": death_markers(streams.get("deaths", []), fight, participants, actor_names),
+            "deaths": deaths,
             "warnings": ([] if combatants else ["No combatant talent data was recorded. Timings use base values; unused cooldowns cannot be inferred."])
                          + ([] if any(l["kind"] == "boss" for l in ordered) else ["No catalogue boss casts found. Damage timings may still be available."])}
 

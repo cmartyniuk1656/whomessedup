@@ -37,10 +37,33 @@ class CoverageLaneModel(ViewModelBase):
     modifiers: List[str] = Field(default_factory=list)
 
 
+class CoverageDeathRecapEventModel(ViewModelBase):
+    offset: float
+    kind: Literal["damage", "heal", "absorbed", "healabsorbed"]
+    spell_id: Optional[int] = Field(None, alias="spellId")
+    name: str
+    source: str
+    amount: float
+    overkill: float = 0
+    absorbed: float = 0
+    killing_blow: bool = Field(False, alias="killingBlow")
+
+
+class CoverageDeathRecapModel(ViewModelBase):
+    window_seconds: float = Field(..., alias="windowSeconds")
+    events: List[CoverageDeathRecapEventModel]
+    total_events: int = Field(..., alias="totalEvents")
+    damage_taken: float = Field(..., alias="damageTaken")
+    healing_received: float = Field(..., alias="healingReceived")
+    healing_absorbed: float = Field(..., alias="healingAbsorbed")
+    damage_absorbed: float = Field(..., alias="damageAbsorbed")
+
+
 class CoverageDeathModel(ViewModelBase):
     time: float
     player_id: int = Field(..., alias="playerId")
     player: str
+    recap: Optional[CoverageDeathRecapModel] = None
 
 
 class CoveragePullModel(ViewModelBase):

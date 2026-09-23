@@ -3598,7 +3598,7 @@ def _register_coverage_reports():
     def payload_builder(report_id, encounter_id, difficulty):
         def build(values):
             return {"report_id": report_id, "report_codes": _coerce_report_code_list(values),
-                    "encounter_id": encounter_id, "difficulty": difficulty.value, "coverage_version": 3}, _coerce_bool(values, "fresh_run", default=False)
+                    "encounter_id": encounter_id, "difficulty": difficulty.value, "coverage_version": 4}, _coerce_bool(values, "fresh_run", default=False)
         return build
 
     for encounter_id, boss in bosses.items():

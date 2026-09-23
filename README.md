@@ -4,7 +4,7 @@ Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into act
 
 ## What the App Does
 
-- [Cooldown Coverage Report](docs/cooldown-coverage-report.md): compare each pull's recorded boss casts with healer cooldown windows, estimated readiness, and incoming damage plus consumed heal absorbs.
+- [Cooldown Coverage Report](docs/cooldown-coverage-report.md): compare each pull's recorded boss casts with healer cooldown windows, estimated readiness, and incoming damage plus consumed heal absorbs. Death markers show five-second damage/healing recaps, built by `services/coverage_deaths.py` and shared between tooltip and drawer through `DeathRecap`.
 
 - Accepts a Warcraft Logs report URL or code and runs purpose-built analyses (“tiles”).
 - Talks directly to the Warcraft Logs GraphQL v2 API using your client credentials.

@@ -10,7 +10,7 @@
           "fightId": 15,
           "id": "J3y9gP2bqmkphY7f:15",
           "kill": false,
-          "label": "Pull 1 \u00b7 Wipe \u00b7 1:40 \u00b7 J3y9gP2bqmkphY7f / 15",
+          "label": "Pull 1 · Wipe · 1:40 · J3y9gP2bqmkphY7f / 15",
           "lanes": [
             {
               "cooldown": null,
@@ -316,7 +316,7 @@
               "id": "6:391528",
               "kind": "healer",
               "modifiers": [
-                "Cenarius\u2019 Guidance: Halves the cooldown and reduces channel duration and spell count by 25%; also improves the chance of an exceptional spell.",
+                "Cenarius’ Guidance: Halves the cooldown and reduces channel duration and spell count by 25%; also improves the chance of an exceptional spell.",
                 "Control of the Dream: Keeper of the Grove: time spent ready before activation is subtracted from the next cooldown, capped at 15 seconds. Choice with Power of the Dream. This is variable recovery, not a permanent cooldown reduction."
               ],
               "name": "Convoke the Spirits",
@@ -328,7 +328,7 @@
               "shownByDefault": true,
               "spec": "Restoration Druid",
               "spellId": 391528,
-              "timingBasis": "Cenarius\u2019 Guidance"
+              "timingBasis": "Cenarius’ Guidance"
             },
             {
               "cooldown": 180.0,
@@ -367,7 +367,7 @@
                 "First Ascendant: Reduces Ascendance or Healing Tide Totem cooldown by 60 seconds. Choice with Preeminence.",
                 "Preeminence: Alternative to First Ascendant: adds 3 seconds to Ascendance/Healing Tide Totem and grants haste while active.",
                 "Oversurge: Totemic: increases Surging Totem output while Ascendance or Healing Tide Totem is active. The generic tooltip mixes specialization effects; no numeric healing coefficient is asserted here.",
-                "Deeply Rooted Elements: Riptide can trigger a separate 6-second Ascendance proc. This does not reduce the manual ability\u2019s cooldown and is not independently schedulable."
+                "Deeply Rooted Elements: Riptide can trigger a separate 6-second Ascendance proc. This does not reduce the manual ability’s cooldown and is not independently schedulable."
               ],
               "name": "Ascendance",
               "notes": [
@@ -390,13 +390,13 @@
               "id": "13:98008",
               "kind": "healer",
               "modifiers": [
-                "Spouting Spirits: Adds a substantial heal 1 second after placement and increases the totem\u2019s damage reduction.",
+                "Spouting Spirits: Adds a substantial heal 1 second after placement and increases the totem’s damage reduction.",
                 "Lively Totems: Totemic: placing Spirit Link Totem also casts a free Chain Heal."
               ],
               "name": "Spirit Link Totem",
               "notes": [
                 "Redistribution alone does not create net group healing. This is included as a healing/defensive hybrid because its current talents add major direct healing.",
-                "The 1-second delayed burst is not the totem\u2019s duration; the totem lasts 6 seconds."
+                "The 1-second delayed burst is not the totem’s duration; the totem lasts 6 seconds."
               ],
               "player": "Sample Restoration Shaman",
               "shownByDefault": true,
@@ -511,7 +511,7 @@
               "id": "2:64843",
               "kind": "healer",
               "modifiers": [
-                "Seraphic Crescendo: Reduces Divine Hymn\u2019s cooldown by 60 seconds. Choice with Gales of Song.",
+                "Seraphic Crescendo: Reduces Divine Hymn’s cooldown by 60 seconds. Choice with Gales of Song.",
                 "Gales of Song: Alternative to Seraphic Crescendo: distributes Prayer of Mending stacks each second during the channel.",
                 "Benediction: The relevant Apex effect adds a Cosmic Ripple to each Divine Hymn pulse."
               ],
@@ -536,7 +536,7 @@
               "id": "4:363534",
               "kind": "healer",
               "modifiers": [
-                "Temporal Artificer: Reduces Rewind\u2019s cooldown by 60 seconds.",
+                "Temporal Artificer: Reduces Rewind’s cooldown by 60 seconds.",
                 "Time Convergence: Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell."
               ],
               "name": "Rewind",
@@ -660,7 +660,7 @@
             },
             {
               "cooldown": 120.0,
-              "description": "Included as a major throughput window specifically when Chronowarden\u2019s Temporal Burst is selected.",
+              "description": "Included as a major throughput window specifically when Chronowarden’s Temporal Burst is selected.",
               "duration": null,
               "dynamic": false,
               "events": [
@@ -732,14 +732,14 @@
               "kind": "healer",
               "modifiers": [
                 "Temporal Burst: Chronowarden: Tip the Scales grants a 30-second window of decaying haste, movement speed and cooldown recovery, starting at 30%.",
-                "Chronoboon: Chronowarden: reduces Tip the Scales\u2019 cooldown by 30 seconds.",
+                "Chronoboon: Chronowarden: reduces Tip the Scales’ cooldown by 30 seconds.",
                 "Time Convergence: Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell."
               ],
-              "name": "Tip the Scales \u2014 Temporal Burst build",
+              "name": "Tip the Scales — Temporal Burst build",
               "notes": [
-                "Without Temporal Burst, Tip the Scales is principally an instant maximum-rank empower enabler and falls below this report\u2019s major-throughput scope.",
+                "Without Temporal Burst, Tip the Scales is principally an instant maximum-rank empower enabler and falls below this report’s major-throughput scope.",
                 "The base effect is consumed by the next empowered spell; it is not itself a fixed 30-second healing buff.",
-                "Temporal Burst\u2019s changing recovery rate prevents a universal effective cooldown for the Evoker kit."
+                "Temporal Burst’s changing recovery rate prevents a universal effective cooldown for the Evoker kit."
               ],
               "player": "Sample Preservation Evoker",
               "shownByDefault": true,
@@ -2060,7 +2060,1117 @@
             {
               "time": 49.342,
               "playerId": 21,
-              "player": "Sample Player 21"
+              "player": "Sample Player 21",
+              "recap": {
+                "windowSeconds": 5.0,
+                "events": [
+                  {
+                    "offset": -4.252,
+                    "kind": "damage",
+                    "spellId": 1297338,
+                    "name": "Deadly Venom",
+                    "source": "Environment",
+                    "amount": 92798.0,
+                    "overkill": 0.0,
+                    "absorbed": 937.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.252,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 937.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.238,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 937.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.121,
+                    "kind": "damage",
+                    "spellId": 1284506,
+                    "name": "Mark of Blood",
+                    "source": "Blood of Ula'tek",
+                    "amount": 72619.0,
+                    "overkill": 0.0,
+                    "absorbed": 733.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.121,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 733.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.119,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 734.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.027,
+                    "kind": "damage",
+                    "spellId": 1296882,
+                    "name": "Shifting Protovenom",
+                    "source": "Vashnik",
+                    "amount": 197442.0,
+                    "overkill": 0.0,
+                    "absorbed": 1994.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.027,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1994.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -4.016,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 1995.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.928,
+                    "kind": "heal",
+                    "spellId": 1287665,
+                    "name": "Rune of Lingering",
+                    "source": "Scootoot",
+                    "amount": 800.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.915,
+                    "kind": "heal",
+                    "spellId": 361361,
+                    "name": "Fluttering Seedlings",
+                    "source": "Taisuwu",
+                    "amount": 32276.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.915,
+                    "kind": "heal",
+                    "spellId": 355916,
+                    "name": "Emerald Blossom",
+                    "source": "Taisuwu",
+                    "amount": 40216.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.826,
+                    "kind": "heal",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 3573.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.795,
+                    "kind": "heal",
+                    "spellId": 445495,
+                    "name": "Consume Flame",
+                    "source": "Taisuwu",
+                    "amount": 56398.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.795,
+                    "kind": "heal",
+                    "spellId": 445495,
+                    "name": "Consume Flame",
+                    "source": "Taisuwu",
+                    "amount": 56399.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.645,
+                    "kind": "heal",
+                    "spellId": 469421,
+                    "name": "Lightbearer",
+                    "source": "Athenä",
+                    "amount": 6147.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.472,
+                    "kind": "heal",
+                    "spellId": 1287665,
+                    "name": "Rune of Lingering",
+                    "source": "Taisuwu",
+                    "amount": 857.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.29,
+                    "kind": "heal",
+                    "spellId": 361361,
+                    "name": "Fluttering Seedlings",
+                    "source": "Taisuwu",
+                    "amount": 23724.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.29,
+                    "kind": "heal",
+                    "spellId": 355916,
+                    "name": "Emerald Blossom",
+                    "source": "Taisuwu",
+                    "amount": 75144.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.25,
+                    "kind": "damage",
+                    "spellId": 1297338,
+                    "name": "Deadly Venom",
+                    "source": "Environment",
+                    "amount": 87483.0,
+                    "overkill": 0.0,
+                    "absorbed": 6252.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.25,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 937.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.25,
+                    "kind": "absorbed",
+                    "spellId": 414143,
+                    "name": "Yu'lon's Grace",
+                    "source": "Navori",
+                    "amount": 5315.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.25,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 938.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.25,
+                    "kind": "heal",
+                    "spellId": 355941,
+                    "name": "Dream Breath",
+                    "source": "Taisuwu",
+                    "amount": 38325.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.206,
+                    "kind": "heal",
+                    "spellId": 382024,
+                    "name": "Earthliving Weapon",
+                    "source": "Scootoot",
+                    "amount": 8308.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -3.177,
+                    "kind": "heal",
+                    "spellId": 445495,
+                    "name": "Consume Flame",
+                    "source": "Taisuwu",
+                    "amount": 103571.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.543,
+                    "kind": "damage",
+                    "spellId": 1296962,
+                    "name": "Protovenom Eruption",
+                    "source": "Vashnik",
+                    "amount": 217242.0,
+                    "overkill": 0.0,
+                    "absorbed": 2194.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.543,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 2194.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.53,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 2194.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.53,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 2194.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.529,
+                    "kind": "damage",
+                    "spellId": 1296962,
+                    "name": "Protovenom Eruption",
+                    "source": "Vashnik",
+                    "amount": 217243.0,
+                    "overkill": 0.0,
+                    "absorbed": 2194.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.516,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 2194.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.484,
+                    "kind": "heal",
+                    "spellId": 1287665,
+                    "name": "Rune of Lingering",
+                    "source": "Taisuwu",
+                    "amount": 857.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.306,
+                    "kind": "heal",
+                    "spellId": 61295,
+                    "name": "Riptide",
+                    "source": "Scootoot",
+                    "amount": 7874.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.258,
+                    "kind": "heal",
+                    "spellId": 1064,
+                    "name": "Chain Heal",
+                    "source": "Scootoot",
+                    "amount": 80504.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.243,
+                    "kind": "damage",
+                    "spellId": 1297338,
+                    "name": "Deadly Venom",
+                    "source": "Environment",
+                    "amount": 92798.0,
+                    "overkill": 0.0,
+                    "absorbed": 937.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.243,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 937.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.242,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 937.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.221,
+                    "kind": "heal",
+                    "spellId": 462425,
+                    "name": "Tidewaters",
+                    "source": "Scootoot",
+                    "amount": 43671.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.189,
+                    "kind": "heal",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 3625.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.157,
+                    "kind": "damage",
+                    "spellId": 1284210,
+                    "name": "Blood Venom",
+                    "source": "Blood of Ula'tek",
+                    "amount": 124139.0,
+                    "overkill": 0.0,
+                    "absorbed": 1253.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.157,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1253.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.144,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 1254.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.13,
+                    "kind": "damage",
+                    "spellId": 1284506,
+                    "name": "Mark of Blood",
+                    "source": "Blood of Ula'tek",
+                    "amount": 72620.0,
+                    "overkill": 0.0,
+                    "absorbed": 733.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.13,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 733.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.112,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 733.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.019,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1994.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.018,
+                    "kind": "damage",
+                    "spellId": 1296882,
+                    "name": "Shifting Protovenom",
+                    "source": "Vashnik",
+                    "amount": 197443.0,
+                    "overkill": 0.0,
+                    "absorbed": 1994.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -2.005,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 1994.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.931,
+                    "kind": "heal",
+                    "spellId": 1287665,
+                    "name": "Rune of Lingering",
+                    "source": "Scootoot",
+                    "amount": 801.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.866,
+                    "kind": "heal",
+                    "spellId": 355941,
+                    "name": "Dream Breath",
+                    "source": "Taisuwu",
+                    "amount": 38869.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.845,
+                    "kind": "heal",
+                    "spellId": 1263002,
+                    "name": "Rune of Unleashed Fire",
+                    "source": "Taisuwu",
+                    "amount": 13718.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.844,
+                    "kind": "heal",
+                    "spellId": 378213,
+                    "name": "Golden Hour",
+                    "source": "Taisuwu",
+                    "amount": 101908.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.844,
+                    "kind": "heal",
+                    "spellId": 378213,
+                    "name": "Golden Hour",
+                    "source": "Taisuwu",
+                    "amount": 97056.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.55,
+                    "kind": "heal",
+                    "spellId": 382024,
+                    "name": "Earthliving Weapon",
+                    "source": "Scootoot",
+                    "amount": 4809.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.479,
+                    "kind": "heal",
+                    "spellId": 1287665,
+                    "name": "Rune of Lingering",
+                    "source": "Taisuwu",
+                    "amount": 943.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.263,
+                    "kind": "heal",
+                    "spellId": 1256581,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 22033.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.263,
+                    "kind": "heal",
+                    "spellId": 1256581,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 54557.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.24,
+                    "kind": "heal",
+                    "spellId": 1256581,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 9443.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.152,
+                    "kind": "damage",
+                    "spellId": 1284210,
+                    "name": "Blood Venom",
+                    "source": "Blood of Ula'tek",
+                    "amount": 116752.0,
+                    "overkill": 0.0,
+                    "absorbed": 2370.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.152,
+                    "kind": "absorbed",
+                    "spellId": 366155,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1191.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.152,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1179.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.152,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 1192.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.152,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 1179.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.049,
+                    "kind": "heal",
+                    "spellId": 73921,
+                    "name": "Healing Rain",
+                    "source": "Scootoot",
+                    "amount": 11222.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -1.001,
+                    "kind": "heal",
+                    "spellId": 1267745,
+                    "name": "Stormstream Totem",
+                    "source": "Stormstream Totem",
+                    "amount": 20504.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.933,
+                    "kind": "heal",
+                    "spellId": 1287665,
+                    "name": "Rune of Lingering",
+                    "source": "Scootoot",
+                    "amount": 801.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.895,
+                    "kind": "damage",
+                    "spellId": 1284813,
+                    "name": "Helical Toxins",
+                    "source": "Breath of Ula'tek",
+                    "amount": 15440.0,
+                    "overkill": 0.0,
+                    "absorbed": 11683.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.895,
+                    "kind": "absorbed",
+                    "spellId": 366155,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 271.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.895,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 268.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.895,
+                    "kind": "absorbed",
+                    "spellId": 1300642,
+                    "name": "Condensation",
+                    "source": "Scootoot",
+                    "amount": 11144.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.883,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 271.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.883,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 268.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.634,
+                    "kind": "heal",
+                    "spellId": 1267745,
+                    "name": "Stormstream Totem",
+                    "source": "Stormstream Totem",
+                    "amount": 620.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.573,
+                    "kind": "heal",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 4129.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.487,
+                    "kind": "heal",
+                    "spellId": 355941,
+                    "name": "Dream Breath",
+                    "source": "Taisuwu",
+                    "amount": 44284.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.475,
+                    "kind": "heal",
+                    "spellId": 1287665,
+                    "name": "Rune of Lingering",
+                    "source": "Taisuwu",
+                    "amount": 943.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.475,
+                    "kind": "heal",
+                    "spellId": 355941,
+                    "name": "Dream Breath",
+                    "source": "Taisuwu",
+                    "amount": 147.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.463,
+                    "kind": "heal",
+                    "spellId": 52042,
+                    "name": "Healing Stream Totem",
+                    "source": "Healing Stream Totem",
+                    "amount": 9644.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.315,
+                    "kind": "damage",
+                    "spellId": 1297338,
+                    "name": "Deadly Venom",
+                    "source": "Environment",
+                    "amount": 81962.0,
+                    "overkill": 0.0,
+                    "absorbed": 7086.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.315,
+                    "kind": "absorbed",
+                    "spellId": 366155,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 890.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.315,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 881.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.315,
+                    "kind": "absorbed",
+                    "spellId": 414143,
+                    "name": "Yu'lon's Grace",
+                    "source": "Navori",
+                    "amount": 5315.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.314,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 890.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.314,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 882.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.217,
+                    "kind": "heal",
+                    "spellId": 366155,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 3329.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.151,
+                    "kind": "damage",
+                    "spellId": 1284210,
+                    "name": "Blood Venom",
+                    "source": "Blood of Ula'tek",
+                    "amount": 122898.0,
+                    "overkill": 0.0,
+                    "absorbed": 2494.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.151,
+                    "kind": "absorbed",
+                    "spellId": 366155,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1253.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.151,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1241.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.151,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 1253.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.151,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 1242.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.127,
+                    "kind": "damage",
+                    "spellId": 1284506,
+                    "name": "Mark of Blood",
+                    "source": "Blood of Ula'tek",
+                    "amount": 71893.0,
+                    "overkill": 0.0,
+                    "absorbed": 1459.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.127,
+                    "kind": "absorbed",
+                    "spellId": 366155,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 733.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.127,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 726.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.11,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 734.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.11,
+                    "kind": "heal",
+                    "spellId": 1256688,
+                    "name": "Merithra's Blessing",
+                    "source": "Taisuwu",
+                    "amount": 726.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.017,
+                    "kind": "absorbed",
+                    "spellId": 366155,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1994.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.017,
+                    "kind": "absorbed",
+                    "spellId": 367364,
+                    "name": "Reversion",
+                    "source": "Taisuwu",
+                    "amount": 1974.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.017,
+                    "kind": "heal",
+                    "spellId": 451968,
+                    "name": "Expel Harm",
+                    "source": "Navori",
+                    "amount": 52976.0,
+                    "overkill": 0.0,
+                    "absorbed": 0.0,
+                    "killingBlow": false
+                  },
+                  {
+                    "offset": -0.016,
+                    "kind": "damage",
+                    "spellId": 1296882,
+                    "name": "Shifting Protovenom",
+                    "source": "Vashnik",
+                    "amount": 195468.0,
+                    "overkill": 89844.0,
+                    "absorbed": 3968.0,
+                    "killingBlow": true
+                  }
+                ],
+                "totalEvents": 100,
+                "damageTaken": 1886396.0,
+                "healingReceived": 1097552.0,
+                "healingAbsorbed": 0.0,
+                "damageAbsorbed": 48281.0
+              }
             },
             {
               "time": 71.337,
@@ -2159,7 +3269,7 @@
           "fightId": 16,
           "id": "J3y9gP2bqmkphY7f:16",
           "kill": false,
-          "label": "Pull 2 \u00b7 Wipe \u00b7 4:47 \u00b7 J3y9gP2bqmkphY7f / 16",
+          "label": "Pull 2 · Wipe · 4:47 · J3y9gP2bqmkphY7f / 16",
           "lanes": [
             {
               "cooldown": null,
@@ -2903,7 +4013,7 @@
               "id": "6:391528",
               "kind": "healer",
               "modifiers": [
-                "Cenarius\u2019 Guidance: Halves the cooldown and reduces channel duration and spell count by 25%; also improves the chance of an exceptional spell.",
+                "Cenarius’ Guidance: Halves the cooldown and reduces channel duration and spell count by 25%; also improves the chance of an exceptional spell.",
                 "Control of the Dream: Keeper of the Grove: time spent ready before activation is subtracted from the next cooldown, capped at 15 seconds. Choice with Power of the Dream. This is variable recovery, not a permanent cooldown reduction."
               ],
               "name": "Convoke the Spirits",
@@ -2915,7 +4025,7 @@
               "shownByDefault": true,
               "spec": "Restoration Druid",
               "spellId": 391528,
-              "timingBasis": "Cenarius\u2019 Guidance"
+              "timingBasis": "Cenarius’ Guidance"
             },
             {
               "cooldown": 180.0,
@@ -3095,7 +4205,7 @@
                 "First Ascendant: Reduces Ascendance or Healing Tide Totem cooldown by 60 seconds. Choice with Preeminence.",
                 "Preeminence: Alternative to First Ascendant: adds 3 seconds to Ascendance/Healing Tide Totem and grants haste while active.",
                 "Oversurge: Totemic: increases Surging Totem output while Ascendance or Healing Tide Totem is active. The generic tooltip mixes specialization effects; no numeric healing coefficient is asserted here.",
-                "Deeply Rooted Elements: Riptide can trigger a separate 6-second Ascendance proc. This does not reduce the manual ability\u2019s cooldown and is not independently schedulable."
+                "Deeply Rooted Elements: Riptide can trigger a separate 6-second Ascendance proc. This does not reduce the manual ability’s cooldown and is not independently schedulable."
               ],
               "name": "Ascendance",
               "notes": [
@@ -3189,13 +4299,13 @@
               "id": "13:98008",
               "kind": "healer",
               "modifiers": [
-                "Spouting Spirits: Adds a substantial heal 1 second after placement and increases the totem\u2019s damage reduction.",
+                "Spouting Spirits: Adds a substantial heal 1 second after placement and increases the totem’s damage reduction.",
                 "Lively Totems: Totemic: placing Spirit Link Totem also casts a free Chain Heal."
               ],
               "name": "Spirit Link Totem",
               "notes": [
                 "Redistribution alone does not create net group healing. This is included as a healing/defensive hybrid because its current talents add major direct healing.",
-                "The 1-second delayed burst is not the totem\u2019s duration; the totem lasts 6 seconds."
+                "The 1-second delayed burst is not the totem’s duration; the totem lasts 6 seconds."
               ],
               "player": "Sample Restoration Shaman",
               "shownByDefault": true,
@@ -3263,7 +4373,7 @@
                       {
                         "kind": "cast",
                         "laneId": "4:370553",
-                        "name": "Tip the Scales \u2014 Temporal Burst build",
+                        "name": "Tip the Scales — Temporal Burst build",
                         "player": "Sample Preservation Evoker",
                         "time": 47.124
                       }
@@ -3512,7 +4622,7 @@
               "id": "2:64843",
               "kind": "healer",
               "modifiers": [
-                "Seraphic Crescendo: Reduces Divine Hymn\u2019s cooldown by 60 seconds. Choice with Gales of Song.",
+                "Seraphic Crescendo: Reduces Divine Hymn’s cooldown by 60 seconds. Choice with Gales of Song.",
                 "Gales of Song: Alternative to Seraphic Crescendo: distributes Prayer of Mending stacks each second during the channel.",
                 "Benediction: The relevant Apex effect adds a Cosmic Ripple to each Divine Hymn pulse."
               ],
@@ -3670,7 +4780,7 @@
               "id": "4:363534",
               "kind": "healer",
               "modifiers": [
-                "Temporal Artificer: Reduces Rewind\u2019s cooldown by 60 seconds.",
+                "Temporal Artificer: Reduces Rewind’s cooldown by 60 seconds.",
                 "Time Convergence: Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell."
               ],
               "name": "Rewind",
@@ -3942,7 +5052,7 @@
             },
             {
               "cooldown": 120.0,
-              "description": "Included as a major throughput window specifically when Chronowarden\u2019s Temporal Burst is selected.",
+              "description": "Included as a major throughput window specifically when Chronowarden’s Temporal Burst is selected.",
               "duration": null,
               "dynamic": false,
               "events": [
@@ -4084,14 +5194,14 @@
               "kind": "healer",
               "modifiers": [
                 "Temporal Burst: Chronowarden: Tip the Scales grants a 30-second window of decaying haste, movement speed and cooldown recovery, starting at 30%.",
-                "Chronoboon: Chronowarden: reduces Tip the Scales\u2019 cooldown by 30 seconds.",
+                "Chronoboon: Chronowarden: reduces Tip the Scales’ cooldown by 30 seconds.",
                 "Time Convergence: Chronowarden: eligible non-defensive abilities with a cooldown of at least 45 seconds grant a 15-second Intellect buff; Essence spells extend it by 1 second. This is a secondary throughput buff, not the duration of the healing spell."
               ],
-              "name": "Tip the Scales \u2014 Temporal Burst build",
+              "name": "Tip the Scales — Temporal Burst build",
               "notes": [
-                "Without Temporal Burst, Tip the Scales is principally an instant maximum-rank empower enabler and falls below this report\u2019s major-throughput scope.",
+                "Without Temporal Burst, Tip the Scales is principally an instant maximum-rank empower enabler and falls below this report’s major-throughput scope.",
                 "The base effect is consumed by the next empowered spell; it is not itself a fixed 30-second healing buff.",
-                "Temporal Burst\u2019s changing recovery rate prevents a universal effective cooldown for the Evoker kit."
+                "Temporal Burst’s changing recovery rate prevents a universal effective cooldown for the Evoker kit."
               ],
               "player": "Sample Preservation Evoker",
               "shownByDefault": true,
@@ -8082,7 +9192,7 @@
     "Catalogue: supplied Midnight 12.1 research, 24 cooldowns and 68 tracked abilities. Boss markers are recorded casts; catalogue display durations are not treated as verified effect durations."
   ],
   "header": {
-    "subtitle": "Entombed Sentinels \u00b7 Recorded casts, healing windows and raid pressure",
+    "subtitle": "Entombed Sentinels · Recorded casts, healing windows and raid pressure",
     "tags": []
   },
   "reportCode": "J3y9gP2bqmkphY7f",

@@ -5,6 +5,7 @@ import {
   compactCoverageNumber as compact,
 } from "../../../utils/coverageTimeline";
 import { CastEffectiveness } from "./CastEffectiveness";
+import { DeathRecap } from "./DeathRecap";
 
 function CastChoices({ casts, onInspect }) {
   return (
@@ -74,14 +75,14 @@ export function CoverageInspector({ selection, onInspect, onClose }) {
               ? "Player death"
               : `${deaths.length} player deaths`}
           </h3>
-          <ul className="coverage-death-list">
-            {deaths.map((death) => (
-              <li key={`${death.playerId}:${death.time}`}>
-                <strong>{death.player}</strong>
-                <span>{preciseCoverageTime(death.time)}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="coverage-death-recaps">
+            {deaths.map((death, index) => deaths.length === 1
+              ? <DeathRecap key={`${death.playerId}:${death.time}`} death={death} />
+              : <details key={`${death.playerId}:${death.time}`} open={index === 0}>
+                  <summary>{death.player}<time>{preciseCoverageTime(death.time)}</time></summary>
+                  <DeathRecap death={death} />
+                </details>)}
+          </div>
         </>
       )}
       {bossGroup && (

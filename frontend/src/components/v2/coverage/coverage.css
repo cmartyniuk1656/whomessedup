@@ -742,21 +742,65 @@
   color: #718394;
   font-size: 10px;
 }
-.coverage-death-list {
-  list-style: none !important;
-  padding: 0 !important;
-  margin-top: 10px;
+/* Portalled above the timeline so the scroll tracks cannot clip a recap. */
+.coverage-death-tooltip {
+  position: fixed;
+  z-index: 100;
+  width: min(370px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid #fb71854d;
+  border-top: 2px solid #fb7185;
+  border-radius: 12px;
+  background: linear-gradient(150deg, #241c2c, #101b2a 40%);
+  box-shadow: 0 16px 50px #0009;
+  color: #e2e8f0;
+  font: 12px/1.45 system-ui, sans-serif;
 }
-.coverage-death-list li {
+.coverage-death-heading,
+.coverage-death-recaps summary {
   display: flex;
   justify-content: space-between;
-  gap: 15px;
-  padding: 4px 0;
+  align-items: center;
+  gap: 12px;
 }
-.coverage-death-list strong {
-  color: #e2e8f0;
-  font-weight: 500;
-}
-.coverage-death-list span {
-  color: #fda4af;
-}
+.coverage-death-heading strong { display: block; color: #f8fafc; font-size: 16px; }
+.coverage-death-eyebrow { color: #fda4af; font-size: 9px; font-weight: 600; letter-spacing: .12em; }
+.coverage-death-heading time,
+.coverage-death-recaps summary time { color: #fda4af; font-size: 11px; font-variant-numeric: tabular-nums; }
+.coverage-death-recap .coverage-death-window { margin: 4px 0 12px; color: #94a3b8; font-size: 11px; }
+.coverage-killing-blow { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 7px 9px; background: #fb718511; border-radius: 5px; }
+.coverage-killing-blow span { color: #fda4af; font-size: 10px; }
+.coverage-killing-blow strong { color: #ffe4e6; font-size: 11px; }
+.coverage-death-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 0; }
+.coverage-death-totals span { display: block; color: #a4b2c4; font-size: 10px; }
+.coverage-death-totals strong { display: block; color: #fda4af; font-size: 21px; font-weight: 600; }
+.coverage-death-totals > div:last-child strong { color: #6ee7b7; }
+.coverage-death-absorbs { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 10px; color: #c4b5fd; margin: 0 0 8px; }
+.coverage-death-events { list-style: none; margin: 0; padding: 0; border-top: 1px solid #334155; }
+.coverage-death-recap .coverage-death-events-label { margin: 8px 0 5px; font-size: 10px; color: #94a3b8; }
+.coverage-death-event { display: grid; grid-template-columns: 43px 15px minmax(0, 1fr) auto; gap: 7px; align-items: center; padding: 8px 0; border-bottom: 1px solid #ffffff09; }
+.coverage-death-event > time { color: #94a3b8; font-size: 10px; font-variant-numeric: tabular-nums; }
+.coverage-death-event-name { min-width: 0; }
+.coverage-death-event-name strong { display: block; color: #e2e8f0; font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }
+.coverage-death-event small { display: block; color: #8294aa; font-size: 9px; }
+.coverage-death-event-amount { text-align: right; font-size: 11px; font-variant-numeric: tabular-nums; }
+.coverage-death-event-amount strong { font-weight: 600; }
+.coverage-death-event-symbol,
+.coverage-death-event-amount { color: #fda4af; }
+.coverage-death-event.is-heal .coverage-death-event-symbol,
+.coverage-death-event.is-heal .coverage-death-event-amount { color: #6ee7b7; }
+.coverage-death-event.is-absorbed .coverage-death-event-symbol,
+.coverage-death-event.is-absorbed .coverage-death-event-amount { color: #7dd3fc; }
+.coverage-death-event.is-healabsorbed .coverage-death-event-symbol,
+.coverage-death-event.is-healabsorbed .coverage-death-event-amount { color: #c4b5fd; }
+.coverage-death-event.is-lethal { background: #fb71850a; }
+.coverage-death-event.is-lethal .coverage-death-event-name small { color: #fda4af; }
+.coverage-death-recap .coverage-death-note { margin: 8px 0 0; color: #94a3b8; font-size: 10px; }
+.coverage-death-tooltip-hint { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid #ffffff12; color: #cbd5e1; font-size: 10px; }
+.coverage-death-cluster-note { margin: 10px 0 0; color: #fda4af; font-size: 11px; }
+.coverage-death-recaps { margin-top: 14px; }
+.coverage-death-recaps details { border-bottom: 1px solid #334155; padding: 10px 0; }
+.coverage-death-recaps summary { cursor: pointer; color: #f8fafc; font-size: 12px; }
+.coverage-death-recaps details .coverage-death-recap { padding-top: 12px; }
