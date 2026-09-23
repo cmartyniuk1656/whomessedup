@@ -692,3 +692,71 @@
 .coverage-cast-choices img {
   border-radius: 4px;
 }
+
+.coverage-death-row {
+  min-height: 30px;
+  height: 30px;
+  border-bottom: 1px solid #344151;
+}
+.coverage-death-row .coverage-lane-label {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.coverage-death-row .coverage-lane-label strong {
+  color: #fda4af;
+}
+.coverage-death-marker {
+  position: absolute;
+  top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 21px;
+  transform: translateX(-50%);
+  color: #fb7185;
+  border-radius: 4px;
+  background: #fb718510;
+  z-index: 4;
+}
+.coverage-death-marker:hover,
+.coverage-death-marker:focus-visible {
+  background: #fb718530;
+  color: #fecdd3;
+}
+.coverage-death-marker small {
+  position: absolute;
+  right: -3px;
+  top: -2px;
+  font-size: 8px;
+  line-height: 11px;
+  min-width: 10px;
+  border-radius: 3px;
+  background: #881337;
+  color: #ffe4e6;
+}
+.coverage-no-deaths {
+  position: absolute;
+  left: 12px;
+  top: 6px;
+  color: #718394;
+  font-size: 10px;
+}
+.coverage-death-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin-top: 10px;
+}
+.coverage-death-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 4px 0;
+}
+.coverage-death-list strong {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+.coverage-death-list span {
+  color: #fda4af;
+}

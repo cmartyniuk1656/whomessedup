@@ -89,11 +89,22 @@ export function coverageSegments(pull, binSeconds) {
 
 /** Cluster crowded boss icons without moving or changing recorded timestamps. */
 export function clusterBossCasts(lanes, duration, trackWidth) {
-  const casts = lanes
-    .flatMap((lane) => lane.events.map((event) => ({ lane, event })))
-    .sort((a, b) => a.event.time - b.event.time);
+  const casts = lanes.flatMap((lane) =>
+    lane.events.map((event) => ({ lane, event })),
+  );
+  return clusterTimelineEvents(casts, duration, trackWidth);
+}
+
+/** Group nearby markers by their rendered spacing while retaining exact times. */
+export function clusterTimelineEvents(
+  entries,
+  duration,
+  trackWidth,
+  pixels = 28,
+) {
+  const casts = [...entries].sort((a, b) => a.event.time - b.event.time);
   const groups = [];
-  const spacing = (28 * duration) / Math.max(1, trackWidth);
+  const spacing = (pixels * duration) / Math.max(1, trackWidth);
   for (const cast of casts) {
     const last = groups[groups.length - 1];
     if (last && cast.event.time - last[0].event.time < spacing) last.push(cast);

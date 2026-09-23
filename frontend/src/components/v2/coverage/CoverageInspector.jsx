@@ -52,7 +52,7 @@ export function CoverageInspector({ selection, onInspect, onClose }) {
         coverage strip to review an interval.
       </div>
     );
-  const { lane, event, bossGroup, coverage } = selection;
+  const { lane, event, bossGroup, coverage, deaths } = selection;
   return (
     <aside
       ref={drawer}
@@ -67,6 +67,23 @@ export function CoverageInspector({ selection, onInspect, onClose }) {
       >
         ×
       </button>
+      {deaths && (
+        <>
+          <h3>
+            {deaths.length === 1
+              ? "Player death"
+              : `${deaths.length} player deaths`}
+          </h3>
+          <ul className="coverage-death-list">
+            {deaths.map((death) => (
+              <li key={`${death.playerId}:${death.time}`}>
+                <strong>{death.player}</strong>
+                <span>{preciseCoverageTime(death.time)}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       {bossGroup && (
         <>
           <h3>Boss casts close together</h3>

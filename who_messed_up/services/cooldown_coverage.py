@@ -100,8 +100,26 @@ def build_coverage_pull(*, code, fight, boss, streams, actor_names, player_ids, 
             "duration": duration, "kill": fight.kill, "lanes": ordered,
             "url": f"https://www.warcraftlogs.com/reports/{code}?fight={fight.id}",
             "pressure": pressure_series(streams.get("pressure", []), fight, participants, boss_spells, ability_labels=ability_labels),
+            "deaths": death_markers(streams.get("deaths", []), fight, participants, actor_names),
             "warnings": ([] if combatants else ["No combatant talent data was recorded. Timings use base values; unused cooldowns cannot be inferred."])
                          + ([] if any(l["kind"] == "boss" for l in ordered) else ["No catalogue boss casts found. Damage timings may still be available."])}
+
+
+def death_markers(events, fight, participants, actor_names):
+    """Retain every player death, including later deaths after a resurrection."""
+    markers, seen = [], set()
+    for event in sorted(events, key=lambda entry: entry.get("timestamp") or 0):
+        target, timestamp = event.get("targetID"), event.get("timestamp")
+        if (event.get("type") not in ("death", "instakill") or target not in participants
+                or timestamp is None or not fight.start <= timestamp <= fight.end):
+            continue
+        key = (target, timestamp)
+        if key in seen:
+            continue
+        seen.add(key)
+        markers.append({"time": round((timestamp - fight.start) / 1000, 3),
+                        "playerId": target, "player": actor_names.get(target, f"Player {target}")})
+    return markers
 
 
 def make_lane(lane_id, spell, source, names, info, is_player):
@@ -164,6 +182,7 @@ def fetch_cooldown_coverage(*, report_codes, encounter_id, difficulty, token=Non
                 streams={"casts": {"data_type": "Casts", "extra_filter": spell_filter},
                          "bossCasts": {"data_type": "Casts", "extra_filter": spell_filter, "hostility_type": "Enemies"},
                          "combatants": {"data_type": "CombatantInfo"},
+                         "deaths": {"data_type": "Deaths"},
                          "auras": {"data_type": "Buffs", "extra_filter": spell_filter},
                          "healing": {"data_type": "Healing", "extra_filter": 'type = "heal" OR type = "absorbed"'},
                          "pressure": {"data_type": "All", "extra_filter": 'type = "damage" OR type = "healabsorbed"'}},

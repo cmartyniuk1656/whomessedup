@@ -73,6 +73,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_NEK_ZALI_THE_SOULCOILER_DEATHS,
     JOB_V2_NEK_ZALI_THE_SOULCOILER_MECHANICS,
     JOB_V2_ENTOMBED_SENTINELS_MECHANICS,
+    JOB_V2_NYMRISSA_MECHANICS,
     JOB_V2_VASHNIK_MECHANICS,
     JOB_V2_VORASIUS_AVOIDABLE_DAMAGE,
     JOB_V2_VORASIUS_DAMAGE,
@@ -145,6 +146,7 @@ from who_messed_up.services.view_models.nek_zali_the_soulcoiler_deaths import (
     build_nek_zali_the_soulcoiler_deaths_report_page,
 )
 from who_messed_up.services.view_models.vashnik_mechanics import build_vashnik_mechanics_report_page
+from who_messed_up.services.view_models.nymrissa_mechanics import build_nymrissa_mechanics_report_page
 from who_messed_up.services.view_models.entombed_sentinels_mechanics import (
     build_sentinels_mechanics_report_page,
 )
@@ -271,6 +273,7 @@ from who_messed_up.service import (
     fetch_nek_zali_the_soulcoiler_death_summary,
     fetch_nek_zali_mechanics_summary,
     fetch_sentinels_mechanics_summary,
+    fetch_nymrissa_mechanics_summary,
     fetch_vashnik_mechanics_summary,
     fetch_entombed_sentinels_avoidable_damage_summary,
     fetch_entombed_sentinels_damage_summary,
@@ -2409,6 +2412,23 @@ def _execute_v2_vashnik_mechanics_job(payload: Dict[str, Any]) -> Dict[str, Any]
     return index_report_rows(data)
 
 
+def _execute_v2_nymrissa_mechanics_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    credentials = _client_credentials()
+    summary = fetch_nymrissa_mechanics_summary(
+        report_code=payload["report"],
+        fight_name=payload.get("fight"),
+        fight_ids=payload.get("fight_ids") or None,
+        difficulty=payload.get("difficulty"),
+        extra_report_codes=payload.get("extra_reports"),
+        token=payload.get("token"),
+        client_id=credentials["client_id"],
+        client_secret=credentials["client_secret"],
+    )
+    page = build_nymrissa_mechanics_report_page(summary)
+    data = page.model_dump(by_alias=True) if hasattr(page, "model_dump") else page.dict(by_alias=True)
+    return index_report_rows(data)
+
+
 def _execute_v2_entombed_sentinels_deaths_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_entombed_sentinels_deaths_summary_from_payload(payload)
     page = build_entombed_sentinels_deaths_report_page(
@@ -2922,6 +2942,10 @@ job_manager.register_handler(
 job_manager.register_handler(
     JOB_V2_VASHNIK_MECHANICS,
     _execute_v2_vashnik_mechanics_job,
+)
+job_manager.register_handler(
+    JOB_V2_NYMRISSA_MECHANICS,
+    _execute_v2_nymrissa_mechanics_job,
 )
 job_manager.register_handler(
     JOB_V2_ENTOMBED_SENTINELS_DAMAGE,

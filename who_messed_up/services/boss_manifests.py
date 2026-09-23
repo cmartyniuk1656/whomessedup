@@ -20,6 +20,7 @@ from .manifests.midnight_season_1 import (
     VORASIUS_MANIFEST,
 )
 from .manifests.midnight_season_2 import (
+    NYMRISSA_WAVECALLER_MYTHIC_MANIFEST,
     ENTOMBED_SENTINELS_HEROIC_MANIFEST,
     ENTOMBED_SENTINELS_MYTHIC_MANIFEST,
     MIDNIGHT_SEASON_2_MANIFESTS,
@@ -80,6 +81,7 @@ def get_boss_manifest(boss_id: str, difficulty: object = None) -> BossManifest |
 
 
 __all__ = [
+    "NYMRISSA_WAVECALLER_MYTHIC_MANIFEST",
     "ALL_BOSS_MANIFESTS",
     "BOSS_MANIFESTS",
     "BOSS_MANIFESTS_BY_BOSS",

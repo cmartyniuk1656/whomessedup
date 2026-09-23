@@ -61,6 +61,24 @@ try {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   const { render, fireEvent, cleanup } = await import("@testing-library/react");
   const view = render(React.createElement(ReportPageView, { page: fixture }));
+  const firstDeath = fixture.content.timeline.pulls[0].deaths[0];
+  const firstDeathMarker = [
+    ...view.container.querySelectorAll(".coverage-death-marker"),
+  ].find((marker) =>
+    marker.title.includes(
+      `${firstDeath.player} died at ${preciseCoverageTime(firstDeath.time)}`,
+    ),
+  );
+  assert.ok(
+    firstDeathMarker,
+    "Recorded deaths appear at their own pull-relative times",
+  );
+  fireEvent.click(firstDeathMarker);
+  assert.ok(
+    view
+      .getByRole("complementary", { name: "Ability details" })
+      .textContent.includes(firstDeath.player),
+  );
   assert.equal(
     view.container.querySelectorAll(".coverage-pressure-graph").length,
     1,
@@ -97,6 +115,14 @@ try {
     name: /Shifting Protovenom at 0:36.378/,
   });
   assert.equal(
+    view.queryByRole("complementary", { name: "Ability details" }),
+    null,
+    "Changing pulls clears the previous death selection",
+  );
+  const deathTrack = view.container.querySelector(
+    ".coverage-death-row",
+  ).innerHTML;
+  assert.equal(
     view.queryByRole("button", { name: /Shifting Protovenom at 0:36.205/ }),
     null,
   );
@@ -130,6 +156,11 @@ try {
     strip,
     "Healer filters must not change raid coverage",
   );
+  assert.equal(
+    view.container.querySelector(".coverage-death-row").innerHTML,
+    deathTrack,
+    "Death markers remain raid-wide when pressure or healer filters change",
+  );
   fireEvent.click(view.container.querySelector(".coverage-strip-gap"));
   assert.ok(
     view
@@ -153,10 +184,7 @@ try {
   assert.ok(
     view.getByRole("img", { name: /effective healing, .* overhealing/ }),
   );
-  assert.equal(
-    view.container.querySelector(".coverage-timing-details"),
-    null,
-  );
+  assert.equal(view.container.querySelector(".coverage-timing-details"), null);
   assert.equal(view.queryByText("Players helped"), null);
   assert.ok(view.container.querySelector(".coverage-cast-selected"));
   fireEvent.click(view.getByLabelText("Estimated readiness"));

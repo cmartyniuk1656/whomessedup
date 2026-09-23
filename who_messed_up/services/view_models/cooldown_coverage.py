@@ -37,6 +37,12 @@ class CoverageLaneModel(ViewModelBase):
     modifiers: List[str] = Field(default_factory=list)
 
 
+class CoverageDeathModel(ViewModelBase):
+    time: float
+    player_id: int = Field(..., alias="playerId")
+    player: str
+
+
 class CoveragePullModel(ViewModelBase):
     id: str
     label: str
@@ -47,6 +53,7 @@ class CoveragePullModel(ViewModelBase):
     lanes: List[CoverageLaneModel]
     url: str
     pressure: List[Dict[str, Any]]
+    deaths: List[CoverageDeathModel] = Field(default_factory=list)
     warnings: List[str]
 
 

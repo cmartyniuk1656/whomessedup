@@ -1,0 +1,1042 @@
+{
+  "source": "fCqgJN7QMWA2vFbT, fight 15; real Rain boundary/tick samples and all Frost Orb events; players anonymized",
+  "fight": {
+    "id": 15,
+    "name": "Nymrissa Wavecaller",
+    "start": 4228388.0,
+    "end": 4352215.0,
+    "kill": false,
+    "difficulty": 5,
+    "encounter_id": 3379,
+    "friendly_player_ids": [
+      45,
+      145,
+      146,
+      9,
+      59,
+      124,
+      49,
+      56,
+      7,
+      148,
+      36,
+      361,
+      5,
+      1,
+      15,
+      363,
+      47,
+      2,
+      8,
+      43,
+      18,
+      42,
+      37,
+      147,
+      58
+    ],
+    "friendly_specs": [
+      "Arms",
+      "Restoration",
+      "Blood",
+      "Arcane",
+      "Windwalker",
+      "Unholy",
+      "Affliction",
+      "Arms",
+      "Frost",
+      "Arcane",
+      "Survival",
+      "Balance",
+      "Affliction",
+      "Arms",
+      "Elemental",
+      "Preservation",
+      "Subtlety",
+      "Shadow",
+      "Survival",
+      "Protection",
+      "Retribution",
+      "Vengeance",
+      "BeastMastery",
+      "Holy",
+      "Restoration"
+    ]
+  },
+  "names": {
+    "45": "Player 1",
+    "145": "Player 2",
+    "146": "Player 3",
+    "9": "Player 4",
+    "59": "Player 5",
+    "124": "Player 6",
+    "49": "Player 7",
+    "56": "Player 8",
+    "7": "Player 9",
+    "148": "Player 10",
+    "36": "Player 11",
+    "361": "Player 12",
+    "5": "Player 13",
+    "1": "Player 14",
+    "15": "Player 15",
+    "363": "Player 16",
+    "47": "Player 17",
+    "2": "Player 18",
+    "8": "Player 19",
+    "43": "Player 20",
+    "18": "Player 21",
+    "42": "Player 22",
+    "37": "Player 23",
+    "147": "Player 24",
+    "58": "Player 25"
+  },
+  "damage": [
+    {
+      "timestamp": 4239387,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 37,
+      "amount": 139412,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4241387,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 158344,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4243427,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 7,
+      "amount": 43279,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4245412,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 58,
+      "amount": 73258,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4247414,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 58,
+      "amount": 73258,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4249416,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 58,
+      "amount": 73257,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4251388,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 58,
+      "amount": 77933,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4253403,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 361,
+      "amount": 76001,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4255390,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 23403,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4257405,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 148,
+      "amount": 0,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4259394,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 77645,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4261396,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 77645,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4263409,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 5,
+      "amount": 60694,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4265379,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 124,
+      "amount": 1729,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4266429,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 9,
+      "amount": 32771,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4272418,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 47,
+      "amount": 152035,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4274456,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "hitType": 0
+    },
+    {
+      "timestamp": 4274535,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 172998,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4274537,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 172999,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4274708,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 8,
+      "amount": 172056,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4276081,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "hitType": 0
+    },
+    {
+      "timestamp": 4276409,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 67176,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4276563,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 289291,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4276673,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 8,
+      "amount": 121647,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4278259,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "hitType": 0
+    },
+    {
+      "timestamp": 4278423,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 67198,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4278546,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 290270,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4278690,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 8,
+      "amount": 114348,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4278980,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "hitType": 0
+    },
+    {
+      "timestamp": 4280438,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 147,
+      "amount": 70078,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4280544,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 292230,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4280712,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 8,
+      "amount": 76060,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4281338,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "hitType": 0
+    },
+    {
+      "timestamp": 4281451,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "hitType": 0
+    },
+    {
+      "timestamp": 4281552,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "hitType": 0
+    },
+    {
+      "timestamp": 4282406,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 63325,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4282534,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 292230,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4282691,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 8,
+      "amount": 121533,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4284433,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 32289,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4284548,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 277459,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4284692,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 8,
+      "amount": 108529,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4286405,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 66880,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4286540,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 363,
+      "amount": 276802,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4286691,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 8,
+      "amount": 114240,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4288419,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 56718,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4290424,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 49,
+      "amount": 58590,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4292414,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 2,
+      "amount": 64283,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4294430,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 59,
+      "amount": 72022,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4296408,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 9,
+      "amount": 67625,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4298420,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 15,
+      "amount": 28022,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4299445,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 38328,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4315132,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 56,
+      "amount": 151645,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4316383,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 0,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4317146,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 56,
+      "amount": 74805,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4318364,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 361,
+      "amount": 177166,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4319074,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 0,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4319124,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 56,
+      "amount": 88504,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4320365,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 147,
+      "amount": 77938,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4320429,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 170201,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4320941,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 92579,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4320943,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 92579,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4321070,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 208268,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4321119,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 56,
+      "amount": 91906,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4322391,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 67352,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4322437,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 114867,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4323060,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 197109,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4323125,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 56,
+      "amount": 92220,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4324375,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 79139,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4324419,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 134968,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4325063,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 0,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4325131,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 56,
+      "amount": 125997,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4326374,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 147,
+      "amount": 65936,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4326416,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 143583,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4327069,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 189057,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4327150,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 56,
+      "amount": 126849,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4327663,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 112053,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4328380,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 15,
+      "amount": 82281,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4328411,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 134968,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4329059,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 277798,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4330376,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 79138,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4330430,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 134968,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4331071,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 466962,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4332380,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 37,
+      "amount": 70230,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4332418,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 1,
+      "amount": 143583,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4333064,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 231363,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4334380,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 37,
+      "amount": 78626,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4335101,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 233772,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4336379,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 58,
+      "amount": 85894,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4337055,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 0,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4338377,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 36,
+      "amount": 0,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4339073,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 239853,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4339404,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 15,
+      "amount": 192410,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4339658,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 70596,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4339810,
+      "type": "damage",
+      "abilityGameID": 1313448,
+      "sourceID": 370,
+      "targetID": 15,
+      "amount": 230893,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4340400,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 15,
+      "amount": 28055,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4342377,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 37,
+      "amount": 75352,
+      "tick": true,
+      "hitType": 1
+    },
+    {
+      "timestamp": 4343381,
+      "type": "damage",
+      "abilityGameID": 1260843,
+      "sourceID": 370,
+      "targetID": 42,
+      "amount": 28253,
+      "tick": true,
+      "hitType": 1
+    }
+  ]
+}

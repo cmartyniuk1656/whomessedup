@@ -1,21 +1,12 @@
 /** One boss lane. Crowded casts open a chooser with their exact timestamps. */
-import { useEffect, useRef, useState } from "react";
+import { useTimelineTrackWidth } from "../../../hooks/useTimelineTrackWidth";
 import {
   clusterBossCasts,
   preciseCoverageTime,
 } from "../../../utils/coverageTimeline";
 
 export function BossAbilityLane({ lanes, duration, onInspect }) {
-  const track = useRef(null);
-  const [width, setWidth] = useState(1000);
-  useEffect(() => {
-    if (!globalThis.ResizeObserver) return;
-    const observer = new ResizeObserver(([entry]) =>
-      setWidth(entry.contentRect.width || 1000),
-    );
-    observer.observe(track.current);
-    return () => observer.disconnect();
-  }, []);
+  const { track, width } = useTimelineTrackWidth();
   const groups = clusterBossCasts(lanes, duration, width);
   return (
     <div className="coverage-row coverage-row-boss">

@@ -22,6 +22,7 @@ export function useCoverageTimeline(pull, binSeconds) {
     setSelection(next);
     if (next?.event) setCursor(next.event.time);
     if (next?.coverage) setCursor(next.coverage.start);
+    if (next?.deaths?.length) setCursor(next.deaths[0].time);
   };
   const toggleBoss = (id) =>
     setBossIds((current) =>

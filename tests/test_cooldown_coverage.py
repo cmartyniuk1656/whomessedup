@@ -97,10 +97,27 @@ class CoverageTests(unittest.TestCase):
         _, payload, fresh = build_report_job_request("vashnik-the-malignant-cooldown-coverage-mythic", {"report_codes": ["abcdefghijklmnop"], "fresh_run": True})
         self.assertEqual(payload["encounter_id"], 3455)
         self.assertEqual(payload["difficulty"], "mythic")
+        self.assertEqual(payload["coverage_version"], 3)
         self.assertTrue(fresh)
         pull = {**self.build({}), "label": "Pull 1"}
         page = build_cooldown_coverage_page({"boss": "Boss", "patch": "12.1", "binSeconds": 2, "pulls": [pull]}, reports[0].id)
         self.assertEqual(page.model_dump(by_alias=True)["content"]["timeline"]["pulls"][0]["fightId"], 1)
+
+    def test_death_markers_exclude_pets_and_preserve_repeat_deaths_and_pull_boundaries(self):
+        events = [self.event(0, time, kind=kind, targetID=target) for target, time, kind in [
+            (1, 0, "death"), (2, 20.125, "death"), (2, 20.125, "instakill"),
+            (99, 20, "death"), (1, -1, "death"), (1, 301, "death"),
+            (1, 30, "resurrect"), (1, 300, "death")]]
+        events.append({"type": "death", "targetID": 1, "timestamp": None})
+        pull = {**self.build({"deaths": list(reversed(events))}), "label": "Pull 1"}
+        self.assertEqual(pull["deaths"], [
+            {"time": 0, "playerId": 1, "player": "Healer"},
+            {"time": 20.125, "playerId": 2, "player": "DPS"},
+            {"time": 300, "playerId": 1, "player": "Healer"}])
+        page = build_cooldown_coverage_page({"boss": "Boss", "patch": "12.1", "binSeconds": 2, "pulls": [pull]}, "test")
+        self.assertEqual(page.model_dump(by_alias=True)["content"]["timeline"]["pulls"][0]["deaths"], pull["deaths"])
+        shifted = Fight(2, self.fight.name, 120000, 140000, False, 5, 3455, (1, 2))
+        self.assertEqual(self.build({"deaths": events}, shifted)["deaths"], [{"time": .125, "playerId": 2, "player": "DPS"}])
 
     @patch("who_messed_up.services.cooldown_coverage._fetch_ability_labels", return_value={})
     @patch("who_messed_up.services.cooldown_coverage.fetch_event_streams")
@@ -113,3 +130,4 @@ class CoverageTests(unittest.TestCase):
         result = fetch_cooldown_coverage(report_codes=["abcdefghijklmnop"], encounter_id=3455, difficulty="mythic", token="test")
         self.assertEqual([p["fightId"] for p in result["pulls"]], [1, 2])
         self.assertEqual(streams.call_args.kwargs["streams"]["bossCasts"]["hostility_type"], "Enemies")
+        self.assertEqual(streams.call_args.kwargs["streams"]["deaths"]["data_type"], "Deaths")

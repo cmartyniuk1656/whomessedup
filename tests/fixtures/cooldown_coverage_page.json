@@ -2055,7 +2055,104 @@
           ],
           "reportCode": "J3y9gP2bqmkphY7f",
           "url": "https://www.warcraftlogs.com/reports/J3y9gP2bqmkphY7f?fight=15",
-          "warnings": []
+          "warnings": [],
+          "deaths": [
+            {
+              "time": 49.342,
+              "playerId": 21,
+              "player": "Sample Player 21"
+            },
+            {
+              "time": 71.337,
+              "playerId": 40,
+              "player": "Sample Player 40"
+            },
+            {
+              "time": 74.416,
+              "playerId": 67,
+              "player": "Sample Player 67"
+            },
+            {
+              "time": 75.426,
+              "playerId": 14,
+              "player": "Sample Player 14"
+            },
+            {
+              "time": 75.458,
+              "playerId": 28,
+              "player": "Sample Player 28"
+            },
+            {
+              "time": 81.528,
+              "playerId": 19,
+              "player": "Sample Player 19"
+            },
+            {
+              "time": 82.522,
+              "playerId": 10,
+              "player": "Sample Player 10"
+            },
+            {
+              "time": 83.232,
+              "playerId": 142,
+              "player": "Sample Player 142"
+            },
+            {
+              "time": 83.371,
+              "playerId": 4,
+              "player": "Sample Player 4"
+            },
+            {
+              "time": 83.658,
+              "playerId": 65,
+              "player": "Sample Player 65"
+            },
+            {
+              "time": 87.298,
+              "playerId": 3,
+              "player": "Sample Player 3"
+            },
+            {
+              "time": 92.26,
+              "playerId": 13,
+              "player": "Sample Player 13"
+            },
+            {
+              "time": 92.848,
+              "playerId": 6,
+              "player": "Sample Player 6"
+            },
+            {
+              "time": 93.229,
+              "playerId": 1,
+              "player": "Sample Player 1"
+            },
+            {
+              "time": 93.936,
+              "playerId": 16,
+              "player": "Sample Player 16"
+            },
+            {
+              "time": 94.451,
+              "playerId": 41,
+              "player": "Sample Player 41"
+            },
+            {
+              "time": 94.625,
+              "playerId": 18,
+              "player": "Sample Player 18"
+            },
+            {
+              "time": 96.343,
+              "playerId": 39,
+              "player": "Sample Player 39"
+            },
+            {
+              "time": 96.344,
+              "playerId": 7,
+              "player": "Sample Player 7"
+            }
+          ]
         },
         {
           "duration": 287.846,
@@ -7859,7 +7956,119 @@
           ],
           "reportCode": "J3y9gP2bqmkphY7f",
           "url": "https://www.warcraftlogs.com/reports/J3y9gP2bqmkphY7f?fight=16",
-          "warnings": []
+          "warnings": [],
+          "deaths": [
+            {
+              "time": 80.926,
+              "playerId": 4,
+              "player": "Sample Player 4"
+            },
+            {
+              "time": 145.805,
+              "playerId": 7,
+              "player": "Sample Player 7"
+            },
+            {
+              "time": 147.523,
+              "playerId": 1,
+              "player": "Sample Player 1"
+            },
+            {
+              "time": 150.167,
+              "playerId": 18,
+              "player": "Sample Player 18"
+            },
+            {
+              "time": 256.799,
+              "playerId": 39,
+              "player": "Sample Player 39"
+            },
+            {
+              "time": 260.837,
+              "playerId": 2,
+              "player": "Sample Player 2"
+            },
+            {
+              "time": 265.481,
+              "playerId": 6,
+              "player": "Sample Player 6"
+            },
+            {
+              "time": 266.158,
+              "playerId": 14,
+              "player": "Sample Player 14"
+            },
+            {
+              "time": 266.16,
+              "playerId": 1,
+              "player": "Sample Player 1"
+            },
+            {
+              "time": 266.161,
+              "playerId": 28,
+              "player": "Sample Player 28"
+            },
+            {
+              "time": 266.163,
+              "playerId": 41,
+              "player": "Sample Player 41"
+            },
+            {
+              "time": 266.164,
+              "playerId": 142,
+              "player": "Sample Player 142"
+            },
+            {
+              "time": 266.164,
+              "playerId": 40,
+              "player": "Sample Player 40"
+            },
+            {
+              "time": 279.523,
+              "playerId": 19,
+              "player": "Sample Player 19"
+            },
+            {
+              "time": 279.858,
+              "playerId": 67,
+              "player": "Sample Player 67"
+            },
+            {
+              "time": 281.359,
+              "playerId": 13,
+              "player": "Sample Player 13"
+            },
+            {
+              "time": 281.523,
+              "playerId": 65,
+              "player": "Sample Player 65"
+            },
+            {
+              "time": 281.768,
+              "playerId": 3,
+              "player": "Sample Player 3"
+            },
+            {
+              "time": 282.161,
+              "playerId": 4,
+              "player": "Sample Player 4"
+            },
+            {
+              "time": 284.721,
+              "playerId": 16,
+              "player": "Sample Player 16"
+            },
+            {
+              "time": 286.822,
+              "playerId": 10,
+              "player": "Sample Player 10"
+            },
+            {
+              "time": 287.523,
+              "playerId": 21,
+              "player": "Sample Player 21"
+            }
+          ]
         }
       ]
     },

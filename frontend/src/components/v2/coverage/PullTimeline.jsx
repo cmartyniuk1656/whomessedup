@@ -12,6 +12,7 @@ import { CoverageToolbar } from "./CoverageToolbar";
 import { PressureGraph } from "./PressureGraph";
 import { PressureShading } from "./PressureShading";
 import { RaidCoverageStrip } from "./RaidCoverageStrip";
+import { DeathMarkers } from "./DeathMarkers";
 
 export function PullTimeline({ pull, binSeconds }) {
   const state = useCoverageTimeline(pull, binSeconds);
@@ -120,6 +121,11 @@ export function PullTimeline({ pull, binSeconds }) {
               </div>
             </div>
           )}
+          <DeathMarkers
+            deaths={pull.deaths || []}
+            duration={pull.duration}
+            onInspect={inspect}
+          />
           <RaidCoverageStrip
             segments={state.segments}
             duration={pull.duration}

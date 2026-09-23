@@ -8,6 +8,8 @@ Click a healer cast to open a compact efficiency drawer: effective direct healin
 
 ## Data and interpretation
 
+- A slim death track below the pressure graph marks every recorded player death at its pull-relative time, including repeat deaths after resurrection. Nearby markers group with a count badge; hover lists names and precise times, and click opens a compact list. Markers remain visible with pressure hidden or a single healer selected. Pets and out-of-pull events are excluded. Deaths use the existing paginated event-stream service, with no first-deaths cutoff. Cache version 3 ensures fresh results include death markers.
+
 - `who_messed_up/data/cooldown_coverage/` preserves the supplied research and its provenance: 24 healer cooldowns and 68 boss abilities across nine bosses. This is the supplied catalogue, not a claim to include every encounter-journal spell or raid defensive.
 - Recorded friendly and enemy casts are queried separately and grouped by fight. A successful `cast` is used, rather than also counting `begincast`. All pages are fetched through the existing bounded event-stream service.
 - Combatant talent entry IDs are translated using the versioned `talent-entry-map.json`, extracted from SimulationCraft's 12.1 game-data export. Both entry and node IDs must match; ranks and mutually excluded variants are respected. Unknown mappings fall back to nominal timing. No runtime request to an external talent database is needed.
@@ -29,6 +31,7 @@ Click a healer cast to open a compact efficiency drawer: effective direct healin
 - Backend: `.venv/Scripts/python.exe -m pytest -q`.
 - Frontend: `npm run build`, `npm run test:coverage`, and focused ESLint checks. The React Testing Library/jsdom test checks pull isolation, boss icon filters, healer filtering without changing raid coverage, gap inspection, effectiveness measurements, overlay/readiness toggles, zoom, keyboard dismissal and the ability inspector. Geometry checks distinguish instant casts and Stasis preparation from sustained coverage and preserve clustered boss timestamps.
 - Backend calculation tests cover pet attribution, player targets, overheal denominators, shield consumption, preceding pressure, window clipping, overlaps, estimated hold time, and missing data.
+- Death marker checks cover player-only filtering, duplicate events, repeat deaths, pull boundaries and serialization. The render fixture includes real death times from two pulls; interaction checks cover hover labels, click details, pull changes and filter independence. Boss and death tracks share `useTimelineTrackWidth` and `clusterTimelineEvents` so markers regroup consistently on zoom/resize.
 - Live snapshot cases: `cooldown_coverage_sentinels_mythic` and `cooldown_coverage_vashnik_mythic` in `scripts/capture_regressions.py`.
 - The checked-in render fixture contains two real Entombed Sentinels pulls with healer names replaced by sample labels. Its different Shifting Protovenom times (36.205 and 36.378 seconds) ensure that the displayed pull does not mix in another pull's events.
 - The effectiveness update was additionally verified against 297 measured cooldown uses across 15 Sentinels/Vashnik pulls, including consumed defensive shields.
