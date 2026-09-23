@@ -1038,5 +1038,49 @@
       "tick": true,
       "hitType": 1
     }
+  ],
+  "channels": [
+    {
+      "timestamp": 4238376,
+      "type": "applybuff",
+      "abilityGameID": 1260837,
+      "sourceID": 370,
+      "targetID": 370
+    },
+    {
+      "timestamp": 4242398,
+      "type": "removebuff",
+      "abilityGameID": 1260837,
+      "sourceID": 370,
+      "targetID": 370
+    },
+    {
+      "timestamp": 4271380,
+      "type": "applybuff",
+      "abilityGameID": 1260837,
+      "sourceID": 370,
+      "targetID": 370
+    },
+    {
+      "timestamp": 4275391,
+      "type": "removebuff",
+      "abilityGameID": 1260837,
+      "sourceID": 370,
+      "targetID": 370
+    },
+    {
+      "timestamp": 4315350,
+      "type": "applybuff",
+      "abilityGameID": 1260837,
+      "sourceID": 370,
+      "targetID": 370
+    },
+    {
+      "timestamp": 4319376,
+      "type": "removebuff",
+      "abilityGameID": 1260837,
+      "sourceID": 370,
+      "targetID": 370
+    }
   ]
 }

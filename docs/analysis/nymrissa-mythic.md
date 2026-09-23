@@ -4,9 +4,9 @@ Report: `nymrissa-wavecaller-mythic-mechanics`. Sample: [fCqgJN7QMWA2vFbT](https
 
 ## Requested timing rule
 
-Flag a player orb pop during **raid damage from Abyssal Rain, including its lingering DoT**, plus **one second before and after**, inclusive. The rule follows the user's clarification; it does not stop when the boss finishes channeling.
+Flag a player orb pop during **the Abyssal Rain channel**, plus **one second before and after**, inclusive. The lingering raid DoT is excluded, following the user's corrected requirement.
 
-Windows use actual player-targeted damage events for `1260843`. Consecutive hits no more than 2.5 seconds apart form one window, allowing jitter around the two-second DoT cadence. The first and last observed hits determine its endpoints. No scripted boss offsets or assumed full DoT duration are substituted. Missing data, deaths and wipe truncation can shorten observed windows. The report explains that being outside a recorded window is not proof of safe timing.
+Windows use the boss's observed `1260837` channel buff application and removal. Cast windup is not included. When a complete pair is unavailable, the report labels a conservative fallback using only non-periodic `1260843` direct damage pulses, grouping hits at most 1.5 seconds apart. Periodic Rain ticks never create or extend a window. Direct pulse groups overlapping an observed channel (with 250 ms impact tolerance) do not create duplicate windows. Missing boundaries and wipe truncation can shorten fallback windows; being outside a recorded window is not proof of safe timing. Request payload `mechanics_version: 2` prevents reuse of cached reports generated under the old DoT-inclusive rule.
 
 `1313448` non-periodic Frost Orb impacts identify soakers, including immune and fully absorbed impacts. Periodic `tick: true` rows do not represent new pops. Two separate impacts on the same player two milliseconds apart remain two pops. Debuff applications corroborate contacts but are insufficient alone: immune players can trigger raid bursts without gaining the debuff. Aura stacks and refreshes must not be counted again.
 
@@ -14,16 +14,16 @@ Windows use actual player-targeted damage events for `1260843`. Consecutive hits
 
 ## Observed results
 
-| Fight | Rain damage windows | Orb pops | Flagged pops |
+| Fight | Rain channel windows | Orb pops | Flagged pops |
 | --- | ---: | ---: | ---: |
-| 15 | 3 | 17 | 16 |
-| 16 | 3 | 17 | 17 |
-| 17 | 4 | 17 | 16 |
-| 18 | 7 | 54 | 53 |
-| 19 | 7 | 46 | 45 |
-| Total | 24 | 151 | 147 |
+| 15 | 3 | 17 | 6 |
+| 16 | 3 | 17 | 8 |
+| 17 | 4 | 17 | 8 |
+| 18 | 7 | 54 | 13 |
+| 19 | 7 | 46 | 6 |
+| Total | 24 | 151 | 41 |
 
-146 flagged pops are inside observed damage windows and one is within the preceding one-second buffer. None fall only in the following buffer. These are timing review flags, not automatic fault scores.
+34 flagged pops are inside observed channels, three are within the preceding one-second buffer, and four are within the following buffer. These are timing review flags, not automatic fault scores. All 24 windows in this original five-pull sample have paired channel boundaries. The original deployed DoT-inclusive rule flagged 147 pops; the corrected channel-only rule flags 41.
 
 The sample has 601 Frost Orb damage events: 151 initial impacts and 450 periodic ticks. Forty-two initial impacts have immune/miss hit type 0. All 102 observed debuff applications/stack increases have a matching initial impact within 100 ms. All raid Frost Burst hits have an initial orb impact within 150 ms; that proximity validates attribution in this sample but is not used to merge distinct contacts.
 
@@ -57,14 +57,14 @@ The [Mythic Trap guide](https://www.mythictrap.com/en/venomous-abyss/nymrissa-wa
 ## Implementation and validation
 
 - `services/nymrissa_mechanics.py`: bounded, paginated event fetching and multi-report merge.
-- `services/nymrissa_mechanics_orbs.py`: pure per-pull damage-window and contact analysis.
+- `services/nymrissa_mechanics_orbs.py`: pure per-pull channel-window and contact analysis.
 - `services/nymrissa_mechanics_models.py`: spell IDs, timing constants and report vocabulary.
 - `services/view_models/nymrissa_mechanics.py`: compact shared tables, player bars, pull selection and expanded timing evidence. The API indexes serialized rows using the existing transport helper.
 - `services/manifests/midnight_season_2/nymrissa_wavecaller.py`: audited boss metadata, registered through the season and central manifest registries.
 - `app.py`, `services/report_registry.py`, `service.py`: catalog/job integration and public service exports.
-- `tests/test_nymrissa_mechanics.py` and `tests/fixtures/nymrissa_orb_rain.json`: exact buffer boundaries, periodic/immune attribution, repeated impacts, source/pull isolation, recorded pull and rendering contracts. The fixture anonymizes players and retains real Rain boundary/tick samples plus every Frost Orb event from fight 15.
+- `tests/test_nymrissa_mechanics.py` and `tests/fixtures/nymrissa_orb_rain.json`: exact buffer boundaries, DoT exclusion, missing channel boundaries, delayed direct impacts, periodic/immune attribution, repeated impacts, source/pull isolation, recorded pull and rendering contracts. The fixture anonymizes players and retains real channel buff boundaries, Rain tick samples and every Frost Orb event from fight 15.
 - `scripts/capture_regressions.py --case nymrissa_mythic_mechanics`: fresh API smoke test against the supplied report. Also compare `ghosts_first_per_set`, `nexus_phase_damage_full` and `dimensius_add_damage_default` with their baselines.
 
 Validation commands: `.venv/Scripts/python.exe -m compileall -q app.py who_messed_up`; focused pytest for Nymrissa, manifests, existing mechanics and cooldown coverage; `npm run build` in `frontend`; the regression captures above.
 
-Validated locally on 2026-09-22: 96 focused tests passed; compilation and frontend build passed. A fresh WCL API job exactly matched the researched page after row indexing. All three legacy regression snapshots matched their pre-change baselines. SSR/DOM checks exercised expanded evidence, player bars, pull selection, Rain windows and all-pop views. Changes have not been deployed.
+The original DoT-inclusive release passed 96 focused tests, compilation, frontend build and SSR/DOM interaction checks, and was deployed as `e59c41d`. The channel-only correction passes 99 focused tests, compilation and report rendering checks. A fresh query matched every original pull across 45 views and found observed channel boundaries for every window. The live source had grown to eight pulls at this check, yielding 57 flagged pops (44 during channels, eight in the preceding buffer, five in the following buffer). All three legacy regression snapshots remained unchanged. Deployment evidence is recorded in the VPS operations runbook.

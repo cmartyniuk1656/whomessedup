@@ -10,7 +10,10 @@ from .nymrissa_mechanics_models import REPORT_DEFAULT_FIGHT, VIEWS, NymrissaMech
 from .nymrissa_mechanics_orbs import build_orb_sets
 from .report_pulls import build_report_pulls, merge_report_pulls
 
-STREAM_SPECS = {"damage": dict(data_type="DamageTaken", extra_filter="ability.id in (1260843,1313448)")}
+STREAM_SPECS = {
+    "damage": dict(data_type="DamageTaken", extra_filter="ability.id in (1260843,1313448)"),
+    "channels": dict(data_type="Buffs", hostility_type="Enemies", extra_filter="ability.id = 1260837"),
+}
 
 
 def build_nymrissa_mechanics_summary(*, report_code, fights, streams, actor_names, actor_classes, actor_owners):

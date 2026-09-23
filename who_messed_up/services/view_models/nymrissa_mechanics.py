@@ -9,7 +9,7 @@ COLUMNS = {
     "orbs": [("soakers", "Player", "player_list"), ("timing", "Timing", "heading")],
 }
 METRICS = {
-    "overlaps": [("pops", "Flagged pops"), ("during", "During damage"),
+    "overlaps": [("pops", "Flagged pops"), ("during", "During channel window"),
                  ("before", "Within 1s before"), ("after", "Within 1s after")],
     "rain": [("pops", "Flagged pops")],
     "orbs": [("pops", "All orb pops"), ("flagged", "Flagged pops")],

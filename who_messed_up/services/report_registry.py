@@ -990,7 +990,8 @@ def _build_vashnik_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, 
 def _build_nymrissa_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     report_codes = _coerce_report_code_list(values)
     return ({"report": report_codes[0], "extra_reports": report_codes[1:],
-             "fight": REPORT_NYMRISSA_MECHANICS_DEFAULT_FIGHT, "difficulty": "mythic"},
+             "fight": REPORT_NYMRISSA_MECHANICS_DEFAULT_FIGHT, "difficulty": "mythic",
+             "mechanics_version": 2},
             _coerce_bool(values, "fresh_run", default=False))
 
 

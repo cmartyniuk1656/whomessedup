@@ -8,7 +8,7 @@ from who_messed_up.api import Fight
 from who_messed_up.services.boss_manifests import get_boss_manifest
 from who_messed_up.services.mechanics_context import PullContext
 from who_messed_up.services.nymrissa_mechanics import build_nymrissa_mechanics_summary, fetch_nymrissa_mechanics_summary
-from who_messed_up.services.nymrissa_mechanics_models import FROST_ORB, RAIN_DAMAGE, REPORT_ID
+from who_messed_up.services.nymrissa_mechanics_models import FROST_ORB, RAIN_CHANNEL, RAIN_DAMAGE, REPORT_ID
 from who_messed_up.services.nymrissa_mechanics_orbs import build_orb_sets
 from who_messed_up.services.report_registry import build_report_job_request
 from who_messed_up.services.view_models.nymrissa_mechanics import build_nymrissa_mechanics_report_page
@@ -16,6 +16,10 @@ from who_messed_up.services.view_models.nymrissa_mechanics import build_nymrissa
 
 def event(at, aid=FROST_ORB, target=1, **extra):
     return dict(timestamp=at, type="damage", abilityGameID=aid, targetID=target, sourceID=90, **extra)
+
+
+def channel_event(at, kind):
+    return {**event(at, RAIN_CHANNEL, target=90), "type": kind}
 
 
 def context(events=()):
@@ -31,15 +35,20 @@ def summary_for(ctx):
         actor_names=ctx.names, actor_classes={1: "Mage", 2: "Priest"}, actor_owners=ctx.owners)
 
 
-def test_rain_includes_lingering_damage_and_exact_one_second_buffers():
-    ctx = context([event(t, RAIN_DAMAGE, tick=True) for t in range(10000, 38001, 2000)] +
-                  [event(t) for t in (8999, 9000, 9999, 10000, 30000, 38000, 38001, 39000, 39001)])
+def test_channel_excludes_lingering_damage_and_keeps_exact_one_second_buffers():
+    ctx = context([event(t, RAIN_DAMAGE) for t in range(11000, 14001, 1000)] +
+                  [event(t, RAIN_DAMAGE, tick=True) for t in range(13000, 38001, 2000)] +
+                  [event(t) for t in (8999, 9000, 9999, 10000, 14000, 14001, 15000, 15001, 30000)])
+    ctx.streams["channels"] = [channel_event(8000, "begincast"), channel_event(10000, "applybuff"),
+                               channel_event(14000, "removebuff")]
     sets = build_orb_sets(ctx)
-    assert len(sets["orbs"]) == 9 and len(sets["overlaps"]) == 7
+    assert len(sets["orbs"]) == 9 and len(sets["overlaps"]) == 6
     rain, = sets["rain"]
-    assert (rain.values["during"], rain.values["before"], rain.values["after"]) == (3, 2, 2)
-    assert rain.values["pops"] == 7
-    assert rain.soak_counts == {"Alice": 7}
+    assert (rain.values["during"], rain.values["before"], rain.values["after"]) == (2, 2, 2)
+    assert rain.values["pops"] == 6
+    assert rain.soak_counts == {"Alice": 6}
+    assert rain.values["duration"] == 4
+    assert rain.details[0].label == "Observed channel"
 
 
 def test_immune_and_simultaneous_contacts_count_but_dot_and_raid_victims_do_not():
@@ -61,16 +70,42 @@ def test_missing_rain_is_not_invented_and_other_sources_or_pulls_are_excluded():
     sets = build_orb_sets(ctx)
     assert not sets["rain"] and not sets["overlaps"]
     assert len(sets["orbs"]) == 1
-    assert sets["orbs"][0].values["timing"] == "Outside recorded Rain"
+    assert sets["orbs"][0].values["timing"] == "Outside recorded channel"
 
 
-def test_tick_gaps_split_windows_and_pull_end_clips_display():
-    ctx = context([event(10000, RAIN_DAMAGE), event(12500, RAIN_DAMAGE),
-                   event(15001, RAIN_DAMAGE), event(60000, RAIN_DAMAGE), event(60000)])
+def test_direct_pulse_fallback_excludes_dot_and_pull_end_clips_display():
+    ctx = context([event(10000, RAIN_DAMAGE), event(11500, RAIN_DAMAGE),
+                   event(13001, RAIN_DAMAGE), event(14500, RAIN_DAMAGE, tick=True),
+                   event(60000, RAIN_DAMAGE), event(60000)])
     sets = build_orb_sets(ctx)
     assert len(sets["rain"]) == 3
-    assert sets["rain"][0].values["duration"] == 2.5
+    assert sets["rain"][0].values["duration"] == 1.5
+    assert sets["rain"][0].details[0].label == "Direct damage fallback"
     assert "to 1:00.00 (one-second buffer)" in sets["rain"][-1].details[0].description
+
+
+def test_dot_alone_does_not_create_channel_or_flag_pops():
+    sets = build_orb_sets(context([event(20000, RAIN_DAMAGE, tick=True), event(20000)]))
+    assert not sets["rain"] and not sets["overlaps"]
+    assert len(sets["orbs"]) == 1
+
+
+def test_unpaired_channel_uses_direct_pulses_without_extending_through_dot():
+    ctx = context([event(11000, RAIN_DAMAGE), event(12000, RAIN_DAMAGE),
+                   event(14000, RAIN_DAMAGE, tick=True), event(14000)])
+    ctx.streams["channels"] = [channel_event(10000, "applybuff")]
+    sets = build_orb_sets(ctx)
+    assert len(sets["rain"]) == 1 and not sets["overlaps"]
+    assert sets["rain"][0].details[0].label == "Direct damage fallback"
+
+
+def test_channel_buff_wins_over_late_damage_and_does_not_duplicate_window():
+    ctx = context([event(11000, RAIN_DAMAGE), event(12000, RAIN_DAMAGE),
+                   event(13000, RAIN_DAMAGE), event(14190, RAIN_DAMAGE), event(15100)])
+    ctx.streams["channels"] = [channel_event(10000, "applybuff"), channel_event(14000, "removebuff")]
+    sets = build_orb_sets(ctx)
+    assert len(sets["rain"]) == 1 and not sets["overlaps"]
+    assert sets["rain"][0].values["duration"] == 4
 
 
 def test_recorded_pull_preserves_immune_contacts_and_close_double_soaks():
@@ -78,10 +113,13 @@ def test_recorded_pull_preserves_immune_contacts_and_close_double_soaks():
     ctx = context(data["damage"])
     ctx.fight = Fight(**data["fight"])
     ctx.names = {int(k): v for k, v in data["names"].items()}
+    ctx.streams["channels"] = data["channels"]
     sets = build_orb_sets(ctx)
-    assert {k: len(v) for k, v in sets.items()} == {"overlaps": 16, "rain": 3, "orbs": 17}
-    assert [r.values["pops"] for r in sets["rain"]] == [0, 9, 7]
-    assert all(r.values["during"] == 1 for r in sets["overlaps"])
+    assert len(sets["orbs"]) == 17 and len(sets["rain"]) == 3
+    assert len(sets["overlaps"]) == 6
+    assert [r.values["pops"] for r in sets["rain"]] == [0, 4, 2]
+    assert all(r.values["duration"] < 4.1 for r in sets["rain"])
+    assert all(r.details[0].label == "Observed channel" for r in sets["rain"])
     assert len([e for e in data["damage"] if e["abilityGameID"] == FROST_ORB and not e.get("tick") and e.get("hitType") == 0]) > 0
 
 
@@ -122,6 +160,7 @@ def test_registry_and_manifest_cover_observed_damage_without_blaming_raid_victim
     job, payload, fresh = build_report_job_request(REPORT_ID, {"report_codes": ["fCqgJN7QMWA2vFbT"], "fresh_run": True})
     assert job == "v2_report_nymrissa_mechanics" and fresh
     assert payload["difficulty"] == "mythic"
+    assert payload["mechanics_version"] == 2  # Old DoT-based cached reports must not be reused.
     manifest = get_boss_manifest("nymrissa-wavecaller", "mythic")
     assert len(manifest.targets) == 4
     assert {a.game_id for a in manifest.abilities} == {
