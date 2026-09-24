@@ -68,6 +68,12 @@ class DefensiveAbilityModel(ViewModelBase):
     events: List[DefensiveEventModel]
 
 
+class DefensiveHealthPointModel(ViewModelBase):
+    time: float
+    percent: float
+    break_before: bool = Field(False, alias="breakBefore")
+
+
 class DefensivePlayerModel(ViewModelBase):
     id: str
     actor_id: int = Field(alias="actorId")
@@ -77,6 +83,7 @@ class DefensivePlayerModel(ViewModelBase):
     role: str
     lanes: List[DefensiveAbilityModel]
     pressure: List[Dict[str, Any]]
+    health: List[DefensiveHealthPointModel] = Field(default_factory=list)
     deaths: List[CoverageDeathModel]
     build_known: bool = Field(alias="buildKnown")
 

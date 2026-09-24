@@ -106,3 +106,18 @@
 .defensive-hidden-players label:hover, .defensive-hidden-players label:focus-within { background: #1a2d3e; border-color: #5c897d; }
 .defensive-hidden-players strong { display: block; color: #afc0d2; font-size: 11px; }
 .defensive-hidden-players small { display: block; color: #8394a9; font-size: 10px; margin-top: 3px; }
+
+/* Health remains legible above the faint damage backdrop and below cast controls. */
+.defensive-health-overlay, .defensive-health-aligned { position: absolute; inset: 0; pointer-events: none; }
+.defensive-health-overlay { z-index: 1; }
+.defensive-health-overlay svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.defensive-health-overlay > span { position: absolute; right: 3px; color: #c1848c; font: 9px/1.1 system-ui; background: #0c1622d9; padding: 1px 2px; border-radius: 2px; }
+.defensive-health-max { top: 2px; }
+.defensive-health-min { bottom: 2px; }
+.defensive-report .coverage-graph-track > .defensive-health-overlay { top: 10px; }
+.defensive-health-swatch { width: 14px; height: 2px; background: #ff63748c; flex-shrink: 0; margin-top: 7px; }
+.defensive-health-readout { color: #ff94a0; }
+
+.defensive-graph-key-item.is-filter { cursor: pointer; }
+.defensive-graph-key-item.is-filter input { margin-top: 2px; flex-shrink: 0; }
+.defensive-graph-key-item.is-off { opacity: .55; }

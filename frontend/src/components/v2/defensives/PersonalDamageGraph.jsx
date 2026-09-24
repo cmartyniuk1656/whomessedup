@@ -2,17 +2,32 @@
 import { coverageTime } from "../../../utils/coverageTimeline";
 
 import { incomingDamage } from "../../../utils/defensiveUsage";
+import { DEFAULT_DEFENSIVE_LAYERS } from "../../../config/defensiveChartLayers";
 
 const exact = (value) => (value || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 
-export function PersonalDamageGraph({ points, duration, maximum, onTime, scope = "Personal" }) {
+function damageTooltip(point, cooldownMode, visibility, maximum) {
+  const labels = [coverageTime(point.time)];
+  if (visibility.damage) labels.push(`${exact(point.damage)}/s taken`);
+  if (cooldownMode) {
+    if (visibility.cooldownShields) labels.push(`${exact(point.cooldownAbsorbed)}/s matched CD shields`);
+    if (visibility.otherShields) labels.push(`${exact(point.absorbed - (point.cooldownAbsorbed || 0))}/s other shields`);
+  } else if (visibility.shields) labels.push(`${exact(point.absorbed)}/s absorbed`);
+  if (visibility.reduction) labels.push(`${exact(point.mitigated)}/s ${cooldownMode ? "estimated cooldown reduction" : "total mitigation"}`);
+  if (incomingDamage(point) > maximum) labels.push(`Above display scale: ${exact(incomingDamage(point))}/s total`);
+  if (cooldownMode && ((visibility.cooldownShields && point.cooldownAbsorbed > 0) || (visibility.reduction && point.mitigated > 0)) && point.cooldownSources?.length) labels.push(`Cooldowns: ${point.cooldownSources.join(", ")}`);
+  if (visibility.immune && point.immuneEvents) labels.push(`${point.immuneEvents} immune hits (amount unknown)`);
+  return labels.join(" · ");
+}
+
+export function PersonalDamageGraph({ points, duration, maximum, onTime, scope = "Personal", visibility = DEFAULT_DEFENSIVE_LAYERS }) {
   const cooldownMode = points[0]?.cooldownMode;
   const layers = [
-    { field: "mitigated", color: "#6ee7a0", value: incomingDamage },
-    { field: "absorbed", color: cooldownMode ? "#718096" : "#67d6f4", value: (p) => p.damage + (p.absorbed || 0) },
-    ...(cooldownMode ? [{ field: "cooldownAbsorbed", color: "#67d6f4", value: (p) => p.damage + (p.cooldownAbsorbed || 0) }] : []),
-    { field: "damage", color: "#fb923c", value: (p) => p.damage },
-  ];
+    { show: visibility.reduction, field: "mitigated", color: "#6ee7a0", value: incomingDamage },
+    { show: cooldownMode ? visibility.otherShields : visibility.shields, field: "absorbed", color: cooldownMode ? "#718096" : "#67d6f4", value: (p) => p.damage + (p.absorbed || 0) },
+    ...(cooldownMode ? [{ show: visibility.cooldownShields, field: "cooldownAbsorbed", color: "#67d6f4", value: (p) => p.damage + (p.cooldownAbsorbed || 0) }] : []),
+    { show: visibility.damage, field: "damage", color: "#fb923c", value: (p) => p.damage },
+  ].filter((layer) => layer.show);
   const path = (value) => `M0,100 ${points.map((p) => {
     const y = 100 - Math.min(1, value(p) / maximum) * 94;
     return `L${p.time / duration * 1000},${y} L${Math.min(duration, p.time + 2) / duration * 1000},${y}`;
@@ -21,11 +36,11 @@ export function PersonalDamageGraph({ points, duration, maximum, onTime, scope =
     role="img" aria-label={`${scope} damage taken, absorbed and mitigated; immune hits marked separately`}
     onPointerMove={onTime ? (e) => { const rect = e.currentTarget.getBoundingClientRect(); onTime(Math.max(0, Math.min(duration, (e.clientX - rect.left) / rect.width * duration))); } : undefined}>
     {layers.map(({ field, color, value }) => <path key={field} data-damage-layer={field} d={path(value)} fill={color} fillOpacity=".32" stroke={color} strokeWidth="1" vectorEffect="non-scaling-stroke" />)}
-    {points.filter((p) => incomingDamage(p) > maximum).map((p) => {
+    {visibility.peaks && points.filter((p) => incomingDamage(p) > maximum).map((p) => {
       const x = (p.time + Math.min(2, duration - p.time) / 2) / duration * 1000;
       return <path className="defensive-overflow" key={p.time} d={`M${x - 3},7 L${x},1 L${x + 3},7`} fill="none" stroke="#f8fafc" strokeWidth="2" vectorEffect="non-scaling-stroke" />;
     })}
-    {points.filter((p) => p.immuneEvents > 0).map((p) => <line key={p.time} x1={(p.time + Math.min(2, duration - p.time) / 2) / duration * 1000} x2={(p.time + Math.min(2, duration - p.time) / 2) / duration * 1000} y1="2" y2="9" stroke="#d8b4fe" strokeWidth="3" vectorEffect="non-scaling-stroke"><title>{coverageTime(p.time)}: {p.immuneEvents} immune hits · prevented amount unknown</title></line>)}
-    {points.map((p) => <rect key={p.time} x={p.time / duration * 1000} y="0" width={Math.min(2, duration - p.time) / duration * 1000} height="100" fill="transparent"><title>{coverageTime(p.time)} · {exact(p.damage)}/s taken · {cooldownMode ? `${exact(p.cooldownAbsorbed)}/s matched CD shields · ${exact(p.absorbed - (p.cooldownAbsorbed || 0))}/s other shields` : `${exact(p.absorbed)}/s absorbed`} · {exact(p.mitigated)}/s {cooldownMode ? "estimated cooldown reduction" : "total mitigation"}{incomingDamage(p) > maximum ? ` · Above display scale: ${exact(incomingDamage(p))}/s total` : ""}{cooldownMode && p.cooldownSources?.length ? ` | Cooldowns: ${p.cooldownSources.join(", ")}` : ""}{p.immuneEvents ? ` · ${p.immuneEvents} immune hits (amount unknown)` : ""}</title></rect>)}
+    {visibility.immune && points.filter((p) => p.immuneEvents > 0).map((p) => <line key={p.time} x1={(p.time + Math.min(2, duration - p.time) / 2) / duration * 1000} x2={(p.time + Math.min(2, duration - p.time) / 2) / duration * 1000} y1="2" y2="9" stroke="#d8b4fe" strokeWidth="3" vectorEffect="non-scaling-stroke"><title>{coverageTime(p.time)}: {p.immuneEvents} immune hits · prevented amount unknown</title></line>)}
+    {points.map((p) => <rect key={p.time} x={p.time / duration * 1000} y="0" width={Math.min(2, duration - p.time) / duration * 1000} height="100" fill="transparent"><title>{damageTooltip(p, cooldownMode, visibility, maximum)}</title></rect>)}
   </svg>;
 }

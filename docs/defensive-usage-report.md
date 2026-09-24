@@ -65,7 +65,7 @@ Cooldown attribution update: 298 backend tests and three subtests passed, along 
 
 ## Estimated readiness
 
-`services/defensive_readiness.py` resolves specialization base timers and selected static cooldown/charge modifiers. The default-on Estimated readiness toggle shows dashed recovery lines and clickable diamonds in individual, Everyone and across-pull tracks. A multi-charge diamond means a charge replenishes, not that the button was previously unavailable. Charges recharge sequentially, explicitly assuming full charges at pull start. There are no pre-first-cast availability or missed-use claims.
+`services/defensive_readiness.py` resolves specialization base timers and selected static cooldown/charge modifiers. Estimated readiness is shown by default with dashed recovery lines and clickable diamonds in individual, Everyone and across-pull tracks. A multi-charge diamond means a charge replenishes, not that the button was previously unavailable. Charges recharge sequentially, explicitly assuming full charges at pull start. There are no pre-first-cast availability or missed-use claims.
 
 A later recorded reuse that contradicts the pending estimate invalidates that estimate and restarts the pool from the observed use. Shared replacement cooldowns use one pool per caster. Lines stop at pull end or the caster's next death; diamonds are not shown after death. Cooldowns are not reset by death. Marker/cast tooltips explain the timing basis; the inspector shows only a compact ready-again or charge-return time.
 
@@ -88,3 +88,19 @@ The report no longer renders the Lorrgs comparison, its mechanic/occurrence cont
 Boss ability icon filters are shared across This pull and Across pulls. Selected spells persist when changing mode, player or pull. Across-pull icons count recorded casts in the displayed attempts, and All/None operate on visibility without changing mechanic alignment or actual cast timings. Hidden alignment mechanics still supply the alignment anchor.
 
 Everyone player visibility: checked player lanes stay together on the common time axis. Unchecking a player moves them to the compact Hidden players section below all enabled lanes, where they can be re-enabled. Show all players and Hide all players provide quick comparison setup. Choices use report/actor identity and persist across pulls and individual inspection; players newly encountered default to shown. The top damage graph and death strip retain full raid context, while personal miniature scaling uses only enabled players. `DefensivePlayerVisibility` holds these controls and labels. UI regression checks cover two-mage comparison, re-enabling, persistence, all-hidden recovery and unchanged raid damage.
+
+
+## Player health overlay
+
+The default-off Player health toggle follows the user between This pull and Across pulls. A red line uses a separate, fixed 0-100% axis with labels on the right. Everyone keeps raid damage above and puts each enabled player's health in their own lane. Across pulls retains one shared legend and aligns health with the same actual mechanic offset as casts and damage.
+
+`services/defensive_health.py` reads WCL health/max-health resource snapshots from the existing damage, healing and tracked-cast streams (`include_resources=True`). It uses `resourceActor` to attribute snapshots to source or target, accounts for changing maximum health, and retains first/minimum/maximum/last observations per 250ms bucket. Constant plateaus are compressed without losing their edges. Recorded deaths supply 0%; missing snapshots, gaps longer than five seconds, and returns from zero break the line. No initial full health or health after the final snapshot is invented. The time inspector reads the displayed line by interpolation only within connected observations. Missing historical payloads show no health line. Cache version 8 refreshes data for this feature.
+
+WCL resource field reference: https://www.warcraftlogs.com/help/pins (Resources Fields). Health remains independent of two-second damage bins and adaptive spike clipping. Backend tests cover ownership, changing max HP, short dips, deaths, resurrections and missing data; UI checks cover toggling, independent axes, two-player comparison and across-pull persistence.
+
+
+### Chart layer filters
+
+The graph legend now provides checkboxes for health, damage taken, matched shields, other shields, reduction, immune hits and clipped-peak markers when those outcomes are present. The muted health stroke is 1.4px at 60% opacity. The timeline checkbox row has been removed; casts, durations, readiness, deaths and pressure shading remain visible. Existing boss icon selections and individual player visibility remain available.
+
+`config/defensiveChartLayers.js` defines shared defaults; `utils/defensiveChartLayers.js` filters presentation data without mutating evidence. Visibility lives in the report parent and persists across player, pull and view changes. Hidden damage layers are removed before stacking and scaling, while health retains its fixed percentage axis. All-mitigation mode uses a separate all-shields toggle and preserves the default view's shield choices. Recorded counts and inspector values remain intact. Across pulls still renders just one shared filter legend. UI regression checks cover restacking, re-enabling, cross-view persistence and removal of the timeline filter row.

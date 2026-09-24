@@ -1,5 +1,6 @@
 /** Orchestrate player/pull selection while retaining identity across attempts. */
 import { useState } from "react";
+import { DEFAULT_DEFENSIVE_LAYERS } from "../../../config/defensiveChartLayers";
 import { ReportPageHeader } from "../molecules/ReportPageHeader";
 import { DefensivePull } from "./DefensivePull";
 import { DefensiveAggregate } from "./DefensiveAggregate";
@@ -14,7 +15,8 @@ export function DefensiveUsageReport({ page, shareUrl }) {
   const [playerId, setPlayerId] = useState(timeline.pulls[0]?.players[0]?.id || "all");
   const [mode, setMode] = useState("pull");
   const [selection, setSelection] = useState(null);
-  const [showReady, setShowReady] = useState(true);
+  const [layers, setLayers] = useState(DEFAULT_DEFENSIVE_LAYERS);
+  const setLayer = (key, checked) => setLayers((current) => ({ ...current, [key]: checked }));
   const [allMitigation, setAllMitigation] = useState(false);
   const [spellId, setSpellId] = useState("");
   const [occurrence, setOccurrence] = useState(1);
@@ -46,9 +48,9 @@ export function DefensiveUsageReport({ page, shareUrl }) {
     </div>
     <div className="coverage-overview"><div><span>Personal defensive uses</span><strong>{casts.filter((c) => isPersonalUse(c) && c.lane.category !== "consumable").length}</strong></div><div><span>Healthstones & health potions</span><strong>{casts.filter((c) => c.lane.category === "consumable").length}</strong></div><div><span>Raid / group / external casts</span><strong>{casts.filter((c) => !isPersonalUse(c)).length}</strong></div><div><span>Recorded deaths</span><strong>{deaths}</strong></div></div>
     <label className="defensive-mitigation-toggle"><input type="checkbox" checked={allMitigation} onChange={(e) => setAllMitigation(e.target.checked)} /> Show all mitigation (includes armor and passives)</label>
-    {pull ? mode === "aggregate" ? <DefensiveAggregate bossIds={bossIds} onBossIds={setBossSelection} showReady={showReady} onShowReady={setShowReady} allMitigation={allMitigation} entries={entries} spellId={spellId} occurrence={occurrence} onInspect={setSelection} onOpenPull={(id) => { setPullId(id); setMode("pull"); setSelection(null); }} />
+    {pull ? mode === "aggregate" ? <DefensiveAggregate layers={layers} onLayerChange={setLayer} bossIds={bossIds} onBossIds={setBossSelection} allMitigation={allMitigation} entries={entries} spellId={spellId} occurrence={occurrence} onInspect={setSelection} onOpenPull={(id) => { setPullId(id); setMode("pull"); setSelection(null); }} />
       : player && !pull.players.some((p) => p.id === player.id) ? <p className="coverage-empty">{player.name} did not participate in this pull. Select another pull or choose Across pulls.</p>
-      : <DefensivePull hiddenPlayerIds={hiddenPlayerIds} onHiddenPlayerIds={setHiddenPlayerIds} bossIds={bossIds} onBossIds={setBossSelection} showReady={showReady} onShowReady={setShowReady} allMitigation={allMitigation} key={`${pull.id}:${playerId}`} pull={pull} playerId={playerId} onSelectPlayer={selectPlayer} onInspect={setSelection} /> : <p>No matching pulls were found.</p>}
+      : <DefensivePull layers={layers} onLayerChange={setLayer} hiddenPlayerIds={hiddenPlayerIds} onHiddenPlayerIds={setHiddenPlayerIds} bossIds={bossIds} onBossIds={setBossSelection} allMitigation={allMitigation} key={`${pull.id}:${playerId}`} pull={pull} playerId={playerId} onSelectPlayer={selectPlayer} onInspect={setSelection} /> : <p>No matching pulls were found.</p>}
     {!player && <p className="defensive-muted">Select a player to see personal incoming damage, pressure to review and all-pull usage.</p>}
     <details className="coverage-notes"><summary>How to read this report · research and interpretation</summary><p>Midnight {timeline.patch} research · {timeline.catalogueDate}</p>{page.footnotes.map((note) => <p key={note}>{note}</p>)}</details>
     <DefensiveInspector selection={selection} onInspect={setSelection} />

@@ -113,14 +113,15 @@ def test_reference_only_matching_spec_difficulty_and_tracked_personals():
 def test_registry_and_typed_page_preserve_defensive_data():
     report_id = "entombed-sentinels-defensive-usage-mythic"
     result = build_report_job_request(report_id, {"report_codes": ["abcdefghijklmnop"]})
-    assert result[0] == "v2_report_defensive_usage" and result[1]["defensive_version"] == 7
+    assert result[0] == "v2_report_defensive_usage" and result[1]["defensive_version"] == 8
     assert "include_reference" not in result[1]
     assert len([d for d in list_report_definitions() if "-defensive-usage-" in d.id]) == 18
-    pull = build(dict(casts=[event(6262, 10)])); pull["label"] = "Pull 1"
+    pull = build(dict(casts=[event(6262, 10, resourceActor=1, hitPoints=500, maxHitPoints=1000)])); pull["label"] = "Pull 1"
     data = dict(boss="Boss", patch="12.1", catalogueDate="2026-09-23", binSeconds=2, pulls=[pull], references={})
     page = build_defensive_usage_page(data, report_id).model_dump(by_alias=True)
     assert page["content"]["variant"] == "defensive_timeline"
     assert page["content"]["timeline"]["pulls"][0]["players"][0]["lanes"] == pull["players"][0]["lanes"]
+    assert page["content"]["timeline"]["pulls"][0]["players"][0]["health"] == [dict(time=10, percent=50, breakBefore=False)]
 
 
 def test_removed_comparison_never_fetches_lorrgs_even_for_legacy_requests():

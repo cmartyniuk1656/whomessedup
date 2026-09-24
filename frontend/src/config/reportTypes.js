@@ -5,6 +5,7 @@ export const REPORT_TYPES = {
   AVOIDABLE_DAMAGE: "avoidable_damage",
   DAMAGE: "damage",
   COOLDOWNS: "cooldowns",
+  DEFENSIVES: "defensives",
   DISPELS: "dispels",
   GENERIC: "generic",
 };
@@ -17,6 +18,7 @@ export function getReportType(report) {
   if (searchable.includes("avoidable") && searchable.includes("damage")) {
     return REPORT_TYPES.AVOIDABLE_DAMAGE;
   }
+  if (searchable.includes("defensive")) return REPORT_TYPES.DEFENSIVES;
   if (searchable.includes("cooldown")) return REPORT_TYPES.COOLDOWNS;
   if (searchable.includes("dispel")) return REPORT_TYPES.DISPELS;
   if (searchable.includes("damage")) return REPORT_TYPES.DAMAGE;

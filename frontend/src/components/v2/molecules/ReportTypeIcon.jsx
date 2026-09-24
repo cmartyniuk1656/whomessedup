@@ -7,6 +7,7 @@ const ICON_TONES = {
   [REPORT_TYPES.AVOIDABLE_DAMAGE]: "text-amber-300",
   [REPORT_TYPES.DAMAGE]: "text-orange-300",
   [REPORT_TYPES.COOLDOWNS]: "text-violet-300",
+  [REPORT_TYPES.DEFENSIVES]: "text-slate-300",
   [REPORT_TYPES.DISPELS]: "text-sky-300",
   [REPORT_TYPES.GENERIC]: "text-slate-300",
 };
@@ -53,6 +54,8 @@ function IconPaths({ type }) {
           <path d="m12.25 6.5 5.25 5.25M7 16.5l-3.25 3.25M15.25 3.5l5.25 5.25" />
         </>
       );
+    case REPORT_TYPES.DEFENSIVES:
+      return <path d="M12 3 4.5 6v5c0 4.5 3 7.7 7.5 10 4.5-2.3 7.5-5.5 7.5-10V6L12 3Z" />;
     case REPORT_TYPES.COOLDOWNS:
       return (
         <>

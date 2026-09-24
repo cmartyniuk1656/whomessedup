@@ -19,6 +19,7 @@ from .defensive_catalog import defensive_catalog, defensive_display, ability_acc
 from .defensive_damage import damage_evidence, personal_damage_series
 from .defensive_attribution import add_cooldown_attribution
 from .defensive_readiness import add_defensive_readiness
+from .defensive_health import player_health_series
 from .event_streams import fetch_event_streams
 
 
@@ -58,6 +59,7 @@ def build_defensive_pull(*, code, fight, boss, streams, actor_names, player_ids,
     for e in streams.get("healing", []): healing[e.get("targetID")].append(e)
     damage_windows = {p: EventWindow(events) for p, events in damage.items()}
     heal_windows = {p: EventWindow(events) for p, events in healing.items()}
+    health = player_health_series(streams, fight, participants)
     players = []
     casts = sorted((e for e in streams.get("casts", []) if e.get("type") == "cast"), key=lambda e: e["timestamp"])
     for actor in sorted(participants, key=lambda p: actor_names.get(p, "")):
@@ -124,6 +126,7 @@ def build_defensive_pull(*, code, fight, boss, streams, actor_names, player_ids,
             role=specs.get(spec_id, {}).get("role", "unknown"),
             lanes=sorted(lanes.values(), key=lambda l: (l["category"] == "consumable", l["name"])),
             pressure=personal_damage_series(damage.get(actor, []), fight, boss_spells, ability_labels=labels),
+            health=health.get(actor, []),
             deaths=[d for d in deaths if d["playerId"] == actor],
             buildKnown=bool(info.get("talentTree"))))
     add_defensive_readiness(players, combatants)
@@ -167,14 +170,14 @@ def fetch_defensive_usage(*, report_codes, encounter_id, difficulty, include_ref
                 name_filter=None, fight_ids=None, difficulty=difficulty), key=lambda f: f.start)
             labels = _fetch_ability_labels(session, bearer, code)
             streams = fetch_event_streams(code=code, fights=chosen, token=bearer, actor_names=names,
-                streams={"casts": {"data_type": "Casts", "extra_filter": spell_filter},
+                streams={"casts": {"data_type": "Casts", "extra_filter": spell_filter, "include_resources": True},
                          "bossCasts": {"data_type": "Casts", "extra_filter": spell_filter, "hostility_type": "Enemies"},
                          
                          "immunities": {"data_type": "All", "extra_filter": 'type = "miss" AND missType = "immune"'},
                          "combatants": {"data_type": "CombatantInfo"}, "deaths": {"data_type": "Deaths"},
                          "auras": {"data_type": "Buffs", "extra_filter": spell_filter},
-                         "healing": {"data_type": "Healing", "extra_filter": 'type = "heal" OR type = "absorbed"'},
-                         "pressure": {"data_type": "All", "extra_filter": 'type = "damage" OR type = "healabsorbed"'}},
+                         "healing": {"include_resources": True, "data_type": "Healing", "extra_filter": 'type = "heal" OR type = "absorbed"'},
+                         "pressure": {"include_resources": True, "data_type": "All", "extra_filter": 'type = "damage" OR type = "healabsorbed"'}},
                 partitioned_streams=("pressure", "healing"))
             for fight in chosen:
                 pull = build_defensive_pull(code=code, fight=fight, boss=boss,
