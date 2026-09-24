@@ -156,6 +156,7 @@ def fetch_report_watch_snapshot(
     *,
     report_code: str,
     fight_name: Optional[str] = None,
+    encounter_id: Optional[int] = None,
     difficulty: Any = None,
     fight_ids: Optional[Iterable[int]] = None,
     kill_only: bool = False,
@@ -182,6 +183,7 @@ def fetch_report_watch_snapshot(
         fight
         for fight in snapshot.fights
         if (not name_filter or name_filter in " ".join(fight.name.lower().split()))
+        and (encounter_id is None or fight.encounter_id == encounter_id)
         and (not selected_fight_ids or fight.id in selected_fight_ids)
         and (not kill_only or fight.kill)
         and (

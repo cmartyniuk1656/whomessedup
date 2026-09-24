@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { reportPulls, watchedPulls, watchRevision } from "../utils/reportPullUpdates";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const POLL_INTERVAL_MS = 10_000;
 const ERROR_RETRY_MS = 20_000;
@@ -21,56 +22,6 @@ async function fetchWatchSnapshot({ reportId, values, forceRefresh = false, sign
   return payload;
 }
 
-function reportPages(page) {
-  const pages = [];
-  const pending = page ? [page] : [];
-  const visited = new Set();
-  while (pending.length) {
-    const candidate = pending.shift();
-    if (!candidate || visited.has(candidate)) {
-      continue;
-    }
-    visited.add(candidate);
-    pages.push(candidate);
-    pending.push(...Object.values(candidate.reportsByView || {}));
-  }
-  return pages;
-}
-
-function pullOptions(page) {
-  const optionsByValue = new Map();
-  for (const candidate of reportPages(page)) {
-    const control = candidate?.content?.table?.viewControl;
-    for (const option of control?.options || []) {
-      if (String(option.value || "").startsWith("pull:")) {
-        optionsByValue.set(option.value, option);
-      }
-    }
-  }
-  return [...optionsByValue.values()];
-}
-
-function fightIdFromPullValue(value, reportCode) {
-  const prefix = `pull:${reportCode}:`;
-  if (!String(value || "").startsWith(prefix)) {
-    return null;
-  }
-  const fightId = Number(String(value).slice(prefix.length));
-  return Number.isInteger(fightId) ? fightId : null;
-}
-
-function pullState(page) {
-  const options = pullOptions(page);
-  const byFightId = new Map();
-  for (const option of options) {
-    const fightId = fightIdFromPullValue(option.value, page?.reportCode);
-    if (fightId !== null) {
-      byFightId.set(fightId, option);
-    }
-  }
-  return byFightId;
-}
-
 export function useRealtimeReport({
   page,
   reportId,
@@ -90,9 +41,11 @@ export function useRealtimeReport({
   const revisionRef = useRef(null);
   const pendingRefreshRef = useRef(null);
   const pageRef = useRef(page);
-  const reportCode = page?.reportCode;
+  const manualControllerRef = useRef(null);
+  const reportCode = String(values?.report_codes || values?.report_code || page?.reportCode || "");
+  const currentPulls = useMemo(() => reportPulls(page), [page]);
 
-  const supportsPullUpdates = pullOptions(page).length > 0;
+  const supportsPullUpdates = currentPulls.size > 0 || ["timeline", "defensive_timeline"].includes(page?.content?.variant);
   const hasFixedFightSelection = values?.fight_selection === "specific";
   const isAvailable =
     supportsPullUpdates && Boolean(reportCode) && !hasFixedFightSelection;
@@ -105,7 +58,6 @@ export function useRealtimeReport({
         : "";
 
   useEffect(() => {
-    const currentPulls = pullState(page);
     for (const fightId of currentPulls.keys()) {
       knownFightIdsRef.current.add(fightId);
     }
@@ -143,7 +95,7 @@ export function useRealtimeReport({
     } else if (pending.manual) {
       setNotice({
         title: "No new pulls found",
-        message: "There was nothing new to add to this report.",
+        message: "Latest Warcraft Logs data loaded; no new pulls were found.",
         viewId: null,
       });
     } else {
@@ -153,7 +105,7 @@ export function useRealtimeReport({
         viewId: null,
       });
     }
-  }, [enabled, page]);
+  }, [enabled, page, currentPulls]);
 
   useEffect(() => {
     setEnabled(false);
@@ -164,7 +116,8 @@ export function useRealtimeReport({
     observationsRef.current.clear();
     revisionRef.current = null;
     pendingRefreshRef.current = null;
-    knownFightIdsRef.current = new Set(pullState(pageRef.current).keys());
+    knownFightIdsRef.current = new Set(reportPulls(pageRef.current).keys());
+    return () => manualControllerRef.current?.abort();
   }, [reportCode, reportId]);
 
   useEffect(() => {
@@ -191,13 +144,14 @@ export function useRealtimeReport({
   }, [enabled, isJobBusy, jobError]);
 
   useEffect(() => {
-    if (!enabled || !isAvailable || !isActive || isJobBusy) {
+    if (!enabled || !isAvailable || !isActive || isJobBusy || isManualRefreshing) {
       return undefined;
     }
 
     let disposed = false;
     let timer = null;
     let controller = null;
+    let checking = false;
 
     const schedule = (delay = POLL_INTERVAL_MS) => {
       if (!disposed) {
@@ -206,7 +160,7 @@ export function useRealtimeReport({
     };
 
     const checkForUpdates = async () => {
-      if (disposed) {
+      if (disposed || checking) {
         return;
       }
       if (document.visibilityState === "hidden") {
@@ -215,6 +169,7 @@ export function useRealtimeReport({
         return;
       }
 
+      checking = true;
       controller = new AbortController();
       setStatus("checking");
       try {
@@ -228,11 +183,10 @@ export function useRealtimeReport({
         }
 
         const previousRevision = revisionRef.current;
-        revisionRef.current = payload.revision;
-        const newFights = (payload.fights || [])
-          .filter((fight) => !knownFightIdsRef.current.has(Number(fight.id)))
-          .sort((left, right) => Number(left.id) - Number(right.id));
-        const visibleNewFightIds = new Set(newFights.map((fight) => Number(fight.id)));
+        revisionRef.current = watchRevision(payload);
+        const newFights = watchedPulls(payload)
+          .filter((fight) => !knownFightIdsRef.current.has(fight.key));
+        const visibleNewFightIds = new Set(newFights.map((fight) => fight.key));
         for (const fightId of observationsRef.current.keys()) {
           if (!visibleNewFightIds.has(fightId)) {
             observationsRef.current.delete(fightId);
@@ -241,7 +195,7 @@ export function useRealtimeReport({
 
         const stableFights = [];
         for (const fight of newFights) {
-          const fightId = Number(fight.id);
+          const fightId = fight.key;
           const endTime = Number(fight.end_time);
           const prior = observationsRef.current.get(fightId);
           const observedAt = Date.now();
@@ -262,10 +216,10 @@ export function useRealtimeReport({
 
         const revisionChangedWithoutNewPull =
           previousRevision !== null &&
-          payload.revision !== previousRevision &&
+          watchRevision(payload) !== previousRevision &&
           newFights.length === 0;
         if (stableFights.length || revisionChangedWithoutNewPull) {
-          const fightIds = stableFights.map((fight) => Number(fight.id));
+          const fightIds = stableFights.map((fight) => fight.key);
           pendingRefreshRef.current = { fightIds };
           setStatus("updating");
           setError("");
@@ -289,6 +243,8 @@ export function useRealtimeReport({
         setStatus("error");
         setError(err.message || "Unable to check Warcraft Logs for new pulls.");
         schedule(ERROR_RETRY_MS);
+      } finally {
+        checking = false;
       }
     };
 
@@ -311,7 +267,7 @@ export function useRealtimeReport({
       controller?.abort();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [enabled, isActive, isAvailable, isJobBusy, refreshReport, reportId, values]);
+  }, [enabled, isActive, isAvailable, isJobBusy, isManualRefreshing, refreshReport, reportId, values]);
 
   const toggle = useCallback(() => {
     if (!isAvailable) {
@@ -333,7 +289,9 @@ export function useRealtimeReport({
     if (!reportId || isJobBusy || isManualRefreshing) {
       return;
     }
-    const previousFightIds = new Set(pullState(pageRef.current).keys());
+    const previousFightIds = new Set(reportPulls(pageRef.current).keys());
+    const controller = new AbortController();
+    manualControllerRef.current = controller;
     setIsManualRefreshing(true);
     setStatus("checking");
     setError("");
@@ -343,21 +301,12 @@ export function useRealtimeReport({
         reportId,
         values,
         forceRefresh: true,
+        signal: controller.signal,
       });
-      const newFightIds = (snapshot.fights || [])
-        .map((fight) => Number(fight.id))
-        .filter((fightId) => Number.isInteger(fightId) && !previousFightIds.has(fightId));
-
-      if (!newFightIds.length) {
-        setIsManualRefreshing(false);
-        setStatus(enabled ? "watching" : "off");
-        setNotice({
-          title: "No new pulls found",
-          message: "There was nothing new to add to this report.",
-          viewId: null,
-        });
-        return;
-      }
+      if (controller.signal.aborted) return;
+      const newFightIds = watchedPulls(snapshot)
+        .map((fight) => fight.key)
+        .filter((fightId) => !previousFightIds.has(fightId));
 
       pendingRefreshRef.current = {
         fightIds: newFightIds,
@@ -366,6 +315,7 @@ export function useRealtimeReport({
       };
       setStatus("updating");
       const queued = await refreshReport({ reportId, values });
+      if (controller.signal.aborted) return;
       if (queued) {
         return;
       }
@@ -375,6 +325,7 @@ export function useRealtimeReport({
       setStatus(enabled ? "error" : "off");
       setError("Unable to queue the report refresh.");
     } catch (err) {
+      if (controller.signal.aborted || err.name === "AbortError") return;
       pendingRefreshRef.current = null;
       setIsManualRefreshing(false);
       setStatus(enabled ? "error" : "off");

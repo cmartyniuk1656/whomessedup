@@ -1,4 +1,5 @@
 from unittest.mock import Mock, patch
+import pytest
 
 import app as application
 from who_messed_up.services.report_monitoring import (
@@ -154,3 +155,47 @@ def test_report_watch_endpoint_derives_scope_from_registered_report():
     assert fetch.call_args.kwargs["fight_name"] == "Vashnik the Malignant"
     assert fetch.call_args.kwargs["difficulty"] == "heroic"
     assert fetch.call_args.kwargs["force_refresh"] is True
+
+
+def test_report_watch_filters_exact_encounter_and_difficulty():
+    clear_report_watch_cache()
+    try:
+        with (
+            patch("who_messed_up.services.report_monitoring._resolve_token", return_value="token"),
+            patch("who_messed_up.services.report_monitoring.gql", return_value=_watch_payload()),
+        ):
+            snapshot = fetch_report_watch_snapshot(
+                report_code="REPORT", encounter_id=100, difficulty="mythic",
+                client_id="client", client_secret="secret", session=Mock(),
+            )
+        assert [fight.id for fight in snapshot.fights] == [12]
+    finally:
+        clear_report_watch_cache()
+
+
+@pytest.mark.parametrize("kind", ["defensive-usage", "cooldown-coverage"])
+def test_timeline_watch_tracks_each_report_with_report_qualified_fights(kind):
+    def snapshot(**kwargs):
+        return ReportWatchSnapshot(
+            report_code=kwargs["report_code"], end_time=2000, revision=2, segments=3,
+            fights=[ReportWatchFight(id=7, encounter_id=3445, name="Entombed Sentinels",
+                start_time=1000, end_time=2000, kill=False, difficulty=5)],
+        )
+
+    request = application.ReportWatchRequestModel(
+        values={"report_codes": ["J3y9gP2bqmkphY7f", "fCqgJN7QMWA2vFbT"]},
+        force_refresh=True,
+    )
+    with (
+        patch("app._client_credentials", return_value={"client_id": "id", "client_secret": "secret"}),
+        patch("app.fetch_report_watch_snapshot", side_effect=snapshot) as fetch,
+    ):
+        response = application.watch_v2_report(f"entombed-sentinels-{kind}-mythic", request)
+
+    assert fetch.call_count == 2
+    assert all(call.kwargs["encounter_id"] == 3445 for call in fetch.call_args_list)
+    assert all(call.kwargs["difficulty"] == "mythic" for call in fetch.call_args_list)
+    assert [(fight.report_code, fight.id) for fight in response.fights] == [
+        ("J3y9gP2bqmkphY7f", 7), ("fCqgJN7QMWA2vFbT", 7),
+    ]
+    assert response.revisions == {"J3y9gP2bqmkphY7f": 2, "fCqgJN7QMWA2vFbT": 2}

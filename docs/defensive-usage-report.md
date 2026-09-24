@@ -107,6 +107,12 @@ The graph legend now provides checkboxes for health, damage taken, matched shiel
 
 ## Sharing and rendering performance
 
+### Live uploads
+
+Use **Real-time mode** above the report to check Warcraft Logs every ten seconds while the results are visible. New pulls are loaded after two checks show a stable end time. The current player, pull, boss filters and chart settings stay selected; **View pull** in the notification jumps to the newest attempt. Across pulls automatically includes the new rows. **Refresh** reloads the report immediately, including late-arriving events for existing pulls.
+
+The shared `useRealtimeReport` hook supports defensive timelines, healer coverage and table reports. `reportPullUpdates` normalizes pull identities using both the log code and fight ID, so multiple source reports cannot collide. The watch endpoint derives encounter/difficulty scope from the registered report and returns separate revision counters for each source. Polling pauses in hidden tabs and during report generation. `npm run test:realtime` simulates upload progress, refreshed data and preserved selections.
+
 [Share Report](report-sharing.md) restores player/pull selection, Across pulls alignment, hidden players, boss filters, chart layers, scale, zoom, horizontal position, inspected time and open details.
 
 `DefensiveTimeReadout` owns cursor updates so moving across a graph does not rebuild every player's SVG. `useDefensivePullData` prepares damage, scales, potion lanes, pressure shading and cast lists once per relevant data/filter change. Memoized tracks and stable callbacks prevent opening an inspector from rebuilding the timeline. Across-pulls row geometry and damage series are reused; numeric tooltips share one `Intl.NumberFormat` instance.

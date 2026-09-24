@@ -1,4 +1,5 @@
 /** Orchestrate player/pull selection while retaining identity across attempts. */
+import { ReportUpdateNotification } from "../molecules/ReportUpdateNotification";
 import { useCallback, useMemo } from "react";
 import { useReportViewState } from "../../../hooks/useReportViewState";
 import { useTimelineSelection } from "../../../hooks/useTimelineSelection";
@@ -11,7 +12,7 @@ import { defensiveCasts, isPersonalUse, playerPulls } from "../../../utils/defen
 import "../coverage/coverage.css";
 import "./defensives.css";
 
-export function DefensiveUsageReport({ page, shareUrl }) {
+export function DefensiveUsageReport({ page, shareUrl, realtime }) {
   const timeline = page.content.timeline;
   const [pullId, setPullId] = useReportViewState("pullId", timeline.pulls[0]?.id, { validate: (id) => timeline.pulls.some((pull) => pull.id === id) });
   const [playerId, setPlayerId] = useReportViewState("playerId", timeline.pulls[0]?.players[0]?.id || "all", { validate: (id) => id === "all" || timeline.pulls.some((pull) => pull.players.some((player) => player.id === id)) });
@@ -39,6 +40,9 @@ export function DefensiveUsageReport({ page, shareUrl }) {
   const changeMode = (next) => { setMode(next); setSelection(null); if (next === "aggregate" && playerId === "all") setPlayerId(pull?.players[0]?.id || players[0]?.id); };
   return <section className="coverage-report defensive-report">
     <ReportPageHeader page={page} shareUrl={shareUrl} rows={[]} />
+      <ReportUpdateNotification notice={realtime?.notice} onDismiss={realtime?.clearNotice}
+        onViewPull={timeline.pulls.some((entry) => entry.id === realtime?.notice?.viewId)
+          ? () => { openPull(realtime.notice.viewId); realtime.clearNotice(); } : null} />
     <div className="defensive-heading"><div><span className="defensive-eyebrow">DEFENSIVE USAGE</span><h2>Protection in context</h2><p>See who pressed what, what damage followed, and how usage changes between attempts.</p></div><div className="defensive-view-tabs" role="group" aria-label="Defensive report view">
       <button aria-pressed={mode === "pull"} onClick={() => changeMode("pull")}>This pull</button><button aria-pressed={mode === "aggregate"} onClick={() => changeMode("aggregate")}>Across pulls</button>
     </div></div>

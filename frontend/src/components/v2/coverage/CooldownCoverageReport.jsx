@@ -1,10 +1,11 @@
 /** Pull selection and filtering for the backend-owned coverage timeline. */
+import { ReportUpdateNotification } from "../molecules/ReportUpdateNotification";
 import { useReportViewState } from "../../../hooks/useReportViewState";
 import { ReportPageHeader } from "../molecules/ReportPageHeader";
 import { PullTimeline } from "./PullTimeline";
 import "./coverage.css";
 
-export function CooldownCoverageReport({ page, shareUrl }) {
+export function CooldownCoverageReport({ page, shareUrl, realtime }) {
   const timeline = page.content.timeline;
   const [pullId, setPullId] = useReportViewState("pullId", timeline.pulls[0]?.id, { validate: (id) => timeline.pulls.some((pull) => pull.id === id) });
   const pull =
@@ -12,6 +13,9 @@ export function CooldownCoverageReport({ page, shareUrl }) {
   return (
     <section className="coverage-report">
       <ReportPageHeader page={page} shareUrl={shareUrl} rows={[]} />
+      <ReportUpdateNotification notice={realtime?.notice} onDismiss={realtime?.clearNotice}
+        onViewPull={timeline.pulls.some((entry) => entry.id === realtime?.notice?.viewId)
+          ? () => { setPullId(realtime.notice.viewId); realtime.clearNotice(); } : null} />
       <div className="coverage-pull-bar">
         <label>
           Pull{" "}

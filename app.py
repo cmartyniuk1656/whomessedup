@@ -342,6 +342,7 @@ class ReportWatchRequestModel(BaseModel):
 
 class ReportWatchFightModel(BaseModel):
     id: int
+    report_code: Optional[str] = None
     encounter_id: Optional[int] = None
     name: str
     start_time: float
@@ -356,6 +357,7 @@ class ReportWatchModel(BaseModel):
     revision: int
     segments: int
     fights: List[ReportWatchFightModel]
+    revisions: Optional[Dict[str, int]] = None
 
 
 class FightModel(BaseModel):
@@ -3069,34 +3071,43 @@ def watch_v2_report(report_id: str, request: ReportWatchRequestModel) -> ReportW
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    report_code = payload.get("report")
-    if not report_code:
+    report_codes = payload.get("report_codes") or ([payload["report"]] if payload.get("report") else [])
+    if not report_codes:
         raise HTTPException(
             status_code=422,
             detail="This report does not expose a primary Warcraft Logs report code.",
         )
     credentials = _client_credentials()
     try:
-        snapshot = fetch_report_watch_snapshot(
-            report_code=str(report_code),
-            fight_name=payload.get("fight"),
-            difficulty=payload.get("difficulty"),
-            fight_ids=payload.get("fight_ids"),
-            kill_only=bool(payload.get("kill_only", False)),
-            force_refresh=request.force_refresh,
-            token=payload.get("token"),
-            client_id=credentials["client_id"],
-            client_secret=credentials["client_secret"],
-        )
+        snapshots = [
+            fetch_report_watch_snapshot(
+                report_code=str(report_code),
+                fight_name=payload.get("fight"),
+                encounter_id=payload.get("encounter_id"),
+                difficulty=payload.get("difficulty"),
+                fight_ids=payload.get("fight_ids"),
+                kill_only=bool(payload.get("kill_only", False)),
+                force_refresh=request.force_refresh,
+                token=payload.get("token"),
+                client_id=credentials["client_id"],
+                client_secret=credentials["client_secret"],
+            )
+            for report_code in dict.fromkeys(report_codes)
+        ]
     except (ValueError, RuntimeError, requests.RequestException) as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return ReportWatchModel(
-        report_code=snapshot.report_code,
-        end_time=snapshot.end_time,
-        revision=snapshot.revision,
-        segments=snapshot.segments,
-        fights=[ReportWatchFightModel(**fight.__dict__) for fight in snapshot.fights],
+        report_code=", ".join(snapshot.report_code for snapshot in snapshots),
+        end_time=max(snapshot.end_time for snapshot in snapshots),
+        revision=max(snapshot.revision for snapshot in snapshots),
+        segments=sum(snapshot.segments for snapshot in snapshots),
+        revisions={snapshot.report_code: snapshot.revision for snapshot in snapshots},
+        fights=[
+            ReportWatchFightModel(**fight.__dict__, report_code=snapshot.report_code)
+            for snapshot in snapshots
+            for fight in snapshot.fights
+        ],
     )
 
 

@@ -95,12 +95,13 @@ export function ReportPageView({ page, shareUrl, realtime }) {
       />
       <ReportViewScope name={selectedReportView || selectedPage.reportId}>
       {selectedPage.content?.variant === "defensive_timeline" ? (
-        <DefensiveUsageReport key={`${selectedPage.reportId}:${selectedPage.reportCode}`} page={selectedPage} shareUrl={shareUrl} />
+        <DefensiveUsageReport key={`${selectedPage.reportId}:${selectedPage.reportCode}`} page={selectedPage} shareUrl={shareUrl} realtime={realtime} />
       ) : selectedPage.content?.variant === "timeline" ? (
         <CooldownCoverageReport
           key={`${selectedPage.reportId}:${selectedPage.reportCode}`}
           page={selectedPage}
           shareUrl={shareUrl}
+          realtime={realtime}
         />
       ) : (
         <SingleReportPageView
