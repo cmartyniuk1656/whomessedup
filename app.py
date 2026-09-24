@@ -129,6 +129,9 @@ from who_messed_up.services.view_models.lightblinded_vanguard_cooldowns import (
 from who_messed_up.services.cooldown_coverage import fetch_cooldown_coverage
 from who_messed_up.services.view_models.cooldown_coverage import build_cooldown_coverage_page
 from who_messed_up.services.report_registry import JOB_V2_COOLDOWN_COVERAGE
+from who_messed_up.services.defensive_usage import fetch_defensive_usage
+from who_messed_up.services.view_models.defensive_usage import build_defensive_usage_page
+from who_messed_up.services.report_registry import JOB_V2_DEFENSIVE_USAGE
 from who_messed_up.services.view_models.lightblinded_vanguard_avoidable_damage import (
     build_lightblinded_vanguard_avoidable_damage_report_page,
 )
@@ -2711,6 +2714,13 @@ def _execute_v2_cooldown_coverage_job(payload: Dict[str, Any]) -> Dict[str, Any]
     return build_cooldown_coverage_page(timeline, payload["report_id"]).model_dump(by_alias=True)
 
 
+def _execute_v2_defensive_usage_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    timeline = fetch_defensive_usage(report_codes=payload["report_codes"],
+        encounter_id=payload["encounter_id"], difficulty=payload["difficulty"],
+        **_client_credentials())
+    return build_defensive_usage_page(timeline, payload["report_id"]).model_dump(by_alias=True)
+
+
 def _execute_v2_lightblinded_vanguard_cooldown_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_lightblinded_vanguard_cooldown_summary_from_payload(payload)
     page = build_cooldown_usage_report_page(
@@ -2857,6 +2867,7 @@ job_manager.register_handler(JOB_DIMENSIUS_DEATHS, _execute_dimensius_deaths_job
 job_manager.register_handler(JOB_DIMENSIUS_BLED_OUT, _execute_dimensius_bled_out_job)
 job_manager.register_handler(JOB_DIMENSIUS_PRIORITY_DAMAGE, _execute_dimensius_priority_damage_job)
 job_manager.register_handler(JOB_V2_COOLDOWN_COVERAGE, _execute_v2_cooldown_coverage_job)
+job_manager.register_handler(JOB_V2_DEFENSIVE_USAGE, _execute_v2_defensive_usage_job)
 job_manager.register_handler(JOB_V2_DIMENSIUS_ADD_DAMAGE, _execute_v2_dimensius_add_damage_job)
 job_manager.register_handler(JOB_V2_DIMENSIUS_DEATHS, _execute_v2_dimensius_deaths_job)
 job_manager.register_handler(JOB_V2_DIMENSIUS_PRIORITY_DAMAGE, _execute_v2_dimensius_priority_damage_job)

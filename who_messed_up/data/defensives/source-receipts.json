@@ -1,0 +1,35 @@
+{
+  "note": "Hashes identify the locally reviewed source snapshots; raw source files are not redistributed in this package. Per-spell source URLs are in defensives.json.",
+  "snapshots": [
+    {
+      "research_file": "talent-data.js",
+      "bytes": 1690925,
+      "sha256": "cfdff2c3f242716feacd5ae5a5e4f4296ea8577b04315854bd46c239d5eeaa0f",
+      "research_as_of": "2026-09-23"
+    },
+    {
+      "research_file": "specs.json",
+      "bytes": 7234,
+      "sha256": "ffc091178e744982f4b0769d0701fa6855811c37a951a3f263201f0042fa7a91",
+      "research_as_of": "2026-09-23"
+    },
+    {
+      "research_file": "spells.json",
+      "bytes": 267524,
+      "sha256": "56734176edca8ff62cabad99df21c56b2000f388d9822355416dd5eda871e751",
+      "research_as_of": "2026-09-23"
+    },
+    {
+      "research_file": "hotfixes.txt",
+      "bytes": 105915,
+      "sha256": "da10161fa8f4fbf3cf4b8e2bdb5a51984636b99460902ad7e9db58391e08e7a0",
+      "research_as_of": "2026-09-23"
+    },
+    {
+      "research_file": "prepatch.txt",
+      "bytes": 280311,
+      "sha256": "fa6825157cca4f528416c34971c7cf211f9d5a43475015add29f2faefe033132",
+      "research_as_of": "2026-09-23"
+    }
+  ]
+}

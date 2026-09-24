@@ -19,6 +19,7 @@ class TheLostExplorersReportRegistryTests(unittest.TestCase):
             "the-lost-explorers-damage",
             "the-lost-explorers-cooldowns",
             "the-lost-explorers-cooldown-coverage-heroic",
+            "the-lost-explorers-defensive-usage-heroic",
             "the-lost-explorers-mechanics-scorecard",
             "the-lost-explorers-heroic-aggregate-reports",
         }

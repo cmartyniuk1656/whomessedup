@@ -137,7 +137,7 @@ def make_lane(lane_id, spell, source, names, info, is_player):
     return lane
 
 
-def pressure_series(events, fight, participants, boss_spells, bin_seconds=2, ability_labels=None):
+def pressure_series(events, fight, participants, boss_spells, bin_seconds=2, ability_labels=None, amount_excludes_overkill=False):
     duration = max(0.001, (fight.end - fight.start) / 1000)
     bins = [{"time": i * bin_seconds, "damage": 0, "healAbsorbs": 0, "sources": {}}
             for i in range(math.ceil(duration / bin_seconds))]
@@ -148,7 +148,7 @@ def pressure_series(events, fight, participants, boss_spells, bin_seconds=2, abi
         kind = event.get("type")
         if kind not in ("damage", "healabsorbed"):
             continue
-        value = max(0, float(event.get("amount") or 0) - (max(0, event.get("overkill") or 0) if kind == "damage" else 0))
+        value = max(0, float(event.get("amount") or 0) - (max(0, event.get("overkill") or 0) if kind == "damage" and not amount_excludes_overkill else 0))
         bucket = bins[min(len(bins) - 1, int(time // bin_seconds))]
         bucket["damage" if kind == "damage" else "healAbsorbs"] += value
         spell_id = _event_ability_id(event)

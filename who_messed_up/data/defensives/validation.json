@@ -1,0 +1,51 @@
+{
+  "checked_at_utc": "2026-09-23T18:15:00.367624+00:00",
+  "status": "passed",
+  "checks": [
+    {
+      "check": "All emitted schema constraints: required fields, types, constants, enums, array bounds, numeric bounds and date format",
+      "result": "passed"
+    },
+    {
+      "check": "72 unique ability records, 191 unique talent modifiers and all 40 specializations",
+      "result": "passed"
+    },
+    {
+      "check": "Specialization indexes, access gates and modifier references resolve to the reviewed live talent snapshot",
+      "result": "passed"
+    },
+    {
+      "check": "Every talent modifier has current node/entry evidence and an applicable specialization",
+      "result": "passed"
+    },
+    {
+      "check": "High-risk gates, inherent spec adjustments, mutually exclusive Spellwarding/Uther choice, current Blur behavior and Guardian Angel timing",
+      "result": "passed"
+    },
+    {
+      "check": "All 70 images decode, dimensions and SHA-256 match; all 72 ability mappings resolve; 64 Lorrgs / 6 documented fallback icons",
+      "result": "passed"
+    },
+    {
+      "check": "Human report has 72 ability cards, unique anchors and no missing local images or linked files",
+      "result": "passed"
+    },
+    {
+      "check": "Every delivered JSON file parses as UTF-8 JSON",
+      "result": "passed"
+    },
+    {
+      "check": "Rendered in Microsoft Edge; all 72 cards and images load, search and support filter work, no browser errors or mobile horizontal overflow",
+      "result": "passed"
+    }
+  ],
+  "limits": "Package structure, source membership and asset integrity checks; these do not establish live-game runtime behavior or Warcraft Logs integration correctness.",
+  "browser_checks": {
+    "initial_entries": 72,
+    "fortifying_brew_search_results": 1,
+    "support_entries": 3,
+    "broken_images": [],
+    "page_errors": [],
+    "mobile_horizontal_overflow": false
+  }
+}

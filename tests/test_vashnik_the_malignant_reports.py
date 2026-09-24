@@ -19,6 +19,7 @@ class VashnikTheMalignantReportRegistryTests(unittest.TestCase):
             "vashnik-the-malignant-damage",
             "vashnik-the-malignant-cooldowns",
             "vashnik-the-malignant-cooldown-coverage-heroic",
+            "vashnik-the-malignant-defensive-usage-heroic",
             "vashnik-the-malignant-mechanics-scorecard",
             "vashnik-the-malignant-heroic-aggregate-reports",
         }
@@ -113,6 +114,7 @@ class VashnikMythicReportRegistryTests(unittest.TestCase):
             "vashnik-the-malignant-mythic-mechanics",
             "vashnik-the-malignant-cooldowns-mythic",
             "vashnik-the-malignant-cooldown-coverage-mythic",
+            "vashnik-the-malignant-defensive-usage-mythic",
             "vashnik-the-malignant-mythic-aggregate-reports",
         })
         _, aggregate, _ = build_report_job_request(

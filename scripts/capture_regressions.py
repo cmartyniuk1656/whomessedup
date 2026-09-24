@@ -15,6 +15,16 @@ DIMENSIUS_REPORT = "W4cZgnxQfR2AH1dT"
 
 REGRESSION_CASES: List[Dict[str, Any]] = [
     {
+        "name": "defensive_usage_sentinels_mythic",
+        "path": "/api/v2/reports/entombed-sentinels-defensive-usage-mythic/jobs",
+        "body": {"values": {"report_codes": ["J3y9gP2bqmkphY7f"], "fresh_run": True, "include_reference": False}},
+    },
+    {
+        "name": "defensive_usage_nymrissa_mythic",
+        "path": "/api/v2/reports/nymrissa-wavecaller-defensive-usage-mythic/jobs",
+        "body": {"values": {"report_codes": ["fCqgJN7QMWA2vFbT"], "fresh_run": True, "include_reference": False}},
+    },
+    {
         "name": "nymrissa_mythic_mechanics",
         "path": "/api/v2/reports/nymrissa-wavecaller-mythic-mechanics/jobs",
         "body": {"values": {"report_codes": ["fCqgJN7QMWA2vFbT"], "fresh_run": True}},

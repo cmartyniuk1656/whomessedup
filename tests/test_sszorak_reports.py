@@ -86,6 +86,7 @@ class SszorakReportRegistryTests(unittest.TestCase):
             "sszorak-damage",
             "sszorak-cooldowns",
             "sszorak-cooldown-coverage-heroic",
+            "sszorak-defensive-usage-heroic",
             "sszorak-tempest",
             "sszorak-mechanics-scorecard",
             "sszorak-heroic-aggregate-reports",

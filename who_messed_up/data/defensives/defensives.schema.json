@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:midnight-12.1:defensives:1.0.0",
+  "title": "Midnight defensive research catalogue",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "patch",
+    "research_as_of",
+    "specializations",
+    "abilities",
+    "talent_modifiers",
+    "baseline_and_support_rules",
+    "shared_pools",
+    "target_lockouts",
+    "sources"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "patch": {
+      "const": "12.1"
+    },
+    "research_as_of": {
+      "type": "string",
+      "format": "date"
+    },
+    "specializations": {
+      "type": "array",
+      "minItems": 40,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "required": [
+          "specialization_id",
+          "name",
+          "defensive_spell_ids"
+        ],
+        "properties": {
+          "specialization_id": {
+            "type": "integer"
+          },
+          "defensive_spell_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "abilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "spell_id",
+          "name",
+          "category",
+          "specialization_profiles",
+          "duration",
+          "cooldown",
+          "event_mapping",
+          "icon",
+          "sources"
+        ],
+        "properties": {
+          "spell_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "personal",
+              "external",
+              "external_or_self",
+              "raid",
+              "group",
+              "support"
+            ]
+          },
+          "duration": {
+            "type": "object",
+            "required": [
+              "nominal_seconds"
+            ],
+            "properties": {
+              "nominal_seconds": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "specialization_profiles": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "specialization_id",
+                "access",
+                "base_cooldown_seconds",
+                "base_max_charges"
+              ],
+              "properties": {
+                "specialization_id": {
+                  "type": "integer"
+                },
+                "base_cooldown_seconds": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "base_max_charges": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "access": {
+                  "type": "object",
+                  "required": [
+                    "all_of"
+                  ],
+                  "properties": {
+                    "all_of": {
+                      "type": "array",
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "icon": {
+            "type": "object",
+            "required": [
+              "file",
+              "source_url",
+              "provider",
+              "mapping_method"
+            ]
+          }
+        }
+      }
+    },
+    "talent_modifiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "spell_id",
+          "name",
+          "affected_ability_spell_ids",
+          "applicability",
+          "operations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "affected_ability_spell_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          },
+          "applicability": {
+            "type": "array",
+            "minItems": 1
+          },
+          "operations": {
+            "type": "array"
+          }
+        }
+      }
+    }
+  }
+}

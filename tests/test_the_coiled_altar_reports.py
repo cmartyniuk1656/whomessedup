@@ -70,6 +70,7 @@ class TheCoiledAltarReportTests(unittest.TestCase):
                 "the-coiled-altar-damage",
                 "the-coiled-altar-cooldowns",
             "the-coiled-altar-cooldown-coverage-heroic",
+            "the-coiled-altar-defensive-usage-heroic",
                 "the-coiled-altar-mechanics-scorecard",
                 "the-coiled-altar-heroic-aggregate-reports",
             },

@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test:coverage": "node scripts/test-coverage-render.mjs",
+    "test:defensives": "node scripts/test-defensive-render.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -51,6 +51,7 @@ class TheTwinFangsReportRegistryTests(unittest.TestCase):
             "the-twin-fangs-damage",
             "the-twin-fangs-cooldowns",
             "the-twin-fangs-cooldown-coverage-heroic",
+            "the-twin-fangs-defensive-usage-heroic",
             "the-twin-fangs-fuckups",
             "the-twin-fangs-mechanics-scorecard",
             "the-twin-fangs-heroic-aggregate-reports",

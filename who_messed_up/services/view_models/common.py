@@ -8,6 +8,7 @@ from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 from .cooldown_coverage import CoverageContentModel
+from .defensive_usage import DefensiveContentModel
 
 try:  # pragma: no cover - compatibility shim
     from pydantic import ConfigDict
@@ -372,7 +373,7 @@ class ReportPageModel(ViewModelBase):
     summary_by_combined_view: Dict[str, List[SummaryMetricModel]] = Field(
         default_factory=dict, alias="summaryByCombinedView"
     )
-    content: Union[ReportContentModel, CoverageContentModel]
+    content: Union[ReportContentModel, CoverageContentModel, DefensiveContentModel]
     footnotes: List[str] = Field(default_factory=list)
     spec_analysis: Optional[SpecAnalysisModel] = Field(None, alias="specAnalysis")
     report_control: Optional[TableViewControlModel] = Field(None, alias="reportControl")

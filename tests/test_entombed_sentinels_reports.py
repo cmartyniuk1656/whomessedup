@@ -19,6 +19,7 @@ class EntombedSentinelsReportRegistryTests(unittest.TestCase):
             "entombed-sentinels-damage",
             "entombed-sentinels-cooldowns",
             "entombed-sentinels-cooldown-coverage-heroic",
+            "entombed-sentinels-defensive-usage-heroic",
             "entombed-sentinels-mechanics-scorecard",
             "entombed-sentinels-heroic-aggregate-reports",
         }
@@ -116,6 +117,7 @@ class EntombedSentinelsMythicReportRegistryTests(unittest.TestCase):
             "entombed-sentinels-avoidable-damage-mythic",
             "entombed-sentinels-cooldowns-mythic",
             "entombed-sentinels-cooldown-coverage-mythic",
+            "entombed-sentinels-defensive-usage-mythic",
             "entombed-sentinels-mythic-aggregate-reports",
             "entombed-sentinels-mythic-mechanics",
         })

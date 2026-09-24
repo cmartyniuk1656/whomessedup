@@ -1,8 +1,10 @@
 # Who Messed Up – Raid Report Dashboard
 
-Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into actionable raid insights. It keeps the heavy lifting on your own box: fetch a report, crunch the data against curated queries ("fuck up" dashboards, damage/healing breakdowns, etc.), and view the results in a modern Tailwind-based frontend or through JSON APIs. Nothing leaves your server except the calls to the official Warcraft Logs API.
+Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into actionable raid insights. It keeps the heavy lifting on your own box: fetch a report, crunch the data against curated queries ("fuck up" dashboards, damage/healing breakdowns, etc.), and view the results in a modern Tailwind-based frontend or through JSON APIs. Report data comes from the official Warcraft Logs API.
 
 ## What the App Does
+
+- [Defensive Usage Report](docs/defensive-usage-report.md): review every player's personal defensives, healthstones and health potions against recorded damage and boss casts. Compare attempts by pull start or mechanic occurrence. Dedicated `defensive_catalog` and `defensive_usage` services feed reusable components under `frontend/src/components/v2/defensives/`.
 
 - [Cooldown Coverage Report](docs/cooldown-coverage-report.md): compare each pull's recorded boss casts with healer cooldown windows, estimated readiness, and incoming damage plus consumed heal absorbs. Death markers show five-second damage/healing recaps, built by `services/coverage_deaths.py` and shared between tooltip and drawer through `DeathRecap`.
 

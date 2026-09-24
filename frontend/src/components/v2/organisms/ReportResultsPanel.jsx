@@ -29,7 +29,7 @@ function FullWidthIcon({ expanded }) {
 }
 
 export function ReportResultsPanel({ page, shareUrl, realtime }) {
-  const defaultFullWidth = page?.content?.variant === "timeline";
+  const defaultFullWidth = ["timeline", "defensive_timeline"].includes(page?.content?.variant);
   const [isFullWidth, setIsFullWidth] = useState(defaultFullWidth);
 
   useEffect(() => {

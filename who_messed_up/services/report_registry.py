@@ -477,6 +477,7 @@ JOB_V2_IMPERATOR_AVERZIAN_AVOIDABLE_DAMAGE = "v2_report_imperator_averzian_avoid
 JOB_V2_IMPERATOR_AVERZIAN_DEATHS = "v2_report_imperator_averzian_deaths"
 JOB_V2_COOLDOWN_USAGE = "v2_report_cooldown_usage"
 JOB_V2_COOLDOWN_COVERAGE = "v2_report_cooldown_coverage"
+JOB_V2_DEFENSIVE_USAGE = "v2_report_defensive_usage"
 JOB_V2_MECHANIC_SCORECARD = "v2_report_mechanic_scorecard"
 JOB_V2_LIGHTBLINDED_VANGUARD_AVOIDABLE_DAMAGE = "v2_report_lightblinded_vanguard_avoidable_damage"
 JOB_V2_LIGHTBLINDED_VANGUARD_COOLDOWNS = JOB_V2_COOLDOWN_USAGE
@@ -3619,6 +3620,34 @@ def _register_coverage_reports():
 _register_coverage_reports()
 
 
+def _register_defensive_reports():
+    from .cooldown_catalog import coverage_catalog
+    _, bosses = coverage_catalog()
+    fight_ids = {name: fight_id for fight_id, name, _ in COOLDOWN_USAGE_FIGHTS}
+
+    def payload_builder(report_id, encounter_id, difficulty):
+        def build(values):
+            return {"report_id": report_id, "report_codes": _coerce_report_code_list(values),
+                    "encounter_id": encounter_id, "difficulty": difficulty.value, "defensive_version": 7}, _coerce_bool(values, "fresh_run", default=False)
+        return build
+
+    for encounter_id, boss in bosses.items():
+        for difficulty in (ReportDifficulty.HEROIC, ReportDifficulty.MYTHIC):
+            fight_id = fight_ids[boss["name"]]
+            report_id = f"{fight_id}-defensive-usage-{difficulty.value}"
+            _REPORTS[report_id] = RegisteredReport(
+                definition=ReportDefinitionModel(id=report_id, title="Defensive Usage Report",
+                    description="Review every player's defensives, healthstones and potions against damage and boss casts, across individual pulls or the whole session.",
+                    fightId=fight_id, fightName=boss["name"], defaultFight=boss["name"], difficulty=difficulty,
+                    requestSchema=RequestSchemaModel(fields=[_build_report_codes_field(),
+                        RequestFieldModel(id="fresh_run", kind=RequestFieldKind.CHECKBOX,
+                            label="Force fresh run (skip cache)", defaultValue=False)])),
+                job_type=JOB_V2_DEFENSIVE_USAGE, build_payload=payload_builder(report_id, encounter_id, difficulty))
+
+
+_register_defensive_reports()
+
+
 _AGGREGATE_FIELD_PREFIX = "aggregate__"
 _AGGREGATE_INCLUDE_PREFIX = "aggregate_include__"
 _AGGREGATE_SHARED_FIELD_IDS = {
@@ -3803,7 +3832,7 @@ def _register_aggregate_reports() -> None:
         definition = registered.definition
         if (
             not registered.visible
-            or registered.job_type in (JOB_V2_COOLDOWN_USAGE, JOB_V2_COOLDOWN_COVERAGE)
+            or registered.job_type in (JOB_V2_COOLDOWN_USAGE, JOB_V2_COOLDOWN_COVERAGE, JOB_V2_DEFENSIVE_USAGE)
             or not definition.fight_id
             or definition.difficulty is None
         ):
@@ -3848,6 +3877,7 @@ def build_report_job_request(report_id: str, values: Dict[str, Any]) -> Tuple[st
 
 
 __all__ = [
+    "JOB_V2_DEFENSIVE_USAGE",
     "JOB_V2_COOLDOWN_COVERAGE",
     "JOB_V2_AGGREGATE_REPORT",
     "JOB_V2_BELOREN_CHILD_OF_ALAR_AVOIDABLE_DAMAGE",

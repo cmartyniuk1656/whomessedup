@@ -100,6 +100,7 @@ class UlaTekReportTests(unittest.TestCase):
                 "ula-tek-damage",
                 "ula-tek-cooldowns",
             "ula-tek-cooldown-coverage-heroic",
+            "ula-tek-defensive-usage-heroic",
                 "ula-tek-fuckups",
                 "ula-tek-mechanics-scorecard",
                 "ula-tek-heroic-aggregate-reports",
