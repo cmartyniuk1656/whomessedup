@@ -1,10 +1,11 @@
 /** Shared compact cast track for raid overview, individual abilities and pull rows. */
+import { memo } from "react";
 import { Fragment } from "react";
 import { defensiveRecovery } from "../../../utils/defensiveUsage";
 import { useTimelineTrackWidth } from "../../../hooks/useTimelineTrackWidth";
 import { preciseCoverageTime } from "../../../utils/coverageTimeline";
 
-export function DefensiveTrack({ casts, duration, onInspect, offset = 0, start = 0, end = duration, showReady = false }) {
+export const DefensiveTrack = memo(function DefensiveTrack({ casts, duration, onInspect, offset = 0, start = 0, end = duration, showReady = false }) {
   const { track, width } = useTimelineTrackWidth();
   const span = Math.max(.001, end - start);
   const positions = [];
@@ -38,4 +39,4 @@ export function DefensiveTrack({ casts, duration, onInspect, offset = 0, start =
       {!cast.event.selfUse && cast.event.targetId != null && !["raid", "group"].includes(cast.lane.category) && <span className="defensive-external-mark">↗</span>}
     </button></Fragment>)}
   </div>;
-}
+});

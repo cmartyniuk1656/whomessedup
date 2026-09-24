@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useReportShareUrl } from "../../../hooks/useReportViewState";
 import { Button } from "../atoms/Button";
 import { downloadReportTableCsv } from "../../../utils/reportTablePresentation";
 import { ReportTags } from "./ReportTags";
 
 export function ReportPageHeader({ page, rows, shareUrl }) {
+  const currentShareUrl = useReportShareUrl();
   const [copyStatus, setCopyStatus] = useState("");
   const hasShareUrl = Boolean(shareUrl);
 
@@ -12,7 +14,7 @@ export function ReportPageHeader({ page, rows, shareUrl }) {
       return;
     }
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(currentShareUrl(shareUrl));
       setCopyStatus("Copied");
       window.setTimeout(() => setCopyStatus(""), 1800);
     } catch {

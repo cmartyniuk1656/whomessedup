@@ -1,10 +1,12 @@
 /** Stack recorded damage outcomes; immunity counts never invent damage amounts. */
+import { memo } from "react";
 import { coverageTime } from "../../../utils/coverageTimeline";
 
 import { incomingDamage } from "../../../utils/defensiveUsage";
 import { DEFAULT_DEFENSIVE_LAYERS } from "../../../config/defensiveChartLayers";
 
-const exact = (value) => (value || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+const numberFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+const exact = (value) => numberFormat.format(value || 0);
 
 function damageTooltip(point, cooldownMode, visibility, maximum) {
   const labels = [coverageTime(point.time)];
@@ -20,7 +22,7 @@ function damageTooltip(point, cooldownMode, visibility, maximum) {
   return labels.join(" · ");
 }
 
-export function PersonalDamageGraph({ points, duration, maximum, onTime, scope = "Personal", visibility = DEFAULT_DEFENSIVE_LAYERS }) {
+export const PersonalDamageGraph = memo(function PersonalDamageGraph({ points, duration, maximum, onTime, scope = "Personal", visibility = DEFAULT_DEFENSIVE_LAYERS }) {
   const cooldownMode = points[0]?.cooldownMode;
   const layers = [
     { show: visibility.reduction, field: "mitigated", color: "#6ee7a0", value: incomingDamage },
@@ -43,4 +45,4 @@ export function PersonalDamageGraph({ points, duration, maximum, onTime, scope =
     {visibility.immune && points.filter((p) => p.immuneEvents > 0).map((p) => <line key={p.time} x1={(p.time + Math.min(2, duration - p.time) / 2) / duration * 1000} x2={(p.time + Math.min(2, duration - p.time) / 2) / duration * 1000} y1="2" y2="9" stroke="#d8b4fe" strokeWidth="3" vectorEffect="non-scaling-stroke"><title>{coverageTime(p.time)}: {p.immuneEvents} immune hits · prevented amount unknown</title></line>)}
     {points.map((p) => <rect key={p.time} x={p.time / duration * 1000} y="0" width={Math.min(2, duration - p.time) / duration * 1000} height="100" fill="transparent"><title>{damageTooltip(p, cooldownMode, visibility, maximum)}</title></rect>)}
   </svg>;
-}
+});

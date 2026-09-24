@@ -5,6 +5,7 @@ Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into act
 ## What the App Does
 
 - [Defensive Usage Report](docs/defensive-usage-report.md): review every player's personal defensives, healthstones and health potions against recorded damage and boss casts. Compare attempts by pull start or mechanic occurrence. Dedicated `defensive_catalog` and `defensive_usage` services feed reusable components under `frontend/src/components/v2/defensives/`.
+- [Sharing report views](docs/report-sharing.md): Share Report restores the selected subreport, filters, player/pull, chart layers, alignment, zoom, full-width layout and open details.
 
 - [Cooldown Coverage Report](docs/cooldown-coverage-report.md): compare each pull's recorded boss casts with healer cooldown windows, estimated readiness, and incoming damage plus consumed heal absorbs. Death markers show five-second damage/healing recaps, built by `services/coverage_deaths.py` and shared between tooltip and drawer through `DeathRecap`.
 

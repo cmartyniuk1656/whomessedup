@@ -1,12 +1,12 @@
 /** Pull selection and filtering for the backend-owned coverage timeline. */
-import { useState } from "react";
+import { useReportViewState } from "../../../hooks/useReportViewState";
 import { ReportPageHeader } from "../molecules/ReportPageHeader";
 import { PullTimeline } from "./PullTimeline";
 import "./coverage.css";
 
 export function CooldownCoverageReport({ page, shareUrl }) {
   const timeline = page.content.timeline;
-  const [pullId, setPullId] = useState(timeline.pulls[0]?.id);
+  const [pullId, setPullId] = useReportViewState("pullId", timeline.pulls[0]?.id, { validate: (id) => timeline.pulls.some((pull) => pull.id === id) });
   const pull =
     timeline.pulls.find((entry) => entry.id === pullId) || timeline.pulls[0];
   return (

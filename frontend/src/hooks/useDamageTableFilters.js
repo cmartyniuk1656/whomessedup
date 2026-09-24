@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useReportViewState } from "./useReportViewState";
+import { useMemo } from "react";
 
 function defaultSelectedIds(filter) {
   const selected = (filter?.options ?? [])
@@ -21,20 +22,10 @@ function asNumber(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-export function useDamageTableFilters(table) {
+export function useDamageTableFilters(table, viewKey = "") {
   const config = table?.damageFilterConfig ?? null;
-  const [selectedTargets, setSelectedTargets] = useState([]);
-  const [selectedMetrics, setSelectedMetrics] = useState([]);
-
-  useEffect(() => {
-    if (!config) {
-      setSelectedTargets([]);
-      setSelectedMetrics([]);
-      return;
-    }
-    setSelectedTargets(defaultSelectedIds(config.targetFilter));
-    setSelectedMetrics(defaultSelectedIds(config.metricFilter));
-  }, [config]);
+  const [selectedTargets, setSelectedTargets] = useReportViewState("targets", () => defaultSelectedIds(config?.targetFilter), { resetKey: viewKey, validate: (ids) => ids.every((id) => config?.targetFilter?.options?.some((option) => option.id === id)) });
+  const [selectedMetrics, setSelectedMetrics] = useReportViewState("metrics", () => defaultSelectedIds(config?.metricFilter), { resetKey: viewKey, validate: (ids) => ids.every((id) => config?.metricFilter?.options?.some((option) => option.id === id)) });
 
   const filteredTable = useMemo(() => {
     if (!table || !config) {

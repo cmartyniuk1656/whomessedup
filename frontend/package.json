@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:sharing": "node scripts/test-report-sharing.mjs",
     "test:coverage": "node scripts/test-coverage-render.mjs",
     "test:defensives": "node scripts/test-defensive-render.mjs",
     "preview": "vite preview"

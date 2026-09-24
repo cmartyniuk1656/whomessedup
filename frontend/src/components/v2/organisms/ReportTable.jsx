@@ -1,3 +1,4 @@
+import { useReportViewState, useReportViewScroll } from "../../../hooks/useReportViewState";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { EventGroupList } from "../molecules/EventGroupList";
 import { SortableColumnHeader } from "../molecules/SortableColumnHeader";
@@ -38,7 +39,8 @@ function groupRowsForDisplay(rows) {
 }
 
 export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
-  const [expandedRows, setExpandedRows] = useState({});
+  const scrollRef = useReportViewScroll(pageKey);
+  const [expandedRows, setExpandedRows] = useReportViewState("expandedRows", {}, { resetKey: pageKey, validate: (value) => Object.values(value).every((entry) => typeof entry === "boolean") });
   const [mountedDetailRows, setMountedDetailRows] = useState({});
   const closingTimersRef = useRef({});
 
@@ -53,7 +55,6 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
   useEffect(() => {
     Object.values(closingTimersRef.current).forEach((timer) => window.clearTimeout(timer));
     closingTimersRef.current = {};
-    setExpandedRows({});
     setMountedDetailRows({});
   }, [pageKey]);
 
@@ -98,7 +99,7 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
   const rowSections = groupRowsForDisplay(rows);
 
   return (
-    <div className={`${compact ? "min-w-0" : "overflow-x-auto"} rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]`}>
+    <div ref={scrollRef} className={`${compact ? "min-w-0" : "overflow-x-auto"} rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]`}>
       <table className={`${compact ? "report-table-compact" : "min-w-full"} divide-y divide-white/10 text-sm`}>
         {compact ? <colgroup>{table.columns.map((column, index) => <col key={column.id} style={{ width: table.columns.length === 1 ? "100%" : index === 0 ? "22%" : `${78 / (table.columns.length - 1)}%` }} />)}</colgroup> : null}
         <thead className="bg-slate-950/55 text-xs uppercase tracking-[0.16em] text-slate-400">
@@ -163,7 +164,7 @@ export function ReportTable({ table, rows, sortConfig, onSort, pageKey }) {
                     row?.details?.groups?.length || row?.details?.barChart || row?.details?.metrics?.length
                   );
                   const isExpanded = Boolean(expandedRows[row.id]);
-                  const shouldRenderDetails = hasDetails && Boolean(mountedDetailRows[row.id]);
+                  const shouldRenderDetails = hasDetails && (isExpanded || Boolean(mountedDetailRows[row.id]));
                   const groupSurface = section.group
                     ? groupIndex % 2 === 0
                       ? "bg-emerald-950/[0.055]"

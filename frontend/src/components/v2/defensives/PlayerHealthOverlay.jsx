@@ -1,5 +1,6 @@
 /** Overlay recorded health on a fixed percentage axis, never the damage scale. */
-export function PlayerHealthOverlay({ points = [], duration }) {
+import { memo } from "react";
+export const PlayerHealthOverlay = memo(function PlayerHealthOverlay({ points = [], duration }) {
   if (!points.length) return null;
   const path = points.map((point, index) => `${!index || point.breakBefore ? "M" : "L"}${point.time / duration * 1000},${99 - point.percent * .98}`).join(" ");
   return <div className="defensive-health-overlay">
@@ -9,5 +10,5 @@ export function PlayerHealthOverlay({ points = [], duration }) {
     </svg>
     <span className="defensive-health-max">100%</span><span className="defensive-health-min">0%</span>
   </div>;
-}
+});
 

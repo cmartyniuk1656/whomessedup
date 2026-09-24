@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { ReportViewScope } from "./ReportViewProvider";
+import { useReportViewState } from "../../../hooks/useReportViewState";
+import { useEffect, useMemo } from "react";
 import { useDamageTableFilters } from "../../../hooks/useDamageTableFilters";
 import { useTableColumnFilters } from "../../../hooks/useTableColumnFilters";
 import { useTableRowFilters } from "../../../hooks/useTableRowFilters";
@@ -61,11 +63,8 @@ function ReportPageSelector({ control, value, onChange }) {
 export function ReportPageView({ page, shareUrl, realtime }) {
   const reportControl = page?.reportControl;
   const defaultReportView = reportControl?.defaultValue;
-  const [selectedReportView, setSelectedReportView] = useState(defaultReportView);
+  const [selectedReportView, setSelectedReportView] = useReportViewState("report", defaultReportView);
 
-  useEffect(() => {
-    setSelectedReportView(defaultReportView);
-  }, [defaultReportView, page?.reportCode, page?.reportId]);
 
   useEffect(() => {
     if (!reportControl?.options?.length) {
@@ -77,7 +76,7 @@ export function ReportPageView({ page, shareUrl, realtime }) {
     if (!hasSelectedReport) {
       setSelectedReportView(defaultReportView);
     }
-  }, [defaultReportView, reportControl, selectedReportView]);
+  }, [defaultReportView, reportControl, selectedReportView, setSelectedReportView]);
 
   const selectedPage = reportControl
     ? page?.reportsByView?.[selectedReportView] ??
@@ -94,6 +93,7 @@ export function ReportPageView({ page, shareUrl, realtime }) {
         value={selectedReportView}
         onChange={setSelectedReportView}
       />
+      <ReportViewScope name={selectedReportView || selectedPage.reportId}>
       {selectedPage.content?.variant === "defensive_timeline" ? (
         <DefensiveUsageReport key={`${selectedPage.reportId}:${selectedPage.reportCode}`} page={selectedPage} shareUrl={shareUrl} />
       ) : selectedPage.content?.variant === "timeline" ? (
@@ -110,27 +110,24 @@ export function ReportPageView({ page, shareUrl, realtime }) {
           realtime={realtime}
         />
       )}
+      </ReportViewScope>
     </div>
   );
 }
 
 function SingleReportPageView({ page, shareUrl, realtime }) {
-  const [isSpecAnalysisOpen, setIsSpecAnalysisOpen] = useState(false);
+  const [isSpecAnalysisOpen, setIsSpecAnalysisOpen] = useReportViewState("specAnalysis", false);
   const baseTable = page?.content?.table;
   const viewControl = baseTable?.viewControl;
   const secondaryViewControl = baseTable?.secondaryViewControl;
   const defaultTableView = viewControl?.defaultValue ?? "aggregate";
   const defaultSecondaryTableView = secondaryViewControl?.defaultValue;
-  const [selectedTableView, setSelectedTableView] = useState(defaultTableView);
-  const [selectedSecondaryTableView, setSelectedSecondaryTableView] = useState(
-    defaultSecondaryTableView
-  );
+  const [selectedTableView, setSelectedTableView] = useReportViewState("tableView", defaultTableView);
+  const [selectedSecondaryTableView, setSelectedSecondaryTableView] = useReportViewState("secondaryView", defaultSecondaryTableView);
   const subViewControl =
     baseTable?.subViewControlByView?.[selectedSecondaryTableView];
   const defaultSubTableView = subViewControl?.defaultValue;
-  const [selectedSubTableView, setSelectedSubTableView] = useState(
-    defaultSubTableView
-  );
+  const [selectedSubTableView, setSelectedSubTableView] = useReportViewState("subView", defaultSubTableView, { resetKey: selectedSecondaryTableView });
   const activeSubTableView = subViewControl?.options?.some(
     (option) => option.value === selectedSubTableView
   )
@@ -181,18 +178,19 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
     selectedTableView,
     viewControl,
   ]);
+  const filterScope = `${selectedTableView}:${selectedSecondaryTableView || ""}:${activeSubTableView || ""}`;
   const {
     config: rowFilterConfig,
     selectedRowValues,
     toggleRowValue,
     filteredTable: rowFilteredTable,
-  } = useTableRowFilters(tableForView);
+  } = useTableRowFilters(tableForView, filterScope);
   const {
     config: columnFilterConfig,
     selectedColumnIds,
     toggleColumn,
     filteredTable: columnFilteredTable,
-  } = useTableColumnFilters(rowFilteredTable);
+  } = useTableColumnFilters(rowFilteredTable, filterScope);
   const {
     config,
     selectedTargets,
@@ -200,7 +198,7 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
     toggleTarget,
     toggleMetric,
     filteredTable,
-  } = useDamageTableFilters(columnFilteredTable);
+  } = useDamageTableFilters(columnFilteredTable, filterScope);
   const table = filteredTable;
   const combinedSummaryViewId = secondaryViewControl
     ? `${selectedTableView}::${selectedSecondaryTableView}`
@@ -215,28 +213,7 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
       : null) ??
     page?.summaryByView?.[selectedTableView] ??
     page?.summary;
-  const { sortConfig, sortedRows, handleSort } = useTableSorting(table);
-
-  useEffect(() => {
-    setIsSpecAnalysisOpen(false);
-  }, [page?.reportId, page?.reportCode]);
-
-  useEffect(() => {
-    setSelectedTableView(defaultTableView);
-  }, [defaultTableView, page?.reportCode, page?.reportId]);
-
-  useEffect(() => {
-    setSelectedSecondaryTableView(defaultSecondaryTableView);
-  }, [defaultSecondaryTableView, page?.reportCode, page?.reportId]);
-
-  useEffect(() => {
-    setSelectedSubTableView(defaultSubTableView);
-  }, [
-    defaultSubTableView,
-    page?.reportCode,
-    page?.reportId,
-    selectedSecondaryTableView,
-  ]);
+  const { sortConfig, sortedRows, handleSort } = useTableSorting(table, filterScope);
 
   useEffect(() => {
     if (!viewControl?.options?.length) {
@@ -246,7 +223,7 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
     if (!hasSelectedView) {
       setSelectedTableView(defaultTableView);
     }
-  }, [defaultTableView, selectedTableView, viewControl]);
+  }, [defaultTableView, selectedTableView, viewControl, setSelectedTableView]);
 
   useEffect(() => {
     if (!secondaryViewControl?.options?.length) {
@@ -260,6 +237,7 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
     }
   }, [
     defaultSecondaryTableView,
+    setSelectedSecondaryTableView,
     secondaryViewControl,
     selectedSecondaryTableView,
   ]);
@@ -274,7 +252,7 @@ function SingleReportPageView({ page, shareUrl, realtime }) {
     if (!hasSelectedView) {
       setSelectedSubTableView(defaultSubTableView);
     }
-  }, [defaultSubTableView, selectedSubTableView, subViewControl]);
+  }, [defaultSubTableView, selectedSubTableView, subViewControl, setSelectedSubTableView]);
 
   if (!page || !table) {
     return null;

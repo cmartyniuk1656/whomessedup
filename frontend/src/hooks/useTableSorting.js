@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useReportViewState } from "./useReportViewState";
+import { useEffect, useMemo } from "react";
 
 const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
 
@@ -68,12 +69,12 @@ const resolveSortConfig = (table, preferredSort) => {
   };
 };
 
-export function useTableSorting(table) {
-  const [sortConfig, setSortConfig] = useState(table?.defaultSort ?? null);
+export function useTableSorting(table, viewKey = "") {
+  const [sortConfig, setSortConfig] = useReportViewState("sort", table?.defaultSort ?? null, { resetKey: viewKey, validate: (value) => !value || (["asc", "desc"].includes(value.direction) && typeof value.columnId === "string") });
 
   useEffect(() => {
     setSortConfig((current) => resolveSortConfig(table, current));
-  }, [table]);
+  }, [table, setSortConfig]);
 
   const sortedRows = useMemo(() => {
     const rows = Array.isArray(table?.rows) ? [...table.rows] : [];

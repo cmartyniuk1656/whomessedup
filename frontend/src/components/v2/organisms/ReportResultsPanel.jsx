@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { ReportViewProvider } from "./ReportViewProvider";
+import { useReportViewHash, useReportViewState } from "../../../hooks/useReportViewState";
 import { Button } from "../atoms/Button";
 import { SurfacePanel } from "../atoms/SurfacePanel";
 import { RealtimeReportControl } from "../molecules/RealtimeReportControl";
@@ -29,12 +30,19 @@ function FullWidthIcon({ expanded }) {
 }
 
 export function ReportResultsPanel({ page, shareUrl, realtime }) {
-  const defaultFullWidth = ["timeline", "defensive_timeline"].includes(page?.content?.variant);
-  const [isFullWidth, setIsFullWidth] = useState(defaultFullWidth);
+  const hash = useReportViewHash();
+  const identity = shareUrl || `${page?.reportId}:${page?.reportCode}`;
+  return (
+    <ReportViewProvider key={`${identity}:${hash}`} shareUrl={shareUrl}>
+      <ReportResultsContent page={page} shareUrl={shareUrl} realtime={realtime} />
+    </ReportViewProvider>
+  );
+}
 
-  useEffect(() => {
-    setIsFullWidth(defaultFullWidth);
-  }, [page?.reportCode, page?.reportId, defaultFullWidth]);
+function ReportResultsContent({ page, shareUrl, realtime }) {
+  const defaultFullWidth = ["timeline", "defensive_timeline"].includes(page?.content?.variant);
+  const [isFullWidth, setIsFullWidth] = useReportViewState("fullWidth", defaultFullWidth);
+
 
   if (!page) {
     return null;

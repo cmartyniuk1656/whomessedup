@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useReportViewState } from "./useReportViewState";
+import { useMemo } from "react";
 
 function defaultSelectedIds(filter) {
   const selected = (filter?.options ?? [])
@@ -19,13 +20,9 @@ function toggleOption(current, optionId, options) {
     .filter((id) => selected.has(id));
 }
 
-export function useTableColumnFilters(table) {
+export function useTableColumnFilters(table, viewKey = "") {
   const config = table?.columnFilter ?? null;
-  const [selectedColumnIds, setSelectedColumnIds] = useState([]);
-
-  useEffect(() => {
-    setSelectedColumnIds(defaultSelectedIds(config));
-  }, [config]);
+  const [selectedColumnIds, setSelectedColumnIds] = useReportViewState("columns", () => defaultSelectedIds(config), { resetKey: viewKey, validate: (ids) => ids.every((id) => config?.options?.some((option) => option.id === id)) });
 
   const filteredTable = useMemo(() => {
     if (!table || !config) {

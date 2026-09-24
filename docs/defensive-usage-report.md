@@ -104,3 +104,22 @@ WCL resource field reference: https://www.warcraftlogs.com/help/pins (Resources 
 The graph legend now provides checkboxes for health, damage taken, matched shields, other shields, reduction, immune hits and clipped-peak markers when those outcomes are present. The muted health stroke is 1.4px at 60% opacity. The timeline checkbox row has been removed; casts, durations, readiness, deaths and pressure shading remain visible. Existing boss icon selections and individual player visibility remain available.
 
 `config/defensiveChartLayers.js` defines shared defaults; `utils/defensiveChartLayers.js` filters presentation data without mutating evidence. Visibility lives in the report parent and persists across player, pull and view changes. Hidden damage layers are removed before stacking and scaling, while health retains its fixed percentage axis. All-mitigation mode uses a separate all-shields toggle and preserves the default view's shield choices. Recorded counts and inspector values remain intact. Across pulls still renders just one shared filter legend. UI regression checks cover restacking, re-enabling, cross-view persistence and removal of the timeline filter row.
+
+## Sharing and rendering performance
+
+[Share Report](report-sharing.md) restores player/pull selection, Across pulls alignment, hidden players, boss filters, chart layers, scale, zoom, horizontal position, inspected time and open details.
+
+`DefensiveTimeReadout` owns cursor updates so moving across a graph does not rebuild every player's SVG. `useDefensivePullData` prepares damage, scales, potion lanes, pressure shading and cast lists once per relevant data/filter change. Memoized tracks and stable callbacks prevent opening an inspector from rebuilding the timeline. Across-pulls row geometry and damage series are reused; numeric tooltips share one `Intl.NumberFormat` instance.
+
+The September 24 optimization benchmark used the recorded 11-pull Sentinels page (290,365 health samples), React's development Profiler and JSDOM. Forty cursor updates per view gave these median render times:
+
+| Interaction | Before | After |
+| --- | ---: | ---: |
+| Individual player cursor | 6.24 ms | 0.45 ms |
+| Everyone cursor | 90.49 ms | 0.60 ms |
+| Everyone cursor with health enabled | 89.53 ms | 0.70 ms |
+| Open Across pulls with health enabled | 297.11 ms | 198.28 ms |
+
+These measure local React rendering, not browser paint or Warcraft Logs/network latency. Backend replay of two recorded pulls took a median 0.47 seconds before changes; backend calculations and returned evidence were left unchanged. The existing bounded event-stream fetch pool and response compression remain in use.
+
+To repeat the render benchmark: `cd frontend` then `node scripts/benchmark-defensives.mjs <saved-report-page.json>`. Without a path it uses the smaller committed fixture. Run `npm run test:defensives`, `npm run test:coverage`, `npm run test:sharing` and `npm run build` for behavior/build validation.

@@ -1,4 +1,5 @@
 /** Compose the aligned pressure, coverage, boss and healer tracks. */
+import { useReportViewScroll } from "../../../hooks/useReportViewState";
 import { useCoverageTimeline } from "../../../hooks/useCoverageTimeline";
 import {
   coverageTime,
@@ -15,6 +16,7 @@ import { RaidCoverageStrip } from "./RaidCoverageStrip";
 import { DeathMarkers } from "./DeathMarkers";
 
 export function PullTimeline({ pull, binSeconds }) {
+  const scrollRef = useReportViewScroll(pull.id);
   const state = useCoverageTimeline(pull, binSeconds);
   const {
     overlay,
@@ -82,6 +84,7 @@ export function PullTimeline({ pull, binSeconds }) {
         </p>
       ))}
       <div
+        ref={scrollRef}
         className="coverage-scroll"
         tabIndex="0"
         role="region"

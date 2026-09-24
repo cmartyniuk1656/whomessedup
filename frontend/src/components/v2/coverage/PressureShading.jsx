@@ -1,5 +1,6 @@
 /** Subtle vertical bands preserve time alignment without duplicating the graph. */
-export function PressureShading({ points, duration, maximum, binSeconds }) {
+import { memo } from "react";
+export const PressureShading = memo(function PressureShading({ points, duration, maximum, binSeconds }) {
   if (!maximum) return null;
   return (
     <svg
@@ -25,4 +26,4 @@ export function PressureShading({ points, duration, maximum, binSeconds }) {
       ))}
     </svg>
   );
-}
+});

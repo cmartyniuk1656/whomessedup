@@ -1,16 +1,17 @@
 /** Own timeline filters and selection; coverage always considers every healer. */
-import { useMemo, useState } from "react";
+import { useReportViewState } from "./useReportViewState";
+import { useMemo } from "react";
+import { useTimelineSelection } from "./useTimelineSelection";
 import { coverageSegments, timelineTicks } from "../utils/coverageTimeline";
 
 export function useCoverageTimeline(pull, binSeconds) {
-  const [overlay, setOverlay] = useState(true);
-  const [showReady, setShowReady] = useState(true);
-  const [healer, setHealer] = useState("all");
-  const [zoom, setZoom] = useState(1);
-  const [cursor, setCursor] = useState(0);
-  const [selection, setSelection] = useState(null);
+  const [overlay, setOverlay] = useReportViewState("overlay", true);
+  const [showReady, setShowReady] = useReportViewState("showReady", true);
+  const [healer, setHealer] = useReportViewState("healer", "all", { validate: (name) => name === "all" || pull.lanes.some((lane) => lane.kind === "healer" && lane.player === name) });
+  const [zoom, setZoom] = useReportViewState("zoom", 1, { resetKey: pull.id, validate: (value) => value >= 1 && value <= 4 });
+  const [cursor, setCursor] = useReportViewState("cursor", 0, { resetKey: pull.id, validate: (value) => value >= 0 && value <= pull.duration });
   const bossLanes = pull.lanes.filter((lane) => lane.kind === "boss");
-  const [bossIds, setBossIds] = useState(() =>
+  const [bossIds, setBossIds] = useReportViewState("bossIds", () =>
     bossLanes.filter((lane) => lane.shownByDefault).map((lane) => lane.id),
   );
   const healerLanes = pull.lanes.filter((lane) => lane.kind === "healer");
@@ -18,6 +19,8 @@ export function useCoverageTimeline(pull, binSeconds) {
     () => coverageSegments(pull, binSeconds),
     [pull, binSeconds],
   );
+  const pulls = useMemo(() => [pull], [pull]);
+  const [selection, setSelection] = useTimelineSelection(pulls, segments, pull.id);
   const inspect = (next) => {
     setSelection(next);
     if (next?.event) setCursor(next.event.time);
