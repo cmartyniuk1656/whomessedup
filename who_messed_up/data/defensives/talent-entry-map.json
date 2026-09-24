@@ -9,6 +9,11 @@
       "spellId": 202168,
       "definitionId": 117188
     },
+    "112187": {
+      "nodeId": 90330,
+      "spellId": 386208,
+      "definitionId": 117192
+    },
     "112188": {
       "nodeId": 90331,
       "spellId": 97462,
@@ -18,6 +23,16 @@
       "nodeId": 90385,
       "spellId": 23920,
       "definitionId": 117258
+    },
+    "114643": {
+      "nodeId": 92537,
+      "spellId": 386208,
+      "definitionId": 119649
+    },
+    "114644": {
+      "nodeId": 92538,
+      "spellId": 386208,
+      "definitionId": 119650
     },
     "118850": {
       "nodeId": 95956,
@@ -209,10 +224,25 @@
       "spellId": 238100,
       "definitionId": 108836
     },
+    "103835": {
+      "nodeId": 82685,
+      "spellId": 373446,
+      "definitionId": 108840
+    },
+    "103836": {
+      "nodeId": 82686,
+      "spellId": 390670,
+      "definitionId": 108841
+    },
     "134846": {
       "nodeId": 109012,
       "spellId": 19236,
       "definitionId": 139614
+    },
+    "134849": {
+      "nodeId": 109015,
+      "spellId": 586,
+      "definitionId": 139617
     },
     "96174": {
       "nodeId": 76046,
@@ -504,6 +534,11 @@
       "spellId": 118038,
       "definitionId": 117126
     },
+    "112153": {
+      "nodeId": 90299,
+      "spellId": 452494,
+      "definitionId": 117158
+    },
     "112156": {
       "nodeId": 90302,
       "spellId": 871,
@@ -528,6 +563,11 @@
       "nodeId": 90395,
       "spellId": 184364,
       "definitionId": 117269
+    },
+    "112323": {
+      "nodeId": 90449,
+      "spellId": 1235047,
+      "definitionId": 117328
     },
     "112110": {
       "nodeId": 90450,

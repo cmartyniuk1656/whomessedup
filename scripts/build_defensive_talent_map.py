@@ -18,6 +18,9 @@ def build(source):
     raw = source.read_bytes()
     text = raw.decode("utf-8")
     research = json.loads((DATA / "defensives.json").read_text(encoding="utf-8"))
+    supplemental = json.loads((DATA / "supplemental-abilities.json").read_text(encoding="utf-8"))
+    research["abilities"].extend(supplemental["abilities"])
+    research["talent_modifiers"].extend(supplemental["talent_modifiers"])
     talents = [c["talent"] for a in research["abilities"] for p in a["specialization_profiles"]
                for c in p["access"]["all_of"] if c["kind"] == "selected_talent"]
     talents += [p["talent"] for m in research["talent_modifiers"] for p in m["applicability"]]

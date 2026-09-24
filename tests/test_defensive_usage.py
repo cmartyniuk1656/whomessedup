@@ -113,7 +113,7 @@ def test_reference_only_matching_spec_difficulty_and_tracked_personals():
 def test_registry_and_typed_page_preserve_defensive_data():
     report_id = "entombed-sentinels-defensive-usage-mythic"
     result = build_report_job_request(report_id, {"report_codes": ["abcdefghijklmnop"]})
-    assert result[0] == "v2_report_defensive_usage" and result[1]["defensive_version"] == 8
+    assert result[0] == "v2_report_defensive_usage" and result[1]["defensive_version"] == 9
     assert "include_reference" not in result[1]
     assert len([d for d in list_report_definitions() if "-defensive-usage-" in d.id]) == 18
     pull = build(dict(casts=[event(6262, 10, resourceActor=1, hitPoints=500, maxHitPoints=1000)])); pull["label"] = "Pull 1"
@@ -137,3 +137,54 @@ def test_removed_comparison_never_fetches_lorrgs_even_for_legacy_requests():
     assert len(timeline["pulls"]) == 1
     assert timeline["references"] == {}
     references.assert_not_called()
+
+
+def test_guardian_environment_cast_alias_pairs_real_buff_without_counting_procs():
+    pull = build(dict(casts=[event(212641, 10), event(86659, 10)], auras=[
+        event(212641, 10, "applybuff", target=1), event(212641, 18, "removebuff", target=1),
+        event(212641, 30, "applybuff", target=1), event(212641, 34, "removebuff", target=1)],
+        pressure=[event(1, 12, "damage", target=1, amount=500, mitigated=1000)]))
+    uses = lane(pull, 86659)["events"]
+    assert len(uses) == 1
+    assert uses[0]["targetId"] == 1 and uses[0]["end"] == 18
+    assert uses[0]["attribution"]["estimatedReduction"] == 500
+
+
+@pytest.mark.parametrize("spec", [102, 103, 105])
+def test_bear_stance_entries_follow_aura_and_do_not_duplicate_casts(spec):
+    pull = build(dict(combatants=[dict(sourceID=1, specID=spec)], casts=[event(5487, 10)],
+        auras=[event(5487, 9.999, "applybuff", target=1), event(5487, 14, "removebuff", target=1),
+               event(5487, 20, "applybuff", target=1)], deaths=[event(0, 30, "death", target=1)]))
+    bear = lane(pull, 5487)
+    assert [(e["time"], e["end"]) for e in bear["events"]] == [(10, 14), (20, 30)]
+    assert bear["events"][1]["origin"] == "Observed stance entry"
+    assert all(e["ready"] is None for e in bear["events"])
+    assert all(e["attribution"]["estimatedReduction"] is None for e in bear["events"])
+
+
+def test_guardian_druid_bear_form_is_excluded_even_when_cast_is_observed():
+    pull = build(dict(combatants=[dict(sourceID=1, specID=104)], casts=[event(5487, 10)],
+                      auras=[event(5487, 10, "applybuff", target=1)]))
+    assert not any(l["spellId"] == 5487 for p in pull["players"] for l in p["lanes"])
+
+
+def test_defensive_stance_persists_to_pull_end_and_has_no_recharge_marker():
+    pull = build(dict(combatants=[dict(sourceID=1, specID=71, talentTree=[dict(id=114643, nodeID=92537, rank=1)])],
+        casts=[event(386208, 10)], auras=[event(386208, 10, "applybuff", target=1)],
+        pressure=[event(1, 55, "damage", target=1, amount=850, mitigated=500)]))
+    use = lane(pull, 386208)["events"][0]
+    assert use["end"] == 60 and use["ready"] is None
+    assert use["attribution"]["estimatedReduction"] == 150
+
+
+@pytest.mark.parametrize("rank, cooldown", [(0, 30), (1, 25), (2, 20)])
+def test_fade_talent_gates_reduction_and_recharge(rank, cooldown):
+    talents = [dict(id=134849, nodeID=109015, rank=1), dict(id=103836, nodeID=82686, rank=rank)]
+    streams = dict(combatants=[dict(sourceID=1, specID=257, talentTree=talents)],
+        casts=[event(586, 10)], auras=[event(586, 10, "applybuff", target=1), event(586, 20, "removebuff", target=1)],
+        pressure=[event(1, 12, "damage", target=1, amount=900, mitigated=500)])
+    use = lane(build(streams), 586)["events"][0]
+    assert use["ready"] == 10 + cooldown
+    assert use["attribution"]["estimatedReduction"] is None
+    talents.append(dict(id=103835, nodeID=82685, rank=1))
+    assert lane(build(streams), 586)["events"][0]["attribution"]["estimatedReduction"] == 100

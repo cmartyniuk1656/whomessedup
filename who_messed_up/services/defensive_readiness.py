@@ -25,6 +25,8 @@ def resolve_defensive_readiness(ability, combatant):
 
     if ability["category"] == "consumable" or sid == 452930:
         return unknown("Item inventory, remaining uses and shared item cooldowns are not established.")
+    if ability.get("track_stance"):
+        return unknown("This form or stance lasts until cancelled; no defensive recharge marker is shown.")
     if not profile or not combatant.get("talentTree"):
         return unknown("Fight-time specialization and talent data are required for a readiness estimate.")
     if ability_access(ability, combatant) != "available":

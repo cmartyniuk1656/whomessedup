@@ -9,6 +9,17 @@ import { aggregateRows, alignedTicks, referenceComparison, pressureReview, isPer
 import { DEFAULT_DEFENSIVE_LAYERS } from "../src/config/defensiveChartLayers.js";
 import { filterDamagePoints } from "../src/utils/defensiveChartLayers.js";
 import { healthAtTime } from "../src/utils/playerHealth.js";
+import { defensiveUsageCounts } from "../src/utils/defensiveUsage.js";
+const protectionLane = (spellId, uses) => ({ spellId, name: "Divine Protection", events: Array.from({ length: uses }, () => ({})) });
+const protectionEntries = [
+  { player: { lanes: [protectionLane(403876, 4)] } },
+  { player: { lanes: [protectionLane(498, 34), protectionLane(403876, 1)] } },
+];
+const protectionCounts = defensiveUsageCounts(protectionEntries);
+assert.equal(protectionCounts.length, 1, "Holy and Retribution share one summary card");
+assert.equal(protectionCounts[0].uses, 39);
+assert.equal(protectionCounts[0].pulls, 2, "Count each pull once even when it includes both versions");
+assert.equal(protectionEntries[0].player.lanes[0].spellId, 403876, "Keep spec-specific cast identity");
 const healthSamples = [{ time: 1, percent: 100 }, { time: 2, percent: 20 }, { time: 4, percent: 80, breakBefore: true }];
 assert.equal(healthAtTime(healthSamples, 1.5), 60);
 assert.equal(healthAtTime(healthSamples, 0), null);
@@ -253,6 +264,22 @@ try {
   assert.ok(!contribution.textContent.includes("Estimated"));
   assert.equal(contribution.querySelector(".defensive-damage-bar"), null);
   assert.ok(contribution.textContent.includes("782.1K"), "Sentinel is estimated independently of the much larger baseline total");
+  cleanup();
+  const specSwitch = structuredClone(fixture);
+  specSwitch.content.timeline.pulls.forEach((pull, index) => {
+    const paladin = pull.players.find((player) => player.specId === 66);
+    const sample = paladin.lanes.find((lane) => lane.events.length);
+    paladin.specId = index ? 65 : 70;
+    paladin.lanes = [{ ...sample, id: `protection:${index}`, spellId: index ? 498 : 403876,
+      name: "Divine Protection", events: sample.events.slice(0, 1) }];
+  });
+  const switched = render(React.createElement(ReportPageView, { page: specSwitch }));
+  fireEvent.change(switched.getByRole("combobox", { name: "Defensive player" }), { target: { value: tank.id } });
+  fireEvent.click(switched.getByRole("button", { name: "Across pulls", exact: true }));
+  const cards = switched.container.querySelectorAll(".defensive-summary-grid > div");
+  assert.equal(cards.length, 1, "Render one Divine Protection card across a spec change");
+  assert.ok(cards[0].textContent.includes("2/2 pulls"));
+  assert.equal(cards[0].querySelector("b").textContent, "2");
   cleanup();
   render(React.createElement(ReportPageView, { page: { ...fixture, content: { ...fixture.content, timeline: { ...fixture.content.timeline, pulls: [] } } } }));
   assert.ok(document.body.textContent.includes("No matching pulls were found"));

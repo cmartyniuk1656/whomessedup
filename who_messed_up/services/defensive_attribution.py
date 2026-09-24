@@ -10,6 +10,7 @@ from math import prod
 
 from .cooldown_usage import _event_ability_id
 from .defensive_catalog import defensive_catalog, selected_rank
+from .defensive_events import STANCES
 
 # Base fractions and talent IDs adding percentage points, from defensives.json.
 RATES = {
@@ -21,6 +22,7 @@ RATES = {
     33206: (.40, {440738: .10}), 108271: (.40, {377933: .20}),
     363916: (.30, {441180: .10}), 264735: (.30, {472707: .10}),
     414658: (.70, {}), 104773: (.25, {317138: .15}),
+    586: (0, {373446: .10}), 386208: (.15, {1235047: .06}),
 }
 
 
@@ -30,6 +32,8 @@ def reduction_rate(spell, combatant):
     base, additions = RATES[spell]
     # Bloody Fortitude depends on missing health at the hit, which we don't model.
     uncertain = {434136} if spell == 48792 else set()
+    if spell == 386208:
+        uncertain.add(452494)
     spec = combatant.get("specID", combatant.get("specId"))
     modifiers = defensive_catalog()[2]["talent_modifiers"]
     for modifier in modifiers:
@@ -41,22 +45,26 @@ def reduction_rate(spell, combatant):
             return None, "Talent data is needed to resolve this cooldown's reduction."
         if any(selected_rank(combatant, p["talent"]) for p in profiles):
             if sid in uncertain:
-                return None, "The selected talent makes reduction depend on missing health."
+                return None, ("The selected talent makes reduction depend on damage school." if sid == 452494
+                              else "The selected talent makes reduction depend on missing health.")
             base += additions[sid]
+    if spell == 586 and not base:
+        return None, "Translucent Image is not selected; Fade has no damage-reduction estimate."
     return base, None
 
 
-def _aura_window(auras, source, target, spell, at, until):
+def _aura_window(auras, source, target, spell, at, until, until_cancelled=False):
+    # Match the small cast/application ordering tolerance used by usage windows.
     own = [e for e in auras if e.get("sourceID") == source and e.get("targetID") == target
-           and _event_ability_id(e) == spell and e["timestamp"] >= at]
+           and _event_ability_id(e) == spell and e["timestamp"] >= at - 100]
     apply = next((e for e in own if e["type"] in ("applybuff", "refreshbuff") and e["timestamp"] <= at + 1500), None)
     if not apply:
         return None
     end = next((e for e in own if e["timestamp"] > apply["timestamp"]
                 and e["type"] in ("removebuff", "refreshbuff", "applybuff")), None)
-    if not end:
+    if not end and not until_cancelled:
         return None
-    return dict(start=apply["timestamp"], end=min(until, end["timestamp"]), initialStack=apply.get("stack", 15),
+    return dict(start=apply["timestamp"], end=min(until, end["timestamp"]) if end else until, initialStack=apply.get("stack", 15),
                 stacks=[(e["timestamp"], e.get("stack")) for e in own
                         if e["type"] in ("applybuffstack", "removebuffstack")])
 
@@ -118,7 +126,7 @@ def add_cooldown_attribution(players, fight, streams, combatants):
                     shield_end = min(shield_end, fight.start + next_cast["time"] * 1000)
                 shields[(source, target, spell)].append((at, shield_end))
                 rate, reason = reduction_rate(spell, combatants.get(source, {}))
-                window = _aura_window(auras, source, target, spell, at, until) if rate else None
+                window = _aura_window(auras, source, target, spell, at, until, spell in STANCES) if rate else None
                 if not window or not rate:
                     attribution["note"] = reason or "A paired buff application and end are needed; a nominal window is insufficient."
                     continue

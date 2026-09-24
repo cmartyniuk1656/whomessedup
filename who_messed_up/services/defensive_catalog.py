@@ -13,6 +13,9 @@ DATA = Path(__file__).resolve().parents[1] / "data" / "defensives"
 @lru_cache(maxsize=1)
 def defensive_catalog():
     research = json.loads((DATA / "defensives.json").read_text(encoding="utf-8"))
+    supplemental = json.loads((DATA / "supplemental-abilities.json").read_text(encoding="utf-8"))
+    research["abilities"].extend(supplemental["abilities"])
+    research["talent_modifiers"].extend(supplemental["talent_modifiers"])
     consumables = json.loads((DATA / "consumables.json").read_text(encoding="utf-8"))
     abilities = {a["spell_id"]: a for a in research["abilities"] if a["category"] != "support"}
     abilities.update({a["spell_id"]: a for a in consumables["abilities"]})

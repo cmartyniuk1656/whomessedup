@@ -1,7 +1,7 @@
 /** Each attempt keeps its own damage and mechanic timings on a shared axis. */
 import { memo, useMemo } from "react";
 import { useReportViewState, useReportViewScroll } from "../../../hooks/useReportViewState";
-import { aggregateRows, alignedTicks } from "../../../utils/defensiveUsage";
+import { aggregateRows, alignedTicks, defensiveUsageCounts } from "../../../utils/defensiveUsage";
 import { coverageTime } from "../../../utils/coverageTimeline";
 import { damageScale, displayDamagePoints } from "../../../utils/defensiveUsage";
 import { DamageLegend } from "./DamageLegend";
@@ -24,13 +24,7 @@ export const DefensiveAggregate = memo(function DefensiveAggregate({ layers, onL
   const sourcePoints = useMemo(() => displayDamagePoints(rows.flatMap((r) => r.player.pressure), allMitigation), [rows, allMitigation]);
   const points = useMemo(() => [...rowPoints.values()].flat(), [rowPoints]);
   const { maximum: peak, clipped } = damageScale(points, fullRange);
-  const counts = new Map();
-  entries.forEach(({ player }) => player.lanes.forEach((lane) => {
-    const current = counts.get(lane.spellId) || { lane, uses: 0, pulls: 0 };
-    current.uses += lane.events.length;
-    current.pulls += Number(lane.events.length > 0);
-    counts.set(lane.spellId, current);
-  }));
+  const counts = useMemo(() => defensiveUsageCounts(entries), [entries]);
   return <>
     <div className="coverage-controls"><label>Damage scale <select aria-label="Damage graph scale" value={fullRange ? "full" : "readable"} onChange={(e) => setFullRange(e.target.value === "full")}><option value="readable">Auto · readable peaks</option><option value="full">Full range</option></select></label>{clipped > 0 && <span className="defensive-muted">↑ {clipped} spikes above the shared scale · open a pull for exact values</span>}</div>
     <DefensiveBossFilters pulls={rows.map((row) => row.pull)} selectedIds={bossIds} onChange={onBossIds} />
@@ -57,7 +51,7 @@ export const DefensiveAggregate = memo(function DefensiveAggregate({ layers, onL
         {!rows.length && <p className="coverage-empty">No pulls recorded this mechanic occurrence. Choose another occurrence or align to pull start.</p>}
       </div>
     </div>
-    <div className="defensive-summary-grid">{[...counts.values()].sort((a, b) => b.uses - a.uses).map(({ lane, uses, pulls }) => <div key={lane.spellId} title={lane.description}>
+    <div className="defensive-summary-grid">{counts.map(({ lane, uses, pulls }) => <div key={lane.spellId} title={lane.description}>
       <img src={lane.icon} alt="" width="28" height="28" /><span><strong>{lane.name}</strong><small>{pulls}/{entries.length} pulls with a recorded use</small></span><b>{uses}</b>
     </div>)}</div>
   </>;

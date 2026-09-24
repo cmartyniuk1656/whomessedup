@@ -1,0 +1,436 @@
+{
+  "research_as_of": "2026-09-24",
+  "abilities": [
+    {
+      "spell_id": 586,
+      "name": "Fade",
+      "category": "personal",
+      "summary": "Reduces threat for 10 seconds. Translucent Image adds 10% damage reduction.",
+      "duration": {
+        "nominal_seconds": 10
+      },
+      "icon": {
+        "file": "icons/spell_magic_lesserinvisibilty.jpg"
+      },
+      "specialization_profiles": [
+        {
+          "specialization_id": 256,
+          "access": {
+            "all_of": [
+              {
+                "kind": "selected_talent",
+                "talent": {
+                  "spell_id": 586,
+                  "name": "Fade",
+                  "tree": "class",
+                  "node_id": 109015,
+                  "entry_id": 139617,
+                  "maximum_rank": 1,
+                  "source_url": "https://www.wowhead.com/spell=586"
+                },
+                "required_rank": 1
+              }
+            ]
+          },
+          "base_cooldown_seconds": 30,
+          "base_max_charges": 1
+        },
+        {
+          "specialization_id": 257,
+          "access": {
+            "all_of": [
+              {
+                "kind": "selected_talent",
+                "talent": {
+                  "spell_id": 586,
+                  "name": "Fade",
+                  "tree": "class",
+                  "node_id": 109015,
+                  "entry_id": 139617,
+                  "maximum_rank": 1,
+                  "source_url": "https://www.wowhead.com/spell=586"
+                },
+                "required_rank": 1
+              }
+            ]
+          },
+          "base_cooldown_seconds": 30,
+          "base_max_charges": 1
+        },
+        {
+          "specialization_id": 258,
+          "access": {
+            "all_of": [
+              {
+                "kind": "selected_talent",
+                "talent": {
+                  "spell_id": 586,
+                  "name": "Fade",
+                  "tree": "class",
+                  "node_id": 109015,
+                  "entry_id": 139617,
+                  "maximum_rank": 1,
+                  "source_url": "https://www.wowhead.com/spell=586"
+                },
+                "required_rank": 1
+              }
+            ]
+          },
+          "base_cooldown_seconds": 30,
+          "base_max_charges": 1
+        }
+      ],
+      "sources": [
+        "https://nether.wowhead.com/tooltip/spell/586",
+        "https://nether.wowhead.com/data/talents-dragonflight"
+      ]
+    },
+    {
+      "spell_id": 5487,
+      "name": "Bear Form",
+      "category": "personal",
+      "summary": "Increases armor by 220% and Stamina by 25% until leaving Bear Form. Armor and maximum-health benefits are not assigned a fixed damage-reduction value.",
+      "duration": {
+        "nominal_seconds": null
+      },
+      "icon": {
+        "file": "icons/ability_racial_bearform.jpg"
+      },
+      "specialization_profiles": [
+        {
+          "specialization_id": 102,
+          "access": {
+            "all_of": [
+              {
+                "kind": "baseline"
+              }
+            ]
+          },
+          "base_cooldown_seconds": null,
+          "base_max_charges": 1
+        },
+        {
+          "specialization_id": 103,
+          "access": {
+            "all_of": [
+              {
+                "kind": "baseline"
+              }
+            ]
+          },
+          "base_cooldown_seconds": null,
+          "base_max_charges": 1
+        },
+        {
+          "specialization_id": 105,
+          "access": {
+            "all_of": [
+              {
+                "kind": "baseline"
+              }
+            ]
+          },
+          "base_cooldown_seconds": null,
+          "base_max_charges": 1
+        }
+      ],
+      "sources": [
+        "https://nether.wowhead.com/tooltip/spell/5487",
+        "https://nether.wowhead.com/data/talents-dragonflight"
+      ],
+      "track_stance": true
+    },
+    {
+      "spell_id": 386208,
+      "name": "Defensive Stance",
+      "category": "personal",
+      "summary": "Reduces damage taken by 15% until leaving the stance. Arms and Fury also deal 10% less damage. Talents can increase protection.",
+      "duration": {
+        "nominal_seconds": null
+      },
+      "icon": {
+        "file": "icons/ability_warrior_defensivestance.jpg"
+      },
+      "specialization_profiles": [
+        {
+          "specialization_id": 71,
+          "access": {
+            "all_of": [
+              {
+                "kind": "selected_talent",
+                "talent": {
+                  "spell_id": 386208,
+                  "name": "Defensive Stance",
+                  "tree": "class",
+                  "node_id": 92537,
+                  "entry_id": 119649,
+                  "maximum_rank": 1,
+                  "source_url": "https://www.wowhead.com/spell=386208"
+                },
+                "required_rank": 1
+              }
+            ]
+          },
+          "base_cooldown_seconds": null,
+          "base_max_charges": 1
+        },
+        {
+          "specialization_id": 72,
+          "access": {
+            "all_of": [
+              {
+                "kind": "selected_talent",
+                "talent": {
+                  "spell_id": 386208,
+                  "name": "Defensive Stance",
+                  "tree": "class",
+                  "node_id": 92538,
+                  "entry_id": 119650,
+                  "maximum_rank": 1,
+                  "source_url": "https://www.wowhead.com/spell=386208"
+                },
+                "required_rank": 1
+              }
+            ]
+          },
+          "base_cooldown_seconds": null,
+          "base_max_charges": 1
+        },
+        {
+          "specialization_id": 73,
+          "access": {
+            "all_of": [
+              {
+                "kind": "selected_talent",
+                "talent": {
+                  "spell_id": 386208,
+                  "name": "Defensive Stance",
+                  "tree": "class",
+                  "node_id": 90330,
+                  "entry_id": 117192,
+                  "maximum_rank": 1,
+                  "source_url": "https://www.wowhead.com/spell=386208"
+                },
+                "required_rank": 1
+              }
+            ]
+          },
+          "base_cooldown_seconds": null,
+          "base_max_charges": 1
+        }
+      ],
+      "sources": [
+        "https://nether.wowhead.com/tooltip/spell/386208",
+        "https://nether.wowhead.com/data/talents-dragonflight"
+      ],
+      "track_stance": true
+    }
+  ],
+  "talent_modifiers": [
+    {
+      "id": "talent_373446",
+      "spell_id": 373446,
+      "name": "Translucent Image",
+      "affected_ability_spell_ids": [
+        586
+      ],
+      "summary": "Fade reduces damage taken by 10%.",
+      "applicability": [
+        {
+          "specialization_id": 256,
+          "talent": {
+            "spell_id": 373446,
+            "name": "Translucent Image",
+            "tree": "class",
+            "node_id": 82685,
+            "entry_id": 108840,
+            "maximum_rank": 1,
+            "source_url": "https://www.wowhead.com/spell=373446"
+          }
+        },
+        {
+          "specialization_id": 257,
+          "talent": {
+            "spell_id": 373446,
+            "name": "Translucent Image",
+            "tree": "class",
+            "node_id": 82685,
+            "entry_id": 108840,
+            "maximum_rank": 1,
+            "source_url": "https://www.wowhead.com/spell=373446"
+          }
+        },
+        {
+          "specialization_id": 258,
+          "talent": {
+            "spell_id": 373446,
+            "name": "Translucent Image",
+            "tree": "class",
+            "node_id": 82685,
+            "entry_id": 108840,
+            "maximum_rank": 1,
+            "source_url": "https://www.wowhead.com/spell=373446"
+          }
+        }
+      ],
+      "operations": [
+        {
+          "field": "damage_reduction_percent",
+          "operation": "add",
+          "values_by_rank": [
+            10
+          ]
+        }
+      ],
+      "trigger": null
+    },
+    {
+      "id": "talent_390670",
+      "spell_id": 390670,
+      "name": "Improved Fade",
+      "affected_ability_spell_ids": [
+        586
+      ],
+      "summary": "Fade cooldown reduced by 5 seconds per rank.",
+      "applicability": [
+        {
+          "specialization_id": 256,
+          "talent": {
+            "spell_id": 390670,
+            "name": "Improved Fade",
+            "tree": "class",
+            "node_id": 82686,
+            "entry_id": 108841,
+            "maximum_rank": 2,
+            "source_url": "https://www.wowhead.com/spell=390670"
+          }
+        },
+        {
+          "specialization_id": 257,
+          "talent": {
+            "spell_id": 390670,
+            "name": "Improved Fade",
+            "tree": "class",
+            "node_id": 82686,
+            "entry_id": 108841,
+            "maximum_rank": 2,
+            "source_url": "https://www.wowhead.com/spell=390670"
+          }
+        },
+        {
+          "specialization_id": 258,
+          "talent": {
+            "spell_id": 390670,
+            "name": "Improved Fade",
+            "tree": "class",
+            "node_id": 82686,
+            "entry_id": 108841,
+            "maximum_rank": 2,
+            "source_url": "https://www.wowhead.com/spell=390670"
+          }
+        }
+      ],
+      "operations": [
+        {
+          "field": "cooldown_seconds",
+          "operation": "add",
+          "values_by_rank": [
+            -5,
+            -10
+          ]
+        }
+      ],
+      "trigger": null
+    },
+    {
+      "id": "talent_1235047",
+      "spell_id": 1235047,
+      "name": "Unyielding Stance",
+      "affected_ability_spell_ids": [
+        386208
+      ],
+      "summary": "Defensive Stance reduces damage taken by an additional 6%.",
+      "applicability": [
+        {
+          "specialization_id": 73,
+          "talent": {
+            "spell_id": 1235047,
+            "name": "Unyielding Stance",
+            "tree": "class",
+            "node_id": 90449,
+            "entry_id": 117328,
+            "maximum_rank": 1,
+            "source_url": "https://www.wowhead.com/spell=1235047"
+          }
+        }
+      ],
+      "operations": [
+        {
+          "field": "damage_reduction_percent",
+          "operation": "add",
+          "values_by_rank": [
+            6
+          ]
+        }
+      ],
+      "trigger": null
+    },
+    {
+      "id": "talent_452494",
+      "spell_id": 452494,
+      "name": "Fight Through the Flames",
+      "affected_ability_spell_ids": [
+        386208
+      ],
+      "summary": "Defensive Stance additionally reduces magic damage taken by 8%.",
+      "applicability": [
+        {
+          "specialization_id": 71,
+          "talent": {
+            "spell_id": 452494,
+            "name": "Fight Through the Flames",
+            "tree": "class",
+            "node_id": 90299,
+            "entry_id": 117158,
+            "maximum_rank": 1,
+            "source_url": "https://www.wowhead.com/spell=452494"
+          }
+        },
+        {
+          "specialization_id": 72,
+          "talent": {
+            "spell_id": 452494,
+            "name": "Fight Through the Flames",
+            "tree": "class",
+            "node_id": 90299,
+            "entry_id": 117158,
+            "maximum_rank": 1,
+            "source_url": "https://www.wowhead.com/spell=452494"
+          }
+        },
+        {
+          "specialization_id": 73,
+          "talent": {
+            "spell_id": 452494,
+            "name": "Fight Through the Flames",
+            "tree": "class",
+            "node_id": 90299,
+            "entry_id": 117158,
+            "maximum_rank": 1,
+            "source_url": "https://www.wowhead.com/spell=452494"
+          }
+        }
+      ],
+      "operations": [
+        {
+          "field": "magic_damage_reduction_percent",
+          "operation": "add",
+          "values_by_rank": [
+            8
+          ]
+        }
+      ],
+      "trigger": null
+    }
+  ]
+}

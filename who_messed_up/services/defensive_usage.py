@@ -20,6 +20,7 @@ from .defensive_damage import damage_evidence, personal_damage_series
 from .defensive_attribution import add_cooldown_attribution
 from .defensive_readiness import add_defensive_readiness
 from .defensive_health import player_health_series
+from .defensive_events import CAST_ALIASES, STANCES, normalize_defensive_streams
 from .event_streams import fetch_event_streams
 
 
@@ -27,13 +28,17 @@ def _window_end(event, ability, aura_events, fight, deaths):
     """Only a same-source, same-recipient paired aura establishes actual duration."""
     at, source = event["timestamp"], event.get("sourceID")
     target = event.get("targetID")
+    # WCL sometimes timestamps the application a millisecond before its cast.
     own = [e for e in aura_events if _event_ability_id(e) == ability["spellId"]
-           and e.get("targetID") == target and e.get("sourceID") == source and e["timestamp"] >= at]
+           and e.get("targetID") == target and e.get("sourceID") == source and e["timestamp"] >= at - 100]
     apply = next((e for e in own if e["type"] in ("applybuff", "refreshbuff") and e["timestamp"] <= at + 1500), None)
     remove = next((e for e in own if apply and e["timestamp"] > apply["timestamp"]
                    and e["type"] in ("removebuff", "refreshbuff", "applybuff")), None)
     if apply and remove and remove["type"] == "removebuff":
         end, basis = remove["timestamp"], "observed aura"
+    elif apply and ability["spellId"] in STANCES:
+        # An until-cancelled form remains observed through the last fight event.
+        end, basis = remove["timestamp"] if remove else fight.end, "observed aura"
     else:
         duration = ability.get("duration")
         end, basis = (at + duration * 1000, "nominal") if duration is not None else (at, "unknown")
@@ -45,6 +50,7 @@ def _window_end(event, ability, aura_events, fight, deaths):
 
 
 def build_defensive_pull(*, code, fight, boss, streams, actor_names, player_ids, ability_labels=None):
+    streams = normalize_defensive_streams(streams)
     abilities, specs, _ = defensive_catalog()
     labels = ability_labels or {}
     combatants = {e["sourceID"]: e for e in streams.get("combatants", []) if e.get("sourceID")}
@@ -74,6 +80,8 @@ def build_defensive_pull(*, code, fight, boss, streams, actor_names, player_ids,
             sid, at = _event_ability_id(event), event["timestamp"]
             if event.get("sourceID") != actor or sid not in abilities or not fight.start <= at <= fight.end:
                 continue
+            if sid == 5487 and spec_id == 104:
+                continue  # Bear Form is routine tank form for Guardian, not a defensive use.
             key = (sid, at)
             if key in seen: continue
             seen.add(key)
@@ -114,7 +122,7 @@ def build_defensive_pull(*, code, fight, boss, streams, actor_names, player_ids,
             boss_event = nearest[0] if nearest else None
             lane["events"].append(dict(time=time, end=end, durationBasis=basis,
                 target=actor_names.get(recipient, "Unknown target"), targetId=recipient,
-                selfUse=recipient == actor, origin="Recorded cast",
+                selfUse=recipient == actor, origin=event.get("defensiveOrigin", "Recorded cast"),
                 damageTaken=protection["damageTaken"], protection=protection,
                 observationSeconds=round((observation_end - at) / 1000, 3),
                 effectiveHealing=round(sum(max(0, e.get("amount") or 0) for e in own_heals)),
@@ -160,7 +168,7 @@ def fetch_defensive_usage(*, report_codes, encounter_id, difficulty, include_ref
     boss = bosses[int(encounter_id)]
     bearer = _resolve_token(token, client_id, client_secret)
     pulls = []
-    tracked = set(abilities) | {s["spell_id"] for s in boss["abilities"]}
+    tracked = set(abilities) | set(CAST_ALIASES) | {s["spell_id"] for s in boss["abilities"]}
     spell_filter = "ability.id IN (" + ",".join(map(str, sorted(tracked))) + ")"
     for reference in dict.fromkeys(report_codes):
         code = _sanitize_report_code(reference)

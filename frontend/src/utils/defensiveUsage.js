@@ -82,6 +82,22 @@ export function displayDamagePoints(points, allMitigation = false) {
     mitigated: allMitigation ? point.mitigated : (point.cooldownMitigated || 0) }));
 }
 
+/** Merge spec versions in summary cards only; casts retain their original spell and timing. */
+export function defensiveUsageCounts(entries) {
+  const counts = new Map();
+  entries.forEach(({ player }) => {
+    const used = new Set();
+    player.lanes.forEach((lane) => {
+      const key = lane.spellId === 403876 ? 498 : lane.spellId;
+      const current = counts.get(key) || { lane, uses: 0, pulls: 0 };
+      current.uses += lane.events.length;
+      if (lane.events.length && !used.has(key)) { current.pulls++; used.add(key); }
+      counts.set(key, current);
+    });
+  });
+  return [...counts.values()].sort((a, b) => b.uses - a.uses);
+}
+
 /** One filter per spell, with counts from all displayed pulls and stable identity. */
 export function mergeBossAbilityLanes(pulls) {
   const lanes = new Map();
