@@ -1,4 +1,5 @@
 import unittest
+from dataclasses import replace
 from unittest.mock import patch
 
 from who_messed_up.api import Fight
@@ -38,6 +39,8 @@ class SszorakReportRegistryTests(unittest.TestCase):
         self.assertEqual(payload, {
             "report": "yCHTdpBrV19zDLvg", "extra_reports": ["bHB9CK3yQnN2AmYq"],
             "fight": "Sszorak", "difficulty": "mythic", "ignore_after_deaths": 5,
+            "mechanics_version": 2,
+            "tempest_version": 2,
         })
         self.assertTrue(fresh)
 
@@ -67,19 +70,30 @@ class SszorakReportRegistryTests(unittest.TestCase):
         heroic = build_sszorak_tempest_report_page(summary)
         self.assertEqual(page.report_id, "sszorak-mythic-mechanics")
         self.assertEqual(heroic.report_id, "sszorak-tempest")
-        self.assertEqual(page.content.table.rows, heroic.content.table.rows)
+        self.assertEqual(page.content.table.rows_by_combined_view["tempest::table"], heroic.content.table.rows)
         self.assertEqual(page.content.table.view_control.options[0].label, "Tempest Hits")
         self.assertEqual(page.content.table.rows_by_view["tempest"], page.content.table.rows)
         alice = page.content.table.rows[0]
         self.assertEqual(alice.cells["contacts"].value, 3)
-        self.assertEqual(alice.cells["contacts_per_pull"].value, 3)
+        self.assertEqual(alice.cells["contacts"].label, "Alice")
+        self.assertEqual(alice.cells["contacts"].max_value, 3)
+        self.assertEqual(alice.cells["contacts"].color_token, heroic.content.table.rows[0].cells["player"].color_token)
+        self.assertEqual(page.content.table.rows[1].cells["contacts"].value, 0)
+        self.assertEqual(page.content.table.secondary_view_control.default_value, "bars")
+        self.assertEqual(page.content.table.columns[0].cell_kind, "relative_bar")
+        self.assertEqual(page.content.table.default_sort.direction, "desc")
+        self.assertEqual(page.content.table.rows_by_combined_view["tempest::table"][0].cells["contacts_per_pull"].value, 3)
         self.assertEqual(len(alice.details.groups[0].items), 3)
+        empty_page = build_sszorak_mechanics_report_page(replace(summary, entries=[]))
+        self.assertEqual(empty_page.content.table.rows, [])
+        zero_page = build_sszorak_mechanics_report_page(replace(summary, entries=[summary.entries[1]]))
+        self.assertEqual(zero_page.content.table.rows[0].cells["contacts"].max_value, 0)
 
     def test_tempest_contacts_collapse_same_timestamp_stack_and_refresh(self):
         events = [
             {"timestamp": 1000, "type": "applydebuff", "abilityGameID": 1287083, "targetName": "Player"},
-            {"timestamp": 1200, "type": "applydebuffstack", "abilityGameID": 1287083, "targetName": "Player", "stack": 3},
-            {"timestamp": 1200, "type": "refreshdebuff", "abilityGameID": 1287083, "targetName": "Player"},
+            {"timestamp": 1300, "type": "applydebuffstack", "abilityGameID": 1287083, "targetName": "Player", "stack": 3},
+            {"timestamp": 1300, "type": "refreshdebuff", "abilityGameID": 1287083, "targetName": "Player"},
             {"timestamp": 1500, "type": "removedebuff", "abilityGameID": 1287083, "targetName": "Player"},
             {"timestamp": 1600, "type": "applydebuff", "abilityGameID": 123, "targetName": "Player"},
         ]
@@ -89,6 +103,20 @@ class SszorakReportRegistryTests(unittest.TestCase):
         self.assertEqual(len(contacts), 2)
         self.assertEqual(contacts[1]["type"], "applydebuffstack")
         self.assertEqual(contacts[1]["stack"], 3)
+
+    def test_tempest_nearby_records_use_fixed_player_contact_windows(self):
+        def event(timestamp, player="Alice", stack=1):
+            return dict(timestamp=timestamp, targetName=player, stack=stack,
+                        type="applydebuffstack", abilityGameID=1287083)
+        events = [event(70840), event(70870, stack=2), event(71090, stack=3),
+                  event(70850, "Bob"), event(71091), event(71341, stack=2),
+                  event(71342), event(70840)]
+        original = [dict(item) for item in events]
+        contacts = _collapse_tempest_contacts(reversed(events))
+        self.assertEqual([(item["targetName"], item["timestamp"], item["stack"]) for item in contacts],
+                         [("Alice", 70840, 3), ("Bob", 70850, 1),
+                          ("Alice", 71091, 2), ("Alice", 71342, 1)])
+        self.assertEqual(events, original)
 
     def test_poison_cleansing_totem_is_credited_to_its_owner(self):
         player, pet = _credited_dispeller(

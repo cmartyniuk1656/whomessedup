@@ -1435,6 +1435,7 @@ def _build_sszorak_tempest_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
     ignore_after_deaths = _coerce_positive_int(values, "ignore_after_deaths")
     fresh_run = _coerce_bool(values, "fresh_run", default=False)
     payload: Dict[str, Any] = {
+        "tempest_version": 2,
         "report": report_codes[0],
         "fight": REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
         "difficulty": ReportDifficulty.HEROIC.value,
@@ -1447,6 +1448,7 @@ def _build_sszorak_tempest_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
 def _build_sszorak_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     payload, fresh_run = _build_sszorak_tempest_payload(values)
     payload["difficulty"] = ReportDifficulty.MYTHIC.value
+    payload["mechanics_version"] = 2
     return payload, fresh_run
 
 
@@ -1657,6 +1659,8 @@ def _make_mechanic_scorecard_payload_builder(
                 values, "ignore_after_deaths"
             ),
         }
+        if boss_id == SSZORAK_FIGHT_ID:
+            payload["tempest_version"] = 2
         return payload, _coerce_bool(values, "fresh_run", default=False)
 
     return build

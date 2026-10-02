@@ -46,7 +46,7 @@ REPORT_DEFAULT_FIGHT = "Sszorak"
 REPORT_TITLE = "Heroic Sszorak - Tempest Report"
 REPORT_DESCRIPTION = "Track who contacts Tempest tornadoes and who successfully dispels the resulting debuff."
 REPORT_FOOTNOTES = [
-    "A Tempest contact is counted from each distinct debuff application, stack application, or max-stack refresh; duplicate records for the same player and timestamp are collapsed.",
+    "Tempest applications, stack increases and refreshes within 250 ms of a player's first contact record count as one hit, retaining the first timestamp and highest observed stack. Later records start a new contact window.",
     "Only successful dispels of Tempest are counted. Natural expirations and removals at the end of a pull are excluded.",
     "Poison Cleansing Totem dispels are credited to the shaman who placed the totem.",
 ]

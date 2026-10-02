@@ -26,6 +26,7 @@ REPORT_DEFAULT_FIGHT = "Sszorak"
 TEMPEST_ABILITY_ID = 1287083
 TEMPEST_ABILITY_NAME = "Tempest"
 CONTACT_EVENT_TYPES = frozenset({"applydebuff", "applydebuffstack", "refreshdebuff"})
+TEMPEST_CONTACT_WINDOW_MS = 250.0
 DISPEL_ABILITY_NAMES = {
     4987: "Cleanse",
     88423: "Nature's Cure",
@@ -329,8 +330,13 @@ def _collect_fight_events(
 
 
 def _collapse_tempest_contacts(events: Iterable[dict]) -> List[dict]:
-    """Return one contact for each player/timestamp, preferring stack-bearing events."""
-    contacts: Dict[tuple[str, int], dict] = {}
+    """Group each player's records within 250 ms of a contact's first event.
+
+    Keep the first timestamp and highest observed stack. Anchoring the window
+    to the first record prevents repeated contacts from chaining into one hit.
+    Callers scope events to one report/pull before using this helper.
+    """
+    candidates = []
     for event in events:
         if _ability_id(event) != TEMPEST_ABILITY_ID:
             continue
@@ -340,11 +346,18 @@ def _collapse_tempest_contacts(events: Iterable[dict]) -> List[dict]:
         timestamp = _event_timestamp(event)
         if not player or timestamp is None:
             continue
-        key = (player, int(round(timestamp)))
-        current = contacts.get(key)
-        if current is None or (_stack(event) or 0) > (_stack(current) or 0):
-            contacts[key] = event
-    return sorted(contacts.values(), key=lambda event: (_event_timestamp(event) or 0.0, _target_name(event) or ""))
+        candidates.append((timestamp, player, event))
+    contacts: List[dict] = []
+    latest_by_player: Dict[str, int] = {}
+    for timestamp, player, event in sorted(candidates, key=lambda item: (item[0], item[1])):
+        index = latest_by_player.get(player)
+        current = contacts[index] if index is not None else None
+        if current is None or timestamp - _event_timestamp(current) > TEMPEST_CONTACT_WINDOW_MS:
+            latest_by_player[player] = len(contacts)
+            contacts.append(event)
+        elif (_stack(event) or 0) > (_stack(current) or 0):
+            contacts[index] = {**event, "timestamp": current["timestamp"]}
+    return contacts
 
 
 def _credited_dispeller(
