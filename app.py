@@ -48,6 +48,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_SSZORAK_DAMAGE,
     JOB_V2_SSZORAK_DEATHS,
     JOB_V2_SSZORAK_TEMPEST,
+    JOB_V2_SSZORAK_MECHANICS,
     JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE,
     JOB_V2_THE_TWIN_FANGS_DAMAGE,
     JOB_V2_THE_TWIN_FANGS_DEATHS,
@@ -189,6 +190,7 @@ from who_messed_up.services.view_models.sszorak_avoidable_damage import (
 from who_messed_up.services.view_models.sszorak_damage import build_sszorak_damage_report_page
 from who_messed_up.services.view_models.sszorak_deaths import build_sszorak_deaths_report_page
 from who_messed_up.services.view_models.sszorak_tempest import build_sszorak_tempest_report_page
+from who_messed_up.services.view_models.sszorak_mechanics import build_sszorak_mechanics_report_page
 from who_messed_up.services.view_models.mechanic_scorecards import (
     build_mechanic_scorecard_report_page,
 )
@@ -2563,6 +2565,11 @@ def _execute_v2_sszorak_tempest_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     return page.dict(by_alias=True)
 
 
+def _execute_v2_sszorak_mechanics_job(payload: Dict[str, Any]) -> Dict[str, Any]:
+    summary = _fetch_sszorak_tempest_summary_from_payload(payload)
+    return build_sszorak_mechanics_report_page(summary).model_dump(by_alias=True)
+
+
 def _execute_v2_mechanic_scorecard_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     summary = _fetch_mechanic_scorecard_summary_from_payload(payload)
     page = build_mechanic_scorecard_report_page(summary)
@@ -2996,6 +3003,7 @@ job_manager.register_handler(JOB_V2_SSZORAK_AVOIDABLE_DAMAGE, _execute_v2_sszora
 job_manager.register_handler(JOB_V2_SSZORAK_DAMAGE, _execute_v2_sszorak_damage_job)
 job_manager.register_handler(JOB_V2_SSZORAK_DEATHS, _execute_v2_sszorak_deaths_job)
 job_manager.register_handler(JOB_V2_SSZORAK_TEMPEST, _execute_v2_sszorak_tempest_job)
+job_manager.register_handler(JOB_V2_SSZORAK_MECHANICS, _execute_v2_sszorak_mechanics_job)
 job_manager.register_handler(
     JOB_V2_MECHANIC_SCORECARD,
     _execute_v2_mechanic_scorecard_job,

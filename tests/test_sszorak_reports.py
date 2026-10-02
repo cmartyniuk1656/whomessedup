@@ -1,4 +1,10 @@
 import unittest
+from unittest.mock import patch
+
+from who_messed_up.api import Fight
+from who_messed_up.services.sszorak_tempest import fetch_sszorak_tempest_summary
+from who_messed_up.services.view_models.sszorak_mechanics import build_sszorak_mechanics_report_page
+from who_messed_up.services.view_models.sszorak_tempest import build_sszorak_tempest_report_page
 
 from who_messed_up.services.ability_event_filters import is_avoidable_event_requirement_met
 from who_messed_up.services.boss_manifest_types import BossAbilityMetadata
@@ -12,6 +18,7 @@ from who_messed_up.services.report_registry import (
     JOB_V2_SSZORAK_DAMAGE,
     JOB_V2_SSZORAK_DEATHS,
     JOB_V2_SSZORAK_TEMPEST,
+    JOB_V2_SSZORAK_MECHANICS,
     build_report_job_request,
     get_registered_report,
     list_report_definitions,
@@ -19,6 +26,55 @@ from who_messed_up.services.report_registry import (
 
 
 class SszorakReportRegistryTests(unittest.TestCase):
+    def test_mythic_mechanics_registration_and_payload(self):
+        registered = get_registered_report("sszorak-mythic-mechanics")
+        self.assertEqual(registered.definition.difficulty, "mythic")
+        self.assertIn(registered.definition, list_report_definitions())
+        job, payload, fresh = build_report_job_request("sszorak-mythic-mechanics", {
+            "report_codes": ["yCHTdpBrV19zDLvg", "bHB9CK3yQnN2AmYq"],
+            "ignore_after_deaths": 5, "fresh_run": True,
+        })
+        self.assertEqual(job, JOB_V2_SSZORAK_MECHANICS)
+        self.assertEqual(payload, {
+            "report": "yCHTdpBrV19zDLvg", "extra_reports": ["bHB9CK3yQnN2AmYq"],
+            "fight": "Sszorak", "difficulty": "mythic", "ignore_after_deaths": 5,
+        })
+        self.assertTrue(fresh)
+
+    def test_mythic_hits_exclude_ticks_duplicates_other_difficulties_and_late_events(self):
+        service = "who_messed_up.services.sszorak_tempest."
+        fights = [Fight(1, "Sszorak", 0, 10000, False, difficulty=4, friendly_player_ids=(1, 2)),
+                  Fight(2, "Sszorak", 20000, 30000, False, difficulty=5, friendly_player_ids=(1, 2))]
+        def event(at, kind, player="Alice", **extra):
+            return dict(timestamp=at, type=kind, targetName=player, abilityGameID=1287083, **extra)
+        events = [event(21000, "applydebuff"), event(22000, "applydebuffstack", stack=2),
+                  event(22000, "refreshdebuff"), event(23000, "refreshdebuff", stack=3),
+                  event(23500, "damage"), event(24000, "removedebuff"),
+                  event(26000, "applydebuff"), event(21000, "applydebuff", player="Pet")]
+        def fetch_events(*args, **kwargs):
+            self.assertEqual([fight.id for fight in kwargs["fights"]], [2])
+            return {2: events if kwargs["data_type"] == "Debuffs" else []}
+        with patch(service + "_resolve_token", return_value="token"), \
+             patch(service + "fetch_fights", return_value=(fights, {1: "Alice", 2: "Bob", 3: "Pet"}, {1: "Mage", 2: "Priest"}, {})), \
+             patch(service + "fetch_player_details", return_value={}), \
+             patch(service + "compute_death_cutoffs", return_value={2: 25000}), \
+             patch(service + "fetch_events_grouped", side_effect=fetch_events):
+            summary = fetch_sszorak_tempest_summary(report_code="yCHTdpBrV19zDLvg", difficulty="mythic", ignore_after_deaths=5)
+        self.assertEqual(summary.pull_count, 1)
+        self.assertEqual(summary.total_contacts, 3)
+        self.assertEqual({entry.player: entry.contacts for entry in summary.entries}, {"Alice": 3, "Bob": 0})
+        page = build_sszorak_mechanics_report_page(summary)
+        heroic = build_sszorak_tempest_report_page(summary)
+        self.assertEqual(page.report_id, "sszorak-mythic-mechanics")
+        self.assertEqual(heroic.report_id, "sszorak-tempest")
+        self.assertEqual(page.content.table.rows, heroic.content.table.rows)
+        self.assertEqual(page.content.table.view_control.options[0].label, "Tempest Hits")
+        self.assertEqual(page.content.table.rows_by_view["tempest"], page.content.table.rows)
+        alice = page.content.table.rows[0]
+        self.assertEqual(alice.cells["contacts"].value, 3)
+        self.assertEqual(alice.cells["contacts_per_pull"].value, 3)
+        self.assertEqual(len(alice.details.groups[0].items), 3)
+
     def test_tempest_contacts_collapse_same_timestamp_stack_and_refresh(self):
         events = [
             {"timestamp": 1000, "type": "applydebuff", "abilityGameID": 1287083, "targetName": "Player"},

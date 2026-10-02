@@ -347,6 +347,11 @@ from .view_models.sszorak_deaths import (
     REPORT_ID as REPORT_SSZORAK_DEATHS_ID,
     REPORT_TITLE as REPORT_SSZORAK_DEATHS_TITLE,
 )
+from .view_models.sszorak_mechanics import (
+    REPORT_ID as REPORT_SSZORAK_MECHANICS_ID,
+    REPORT_TITLE as REPORT_SSZORAK_MECHANICS_TITLE,
+    REPORT_DESCRIPTION as REPORT_SSZORAK_MECHANICS_DESCRIPTION,
+)
 from .view_models.sszorak_tempest import (
     REPORT_DEFAULT_FIGHT as REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_SSZORAK_TEMPEST_DESCRIPTION,
@@ -508,6 +513,7 @@ JOB_V2_SSZORAK_AVOIDABLE_DAMAGE = "v2_report_sszorak_avoidable_damage"
 JOB_V2_SSZORAK_DAMAGE = "v2_report_sszorak_damage"
 JOB_V2_SSZORAK_DEATHS = "v2_report_sszorak_deaths"
 JOB_V2_SSZORAK_TEMPEST = "v2_report_sszorak_tempest"
+JOB_V2_SSZORAK_MECHANICS = "v2_report_sszorak_mechanics"
 JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE = "v2_report_the_twin_fangs_avoidable_damage"
 JOB_V2_THE_TWIN_FANGS_DAMAGE = "v2_report_the_twin_fangs_damage"
 JOB_V2_THE_TWIN_FANGS_DEATHS = "v2_report_the_twin_fangs_deaths"
@@ -1435,6 +1441,12 @@ def _build_sszorak_tempest_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
         "extra_reports": report_codes[1:],
         "ignore_after_deaths": ignore_after_deaths,
     }
+    return payload, fresh_run
+
+
+def _build_sszorak_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    payload, fresh_run = _build_sszorak_tempest_payload(values)
+    payload["difficulty"] = ReportDifficulty.MYTHIC.value
     return payload, fresh_run
 
 
@@ -3275,6 +3287,28 @@ _REPORTS: Dict[str, RegisteredReport] = {
 }
 
 
+_REPORTS[REPORT_SSZORAK_MECHANICS_ID] = RegisteredReport(
+    definition=ReportDefinitionModel(
+        id=REPORT_SSZORAK_MECHANICS_ID,
+        title=REPORT_SSZORAK_MECHANICS_TITLE,
+        description=REPORT_SSZORAK_MECHANICS_DESCRIPTION,
+        fightId=SSZORAK_FIGHT_ID,
+        fightName=REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
+        defaultFight=REPORT_SSZORAK_TEMPEST_DEFAULT_FIGHT,
+        difficulty=ReportDifficulty.MYTHIC,
+        footnotes=list(REPORT_SSZORAK_TEMPEST_FOOTNOTES),
+        requestSchema=RequestSchemaModel(fields=[
+            _build_report_codes_field(),
+            _build_ignore_after_deaths_field(),
+            RequestFieldModel(id="fresh_run", kind=RequestFieldKind.CHECKBOX,
+                              label="Force fresh run (skip cache)", defaultValue=False),
+        ]),
+    ),
+    job_type=JOB_V2_SSZORAK_MECHANICS,
+    build_payload=_build_sszorak_mechanics_payload,
+)
+
+
 _REPORTS[REPORT_NEK_ZALI_MECHANICS_ID] = RegisteredReport(
     definition=ReportDefinitionModel(
         id=REPORT_NEK_ZALI_MECHANICS_ID,
@@ -3902,6 +3936,7 @@ __all__ = [
     "JOB_V2_SSZORAK_DAMAGE",
     "JOB_V2_SSZORAK_DEATHS",
     "JOB_V2_SSZORAK_TEMPEST",
+    "JOB_V2_SSZORAK_MECHANICS",
     "JOB_V2_THE_TWIN_FANGS_AVOIDABLE_DAMAGE",
     "JOB_V2_THE_TWIN_FANGS_DAMAGE",
     "JOB_V2_THE_TWIN_FANGS_DEATHS",

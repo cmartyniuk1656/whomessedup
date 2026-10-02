@@ -149,6 +149,19 @@ REGRESSION_CASES.append({
     "body": {"values": {"report_codes": ["X6FGCJm3pqjQMNdv"], "fresh_run": True}},
 })
 
+REGRESSION_CASES.extend([
+    {
+        "name": "sszorak_mythic_mechanics",
+        "path": "/api/v2/reports/sszorak-mythic-mechanics/jobs",
+        "body": {"values": {"report_codes": ["yCHTdpBrV19zDLvg"], "fresh_run": True}},
+    },
+    {
+        "name": "sszorak_heroic_tempest",
+        "path": "/api/v2/reports/sszorak-tempest/jobs",
+        "body": {"values": {"report_codes": ["bHB9CK3yQnN2AmYq"], "fresh_run": True}},
+    },
+])
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Capture regression baselines from the running API server.")

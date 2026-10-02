@@ -1,4 +1,4 @@
-"""Heroic Sszorak Tempest contacts and successful dispels."""
+"""Shared Heroic/Mythic Sszorak Tempest contacts and successful dispels."""
 from __future__ import annotations
 
 from collections import defaultdict
