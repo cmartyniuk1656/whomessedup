@@ -1448,7 +1448,7 @@ def _build_sszorak_tempest_payload(values: Dict[str, Any]) -> Tuple[Dict[str, An
 def _build_sszorak_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
     payload, fresh_run = _build_sszorak_tempest_payload(values)
     payload["difficulty"] = ReportDifficulty.MYTHIC.value
-    payload["mechanics_version"] = 2
+    payload["mechanics_version"] = 3
     return payload, fresh_run
 
 

@@ -3079,7 +3079,9 @@ def watch_v2_report(report_id: str, request: ReportWatchRequestModel) -> ReportW
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    report_codes = payload.get("report_codes") or ([payload["report"]] if payload.get("report") else [])
+    report_codes = payload.get("report_codes") or (
+        [payload["report"], *(payload.get("extra_reports") or [])] if payload.get("report") else []
+    )
     if not report_codes:
         raise HTTPException(
             status_code=422,

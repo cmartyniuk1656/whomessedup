@@ -45,7 +45,9 @@ export function useRealtimeReport({
   const reportCode = String(values?.report_codes || values?.report_code || page?.reportCode || "");
   const currentPulls = useMemo(() => reportPulls(page), [page]);
 
-  const supportsPullUpdates = currentPulls.size > 0 || ["timeline", "defensive_timeline"].includes(page?.content?.variant);
+  const supportsPullUpdates = currentPulls.size > 0 ||
+    page?.content?.table?.viewControl?.id === "pull_scope" ||
+    ["timeline", "defensive_timeline"].includes(page?.content?.variant);
   const hasFixedFightSelection = values?.fight_selection === "specific";
   const isAvailable =
     supportsPullUpdates && Boolean(reportCode) && !hasFixedFightSelection;

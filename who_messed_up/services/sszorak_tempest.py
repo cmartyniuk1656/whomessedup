@@ -7,6 +7,8 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Set
 
 import requests
 
+from .report_pulls import ReportPull, build_report_pulls, event_belongs_to_pull, merge_report_pulls
+
 from ..api import Fight, fetch_events_grouped, fetch_fights, fetch_player_details
 from ..env import load_env
 from .common import (
@@ -83,6 +85,7 @@ class SszorakTempestSummary:
     player_specs: Dict[str, Optional[str]]
     player_events: Dict[str, List[SszorakTempestEvent]]
     source_reports: List[str] = field(default_factory=list)
+    pulls: List[ReportPull] = field(default_factory=list)
 
 
 def fetch_sszorak_tempest_summary(
@@ -162,6 +165,7 @@ def _fetch_single_summary(
     player_roles, player_specs = _infer_player_roles(details)
     pulls_by_player: DefaultDict[str, int] = defaultdict(int)
     participants_by_fight: Dict[int, Set[str]] = {}
+    roles_by_fight: Dict[int, Dict[str, str]] = {}
     for fight in chosen:
         roster = _fight_roster_from_metadata(fight, actor_names, actor_classes)
         if roster is None:
@@ -180,6 +184,7 @@ def _fetch_single_summary(
             if not player_specs.get(player):
                 player_specs[player] = spec
         participants_by_fight[fight.id] = participants
+        roles_by_fight[fight.id] = fight_roles
         for player in participants:
             pulls_by_player[player] += 1
 
@@ -252,6 +257,7 @@ def _fetch_single_summary(
         player_roles={player: player_roles.get(player, ROLE_UNKNOWN) for player in players},
         player_specs={player: player_specs.get(player) for player in players},
         source_reports=[report_code],
+        pulls=build_report_pulls(report_code, chosen, participants_by_fight, roles_by_fight),
     )
 
 
@@ -455,6 +461,7 @@ def _merge_summaries(summaries: List[SszorakTempestSummary]) -> SszorakTempestSu
         player_roles=roles,
         player_specs=specs,
         source_reports=source_reports,
+        pulls=merge_report_pulls([summary.pulls for summary in summaries]),
     )
 
 
@@ -470,6 +477,7 @@ def _build_summary(
     player_roles: Dict[str, str],
     player_specs: Dict[str, Optional[str]],
     source_reports: List[str],
+    pulls: Optional[List[ReportPull]] = None,
 ) -> SszorakTempestSummary:
     return SszorakTempestSummary(
         report_code=report_code,
@@ -486,6 +494,27 @@ def _build_summary(
         player_specs=player_specs,
         player_events={entry.player: entry.events for entry in entries},
         source_reports=source_reports,
+        pulls=pulls or [],
+    )
+
+
+def build_sszorak_tempest_pull_summary(summary: SszorakTempestSummary, pull: ReportPull) -> SszorakTempestSummary:
+    """Scope player totals and evidence to one pull, retaining zero-hit participants."""
+    events = {
+        entry.player: [event for event in entry.events if event_belongs_to_pull(event, pull, summary.report_code)]
+        for entry in summary.entries
+    }
+    players = set(pull.participants) | {player for player, items in events.items() if items}
+    roles = {**summary.player_roles, **pull.player_roles}
+    entries = _build_entries(
+        players=players, events_by_player=events, pulls_by_player={player: 1 for player in players},
+        player_roles=roles, player_classes=summary.player_classes,
+    )
+    return _build_summary(
+        report_code=summary.report_code, fight_filter=summary.fight_filter, fight_ids=[pull.fight_id],
+        pull_count=1, ignore_after_deaths=summary.ignore_after_deaths, entries=entries,
+        player_classes=summary.player_classes, player_roles=roles, player_specs=summary.player_specs,
+        source_reports=summary.source_reports, pulls=[pull],
     )
 
 
@@ -567,4 +596,5 @@ __all__ = [
     "SszorakTempestEvent",
     "SszorakTempestSummary",
     "fetch_sszorak_tempest_summary",
+    "build_sszorak_tempest_pull_summary",
 ]

@@ -199,3 +199,25 @@ def test_timeline_watch_tracks_each_report_with_report_qualified_fights(kind):
         ("J3y9gP2bqmkphY7f", 7), ("fCqgJN7QMWA2vFbT", 7),
     ]
     assert response.revisions == {"J3y9gP2bqmkphY7f": 2, "fCqgJN7QMWA2vFbT": 2}
+
+
+def test_sszorak_watch_tracks_primary_and_extra_logs_with_mythic_scope():
+    def snapshot(**kwargs):
+        return ReportWatchSnapshot(
+            report_code=kwargs["report_code"], end_time=2000, revision=2, segments=3,
+            fights=[ReportWatchFight(id=7, encounter_id=3420, name="Sszorak",
+                start_time=1000, end_time=2000, kill=False, difficulty=5)],
+        )
+
+    request = application.ReportWatchRequestModel(
+        values={"report_codes": ["yCHTdpBrV19zDLvg", "bHB9CK3yQnN2AmYq"]}, force_refresh=True,
+    )
+    with patch("app.fetch_report_watch_snapshot", side_effect=snapshot) as fetch:
+        response = application.watch_v2_report("sszorak-mythic-mechanics", request)
+    assert [call.kwargs["report_code"] for call in fetch.call_args_list] == ["yCHTdpBrV19zDLvg", "bHB9CK3yQnN2AmYq"]
+    assert all(call.kwargs["fight_name"] == "Sszorak" for call in fetch.call_args_list)
+    assert all(call.kwargs["difficulty"] == "mythic" for call in fetch.call_args_list)
+    assert all(call.kwargs["force_refresh"] for call in fetch.call_args_list)
+    assert [(fight.report_code, fight.id) for fight in response.fights] == [
+        ("yCHTdpBrV19zDLvg", 7), ("bHB9CK3yQnN2AmYq", 7),
+    ]

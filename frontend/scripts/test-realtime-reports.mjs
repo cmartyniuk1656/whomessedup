@@ -97,6 +97,43 @@ try {
   const table = { content: { table: { viewControl: { options: [{ value: "pull:A:9", label: "Pull 9" }] } } } };
   assert.equal(reportPulls(table).get("A:9").value, "pull:A:9");
 
+  // Tempest exposes roster-based pulls, including completed pulls with zero hits.
+  const tempestPage = (ids) => ({ reportCode: "A", content: { variant: "table", table: {
+    viewControl: { id: "pull_scope", defaultValue: "aggregate", options: [
+      { value: "aggregate", label: "Aggregate" },
+      ...ids.map((id) => ({ value: `pull:A:${id}`, label: `Pull ${id}` })),
+    ] }, rows: [],
+  } } });
+  let tempestSnapshot = { report_code: "A", revisions: { A: 1 }, fights: [] };
+  const tempestQueued = [];
+  let manualBody;
+  globalThis.fetch = async (_url, request) => {
+    manualBody = JSON.parse(request.body);
+    return { ok: true, json: async () => tempestSnapshot };
+  };
+  const tempestProps = { ...props, page: tempestPage([]), reportId: "sszorak-mythic-mechanics",
+    values: { report_codes: ["A"] }, refreshReport: async (request) => { tempestQueued.push(request); return true; } };
+  hook = renderHook((input) => useRealtimeReport(input), { initialProps: tempestProps });
+  assert.equal(hook.result.current.isVisible, true);
+  assert.equal(hook.result.current.isAvailable, true, "Empty mechanics reports can watch for their first pull");
+  await act(async () => hook.result.current.refresh());
+  assert.equal(manualBody.force_refresh, true);
+  hook.rerender({ ...tempestProps, page: tempestPage([]) });
+  assert.equal(hook.result.current.notice.title, "No new pulls found");
+  await act(async () => hook.result.current.toggle());
+  await advance(0);
+  tempestSnapshot = { report_code: "A", revisions: { A: 2 }, fights: [{ id: 8, end_time: 9000 }] };
+  await advance(10000);
+  assert.equal(tempestQueued.length, 1, "Wait for a stable new pull before automatic refresh");
+  await advance(10000);
+  assert.equal(tempestQueued.length, 2);
+  hook.rerender({ ...tempestProps, page: tempestPage([8]) });
+  assert.equal(hook.result.current.notice.viewId, "pull:A:8");
+  assert.equal(hook.result.current.status, "watching", "A zero-hit pull completes refresh normally");
+  await advance(0);
+  assert.equal(tempestQueued.length, 2, "A zero-hit pull must not trigger repeated regeneration");
+  hook.unmount();
+
   // A stale manual metadata response must not regenerate the previous report after navigation.
   let resolveFetch;
   globalThis.fetch = () => new Promise((resolve) => { resolveFetch = resolve; });

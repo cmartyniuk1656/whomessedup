@@ -10,9 +10,14 @@ from who_messed_up.services.view_models.sszorak_tempest import build_sszorak_tem
 from who_messed_up.services.ability_event_filters import is_avoidable_event_requirement_met
 from who_messed_up.services.boss_manifest_types import BossAbilityMetadata
 from who_messed_up.services.sszorak_tempest import (
+    SszorakTempestEvent,
+    _build_entries,
+    _build_summary,
     _collapse_tempest_contacts,
     _credited_dispeller,
+    _merge_summaries,
 )
+from who_messed_up.services.report_pulls import build_report_pulls
 from who_messed_up.services.report_registry import (
     JOB_V2_COOLDOWN_USAGE,
     JOB_V2_SSZORAK_AVOIDABLE_DAMAGE,
@@ -27,6 +32,33 @@ from who_messed_up.services.report_registry import (
 
 
 class SszorakReportRegistryTests(unittest.TestCase):
+    def test_pull_views_retain_zero_hit_pulls_and_separate_merged_logs(self):
+        def summary(code, contacts):
+            fight = Fight(7, "Sszorak", 0, 60000, False, difficulty=5)
+            events = [SszorakTempestEvent(code, "Alice", "Alice", "contact", 7, "Sszorak", 1, 1000, 1000)] if contacts else []
+            entries = _build_entries(players={"Alice", "Bob"}, events_by_player={"Alice": events},
+                                     pulls_by_player={"Alice": 1, "Bob": 1}, player_roles={}, player_classes={})
+            return _build_summary(report_code=code, fight_filter="Sszorak", fight_ids=None,
+                                  pull_count=1, ignore_after_deaths=None, entries=entries,
+                                  player_classes={}, player_roles={}, player_specs={}, source_reports=[code],
+                                  pulls=build_report_pulls(code, [fight], {7: ["Alice", "Bob"]}))
+
+        merged = _merge_summaries([summary("A", True), summary("B", False)])
+        page = build_sszorak_mechanics_report_page(merged)
+        table = page.content.table
+        self.assertEqual([option.value for option in table.view_control.options], ["aggregate", "pull:A:7", "pull:B:7"])
+        self.assertEqual([option.label for option in table.view_control.options][1:], ["A Pull 1", "B Pull 1"])
+        for code, expected in [("A", 1), ("B", 0)]:
+            rows = table.rows_by_combined_view[f"pull:{code}:7::tempest::table"]
+            self.assertEqual({row.id for row in rows}, {"Alice", "Bob"})
+            alice = next(row for row in rows if row.id == "Alice")
+            self.assertEqual(alice.cells["contacts"].value, expected)
+            self.assertEqual(alice.cells["pulls"].value, 1)
+            metrics = {metric.id: metric.value for metric in page.summary_by_view[f"pull:{code}:7"]}
+            self.assertEqual(metrics["total_contacts"], expected)
+            self.assertEqual(metrics["pull_count"], 1)
+        self.assertEqual(table.rows_by_combined_view["pull:B:7::tempest::table"][0].details, None)
+
     def test_mythic_mechanics_registration_and_payload(self):
         registered = get_registered_report("sszorak-mythic-mechanics")
         self.assertEqual(registered.definition.difficulty, "mythic")
@@ -39,7 +71,7 @@ class SszorakReportRegistryTests(unittest.TestCase):
         self.assertEqual(payload, {
             "report": "yCHTdpBrV19zDLvg", "extra_reports": ["bHB9CK3yQnN2AmYq"],
             "fight": "Sszorak", "difficulty": "mythic", "ignore_after_deaths": 5,
-            "mechanics_version": 2,
+            "mechanics_version": 3,
             "tempest_version": 2,
         })
         self.assertTrue(fresh)
@@ -70,19 +102,21 @@ class SszorakReportRegistryTests(unittest.TestCase):
         heroic = build_sszorak_tempest_report_page(summary)
         self.assertEqual(page.report_id, "sszorak-mythic-mechanics")
         self.assertEqual(heroic.report_id, "sszorak-tempest")
-        self.assertEqual(page.content.table.rows_by_combined_view["tempest::table"], heroic.content.table.rows)
-        self.assertEqual(page.content.table.view_control.options[0].label, "Tempest Hits")
-        self.assertEqual(page.content.table.rows_by_view["tempest"], page.content.table.rows)
+        self.assertEqual(page.content.table.rows_by_combined_view["aggregate::tempest::table"], heroic.content.table.rows)
+        self.assertEqual(page.content.table.secondary_view_control.options[0].label, "Tempest Hits")
+        self.assertEqual(page.content.table.rows_by_view["aggregate"], page.content.table.rows)
+        self.assertEqual([pull.fight_id for pull in summary.pulls], [2])
+        self.assertEqual(page.content.table.view_control.options[1].value, "pull:yCHTdpBrV19zDLvg:2")
         alice = page.content.table.rows[0]
         self.assertEqual(alice.cells["contacts"].value, 3)
         self.assertEqual(alice.cells["contacts"].label, "Alice")
         self.assertEqual(alice.cells["contacts"].max_value, 3)
         self.assertEqual(alice.cells["contacts"].color_token, heroic.content.table.rows[0].cells["player"].color_token)
         self.assertEqual(page.content.table.rows[1].cells["contacts"].value, 0)
-        self.assertEqual(page.content.table.secondary_view_control.default_value, "bars")
+        self.assertEqual(page.content.table.sub_view_control_by_view["tempest"].default_value, "bars")
         self.assertEqual(page.content.table.columns[0].cell_kind, "relative_bar")
         self.assertEqual(page.content.table.default_sort.direction, "desc")
-        self.assertEqual(page.content.table.rows_by_combined_view["tempest::table"][0].cells["contacts_per_pull"].value, 3)
+        self.assertEqual(page.content.table.rows_by_combined_view["aggregate::tempest::table"][0].cells["contacts_per_pull"].value, 3)
         self.assertEqual(len(alice.details.groups[0].items), 3)
         empty_page = build_sszorak_mechanics_report_page(replace(summary, entries=[]))
         self.assertEqual(empty_page.content.table.rows, [])

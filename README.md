@@ -5,6 +5,7 @@ Who Messed Up is a self-hosted toolkit that turns Warcraft Logs reports into act
 ## What the App Does
 
 - Mythic Sszorak's Mechanics Report includes a Tempest Hits subreport that opens with class-colored bars ranked by individual hits per player. Switch to Detailed table for hits per pull and successful dispels; both views retain expandable event timestamps. Heroic and Mythic share a 250 ms contact window per player, anchored to the first application, stack increase or refresh. Each window counts once and retains its first timestamp and highest stack; periodic damage ticks do not count as additional contacts.
+- Mythic Sszorak supports Refresh and opt-in Real-time mode through the shared report updater. Every matching pull, including zero-hit pulls, has a report-qualified selector entry; merged logs are watched together. Updates preserve the selected pull and display, and new-pull notifications can open the added pull.
 
 - [Defensive Usage Report](docs/defensive-usage-report.md): review every player's personal defensives, healthstones and health potions against recorded damage and boss casts. Compare attempts by pull start or mechanic occurrence. Dedicated `defensive_catalog` and `defensive_usage` services feed reusable components under `frontend/src/components/v2/defensives/`.
 - [Sharing report views](docs/report-sharing.md): Share Report restores the selected subreport, filters, player/pull, chart layers, alignment, zoom, full-width layout and open details.

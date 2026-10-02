@@ -181,6 +181,7 @@ from .services.sszorak_tempest import (
     SszorakTempestEvent,
     SszorakTempestSummary,
     fetch_sszorak_tempest_summary,
+    build_sszorak_tempest_pull_summary,
 )
 from .services.mechanic_scorecard_types import (
     MechanicDefinition,
@@ -394,6 +395,7 @@ __all__ = [
     "SszorakTempestEvent",
     "SszorakTempestSummary",
     "fetch_sszorak_tempest_summary",
+    "build_sszorak_tempest_pull_summary",
     "MechanicDefinition",
     "MechanicObservation",
     "MechanicScoreEntry",
