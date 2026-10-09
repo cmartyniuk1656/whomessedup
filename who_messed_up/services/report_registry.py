@@ -60,6 +60,13 @@ from .nymrissa_mechanics_models import (
     REPORT_DEFAULT_FIGHT as REPORT_NYMRISSA_MECHANICS_DEFAULT_FIGHT,
     REPORT_FOOTNOTES as REPORT_NYMRISSA_MECHANICS_FOOTNOTES,
 )
+from .the_twin_fangs_mechanics_models import (
+    REPORT_ID as REPORT_TWIN_FANGS_MECHANICS_ID,
+    REPORT_TITLE as REPORT_TWIN_FANGS_MECHANICS_TITLE,
+    REPORT_DESCRIPTION as REPORT_TWIN_FANGS_MECHANICS_DESCRIPTION,
+    REPORT_DEFAULT_FIGHT as REPORT_TWIN_FANGS_MECHANICS_DEFAULT_FIGHT,
+    REPORT_FOOTNOTES as REPORT_TWIN_FANGS_MECHANICS_FOOTNOTES,
+)
 from .nek_zali_the_soulcoiler_mechanics import (
     REPORT_DEFAULT_FIGHT as REPORT_NEK_ZALI_MECHANICS_DEFAULT_FIGHT,
     REPORT_DESCRIPTION as REPORT_NEK_ZALI_MECHANICS_DESCRIPTION,
@@ -501,6 +508,7 @@ JOB_V2_ENTOMBED_SENTINELS_AVOIDABLE_DAMAGE = "v2_report_entombed_sentinels_avoid
 JOB_V2_ENTOMBED_SENTINELS_DAMAGE = "v2_report_entombed_sentinels_damage"
 JOB_V2_ENTOMBED_SENTINELS_DEATHS = "v2_report_entombed_sentinels_deaths"
 JOB_V2_VASHNIK_MECHANICS = "v2_report_vashnik_mechanics"
+JOB_V2_TWIN_FANGS_MECHANICS = "v2_report_twin_fangs_mechanics"
 JOB_V2_NYMRISSA_MECHANICS = "v2_report_nymrissa_mechanics"
 JOB_V2_ENTOMBED_SENTINELS_MECHANICS = "v2_report_entombed_sentinels_mechanics"
 JOB_V2_THE_LOST_EXPLORERS_AVOIDABLE_DAMAGE = "v2_report_the_lost_explorers_avoidable_damage"
@@ -998,6 +1006,14 @@ def _build_nymrissa_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str,
     report_codes = _coerce_report_code_list(values)
     return ({"report": report_codes[0], "extra_reports": report_codes[1:],
              "fight": REPORT_NYMRISSA_MECHANICS_DEFAULT_FIGHT, "difficulty": "mythic",
+             "mechanics_version": 2},
+            _coerce_bool(values, "fresh_run", default=False))
+
+
+def _build_the_twin_fangs_mechanics_payload(values: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
+    report_codes = _coerce_report_code_list(values)
+    return ({"report": report_codes[0], "extra_reports": report_codes[1:],
+             "fight": REPORT_TWIN_FANGS_MECHANICS_DEFAULT_FIGHT, "difficulty": "mythic",
              "mechanics_version": 2},
             _coerce_bool(values, "fresh_run", default=False))
 
@@ -3401,6 +3417,26 @@ _REPORTS[REPORT_NYMRISSA_MECHANICS_ID] = RegisteredReport(
     build_payload=_build_nymrissa_mechanics_payload,
 )
 
+_REPORTS[REPORT_TWIN_FANGS_MECHANICS_ID] = RegisteredReport(
+    definition=ReportDefinitionModel(
+        id=REPORT_TWIN_FANGS_MECHANICS_ID,
+        title=REPORT_TWIN_FANGS_MECHANICS_TITLE,
+        description=REPORT_TWIN_FANGS_MECHANICS_DESCRIPTION,
+        fightId=THE_TWIN_FANGS_FIGHT_ID,
+        fightName=REPORT_TWIN_FANGS_MECHANICS_DEFAULT_FIGHT,
+        difficulty=ReportDifficulty.MYTHIC,
+        defaultFight=REPORT_TWIN_FANGS_MECHANICS_DEFAULT_FIGHT,
+        footnotes=list(REPORT_TWIN_FANGS_MECHANICS_FOOTNOTES),
+        requestSchema=RequestSchemaModel(fields=[
+            _build_report_codes_field(),
+            RequestFieldModel(id="fresh_run", kind=RequestFieldKind.CHECKBOX,
+                              label="Force fresh run (skip cache)", defaultValue=False),
+        ]),
+    ),
+    job_type=JOB_V2_TWIN_FANGS_MECHANICS,
+    build_payload=_build_the_twin_fangs_mechanics_payload,
+)
+
 
 def _build_cooldown_usage_definition(
     *,
@@ -3970,6 +4006,7 @@ __all__ = [
     "JOB_V2_ENTOMBED_SENTINELS_MECHANICS",
     "JOB_V2_VASHNIK_MECHANICS",
     "JOB_V2_NYMRISSA_MECHANICS",
+    "JOB_V2_TWIN_FANGS_MECHANICS",
     "JOB_V2_VORASIUS_DAMAGE",
     "JOB_V2_VORASIUS_AVOIDABLE_DAMAGE",
     "JOB_V2_VORASIUS_DEATHS",

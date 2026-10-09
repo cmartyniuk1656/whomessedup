@@ -142,6 +142,7 @@ from .services.nek_zali_the_soulcoiler_avoidable_damage import (
 from .services.nek_zali_the_soulcoiler_damage import fetch_nek_zali_the_soulcoiler_damage_summary
 from .services.nek_zali_the_soulcoiler_deaths import fetch_nek_zali_the_soulcoiler_death_summary
 from .services.vashnik_mechanics import fetch_vashnik_mechanics_summary, VashnikMechanicsSummary
+from .services.the_twin_fangs_mechanics import fetch_the_twin_fangs_mechanics_summary, TwinFangsMechanicsSummary
 from .services.nymrissa_mechanics import fetch_nymrissa_mechanics_summary, NymrissaMechanicsSummary
 from .services.entombed_sentinels_mechanics import (
     SentinelsMechanicsSummary,
@@ -376,6 +377,8 @@ __all__ = [
     "fetch_sentinels_mechanics_summary",
     "fetch_vashnik_mechanics_summary",
     "fetch_nymrissa_mechanics_summary",
+    "fetch_the_twin_fangs_mechanics_summary",
+    "TwinFangsMechanicsSummary",
     "NymrissaMechanicsSummary",
     "VashnikMechanicsSummary",
     "SentinelsMechanicsSummary",
