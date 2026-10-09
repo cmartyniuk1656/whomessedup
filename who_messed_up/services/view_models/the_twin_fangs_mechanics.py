@@ -7,17 +7,20 @@ COLUMNS = {
     "adds": [("contributors", "Players", "player_list"), ("damage", "Add damage", "number")],
     "orbs": [("players", "Picked up by", "player_list")],
     "waves": [("players", "Player", "player_list")],
+    "wave_stacks": [("players", "Player", "player_list")],
     "shields": [("players", "CC players", "player_list"), ("status", "Attribution", "text")],
     "interrupts": [("players", "Interrupted by", "player_list"), ("spell", "Interrupted spell", "text")],
 }
 METRICS = {"adds": [("damage", "Add damage")], "orbs": [("contacts", "Orb pickups")],
            "waves": [("contacts", "Wave contacts")],
+           "wave_stacks": [("stacks", "Wave contact stacks")],
            "shields": [("breaks", "Attributed shield breaks"), ("ambiguous", "Ambiguous CCs"),
                        ("unattributed", "Unattributed removals")],
            "interrupts": [("interrupts", "Successful interrupts")]}
 BARS = {"adds": ("contributions", "Add damage by player", "damage"),
         "orbs": ("soak_counts", "Orb pickups by player", "pickups"),
         "waves": ("soak_counts", "Wave contacts by player", "contacts"),
+        "wave_stacks": ("soak_counts", "Wave contact stacks by player", "stacks"),
         "shields": ("soak_counts", "Shield breaks by player", "shields"),
         "interrupts": ("soak_counts", "Successful interrupts by player", "interrupts")}
 

@@ -13,8 +13,8 @@ def _scoped(ctx, stream):
             if ctx.fight.start <= timestamp(e) <= ctx.fight.end]
 
 
-def build_contacts(ctx, *, waves=False):
-    rows = []
+def contact_events(ctx, *, waves=False):
+    """Return the direct contacts shared by contact and matched-stack reports."""
     for event in sorted(_scoped(ctx, "debuffs" if waves else "pickups"), key=timestamp):
         if event.get("targetID") not in ctx.players or ability(event) != (WAVE if waves else GLOBULE):
             continue
@@ -25,6 +25,12 @@ def build_contacts(ctx, *, waves=False):
                 continue
         elif event.get("type") != "damage" or event.get("tick"):
             continue
+        yield event
+
+
+def build_contacts(ctx, *, waves=False):
+    rows = []
+    for event in contact_events(ctx, waves=waves):
         player = ctx.name(event["targetID"])
         label = "Stir the Depths" if waves else "Caustic Globule"
         row = ctx.row(timestamp(event), len(rows) + 1, label)

@@ -78,12 +78,12 @@ def test_add_instances_pet_ownership_and_effective_damage():
     assert rows[1].values["duration"] is None
 
 
-def test_page_contract_includes_five_scoped_subreports_and_empty_pull():
+def test_page_contract_includes_six_scoped_subreports_and_empty_pull():
     summary = summary_for(context(debuffs=[event()], pickups=[event(aid=GLOBULE, kind="damage")]))
     page = build_the_twin_fangs_mechanics_report_page(summary)
     table = page.content.table
     assert page.report_id == REPORT_ID
-    assert [o.value for o in table.secondary_view_control.options] == ["adds", "orbs", "waves", "shields", "interrupts"]
+    assert [o.value for o in table.secondary_view_control.options] == ["adds", "orbs", "waves", "wave_stacks", "shields", "interrupts"]
     assert table.sub_view_control_by_view["adds"].default_value == "adds-bars"
     assert table.rows_by_combined_view["aggregate::waves::waves-bars"][0].cells["contribution"].value == 1
     assert table.rows_by_combined_view[f"{summary.pulls[0].view_id}::orbs::orbs-bars"][0].cells["contribution"].value == 1
@@ -108,7 +108,7 @@ def test_recorded_mythic_pull_snapshot():
                       {int(k): v for k, v in data["names"].items()},
                       {int(k): v for k, v in data["owners"].items()})
     summary = summary_for(ctx)
-    assert {view: len(rows) for view, rows in summary.sets.items()} == {"adds": 2, "orbs": 30, "waves": 8, "shields": 0, "interrupts": 0}
+    assert {view: len(rows) for view, rows in summary.sets.items()} == {"adds": 2, "orbs": 30, "waves": 8, "wave_stacks": 0, "shields": 0, "interrupts": 0}
     assert [row.values["damage"] for row in summary.sets["adds"]] == [12136258, 1054732]
     assert [row.values["duration"] for row in summary.sets["adds"]] == [7.43, None]
     page = build_the_twin_fangs_mechanics_report_page(summary)

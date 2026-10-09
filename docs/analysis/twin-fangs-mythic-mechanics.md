@@ -15,6 +15,14 @@ Mythic encounter 3421, fights 28–33 (five wipes and one kill).
 - 62 Stir the Depths **applydebuff** events, spell **1292807**, paired with 62
   removals. **54 contacts had no damage event during the recorded aura lifetime.**
   Damage-event counting would miss most wave contacts in this sample.
+- **Wave Contact Stacks** contains 59 contacts with distinct matching Eternal
+  Venom applications/increases (**1290336**) within 100ms either side. Match
+  nearest timestamps first, scoped to the same player and pull; never reuse a
+  venom event. A preliminary proximity-only check found 60 contacts, but two
+  contacts 82ms apart on fight 30 shared one gain. The one-to-one rule correctly
+  counts that gain once. Each matched contact contributes one, not the resulting
+  stack level or every gain nearby. Concurrent mechanics can make causality
+  ambiguous; the report explicitly labels the timing association.
 - 879,408,176 effective player/pet damage across 287 observed add lifetimes for
   **Spawn of Vexhul** and **Broodling of Ithraz**. Pet damage is credited to owners;
   absorbed damage and overkill are excluded. Broodlings can disappear after
@@ -63,11 +71,12 @@ are scoped to the selected fight and report before aggregation.
 
 `the_twin_fangs_mechanics.py` fetches narrowly filtered streams through the shared
 event-stream pool. `the_twin_fangs_mechanics_events.py` calculates add lifetimes
-and individual contacts; `the_twin_fangs_mechanics_control.py` handles successful
+and individual contacts; `the_twin_fangs_mechanics_stacks.py` matches contacts to
+venom gains; `the_twin_fangs_mechanics_control.py` handles successful
 interrupts and conservative CC/shield attribution. Vocabulary lives in `the_twin_fangs_mechanics_models.py`;
 the view-model module configures shared compact mechanics components.
 
-The Mythic tile offers **Add damage**, **Orb pickups**, **Wave contacts**,
+The Mythic tile offers **Add damage**, **Orb pickups**, **Wave Contacts**, **Wave Contact Stacks**,
 **Orb shield CCs**, and **Add interrupts**,
 each with player bars and expandable evidence rows, aggregate/pull selection,
 class colors, and existing CSV/report controls. Counts describe observed actions;
@@ -89,8 +98,12 @@ and manifests are unchanged.
   218 successful interrupts. Additional tests exclude failed casts, wrong
   instances, non-control debuffs, depleted shields, unsupported players, and
   out-of-window CCs; they verify area CC and pet/totem attribution.
-- The mechanics cache version is 2 so earlier three-subreport results cannot
-  hide the new CC and interrupt views.
+- The mechanics cache version is 3 so older results cannot hide Wave Contact Stacks.
+- `tests/fixtures/twin_fangs_wave_stacks.json` retains all six pulls' contacts and
+  nearby venom aura events. Its snapshot distinguishes 62 contacts from 59 matched
+  stack contacts. Synthetic tests cover initial applications, increases, removals,
+  refreshes, damage, player/pull isolation, matching-window boundaries, duplicate
+  events, and nearest one-to-one attribution.
 - `scripts/capture_regressions.py --case twin_fangs_mythic_mechanics` captures
   the complete primary report through the registered API job.
 - The ghosts, Nexus phase-damage, and Dimensius add-damage captures matched the
@@ -103,5 +116,7 @@ and manifests are unchanged.
   indexed API response. A fresh API capture preserves the original three
   subreport totals and reproduces the control fixture's 353/3/218 results.
 
-The complete pre-deployment backend suite passes 341 tests plus three subtests.
+The Wave Contact Stacks follow-up passes the complete 346-test backend suite plus
+three subtests, frontend build, and rendering of both wave subreports in bar and
+evidence modes. All existing pull-scoped summary totals remain unchanged.
 Deployment and production verification are recorded in the VPS operations runbook.
